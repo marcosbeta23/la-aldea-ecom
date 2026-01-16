@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# lock files (pnpm project - ignore npm/yarn locks)
+package-lock.json
+yarn.lock
+
 # vercel
 .vercel
 
