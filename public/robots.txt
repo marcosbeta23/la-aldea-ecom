@@ -1,0 +1,45 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /private/
+Disallow: /temp/
+
+# Allow static assets for better page rendering in search results
+Allow: /assets/css/
+Allow: /assets/js/
+Allow: /assets/images/
+
+# Allow llms.txt for AI search optimization
+Allow: /llms.txt
+
+# Specific rules for Googlebot
+User-agent: Googlebot
+Allow: /assets/css/
+Allow: /assets/js/
+Allow: /assets/images/
+Allow: /llms.txt
+
+# Allow AI crawlers access to llms.txt
+User-agent: GPTBot
+Allow: /llms.txt
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /llms.txt
+Allow: /
+
+User-agent: Claude-Web
+Allow: /llms.txt
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /llms.txt
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /llms.txt
+Allow: /
+
+# Sitemap declaration
+Sitemap: https://laaldeatala.com.uy/sitemap.xml
