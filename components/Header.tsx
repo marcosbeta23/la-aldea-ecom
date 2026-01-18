@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Droplets, MessageCircle, Menu } from 'lucide-react';
+import { Droplets, MessageCircle, Menu, X } from 'lucide-react';
 import CartWidget from '@/components/cart/CartWidget';
 import WishlistWidget from '@/components/cart/WishlistWidget';
 
@@ -13,6 +13,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [lastScroll, setLastScroll] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,6 +37,23 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScroll]);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <header 
@@ -146,6 +164,7 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
               scrolled || !isHomepage
                 ? 'text-slate-600 hover:bg-slate-100' 
@@ -153,10 +172,70 @@ export default function Header() {
             }`}
             aria-label="Abrir menú de navegación"
           >
-            <Menu className="h-5 w-5" />
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 top-16 bg-white z-40 lg:hidden">
+          <nav className="flex flex-col p-4 space-y-2">
+            <Link 
+              href="/" 
+              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
+            >
+              Inicio
+            </Link>
+            <Link 
+              href="/productos" 
+              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
+            >
+              Productos
+            </Link>
+            <Link 
+              href="/cart" 
+              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
+            >
+              Carrito
+            </Link>
+            <Link 
+              href="/wishlist" 
+              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
+            >
+              Lista de Deseos
+            </Link>
+            <Link 
+              href="/faq" 
+              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
+            >
+              Preguntas Frecuentes
+            </Link>
+            <Link 
+              href="/contacto" 
+              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
+            >
+              Contacto
+            </Link>
+            
+            <div className="pt-4 border-t border-slate-200">
+              <a
+                href="https://wa.me/59892744725"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 text-base font-medium text-white shadow-lg transition-all hover:bg-green-600"
+              >
+                <MessageCircle className="h-5 w-5" />
+                Contactar por WhatsApp
+              </a>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
