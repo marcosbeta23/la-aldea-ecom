@@ -29,11 +29,13 @@ export interface Order {
   shipping_address: string | null;
   shipping_city: string | null;
   shipping_department: string | null;
+  shipping_method: 'pickup' | 'delivery';
   subtotal: number;
   discount_amount: number;
   shipping_cost: number;
   total: number;
   status: OrderStatus;
+  payment_status: PaymentStatus;
   payment_method: string | null;
   mp_preference_id: string | null;
   mp_payment_id: string | null;
@@ -42,6 +44,8 @@ export interface Order {
   meta: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  // Joined data
+  order_items?: OrderItem[];
 }
 
 export type OrderStatus =
@@ -50,7 +54,14 @@ export type OrderStatus =
   | 'processing'
   | 'shipped'
   | 'delivered'
+  | 'completed'
   | 'cancelled';
+
+export type PaymentStatus =
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'refunded';
 
 export interface OrderItem {
   id: string;
@@ -81,11 +92,11 @@ export interface DiscountCoupon {
   description: string | null;
   discount_type: 'percentage' | 'fixed';
   discount_value: number;
-  min_purchase_amount: number;
-  max_uses: number | null;
-  current_uses: number;
-  valid_from: string;
-  valid_until: string | null;
+  minimum_purchase: number;
+  max_discount: number | null;
+  usage_limit: number | null;
+  used_count: number;
+  expires_at: string | null;
   is_active: boolean;
   created_at: string;
 }
@@ -142,8 +153,8 @@ export interface Database {
       };
       orders: {
         Row: Order;
-        Insert: Omit<Order, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Order, 'id' | 'created_at' | 'updated_at'>>;
+        Insert: Omit<Order, 'id' | 'created_at' | 'updated_at' | 'order_items'>;
+        Update: Partial<Omit<Order, 'id' | 'created_at' | 'updated_at' | 'order_items'>>;
       };
       order_items: {
         Row: OrderItem;
@@ -155,7 +166,7 @@ export interface Database {
         Insert: Omit<ProductReview, 'id' | 'created_at'>;
         Update: Partial<Omit<ProductReview, 'id' | 'created_at'>>;
       };
-      discount_coupons: {
+      coupons: {
         Row: DiscountCoupon;
         Insert: Omit<DiscountCoupon, 'id' | 'created_at'>;
         Update: Partial<Omit<DiscountCoupon, 'id' | 'created_at'>>;

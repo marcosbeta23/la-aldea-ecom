@@ -31,14 +31,17 @@ export interface CreateOrderResponse {
   preference_id: string; // MercadoPago preference ID
 }
 
-export interface OrderWithItems extends Order {
+export interface OrderWithItems extends Omit<Order, 'order_items'> {
   order_items: Array<{
     id: string;
+    order_id: string;
+    product_id: string;
     product_name: string;
     product_sku: string;
     quantity: number;
     unit_price: number;
     subtotal: number;
+    created_at: string;
   }>;
 }
 

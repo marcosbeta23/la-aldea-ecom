@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Droplets, ShoppingCart, MessageCircle, Menu } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Droplets, MessageCircle, Menu } from 'lucide-react';
+import CartWidget from '@/components/cart/CartWidget';
 
 export default function Header() {
+  const pathname = usePathname();
+  const isHomepage = pathname === '/';
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [lastScroll, setLastScroll] = useState(0);
@@ -37,8 +41,8 @@ export default function Header() {
       className={`
         fixed top-0 left-0 right-0 z-50 
         transition-all duration-300 ease-in-out
-        ${scrolled 
-          ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-slate-200' 
+        ${scrolled || !isHomepage
+          ? 'bg-white shadow-sm border-b border-slate-200' 
           : 'bg-transparent border-b border-transparent'
         }
         ${hidden ? '-translate-y-full' : 'translate-y-0'}
@@ -51,10 +55,10 @@ export default function Header() {
             <Droplets className="h-6 w-6 text-white" />
           </div>
           <div className="hidden sm:block">
-            <span className={`text-xl font-bold transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>
+            <span className={`text-xl font-bold transition-colors ${scrolled || !isHomepage ? 'text-slate-900' : 'text-white'}`}>
               La Aldea
             </span>
-            <p className={`text-xs transition-colors ${scrolled ? 'text-slate-500' : 'text-white/80'}`}>
+            <p className={`text-xs transition-colors ${scrolled || !isHomepage ? 'text-slate-500' : 'text-white/80'}`}>
               Tala, Uruguay
             </p>
           </div>
@@ -65,7 +69,7 @@ export default function Header() {
           <Link 
             href="/" 
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              scrolled 
+              scrolled || !isHomepage
                 ? 'text-blue-600 bg-blue-50' 
                 : 'text-white bg-white/10 hover:bg-white/20'
             }`}
@@ -75,7 +79,7 @@ export default function Header() {
           <Link 
             href="/productos" 
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              scrolled 
+              scrolled || !isHomepage
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50' 
                 : 'text-white/90 hover:bg-white/10'
             }`}
@@ -85,7 +89,7 @@ export default function Header() {
           <Link 
             href="/faq" 
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              scrolled 
+              scrolled || !isHomepage
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50' 
                 : 'text-white/90 hover:bg-white/10'
             }`}
@@ -95,7 +99,7 @@ export default function Header() {
           <Link 
             href="/contacto" 
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              scrolled 
+              scrolled || !isHomepage
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50' 
                 : 'text-white/90 hover:bg-white/10'
             }`}
@@ -107,20 +111,15 @@ export default function Header() {
         {/* Actions */}
         <div className="flex items-center gap-3">
           {/* Cart Icon */}
-          <Link 
-            href="/carrito" 
-            className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-              scrolled 
+          <CartWidget 
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+              scrolled || !isHomepage
                 ? 'text-slate-600 hover:bg-slate-100' 
                 : 'text-white hover:bg-white/10'
             }`}
-            aria-label="Carrito de compras (0 productos)"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
-              0
-            </span>
-          </Link>
+            iconClassName="h-5 w-5"
+            scrolled={scrolled || !isHomepage}
+          />
 
           {/* WhatsApp Button */}
           <a
@@ -136,7 +135,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button 
             className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-              scrolled 
+              scrolled || !isHomepage
                 ? 'text-slate-600 hover:bg-slate-100' 
                 : 'text-white hover:bg-white/10'
             }`}

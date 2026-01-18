@@ -25,6 +25,46 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Form input styling for better readability */
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8; /* slate-400 - visible but not too dark */
+  opacity: 1;
+}
+
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+/* Ensure select text is readable */
+select {
+  color: #1e293b; /* slate-800 */
+}
+
+select option {
+  color: #1e293b;
+  background: white;
+}
+
+/* Hide number input spinners for quantity inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Hide scrollbar for horizontal scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;
