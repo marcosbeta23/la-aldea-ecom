@@ -199,13 +199,8 @@ export default function Header() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
-          
-          {/* Menu */}
-          <div className="fixed inset-0 top-16 bg-white z-50 lg:hidden overflow-y-auto">
-            <nav className="flex flex-col p-4 space-y-2">
+        <div className="fixed inset-0 top-16 bg-white z-40 lg:hidden overflow-y-auto">
+          <nav className="flex flex-col p-4 space-y-2 bg-white min-h-full">
             <Link 
               href="/" 
               className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
@@ -256,7 +251,6 @@ export default function Header() {
             </div>
           </nav>
         </div>
-        </>
       )}
     </header>
   );
