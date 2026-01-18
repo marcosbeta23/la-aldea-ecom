@@ -199,7 +199,7 @@ export default function Header() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 top-16 bg-white z-40 lg:hidden overflow-y-auto">
+        <div className="fixed inset-0 top-[64px] lg:top-[80px] bg-white z-[45] lg:hidden overflow-y-auto">
           <nav className="flex flex-col p-4 space-y-2 bg-white min-h-full">
             <Link 
               href="/" 
