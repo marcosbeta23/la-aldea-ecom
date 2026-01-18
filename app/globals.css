@@ -25,6 +25,14 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Prevent mobile viewport resize jank on hero section */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific - prevents resize on scroll */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
 /* Form input styling for better readability */
 input::placeholder,
 textarea::placeholder {

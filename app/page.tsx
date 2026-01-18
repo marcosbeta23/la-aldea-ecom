@@ -375,9 +375,9 @@ export default function Home() {
         <Header />
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden h-[600px] sm:h-[700px] md:h-screen flex items-center">
+        <section className="relative overflow-hidden min-h-screen flex items-center touch-pan-y">
           {/* Background Image */}
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 will-change-transform">
             <Image
               src="/assets/images/laaldeaedificio.webp"
               alt="La Aldea - Local en Tala"
