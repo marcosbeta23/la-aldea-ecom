@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Droplets, MessageCircle, Menu } from 'lucide-react';
 import CartWidget from '@/components/cart/CartWidget';
+import WishlistWidget from '@/components/cart/WishlistWidget';
 
 export default function Header() {
   const pathname = usePathname();
@@ -110,6 +111,17 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
+          {/* Wishlist Icon */}
+          <WishlistWidget 
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+              scrolled || !isHomepage
+                ? 'text-slate-600 hover:bg-slate-100' 
+                : 'text-white hover:bg-white/10'
+            }`}
+            iconClassName="h-5 w-5"
+            scrolled={scrolled || !isHomepage}
+          />
+
           {/* Cart Icon */}
           <CartWidget 
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${

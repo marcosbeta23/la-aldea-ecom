@@ -886,13 +886,6 @@ export default function Home() {
                   </a>
                 </div>
                 
-                {/* Optional: Link to detailed quote form (future /servicios page) */}
-                <p className="mt-6 text-sm text-blue-200">
-                  ¿Preferís un presupuesto por escrito?{" "}
-                  <Link href="/servicios" className="font-semibold underline hover:text-white">
-                    Completá el formulario aquí
-                  </Link>
-                </p>
               </div>
             </div>
           </div>
