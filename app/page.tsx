@@ -375,7 +375,7 @@ export default function Home() {
         <Header />
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden h-screen flex items-center">
+        <section className="relative overflow-hidden h-[100lvh] flex items-center">
           {/* Background Image */}
           <div className="absolute inset-0">
             <Image
