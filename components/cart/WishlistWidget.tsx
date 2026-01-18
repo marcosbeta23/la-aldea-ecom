@@ -28,13 +28,13 @@ export default function WishlistWidget({
       
       {itemCount > 0 && (
         <span 
-          className={`absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+          className={`absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-xs font-bold transition-colors ${
             scrolled 
               ? 'bg-pink-500 text-white' 
               : 'bg-white text-pink-500'
           }`}
         >
-          {itemCount}
+          {itemCount > 99 ? '99+' : itemCount}
         </span>
       )}
     </Link>
