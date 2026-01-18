@@ -46,7 +46,7 @@ export default function Header() {
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+        <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80" aria-label="La Aldea - Ir a página de inicio">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/25">
             <Droplets className="h-6 w-6 text-white" />
           </div>
@@ -114,6 +114,7 @@ export default function Header() {
                 ? 'text-slate-600 hover:bg-slate-100' 
                 : 'text-white hover:bg-white/10'
             }`}
+            aria-label="Carrito de compras (0 productos)"
           >
             <ShoppingCart className="h-5 w-5" />
             <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
@@ -139,6 +140,7 @@ export default function Header() {
                 ? 'text-slate-600 hover:bg-slate-100' 
                 : 'text-white hover:bg-white/10'
             }`}
+            aria-label="Abrir menú de navegación"
           >
             <Menu className="h-5 w-5" />
           </button>
