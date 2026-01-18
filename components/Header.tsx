@@ -197,61 +197,94 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 top-[64px] lg:top-[80px] bg-white z-[45] lg:hidden overflow-y-auto">
-          <nav className="flex flex-col p-4 space-y-2 bg-white min-h-full">
-            <Link 
-              href="/" 
-              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
+      {/* Mobile Menu Dropdown */}
+      <div 
+        className={`
+          lg:hidden absolute left-0 right-0 top-full w-full
+          bg-white shadow-lg border-t border-slate-200
+          transition-all duration-300 ease-in-out
+          ${mobileMenuOpen 
+            ? 'opacity-100 translate-y-0 pointer-events-auto' 
+            : 'opacity-0 -translate-y-4 pointer-events-none'
+          }
+        `}
+        style={{ maxHeight: mobileMenuOpen ? 'calc(100vh - 64px)' : '0' }}
+      >
+        <nav className="flex flex-col overflow-y-auto" style={{ maxHeight: 'calc(100vh - 64px)' }}>
+          <Link 
+            href="/" 
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
+              pathname === '/' 
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            Inicio
+          </Link>
+          <Link 
+            href="/productos" 
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
+              pathname.startsWith('/productos')
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            Productos
+          </Link>
+          <Link 
+            href="/cart" 
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
+              pathname === '/cart'
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            Carrito
+          </Link>
+          <Link 
+            href="/wishlist" 
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
+              pathname === '/wishlist'
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            Lista de Deseos
+          </Link>
+          <Link 
+            href="/faq" 
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
+              pathname === '/faq'
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            Preguntas Frecuentes
+          </Link>
+          <Link 
+            href="/contacto" 
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
+              pathname === '/contacto'
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            Contacto
+          </Link>
+          
+          <div className="p-6">
+            <a
+              href="https://wa.me/59892744725"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 text-base font-medium text-white shadow-lg transition-all hover:bg-green-600"
             >
-              Inicio
-            </Link>
-            <Link 
-              href="/productos" 
-              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
-            >
-              Productos
-            </Link>
-            <Link 
-              href="/cart" 
-              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
-            >
-              Carrito
-            </Link>
-            <Link 
-              href="/wishlist" 
-              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
-            >
-              Lista de Deseos
-            </Link>
-            <Link 
-              href="/faq" 
-              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
-            >
-              Preguntas Frecuentes
-            </Link>
-            <Link 
-              href="/contacto" 
-              className="px-4 py-3 text-base font-medium rounded-lg transition-colors text-slate-900 hover:bg-slate-100"
-            >
-              Contacto
-            </Link>
-            
-            <div className="pt-4 border-t border-slate-200">
-              <a
-                href="https://wa.me/59892744725"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 text-base font-medium text-white shadow-lg transition-all hover:bg-green-600"
-              >
-                <MessageCircle className="h-5 w-5" />
-                Contactar por WhatsApp
-              </a>
-            </div>
-          </nav>
-        </div>
-      )}
+              <MessageCircle className="h-5 w-5" />
+              Contactar por WhatsApp
+            </a>
+          </div>
+        </nav>
+      </div>
     </header>
   );
 }

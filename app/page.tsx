@@ -375,7 +375,7 @@ export default function Home() {
         <Header />
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden h-[100lvh] flex items-center">
+        <section className="relative overflow-hidden h-[600px] sm:h-[700px] md:h-screen flex items-center">
           {/* Background Image */}
           <div className="absolute inset-0">
             <Image
@@ -384,6 +384,8 @@ export default function Home() {
               fill
               className="object-cover object-[center_40%]"
               priority
+              sizes="100vw"
+              quality={90}
             />
             {/* Overlay with gradient for text readability */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
