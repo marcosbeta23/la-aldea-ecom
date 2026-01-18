@@ -1,0 +1,4 @@
+# This folder contains TypeScript type definitions
+# - database.ts (Supabase table types)
+# - cart.ts (Cart state types)
+# - api.ts (API request/response types)

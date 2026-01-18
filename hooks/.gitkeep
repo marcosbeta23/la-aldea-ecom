@@ -1,0 +1,4 @@
+# This folder contains custom React hooks
+# - useCart.ts (cart state management with Zustand)
+# - useProducts.ts (product fetching)
+# - useLocalStorage.ts (persistent state)

@@ -1,0 +1,5 @@
+# This folder contains reusable React components
+# - ui/ (Button, Input, Card, etc.)
+# - layout/ (Header, Footer, Navigation)
+# - products/ (ProductCard, ProductGrid, etc.)
+# - cart/ (CartDrawer, CartItem, etc.)
