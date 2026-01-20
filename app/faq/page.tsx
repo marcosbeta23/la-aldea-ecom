@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     description: 'Respondemos tus dudas sobre bombas de agua, sistemas de riego, instalaciones hidráulicas, envíos y más.',
     type: 'website',
   },
+  alternates: {
+    canonical: 'https://laaldeatala.com.uy/faq',
+  },
 };
 
 // FAQ data organized by category
@@ -238,7 +241,7 @@ export default function FAQPage() {
                   href="https://wa.me/59892744725"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-colors"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-green-800 font-semibold rounded-xl hover:bg-green-50 transition-colors"
                 >
                   <MessageCircle className="h-5 w-5" />
                   WhatsApp

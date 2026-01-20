@@ -15,6 +15,9 @@ export const metadata: Metadata = {
     description: 'Catálogo completo de bombas de agua, sistemas de riego, insumos agrícolas, herramientas y más.',
     type: 'website',
   },
+  alternates: {
+    canonical: 'https://laaldeatala.com.uy/productos',
+  },
 };
 
 // Revalidate every 5 minutes
