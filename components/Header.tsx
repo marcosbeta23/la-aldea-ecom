@@ -128,9 +128,10 @@ export default function Header() {
             Preguntas Frecuentes
           </Link>
           <Link 
-            href="/contacto" 
+            href="/#contacto"
+            scroll={false}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              pathname === '/contacto'
+              (pathname === '/' && typeof window !== 'undefined' && window.location.hash === '#contacto')
                 ? (scrolled || !isHomepage || mobileMenuOpen
                     ? 'text-blue-600 bg-blue-50'
                     : 'text-white bg-white/10')
@@ -172,7 +173,7 @@ export default function Header() {
             href="https://wa.me/59892744725"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-green-500/25 transition-all hover:bg-green-600 hover:shadow-xl hover:shadow-green-500/30"
+            className="hidden sm:flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-green-700/25 transition-all hover:bg-green-800 hover:shadow-xl hover:shadow-green-700/30"
           >
             <MessageCircle className="h-4 w-4" />
             WhatsApp
@@ -262,9 +263,10 @@ export default function Header() {
             Preguntas Frecuentes
           </Link>
           <Link 
-            href="/contacto" 
+            href="/#contacto"
+            scroll={false}
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname === '/contacto'
+              (pathname === '/' && typeof window !== 'undefined' && window.location.hash === '#contacto')
                 ? 'text-blue-600 bg-blue-50' 
                 : 'text-slate-900 hover:bg-slate-50'
             }`}

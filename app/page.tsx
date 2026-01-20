@@ -869,7 +869,7 @@ export default async function Home() {
         </section>
 
         {/* Contact CTA Section */}
-        <section className="py-20 md:py-28">
+        <section id="contacto" className="py-20 md:py-28">
           <div className="container mx-auto px-4">
             <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-8 text-center md:p-16">
               <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
