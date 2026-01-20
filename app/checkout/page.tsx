@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
+import { trackBeginCheckout } from '@/components/Analytics';
 
 interface CouponData {
   code: string;
@@ -35,6 +36,7 @@ export default function CheckoutPage() {
     department: '',
     notes: '',
     shippingMethod: 'pickup' as 'pickup' | 'delivery',
+    paymentMethod: 'mercadopago' as 'mercadopago' | 'transfer',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -42,6 +44,21 @@ export default function CheckoutPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Track begin_checkout event once items are loaded
+  useEffect(() => {
+    if (mounted && items.length > 0) {
+      trackBeginCheckout(
+        items.map((item) => ({
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price_numeric,
+          quantity: item.quantity,
+        })),
+        getSubtotal()
+      );
+    }
+  }, [mounted, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Format price
   const formatPrice = (price: number) => {
@@ -160,6 +177,7 @@ export default function CheckoutPage() {
             shipping_type: formData.shippingMethod,
             shipping_cost: shippingCost,
             notes: formData.notes || undefined,
+            payment_method: formData.paymentMethod,
           },
           items: items.map((item) => ({
             id: item.product.id,
@@ -175,12 +193,18 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Error al crear el pedido');
       }
 
-      // If MP preference URL is returned, redirect to payment
-      if (data.init_point) {
+      // Handle redirect based on payment method
+      if (formData.paymentMethod === 'transfer') {
+        // Bank transfer: redirect to pending page with order info
         clearCart();
-        window.location.href = data.init_point;
+        router.push(`/pendiente?order=${data.order_number}&method=transfer`);
+      } else if (data.init_point) {
+        // MercadoPago: redirect to processing page first
+        clearCart();
+        const processingUrl = `/procesando?redirect=${encodeURIComponent(data.init_point)}&order=${data.order_number}&method=mercadopago`;
+        router.push(processingUrl);
       } else {
-        // Otherwise, redirect to success page
+        // Fallback: redirect to success page
         clearCart();
         router.push(`/pedido/${data.order_number}?success=true`);
       }
@@ -452,6 +476,80 @@ export default function CheckoutPage() {
                     placeholder="Instrucciones especiales, horarios de entrega, etc."
                   />
                 </div>
+
+                {/* Payment Method */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                  <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-blue-600" />
+                    Método de pago
+                  </h2>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, paymentMethod: 'mercadopago' })}
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                        formData.paymentMethod === 'mercadopago'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <CreditCard className={`h-5 w-5 ${formData.paymentMethod === 'mercadopago' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <div>
+                          <p className="font-medium text-slate-900">MercadoPago</p>
+                          <p className="text-xs text-slate-500">Tarjeta, débito o billetera</p>
+                        </div>
+                      </div>
+                      {formData.paymentMethod === 'mercadopago' && (
+                        <Check className="h-5 w-5 text-blue-600 mt-2" />
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, paymentMethod: 'transfer' })}
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                        formData.paymentMethod === 'transfer'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Building2 className={`h-5 w-5 ${formData.paymentMethod === 'transfer' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <div>
+                          <p className="font-medium text-slate-900">Transferencia</p>
+                          <p className="text-xs text-slate-500">Transferencia bancaria</p>
+                        </div>
+                      </div>
+                      {formData.paymentMethod === 'transfer' && (
+                        <Check className="h-5 w-5 text-blue-600 mt-2" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Bank Transfer Info */}
+                  {formData.paymentMethod === 'transfer' && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-amber-800 mb-2">Datos para transferencia:</p>
+                          <div className="space-y-1 text-amber-700">
+                            <p><span className="font-medium">Banco:</span> BROU</p>
+                            <p><span className="font-medium">Cuenta:</span> 001234567-00001</p>
+                            <p><span className="font-medium">Titular:</span> La Aldea</p>
+                            <p><span className="font-medium">RUT:</span> 21 123456 0001 19</p>
+                          </div>
+                          <p className="mt-3 text-amber-800">
+                            <strong>Importante:</strong> Tu pedido quedará en estado pendiente hasta que confirmemos el pago. 
+                            Enviá el comprobante por WhatsApp al <span className="font-medium">092 744 725</span>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Order Summary */}
@@ -595,14 +693,24 @@ export default function CheckoutPage() {
                     disabled={isSubmitting}
                     className="w-full flex items-center justify-center gap-2 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
                   >
-                    <CreditCard className="h-5 w-5" />
-                    {isSubmitting ? 'Procesando...' : 'Continuar al pago'}
+                    {formData.paymentMethod === 'transfer' ? (
+                      <Banknote className="h-5 w-5" />
+                    ) : (
+                      <CreditCard className="h-5 w-5" />
+                    )}
+                    {isSubmitting 
+                      ? 'Procesando...' 
+                      : formData.paymentMethod === 'transfer' 
+                        ? 'Confirmar pedido'
+                        : 'Continuar al pago'}
                   </button>
 
                   {/* Trust badges */}
                   <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
                     <ShieldCheck className="h-4 w-4 text-green-500" />
-                    Pago seguro con MercadoPago
+                    {formData.paymentMethod === 'transfer' 
+                      ? 'Pedido seguro • Confirmación por WhatsApp' 
+                      : 'Pago seguro con MercadoPago'}
                   </div>
                 </div>
               </div>

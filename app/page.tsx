@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
+import { supabaseAdmin } from "@/lib/supabase";
+import type { Product } from "@/types/database";
 import { 
   Droplets, 
   Wrench, 
@@ -289,42 +291,6 @@ const features = [
   },
 ];
 
-// Featured/Popular Products (placeholder until we fetch from Supabase)
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Bomba Sumergible 1HP",
-    category: "Hidráulica",
-    price: "UYU 8.500",
-    badge: "Más Vendido",
-    color: "from-blue-400 to-blue-600",
-  },
-  {
-    id: 2,
-    name: "Kit Riego por Goteo 100m",
-    category: "Riego",
-    price: "UYU 4.200",
-    badge: "Popular",
-    color: "from-green-400 to-green-600",
-  },
-  {
-    id: 3,
-    name: "Filtro Gianni 3 Etapas",
-    category: "Filtros",
-    price: "UYU 6.800",
-    badge: "Recomendado",
-    color: "from-teal-400 to-teal-600",
-  },
-  {
-    id: 4,
-    name: "Tanque Rotoplas 1000L",
-    category: "Tanques",
-    price: "UYU 12.500",
-    badge: "Destacado",
-    color: "from-cyan-400 to-cyan-600",
-  },
-];
-
 // Services for lead generation
 const services = [
   {
@@ -361,7 +327,40 @@ const stats = [
   { value: "19", label: "Departamentos Cubiertos" },
 ];
 
-export default function Home() {
+// Helper to get badge based on product properties
+function getProductBadge(product: Product): string {
+  if (product.sold_count >= 20) return "Más Vendido";
+  if (product.sold_count >= 10) return "Popular";
+  if (product.stock <= 5 && product.stock > 0) return "Últimas Unidades";
+  return "Destacado";
+}
+
+// Helper to get gradient color based on category
+function getCategoryColor(category: string | null): string {
+  const colors: Record<string, string> = {
+    "Bombas": "from-blue-400 to-blue-600",
+    "Riego": "from-green-400 to-green-600",
+    "Filtros": "from-teal-400 to-teal-600",
+    "Tanques": "from-cyan-400 to-cyan-600",
+    "Piscinas": "from-sky-400 to-sky-600",
+    "Químicos": "from-purple-400 to-purple-600",
+    "Herramientas": "from-orange-400 to-orange-600",
+  };
+  return colors[category || ""] || "from-blue-400 to-blue-600";
+}
+
+export default async function Home() {
+  // Fetch featured products from database (best sellers first)
+  const { data } = await supabaseAdmin
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .gt('stock', 0)
+    .order('sold_count', { ascending: false })
+    .limit(4);
+  
+  const featuredProducts = (data || []) as Product[];
+
   return (
     <>
       {/* JSON-LD Schema */}
@@ -482,26 +481,38 @@ export default function Home() {
                 {featuredProducts.map((product) => (
                   <Link
                     key={product.id}
-                    href={`/productos/${product.id}`}
+                    href={`/productos/${product.sku}`}
                     className="group relative flex-shrink-0 w-52 lg:w-auto overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg"
                   >
                     {/* Badge */}
                     <div className="absolute left-2 top-2 z-10 rounded-full bg-white/90 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-slate-700">
-                      {product.badge}
+                      {getProductBadge(product)}
                     </div>
                     
-                    {/* Gradient placeholder instead of image */}
-                    <div className={`aspect-[4/3] overflow-hidden bg-gradient-to-br ${product.color} flex items-center justify-center`}>
-                      <Droplets className="h-12 w-12 text-white/40" />
+                    {/* Product Image or Gradient Fallback */}
+                    <div className={`aspect-[4/3] overflow-hidden ${product.images?.[0] ? 'bg-white' : `bg-gradient-to-br ${getCategoryColor(product.category)}`} flex items-center justify-center`}>
+                      {product.images?.[0] ? (
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          width={300}
+                          height={225}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <Droplets className="h-12 w-12 text-white/40" />
+                      )}
                     </div>
                     
                     {/* Content - more compact */}
                     <div className="p-3">
-                      <p className="text-[10px] font-medium text-blue-600">{product.category}</p>
+                      <p className="text-[10px] font-medium text-blue-600">{product.category || 'Producto'}</p>
                       <h3 className="mt-0.5 text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                         {product.name}
                       </h3>
-                      <p className="mt-1 text-base font-bold text-slate-900">{product.price}</p>
+                      <p className="mt-1 text-base font-bold text-slate-900">
+                        {product.currency} {product.price_numeric.toLocaleString('es-UY')}
+                      </p>
                     </div>
                   </Link>
                 ))}

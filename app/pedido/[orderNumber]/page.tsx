@@ -5,6 +5,7 @@ import { CheckCircle, Package, Mail, ArrowRight, Home, Clock, MapPin } from 'luc
 import { supabaseAdmin } from '@/lib/supabase';
 import { Order, OrderItem } from '@/types/database';
 import Header from '@/components/Header';
+import PurchaseTracker from '@/components/common/PurchaseTracker';
 
 interface OrderPageProps {
   params: Promise<{ orderNumber: string }>;
@@ -60,6 +61,20 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   return (
     <>
       <Header />
+      {/* Track purchase event on success */}
+      {isSuccess && order.order_items && (
+        <PurchaseTracker
+          transactionId={order.order_number}
+          items={order.order_items.map((item) => ({
+            id: item.product_id,
+            name: item.product_name,
+            price: item.unit_price,
+            quantity: item.quantity,
+          }))}
+          total={order.total}
+          shipping={order.shipping_cost}
+        />
+      )}
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">

@@ -132,6 +132,9 @@ export async function POST(request: NextRequest) {
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     const order_number = `LA-${timestamp}-${random}`;
     
+    // Determine payment method
+    const paymentMethod = customer.payment_method || 'mercadopago';
+    
     // 7️⃣ CREATE ORDER IN DATABASE
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
@@ -151,6 +154,7 @@ export async function POST(request: NextRequest) {
         coupon_code: validatedCoupon?.code || null,
         total: finalTotal, // THIS is the amount that matters
         status: 'pending',
+        payment_method: paymentMethod,
       } as any)
       .select()
       .single();
@@ -183,7 +187,31 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 9️⃣ CREATE MERCADOPAGO PREFERENCE
+    // ✅ INCREMENT COUPON USAGE (before payment processing)
+    if (validatedCoupon) {
+      await supabaseAdmin
+        .from('discount_coupons')
+        // @ts-expect-error - Supabase type inference issue
+        .update({ 
+          current_uses: (validatedCoupon.current_uses || 0) + 1 
+        })
+        .eq('id', validatedCoupon.id);
+    }
+    
+    // 9️⃣ HANDLE PAYMENT METHOD
+    if (paymentMethod === 'transfer') {
+      // Bank transfer: no MercadoPago, return order info only
+      console.log('🏦 Bank transfer order created:', (order as any).order_number);
+      
+      return NextResponse.json({
+        success: true,
+        order_id: (order as any).id,
+        order_number: (order as any).order_number,
+        payment_method: 'transfer',
+      });
+    }
+    
+    // MercadoPago flow
     // Use APP_URL for server-side (NEXT_PUBLIC_URL only works client-side)
     const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
     const isLocalhost = appUrl.includes('localhost') || appUrl.includes('127.0.0.1');
@@ -260,17 +288,6 @@ export async function POST(request: NextRequest) {
     
     if (updateError) {
       console.error('Failed to update order with preference ID:', updateError);
-    }
-    
-    // ✅ INCREMENT COUPON USAGE
-    if (validatedCoupon) {
-      await supabaseAdmin
-        .from('discount_coupons')
-        // @ts-expect-error - Supabase type inference issue
-        .update({ 
-          current_uses: (validatedCoupon.current_uses || 0) + 1 
-        })
-        .eq('id', validatedCoupon.id);
     }
     
     // ✅ RETURN RESPONSE

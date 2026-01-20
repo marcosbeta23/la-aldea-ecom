@@ -92,15 +92,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const reviews = (reviewsData || []) as ProductReview[];
 
   // Fetch related products (same category)
-  const { data: relatedData } = await supabaseAdmin
-    .from('products')
-    .select('*')
-    .eq('category', product.category)
-    .eq('is_active', true)
-    .neq('id', product.id)
-    .limit(4);
-
-  const relatedProducts = (relatedData || []) as Product[];
+  let relatedProducts: Product[] = [];
+  if (product.category) {
+    const { data: relatedData } = await supabaseAdmin
+      .from('products')
+      .select('*')
+      .eq('category', product.category)
+      .eq('is_active', true)
+      .neq('id', product.id)
+      .limit(4);
+    relatedProducts = (relatedData || []) as Product[];
+  }
 
   // Calculate average rating
   const avgRating =
@@ -163,7 +165,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             items={[
               { name: 'Inicio', url: '/' },
               { name: 'Productos', url: '/productos' },
-              { name: product.category, url: `/productos?categoria=${encodeURIComponent(product.category)}` },
+              ...(product.category ? [{ name: product.category, url: `/productos?categoria=${encodeURIComponent(product.category)}` }] : []),
               { name: product.name },
             ]}
           />

@@ -18,6 +18,7 @@ export const CreateOrderSchema = z.object({
     shipping_type: z.enum(['standard', 'express', 'pickup']).optional().default('standard'),
     shipping_cost: z.number().min(0, 'Shipping cost cannot be negative').optional().default(0),
     notes: z.string().max(500, 'Notes too long').optional(),
+    payment_method: z.enum(['mercadopago', 'transfer']).optional().default('mercadopago'),
   }),
   items: z.array(
     z.object({

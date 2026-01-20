@@ -67,9 +67,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {product.is_featured && (
+          {product.sold_count >= 10 && (
             <span className="px-2.5 py-1 text-xs font-semibold bg-amber-500 text-white rounded-full">
-              Destacado
+              Popular
             </span>
           )}
           {!inStock && (

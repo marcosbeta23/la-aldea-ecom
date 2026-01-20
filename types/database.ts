@@ -5,17 +5,14 @@ export interface Product {
   sku: string;
   name: string;
   description: string | null;
-  category: string;
-  subcategory: string | null;
+  category: string | null;
   brand: string | null;
-  price_display: string;
   price_numeric: number;
+  currency: string;
   stock: number;
+  sold_count: number;
   images: string[];
-  specs: Record<string, string> | null;
-  tags: string[];
   is_active: boolean;
-  is_featured: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -148,7 +145,7 @@ export interface Database {
       orders: {
         Row: Order;
         Insert: Omit<Order, 'id' | 'created_at' | 'updated_at' | 'order_items'>;
-        Update: Partial<Omit<Order, 'id' | 'created_at' | 'updated_at' | 'order_items'>>;
+        Update: Partial<Pick<Order, 'status' | 'updated_at' | 'notes' | 'shipping_address' | 'shipping_city' | 'shipping_department' | 'mp_payment_id' | 'payment_method'>>;
       };
       order_items: {
         Row: OrderItem;

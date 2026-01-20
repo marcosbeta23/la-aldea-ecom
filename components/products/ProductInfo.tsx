@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
+import { trackViewItem, trackAddToCart } from '@/components/Analytics';
 
 interface ProductInfoProps {
   product: Product;
@@ -24,11 +25,32 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
   const inStock = product.stock > 0;
   const lowStock = product.stock > 0 && product.stock <= 5;
 
+  // Track view_item event on mount
+  useEffect(() => {
+    trackViewItem({
+      id: product.id,
+      name: product.name,
+      price: product.price_numeric,
+      category: product.category || undefined,
+      brand: product.brand || undefined,
+    });
+  }, [product.id, product.name, product.price_numeric, product.category, product.brand]);
+
   const handleAddToCart = () => {
     if (!inStock) return;
     
     setIsAdding(true);
     addItem(product, quantity);
+    
+    // Track add_to_cart event
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price_numeric,
+      quantity: quantity,
+      category: product.category || undefined,
+      brand: product.brand || undefined,
+    });
     
     setTimeout(() => {
       setIsAdding(false);
@@ -95,21 +117,6 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
         <div className="mb-6">
           <h2 className="text-sm font-semibold text-slate-900 mb-2">Descripción</h2>
           <p className="text-slate-600 leading-relaxed">{product.description}</p>
-        </div>
-      )}
-
-      {/* Specs */}
-      {product.specs && Object.keys(product.specs).length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-sm font-semibold text-slate-900 mb-2">Especificaciones</h2>
-          <dl className="grid grid-cols-2 gap-2">
-            {Object.entries(product.specs).map(([key, value]) => (
-              <div key={key} className="flex flex-col">
-                <dt className="text-xs text-slate-500">{key}</dt>
-                <dd className="text-sm font-medium text-slate-900">{value}</dd>
-              </div>
-            ))}
-          </dl>
         </div>
       )}
 

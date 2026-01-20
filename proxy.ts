@@ -32,9 +32,15 @@ export function proxy(request: NextRequest) {
 
   // 2. Admin panel protection
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    const adminPassword = request.cookies.get('admin-session');
+    // Skip login page
+    if (request.nextUrl.pathname === '/admin/login') {
+      return NextResponse.next();
+    }
     
-    if (!adminPassword) {
+    const adminToken = request.cookies.get('admin_token');
+    
+    // Check if token matches secret
+    if (!adminToken || adminToken.value !== process.env.ADMIN_SESSION_SECRET) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }

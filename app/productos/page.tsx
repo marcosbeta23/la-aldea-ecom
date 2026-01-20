@@ -117,7 +117,9 @@ async function getFilterOptions() {
     .eq('is_active', true);
 
   const categoryCounts = ((categoriesData || []) as Pick<Product, 'category'>[]).reduce((acc: Record<string, number>, item) => {
-    acc[item.category] = (acc[item.category] || 0) + 1;
+    if (item.category) {
+      acc[item.category] = (acc[item.category] || 0) + 1;
+    }
     return acc;
   }, {});
 
