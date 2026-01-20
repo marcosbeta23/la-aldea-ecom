@@ -6,7 +6,8 @@ import { couponsLimiter } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   // ⚡ RATE LIMITING - Max 10 validations per minute per IP
-  const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? 'anonymous';
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'anonymous';
   
   try {
     await couponsLimiter.check(10, ip);
