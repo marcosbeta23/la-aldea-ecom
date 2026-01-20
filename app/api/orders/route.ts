@@ -252,10 +252,14 @@ export async function POST(request: NextRequest) {
     console.log('✅ MercadoPago preference created:', mpData.id);
     
     // 🔟 UPDATE ORDER WITH PREFERENCE ID
-    await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from('orders')
-      .update({ mp_preference_id: mpData.id } as any)
+      .update({ mp_preference_id: mpData.id })
       .eq('id', (order as any).id);
+    
+    if (updateError) {
+      console.error('Failed to update order with preference ID:', updateError);
+    }
     
     // ✅ INCREMENT COUPON USAGE
     if (validatedCoupon) {
@@ -263,7 +267,7 @@ export async function POST(request: NextRequest) {
         .from('discount_coupons')
         .update({ 
           current_uses: (validatedCoupon.current_uses || 0) + 1 
-        } as any)
+        })
         .eq('id', validatedCoupon.id);
     }
     
