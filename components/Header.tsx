@@ -127,21 +127,39 @@ export default function Header() {
           >
             Preguntas Frecuentes
           </Link>
-          <Link 
-            href="/#contacto"
-            scroll={false}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              (pathname === '/' && typeof window !== 'undefined' && window.location.hash === '#contacto')
-                ? (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-white bg-white/10')
-                : (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                    : 'text-white/90 hover:bg-white/10')
-            }`}
-          >
-            Contacto
-          </Link>
+          {isHomepage ? (
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('contacto');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                (typeof window !== 'undefined' && window.location.hash === '#contacto')
+                  ? (scrolled || mobileMenuOpen
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-white bg-white/10')
+                  : (scrolled || mobileMenuOpen
+                      ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                      : 'text-white/90 hover:bg-white/10')
+              }`}
+            >
+              Contacto
+            </button>
+          ) : (
+            <Link
+              href="/#contacto"
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                scrolled || mobileMenuOpen
+                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                  : 'text-white/90 hover:bg-white/10'
+              }`}
+            >
+              Contacto
+            </Link>
+          )}
         </nav>
 
         {/* Actions */}
