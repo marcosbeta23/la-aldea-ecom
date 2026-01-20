@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { z } from 'zod';
+import type { Database } from '@/types/database';
 
 // Zod schema for address validation
 const AddressSchema = z.object({
@@ -93,14 +94,20 @@ export async function POST(request: NextRequest) {
 
     // If setting as default, unset other defaults first
     if (is_default) {
-      await supabaseAdmin
+      const { error: unsetError } = await supabaseAdmin
         .from('addresses')
-        .update({ is_default: false } as never)
+        // @ts-expect-error - Supabase type inference issue with addresses table
+        .update({ is_default: false })
         .eq('customer_email', customer_email.toLowerCase());
+      
+      if (unsetError) {
+        console.error('Error unsetting default addresses:', unsetError);
+      }
     }
 
     const { data, error } = await supabaseAdmin
       .from('addresses')
+      // @ts-expect-error - Supabase type inference issue with addresses table
       .insert({
         customer_email: customer_email.toLowerCase(),
         customer_name,
@@ -110,7 +117,7 @@ export async function POST(request: NextRequest) {
         postal_code: postal_code || null,
         additional_info: additional_info || null,
         is_default: is_default || false,
-      } as never)
+      })
       .select()
       .single();
 

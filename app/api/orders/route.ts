@@ -254,6 +254,7 @@ export async function POST(request: NextRequest) {
     // 🔟 UPDATE ORDER WITH PREFERENCE ID
     const { error: updateError } = await supabaseAdmin
       .from('orders')
+      // @ts-expect-error - Supabase type inference issue
       .update({ mp_preference_id: mpData.id })
       .eq('id', (order as any).id);
     
@@ -265,6 +266,7 @@ export async function POST(request: NextRequest) {
     if (validatedCoupon) {
       await supabaseAdmin
         .from('discount_coupons')
+        // @ts-expect-error - Supabase type inference issue
         .update({ 
           current_uses: (validatedCoupon.current_uses || 0) + 1 
         })

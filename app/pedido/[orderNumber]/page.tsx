@@ -93,7 +93,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               <div className="p-6 border-b border-slate-200">
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${
-                    order.status === 'completed' ? 'bg-green-500' :
+                    order.status === 'delivered' ? 'bg-green-500' :
                     order.status === 'processing' ? 'bg-blue-500' :
                     order.status === 'shipped' ? 'bg-purple-500' :
                     'bg-yellow-500'
@@ -101,7 +101,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <div>
                     <p className="font-medium text-slate-900">
                       Estado: {
-                        order.status === 'completed' ? 'Completado' :
+                        order.status === 'delivered' ? 'Entregado' :
                         order.status === 'processing' ? 'En proceso' :
                         order.status === 'shipped' ? 'Enviado' :
                         order.status === 'cancelled' ? 'Cancelado' :
@@ -140,7 +140,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <div>
                     <p className="text-slate-500">Método de entrega</p>
                     <p className="font-medium text-slate-900">
-                      {order.shipping_method === 'pickup' ? 'Retiro en local' : 'Envío a domicilio'}
+                      {order.shipping_type === 'pickup' ? 'Retiro en local' : 'Envío a domicilio'}
                     </p>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                     </span>
                     <span>
                       Procesaremos tu pedido y te notificaremos cuando esté listo
-                      {order.shipping_method === 'pickup' ? ' para retirar.' : ' para enviar.'}
+                      {order.shipping_type === 'pickup' ? ' para retirar.' : ' para enviar.'}
                     </span>
                   </li>
                   <li className="flex items-start gap-3">

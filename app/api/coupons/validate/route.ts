@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const coupon = data as DiscountCoupon;
 
     // Check expiration
-    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+    if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
       return NextResponse.json(
         { error: 'Este cupón ha expirado' },
         { status: 400 }
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check usage limit
-    if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+    if (coupon.max_uses && coupon.current_uses >= coupon.max_uses) {
       return NextResponse.json(
         { error: 'Este cupón ya alcanzó su límite de uso' },
         { status: 400 }
@@ -70,9 +70,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check minimum purchase
-    if (coupon.minimum_purchase && subtotal < coupon.minimum_purchase) {
+    if (coupon.min_purchase_amount && subtotal < coupon.min_purchase_amount) {
       return NextResponse.json(
-        { error: `Compra mínima: $${coupon.minimum_purchase.toLocaleString()}` },
+        { error: `Compra mínima: $${coupon.min_purchase_amount.toLocaleString()}` },
         { status: 400 }
       );
     }
@@ -81,10 +81,6 @@ export async function POST(request: NextRequest) {
     let discountAmount = 0;
     if (coupon.discount_type === 'percentage') {
       discountAmount = (subtotal * coupon.discount_value) / 100;
-      // Apply max discount if set
-      if (coupon.max_discount && discountAmount > coupon.max_discount) {
-        discountAmount = coupon.max_discount;
-      }
     } else {
       // Fixed discount
       discountAmount = Math.min(coupon.discount_value, subtotal);

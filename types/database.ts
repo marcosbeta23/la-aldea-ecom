@@ -29,13 +29,12 @@ export interface Order {
   shipping_address: string | null;
   shipping_city: string | null;
   shipping_department: string | null;
-  shipping_method: 'pickup' | 'delivery';
+  shipping_type: 'standard' | 'express' | 'pickup';
   subtotal: number;
   discount_amount: number;
   shipping_cost: number;
   total: number;
   status: OrderStatus;
-  payment_status: PaymentStatus;
   payment_method: string | null;
   mp_preference_id: string | null;
   mp_payment_id: string | null;
@@ -49,18 +48,13 @@ export interface Order {
 }
 
 export type OrderStatus =
+  | 'draft'
   | 'pending'
   | 'paid'
   | 'processing'
   | 'shipped'
   | 'delivered'
-  | 'completed'
-  | 'cancelled';
-
-export type PaymentStatus =
-  | 'pending'
-  | 'paid'
-  | 'failed'
+  | 'cancelled'
   | 'refunded';
 
 export interface OrderItem {
@@ -68,11 +62,9 @@ export interface OrderItem {
   order_id: string;
   product_id: string;
   product_name: string;
-  product_sku: string;
   quantity: number;
   unit_price: number;
   subtotal: number;
-  created_at: string;
 }
 
 export interface ProductReview {
@@ -92,13 +84,14 @@ export interface DiscountCoupon {
   description: string | null;
   discount_type: 'percentage' | 'fixed';
   discount_value: number;
-  minimum_purchase: number;
-  max_discount: number | null;
-  usage_limit: number | null;
-  used_count: number;
-  expires_at: string | null;
+  min_purchase_amount: number;
+  max_uses: number | null;
+  current_uses: number;
+  valid_from: string;
+  valid_until: string | null;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface WishlistItem {
@@ -121,6 +114,7 @@ export interface Address {
   additional_info: string | null;
   is_default: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface InventoryLog {
@@ -166,10 +160,10 @@ export interface Database {
         Insert: Omit<ProductReview, 'id' | 'created_at'>;
         Update: Partial<Omit<ProductReview, 'id' | 'created_at'>>;
       };
-      coupons: {
+      discount_coupons: {
         Row: DiscountCoupon;
-        Insert: Omit<DiscountCoupon, 'id' | 'created_at'>;
-        Update: Partial<Omit<DiscountCoupon, 'id' | 'created_at'>>;
+        Insert: Omit<DiscountCoupon, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<DiscountCoupon, 'id' | 'created_at' | 'updated_at'>>;
       };
       wishlist_items: {
         Row: WishlistItem;
@@ -178,8 +172,8 @@ export interface Database {
       };
       addresses: {
         Row: Address;
-        Insert: Omit<Address, 'id' | 'created_at'>;
-        Update: Partial<Omit<Address, 'id' | 'created_at'>>;
+        Insert: Omit<Address, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Address, 'id' | 'created_at' | 'updated_at'>>;
       };
       inventory_log: {
         Row: InventoryLog;

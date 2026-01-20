@@ -88,13 +88,13 @@ export async function POST(request: NextRequest) {
       // Mark as fraud
       await supabaseAdmin
         .from('orders')
+        // @ts-expect-error - Supabase type inference issue
         .update({
-          status: 'fraud_detected',
-          payment_status: 'fraud',
+          status: 'cancelled',
           notes: `Payment amount mismatch. Expected: ${expectedAmount}, Paid: ${paidAmount}`,
           mp_payment_id: paymentId,
           meta: payment,
-        } as any)
+        })
         .eq('id', orderData.id);
       
       // TODO: Send alert to admin
@@ -135,7 +135,8 @@ export async function POST(request: NextRequest) {
             const newStock = Math.max(0, productData.stock - itemData.quantity);
             await supabaseAdmin
               .from('products')
-              .update({ stock: newStock } as any)
+              // @ts-expect-error - Supabase type inference issue
+              .update({ stock: newStock })
               .eq('id', itemData.product_id);
             
             console.log(`Stock updated for product ${itemData.product_id}: ${productData.stock} → ${newStock}`);
@@ -155,9 +156,10 @@ export async function POST(request: NextRequest) {
           const couponData: any = coupon;
           await supabaseAdmin
             .from('discount_coupons')
+            // @ts-expect-error - Supabase type inference issue
             .update({ 
               current_uses: (couponData.current_uses || 0) + 1 
-            } as any)
+            })
             .eq('code', orderData.coupon_code);
         }
       }
@@ -182,7 +184,8 @@ export async function POST(request: NextRequest) {
     // 8️⃣ UPDATE ORDER
     await supabaseAdmin
       .from('orders')
-      .update(updateData as any)
+      // @ts-expect-error - Supabase type inference issue
+      .update(updateData)
       .eq('id', orderData.id);
     
     // ALWAYS return 200 so MP doesn't retry

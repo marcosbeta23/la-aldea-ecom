@@ -7,7 +7,8 @@ import { reviewsLimiter } from '@/lib/rate-limit';
 // POST - Submit a new review
 export async function POST(request: NextRequest) {
   // ⚡ RATE LIMITING - Max 3 reviews per minute per IP
-  const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? 'anonymous';
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'anonymous';
   
   try {
     await reviewsLimiter.check(3, ip);

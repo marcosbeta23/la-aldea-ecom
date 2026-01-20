@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function PendientePage() {
+function PendienteContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id');
 
@@ -71,5 +71,17 @@ export default function PendientePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PendientePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600"></div>
+      </div>
+    }>
+      <PendienteContent />
+    </Suspense>
   );
 }
