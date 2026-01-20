@@ -1,0 +1,137 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
+import { z } from 'zod';
+
+// Zod schema for address validation
+const AddressSchema = z.object({
+  customer_email: z.string().email('Invalid email address'),
+  customer_name: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  street_address: z.string().min(5, 'Address must be at least 5 characters').max(200),
+  city: z.string().min(2, 'City is required').max(100),
+  department: z.string().min(2, 'Department is required').max(50),
+  postal_code: z.string().max(10).optional(),
+  additional_info: z.string().max(200).optional(),
+  is_default: z.boolean().optional().default(false),
+});
+
+// GET /api/addresses?email=xxx
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const email = searchParams.get('email');
+
+    if (!email) {
+      return NextResponse.json(
+        { success: false, error: 'Email required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    const emailValidation = z.string().email().safeParse(email);
+    if (!emailValidation.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    const { data: addresses, error } = await supabaseAdmin
+      .from('addresses')
+      .select('*')
+      .eq('customer_email', email.toLowerCase())
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Get addresses error:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch addresses' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: addresses || [] });
+  } catch (error) {
+    console.error('Get addresses error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch addresses' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/addresses
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    
+    // Validate input with Zod
+    const validation = AddressSchema.safeParse(body);
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Validation failed', 
+          details: validation.error.flatten().fieldErrors 
+        },
+        { status: 400 }
+      );
+    }
+
+    const {
+      customer_email,
+      customer_name,
+      street_address,
+      city,
+      department,
+      postal_code,
+      additional_info,
+      is_default,
+    } = validation.data;
+
+    // If setting as default, unset other defaults first
+    if (is_default) {
+      await supabaseAdmin
+        .from('addresses')
+        .update({ is_default: false } as never)
+        .eq('customer_email', customer_email.toLowerCase());
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('addresses')
+      .insert({
+        customer_email: customer_email.toLowerCase(),
+        customer_name,
+        street_address,
+        city,
+        department,
+        postal_code: postal_code || null,
+        additional_info: additional_info || null,
+        is_default: is_default || false,
+      } as never)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create address error:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to save address' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data,
+      message: 'Address saved successfully',
+    });
+  } catch (error) {
+    console.error('Create address error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to save address' },
+      { status: 500 }
+    );
+  }
+}

@@ -1,169 +1,342 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { Order, OrderItem } from '@/types/database';
+import { CreateOrderSchema } from '@/lib/validators';
+import { ordersLimiter } from '@/lib/rate-limit';
 
-// Generate order number
-function generateOrderNumber(): string {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `LA-${timestamp}-${random}`;
-}
+// 🔒 SECURE ORDER CREATION
+// This version NEVER trusts frontend prices
+// All calculations done server-side using database as source of truth
 
 export async function POST(request: NextRequest) {
+  // ⚡ RATE LIMITING - Max 5 orders per minute per IP
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'anonymous';
+  
+  try {
+    await ordersLimiter.check(5, ip);
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'Too many requests. Please try again in a minute.' },
+      { status: 429 }
+    );
+  }
   try {
     const body = await request.json();
-    const {
-      customer_name,
-      customer_email,
-      customer_phone,
-      shipping_address,
-      shipping_city,
-      shipping_department,
-      shipping_method,
-      shipping_cost,
-      notes,
-      coupon_code,
-      discount_amount,
-      subtotal,
-      total,
-      items,
-    } = body;
-
-    // Validate required fields
-    if (!customer_name || !customer_email || !customer_phone) {
+    
+    // 1️⃣ VALIDATE INPUT WITH ZOD
+    const validation = CreateOrderSchema.safeParse(body);
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Datos de cliente incompletos' },
+        { 
+          success: false, 
+          error: 'Validation failed', 
+          details: validation.error.flatten().fieldErrors 
+        },
         { status: 400 }
       );
     }
-
-    if (!items || items.length === 0) {
+    
+    const { items, couponCode, customer } = validation.data;
+    
+    // 2️⃣ FETCH PRODUCTS FROM DATABASE (source of truth)
+    const productIds = items.map((item: any) => item.id);
+    const { data: products, error: productsError } = await supabaseAdmin
+      .from('products')
+      .select('id, sku, name, price_numeric, stock, is_active')
+      .in('id', productIds);
+    
+    if (productsError || !products) {
       return NextResponse.json(
-        { error: 'El pedido debe tener al menos un producto' },
-        { status: 400 }
-      );
-    }
-
-    // Generate unique order number
-    const order_number = generateOrderNumber();
-
-    // Create order
-    const { data, error: orderError } = await supabaseAdmin
-      .from('orders')
-      .insert({
-        order_number,
-        customer_name,
-        customer_email,
-        customer_phone,
-        shipping_address,
-        shipping_city,
-        shipping_department,
-        shipping_method,
-        shipping_cost,
-        notes,
-        coupon_code,
-        discount_amount: discount_amount || 0,
-        subtotal,
-        total,
-        status: 'pending',
-        payment_status: 'pending',
-      } as any)
-      .select()
-      .single();
-
-    if (orderError || !data) {
-      console.error('Order creation error:', orderError);
-      return NextResponse.json(
-        { error: 'Error al crear el pedido' },
+        { success: false, error: 'Failed to fetch products' },
         { status: 500 }
       );
     }
-
-    const order = data as Order;
-
-    // Create order items
-    const orderItems = items.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.product_id,
-      product_name: item.product_name,
-      product_sku: item.product_sku,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      subtotal: item.subtotal,
+    
+    // 3️⃣ RECALCULATE TOTAL (DO NOT trust frontend prices)
+    let subtotal = 0;
+    const orderItems: any[] = [];
+    
+    for (const item of items) {
+      // Find product in database
+      const product: any = products.find((p: any) => p.id === item.id);
+      
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: `Product ${item.id} not found` },
+          { status: 404 }
+        );
+      }
+      
+      if (!product.is_active) {
+        return NextResponse.json(
+          { success: false, error: `Product ${product.name} is not available` },
+          { status: 400 }
+        );
+      }
+      
+      // Verify stock BEFORE creating order
+      if (product.stock < item.quantity) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `Insufficient stock for ${product.name}. Available: ${product.stock}` 
+          },
+          { status: 400 }
+        );
+      }
+      
+      // Calculate with DATABASE price (NOT frontend price)
+      const itemSubtotal = product.price_numeric * item.quantity;
+      subtotal += itemSubtotal;
+      
+      orderItems.push({
+        product_id: product.id,
+        product_name: product.name,
+        quantity: item.quantity,
+        unit_price: product.price_numeric, // Price from DB!
+        subtotal: itemSubtotal,
+      });
+    }
+    
+    // 4️⃣ VALIDATE COUPON (if provided)
+    let discountAmount = 0;
+    let validatedCoupon: any = null;
+    
+    if (couponCode) {
+      const couponResult = await validateCoupon(couponCode, subtotal);
+      
+      if (!couponResult.valid) {
+        return NextResponse.json(
+          { success: false, error: couponResult.error || 'Invalid coupon' },
+          { status: 400 }
+        );
+      }
+      
+      discountAmount = couponResult.discount_amount || 0;
+      validatedCoupon = couponResult.coupon;
+    }
+    
+    // 5️⃣ CALCULATE FINAL TOTAL
+    const finalTotal = subtotal - discountAmount;
+    
+    if (finalTotal <= 0) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid total amount' },
+        { status: 400 }
+      );
+    }
+    
+    // 6️⃣ GENERATE ORDER NUMBER
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const order_number = `LA-${timestamp}-${random}`;
+    
+    // 7️⃣ CREATE ORDER IN DATABASE
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from('orders')
+      .insert({
+        order_number: order_number,
+        customer_name: customer.name,
+        customer_email: customer.email || null,
+        customer_phone: customer.phone,
+        shipping_address: customer.shipping_address || null,
+        shipping_city: customer.shipping_city || null,
+        shipping_department: customer.shipping_department || null,
+        shipping_type: customer.shipping_type || 'standard',
+        shipping_cost: customer.shipping_cost || 0,
+        notes: customer.notes || null,
+        subtotal: subtotal,
+        discount_amount: discountAmount,
+        coupon_code: validatedCoupon?.code || null,
+        total: finalTotal, // THIS is the amount that matters
+        status: 'pending',
+      } as any)
+      .select()
+      .single();
+    
+    if (orderError || !order) {
+      console.error('Order creation failed:', orderError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to create order' },
+        { status: 500 }
+      );
+    }
+    
+    // 8️⃣ INSERT ORDER ITEMS
+    const itemsWithOrderId = orderItems.map((item: any) => ({
+      ...item,
+      order_id: (order as any).id,
     }));
-
+    
     const { error: itemsError } = await supabaseAdmin
       .from('order_items')
-      .insert(orderItems as any);
-
+      .insert(itemsWithOrderId as any);
+    
     if (itemsError) {
-      console.error('Order items error:', itemsError);
-      // Don't fail the whole order, items can be recovered
+      console.error('Order items creation failed:', itemsError);
+      // Rollback: delete order
+      await supabaseAdmin.from('orders').delete().eq('id', (order as any).id);
+      return NextResponse.json(
+        { success: false, error: 'Failed to create order items' },
+        { status: 500 }
+      );
     }
-
-    // Update coupon usage if used
-    if (coupon_code) {
-      try {
-        const { data: couponData } = await supabaseAdmin
-          .from('coupons')
-          .select('used_count')
-          .eq('code', coupon_code)
-          .single();
-        
-        if (couponData) {
-          const newCount = ((couponData as Record<string, number>).used_count || 0) + 1;
-          await (supabaseAdmin
-            .from('coupons') as any)
-            .update({ used_count: newCount })
-            .eq('code', coupon_code);
-        }
-      } catch (e) {
-        console.error('Coupon update error:', e);
-      }
+    
+    // 9️⃣ CREATE MERCADOPAGO PREFERENCE
+    // Use APP_URL for server-side (NEXT_PUBLIC_URL only works client-side)
+    const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
+    const isLocalhost = appUrl.includes('localhost') || appUrl.includes('127.0.0.1');
+    
+    const mpPayload: any = {
+      items: orderItems.map((item: any) => ({
+        id: item.product_id, // Use product_id instead of product_sku
+        title: item.product_name,
+        unit_price: Number(item.unit_price), // Price we calculated
+        quantity: item.quantity,
+        currency_id: 'UYU',
+      })),
+      external_reference: (order as any).id, // To find order in webhook
+      back_urls: {
+        success: `${appUrl}/gracias?order_id=${(order as any).id}`,
+        failure: `${appUrl}/error`,
+        pending: `${appUrl}/pendiente`,
+      },
+      notification_url: `${appUrl}/api/webhooks/mercadopago`,
+      payer: {
+        name: customer.name,
+        email: customer.email,
+        phone: { number: customer.phone },
+      },
+    };
+    
+    // Only add auto_return for production URLs (MercadoPago rejects localhost)
+    if (!isLocalhost) {
+      mpPayload.auto_return = 'approved';
     }
-
-    // Update product stock
-    for (const item of items) {
-      try {
-        const { data: productData } = await supabaseAdmin
-          .from('products')
-          .select('stock')
-          .eq('id', item.product_id)
-          .single();
-        
-        if (productData) {
-          const currentStock = (productData as Record<string, number>).stock || 0;
-          const newStock = Math.max(0, currentStock - item.quantity);
-          await (supabaseAdmin
-            .from('products') as any)
-            .update({ stock: newStock })
-            .eq('id', item.product_id);
-        }
-      } catch (e) {
-        console.error('Stock update error:', e);
-      }
+    
+    console.log('🔵 Creating MercadoPago preference with:', {
+      appUrl,
+      isLocalhost,
+      auto_return: mpPayload.auto_return || 'DISABLED (localhost)',
+      back_urls: mpPayload.back_urls,
+      items_count: mpPayload.items.length,
+      order_id: (order as any).id
+    });
+    
+    const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(mpPayload),
+    });
+    
+    if (!mpResponse.ok) {
+      const mpError = await mpResponse.json();
+      console.error('❌ MercadoPago error:', mpError);
+      console.error('❌ Request payload was:', mpPayload);
+      
+      // Rollback: delete order and items
+      await supabaseAdmin.from('order_items').delete().eq('order_id', (order as any).id);
+      await supabaseAdmin.from('orders').delete().eq('id', (order as any).id);
+      
+      return NextResponse.json(
+        { success: false, error: 'Payment gateway error' },
+        { status: 500 }
+      );
     }
-
-    // TODO: Create MercadoPago preference in Week 3
-    // For now, return order info without payment URL
-    // In Week 3, we'll add MP integration here
-
+    
+    const mpData = await mpResponse.json();
+    console.log('✅ MercadoPago preference created:', mpData.id);
+    
+    // 🔟 UPDATE ORDER WITH PREFERENCE ID
+    await supabaseAdmin
+      .from('orders')
+      .update({ mp_preference_id: mpData.id } as any)
+      .eq('id', (order as any).id);
+    
+    // ✅ INCREMENT COUPON USAGE
+    if (validatedCoupon) {
+      await supabaseAdmin
+        .from('discount_coupons')
+        .update({ 
+          current_uses: (validatedCoupon.current_uses || 0) + 1 
+        } as any)
+        .eq('id', validatedCoupon.id);
+    }
+    
+    // ✅ RETURN RESPONSE
     return NextResponse.json({
       success: true,
-      order_number: order.order_number,
-      order_id: order.id,
-      // payment_url will be added in Week 3
+      order_id: (order as any).id,
+      order_number: (order as any).order_number,
+      init_point: mpData.init_point,
+      preference_id: mpData.id,
     });
+    
   } catch (error) {
-    console.error('Order error:', error);
+    console.error('Unexpected error:', error);
     return NextResponse.json(
-      { error: 'Error al procesar el pedido' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// Get order by order number
+// Helper function to validate coupon
+async function validateCoupon(code: string, subtotal: number) {
+  const { data: coupon } = await supabaseAdmin
+    .from('discount_coupons')
+    .select('*')
+    .eq('code', code.toUpperCase())
+    .eq('is_active', true)
+    .single();
+  
+  if (!coupon) {
+    return { valid: false, error: 'Coupon not found' };
+  }
+  
+  const couponData: any = coupon;
+  
+  // Check expiration
+  if (couponData.valid_until && new Date(couponData.valid_until) < new Date()) {
+    return { valid: false, error: 'Coupon expired' };
+  }
+  
+  // Check minimum purchase
+  if (subtotal < couponData.min_purchase_amount) {
+    return { 
+      valid: false, 
+      error: `Minimum purchase amount: $${couponData.min_purchase_amount}` 
+    };
+  }
+  
+  // Check usage limit
+  if (couponData.max_uses && couponData.current_uses >= couponData.max_uses) {
+    return { valid: false, error: 'Coupon usage limit reached' };
+  }
+  
+  // Calculate discount
+  let discount_amount = 0;
+  if (couponData.discount_type === 'percentage') {
+    discount_amount = (subtotal * couponData.discount_value) / 100;
+  } else {
+    discount_amount = couponData.discount_value;
+  }
+  
+  // Don't allow discount greater than subtotal
+  discount_amount = Math.min(discount_amount, subtotal);
+  
+  return {
+    valid: true,
+    discount_amount,
+    coupon: couponData,
+  };
+}
+
+// GET order by order number
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -171,12 +344,11 @@ export async function GET(request: NextRequest) {
 
     if (!orderNumber) {
       return NextResponse.json(
-        { error: 'Número de orden requerido' },
+        { error: 'Order number required' },
         { status: 400 }
       );
     }
 
-    // Fetch order with items
     const { data: order, error } = await supabaseAdmin
       .from('orders')
       .select(`
@@ -188,7 +360,7 @@ export async function GET(request: NextRequest) {
 
     if (error || !order) {
       return NextResponse.json(
-        { error: 'Pedido no encontrado' },
+        { error: 'Order not found' },
         { status: 404 }
       );
     }
@@ -197,7 +369,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Get order error:', error);
     return NextResponse.json(
-      { error: 'Error al obtener el pedido' },
+      { error: 'Failed to get order' },
       { status: 500 }
     );
   }

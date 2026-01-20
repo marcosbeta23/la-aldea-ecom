@@ -10,36 +10,6 @@ E-commerce platform for La Aldea - Tala, Uruguay. Built with Next.js 16, TypeScr
 - **Hosting:** Vercel
 - **Analytics:** Google Analytics 4
 
-## 📋 Pre-Development Setup (COMPLETED ✅)
-
-### Card 1: Repository & Environment ✅
-- [x] Node.js v20.20.0 installed
-- [x] pnpm 10.28.0 installed
-- [x] Next.js 16.1.2 project initialized
-- [x] Git repository created and connected to GitHub
-- [x] VS Code extensions configured (ESLint, Prettier, Tailwind IntelliSense)
-
-### Card 2: Supabase Database ✅
-- [x] Supabase project created (laaldea-prod, São Paulo region)
-- [x] Complete database schema executed (9 tables)
-- [x] Row Level Security (RLS) policies enabled
-- [x] Test products inserted
-- [x] Connection verified
-
-### Card 3: MercadoPago Setup ✅
-- [x] Developer account created
-- [x] Test/sandbox credentials obtained
-- [x] Test users created (TESTUSER3327, TESTUSER5624)
-- [x] Payment flow tested successfully (Operation #141682243149)
-- [x] Preference creation script working (`test-mp.js`)
-
-### Card 4: Environment Variables ✅
-- [x] `.env.local` created with all credentials
-- [x] `.env.example` template created (safe for git)
-- [x] `.gitignore` configured to exclude sensitive files
-- [x] Environment variables validated with `test-env.js`
-- [x] All critical variables loading successfully
-
 ## 🔧 Getting Started
 
 ### Prerequisites
@@ -130,38 +100,6 @@ la-aldea-ecom/
 - Keep `SUPABASE_SERVICE_ROLE_KEY` and `MP_ACCESS_TOKEN` server-side only
 - Rotate keys immediately if accidentally exposed
 
-## 📚 Documentation
-
-- [Testing Guide](./TESTING.md) - Complete testing procedures
-- [Tech Guide](../la-aldea-ecom-data/nextjs_tech_guide.md) - Full technical documentation
-- [Supabase Credentials](../la-aldea-ecom-data/supabase_cred.md) - Database credentials reference
-
-## 🗺️ Development Roadmap
-
-**Week 1: Foundation** (Cards 1-4) ✅ COMPLETED
-- [x] Repository & Environment Setup
-- [x] Database Configuration
-- [x] Payment Gateway Setup
-- [x] Environment Variables
-
-**Week 2: Core E-Commerce** (Cards 5-8)
-- [ ] Project structure setup
-- [ ] Product listing page
-- [ ] Product detail pages
-- [ ] Shopping cart functionality
-
-**Week 3: Backend & Testing** (Cards 9-12)
-- [ ] API routes (orders, payments)
-- [ ] MercadoPago webhook
-- [ ] End-to-end testing
-- [ ] Admin panel
-
-**Week 4: Production Launch** (Cards 13-16)
-- [ ] Production credentials
-- [ ] Domain configuration
-- [ ] Analytics setup
-- [ ] Go live! 🚀
-
 ## 🛠️ Scripts
 
 ```bash
@@ -210,5 +148,4 @@ Private project. All rights reserved.
 
 ---
 
-**Last Updated:** January 16, 2026  
-**Current Status:** Week 1 Complete ✅ | Ready for Week 2 Development
+**Last Updated:** January 18, 2026  

@@ -1,27 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ProductReview } from '@/types/database';
+import { CreateReviewSchema } from '@/lib/validators';
+import { reviewsLimiter } from '@/lib/rate-limit';
 
 // POST - Submit a new review
 export async function POST(request: NextRequest) {
+  // ⚡ RATE LIMITING - Max 3 reviews per minute per IP
+  const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? 'anonymous';
+  
+  try {
+    await reviewsLimiter.check(3, ip);
+  } catch {
+    return NextResponse.json(
+      { error: 'Too many reviews submitted. Please try again in a minute.' },
+      { status: 429 }
+    );
+  }
+  
   try {
     const body = await request.json();
-    const { product_id, customer_name, customer_email, rating, comment } = body;
-
-    // Validation
-    if (!product_id || !customer_name || !rating) {
+    
+    // Validate with Zod
+    const validation = CreateReviewSchema.safeParse(body);
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: product_id, customer_name, rating' },
+        { 
+          error: 'Validation failed', 
+          details: validation.error.flatten().fieldErrors 
+        },
         { status: 400 }
       );
     }
-
-    if (rating < 1 || rating > 5) {
-      return NextResponse.json(
-        { error: 'Rating must be between 1 and 5' },
-        { status: 400 }
-      );
-    }
+    
+    const { product_id, customer_name, customer_email, rating, comment } = validation.data;
 
     // Insert review (not approved by default)
     const { data: review, error } = await supabaseAdmin

@@ -3,14 +3,31 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
-  // 1. Rate limiting for API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    // Simple IP-based rate limiting
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  // 1. CSRF Protection for API routes
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
+    // Excepciones: webhooks externos que no tienen origin header
+    const isWebhook = request.nextUrl.pathname.startsWith('/api/webhooks/');
     
-    // TODO: Implement actual rate limiting with Vercel KV or Redis
-    // For now, just log suspicious activity
-    console.log(`API request from ${ip} to ${request.nextUrl.pathname}`);
+    if (!isWebhook) {
+      // Verificar que request venga del mismo origen
+      const origin = request.headers.get('origin');
+      const host = request.headers.get('host');
+      
+      // Si hay origin header y NO coincide con nuestro host
+      if (origin && !origin.includes(host!)) {
+        console.error('CSRF attempt detected:', { 
+          origin, 
+          host,
+          path: request.nextUrl.pathname,
+          method: request.method
+        });
+        
+        return NextResponse.json(
+          { error: 'Forbidden - Invalid origin' },
+          { status: 403 }
+        );
+      }
+    }
   }
 
   // 2. Admin panel protection

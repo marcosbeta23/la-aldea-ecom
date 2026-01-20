@@ -1,18 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DiscountCoupon } from '@/types/database';
+import { ValidateCouponSchema } from '@/lib/validators';
+import { couponsLimiter } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  // ⚡ RATE LIMITING - Max 10 validations per minute per IP
+  const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? 'anonymous';
+  
+  try {
+    await couponsLimiter.check(10, ip);
+  } catch {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again in a minute.' },
+      { status: 429 }
+    );
+  }
+  
   try {
     const body = await request.json();
-    const { code, subtotal } = body;
-
-    if (!code) {
+    
+    // Validate with Zod
+    const validation = ValidateCouponSchema.safeParse(body);
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Código de cupón requerido' },
+        { 
+          error: 'Validation failed', 
+          details: validation.error.flatten().fieldErrors 
+        },
         { status: 400 }
       );
     }
+    
+    const { code, subtotal } = validation.data;
 
     // Fetch coupon
     const { data, error } = await supabaseAdmin

@@ -145,32 +145,27 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      // Create order
+      // Create order (matching Zod schema structure)
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_name: formData.name,
-          customer_email: formData.email,
-          customer_phone: formData.phone,
-          shipping_address: formData.shippingMethod === 'delivery' ? formData.address : null,
-          shipping_city: formData.shippingMethod === 'delivery' ? formData.city : null,
-          shipping_department: formData.shippingMethod === 'delivery' ? formData.department : null,
-          shipping_method: formData.shippingMethod,
-          shipping_cost: shippingCost,
-          notes: formData.notes,
-          coupon_code: appliedCoupon?.code || null,
-          discount_amount: discount,
-          subtotal,
-          total,
+          customer: {
+            name: formData.name,
+            email: formData.email || undefined,
+            phone: formData.phone,
+            shipping_address: formData.shippingMethod === 'delivery' ? formData.address : undefined,
+            shipping_city: formData.shippingMethod === 'delivery' ? formData.city : undefined,
+            shipping_department: formData.shippingMethod === 'delivery' ? formData.department : undefined,
+            shipping_type: formData.shippingMethod,
+            shipping_cost: shippingCost,
+            notes: formData.notes || undefined,
+          },
           items: items.map((item) => ({
-            product_id: item.product.id,
-            product_name: item.product.name,
-            product_sku: item.product.sku,
+            id: item.product.id,
             quantity: item.quantity,
-            unit_price: item.product.price_numeric,
-            subtotal: item.product.price_numeric * item.quantity,
           })),
+          couponCode: appliedCoupon?.code,
         }),
       });
 
@@ -181,8 +176,9 @@ export default function CheckoutPage() {
       }
 
       // If MP preference URL is returned, redirect to payment
-      if (data.payment_url) {
-        window.location.href = data.payment_url;
+      if (data.init_point) {
+        clearCart();
+        window.location.href = data.init_point;
       } else {
         // Otherwise, redirect to success page
         clearCart();
