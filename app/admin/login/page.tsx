@@ -1,12 +1,35 @@
-import { SignIn } from '@clerk/nextjs';
+'use client';
+
+import { SignIn, useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { ShieldCheck } from 'lucide-react';
 
-export const metadata = {
-  title: 'Admin Login',
-  robots: { index: false, follow: false },
-};
-
 export default function AdminLoginPage() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  // Redirect to admin dashboard if already signed in
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace('/admin');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Show loading spinner while checking auth or redirecting
+  if (!isLoaded || isSignedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+          <p className="text-slate-400 text-sm">
+            {isSignedIn ? 'Redirigiendo al panel...' : 'Cargando...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -22,7 +45,7 @@ export default function AdminLoginPage() {
         {/* Clerk SignIn Component */}
         <div className="flex justify-center">
           <SignIn 
-            forceRedirectUrl="/admin"
+            fallbackRedirectUrl="/admin"
             appearance={{
               elements: {
                 rootBox: "w-full max-w-md",
