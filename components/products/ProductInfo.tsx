@@ -77,13 +77,11 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
     }
   };
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('es-UY', {
-      style: 'currency',
-      currency: 'UYU',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
+  const formatPrice = (price: number, currency: string = 'UYU') => {
+    if (currency === 'USD') {
+      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   return (
@@ -129,10 +127,10 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
         {product.original_price_numeric && product.discount_percentage ? (
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-2xl text-slate-400 line-through">
-              {formatPrice(product.original_price_numeric)}
+              {formatPrice(product.original_price_numeric, product.currency)}
             </span>
             <span className="text-4xl font-bold text-green-600">
-              {formatPrice(product.price_numeric)}
+              {formatPrice(product.price_numeric, product.currency)}
             </span>
             <span className="px-3 py-1 bg-green-600 text-white text-sm font-bold rounded-full">
               -{product.discount_percentage}% OFF
@@ -140,7 +138,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           </div>
         ) : (
           <span className="text-4xl font-bold text-slate-900">
-            {formatPrice(product.price_numeric)}
+            {formatPrice(product.price_numeric, product.currency)}
           </span>
         )}
       </div>

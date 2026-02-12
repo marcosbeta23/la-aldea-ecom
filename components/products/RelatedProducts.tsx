@@ -8,13 +8,11 @@ interface RelatedProductsProps {
 }
 
 export default function RelatedProducts({ products }: RelatedProductsProps) {
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('es-UY', {
-      style: 'currency',
-      currency: 'UYU',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
+  const formatPrice = (price: number, currency: string = 'UYU') => {
+    if (currency === 'USD') {
+      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   return (
@@ -56,7 +54,7 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
                 {product.name}
               </h3>
               <p className="text-lg font-bold text-slate-900">
-                {formatPrice(product.price_numeric)}
+                {formatPrice(product.price_numeric, product.currency)}
               </p>
             </Link>
           ))}

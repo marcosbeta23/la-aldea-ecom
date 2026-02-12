@@ -14,10 +14,10 @@ export async function GET(request: NextRequest) {
     // Fetch matching products
     const { data: products } = await supabaseAdmin
       .from('products')
-      .select('id, sku, name, category, brand, price_numeric, images')
+      .select('id, sku, name, category, brand, price_numeric, currency, images')
       .eq('is_active', true)
       .or(`name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%,sku.ilike.%${query}%`)
-      .limit(8) as { data: Array<{ id: string; sku: string; name: string; category: string | null; brand: string | null; price_numeric: number; images: string[] | null }> | null };
+      .limit(8) as { data: Array<{ id: string; sku: string; name: string; category: string | null; brand: string | null; price_numeric: number; currency: string; images: string[] | null }> | null };
 
     // Get unique categories that match
     const { data: categories } = await supabaseAdmin
@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       name: string;
       image?: string;
       price?: number;
+      currency?: string;
     }> = [];
 
     // Add category suggestions first
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
         name: product.name,
         image: product.images?.[0] || undefined,
         price: product.price_numeric,
+        currency: product.currency,
       });
     });
 

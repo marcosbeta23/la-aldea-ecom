@@ -12,6 +12,7 @@ interface Suggestion {
   name: string;
   image?: string;
   price?: number;
+  currency?: string;
 }
 
 interface ProductSearchProps {
@@ -158,8 +159,12 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
     }
   };
 
-  const formatPrice = (price: number) => 
-    `UYU ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatPrice = (price: number, currency: string = 'UYU') => {
+    if (currency === 'USD') {
+      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$ ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  };
 
   const getSuggestionIcon = (type: string) => {
     switch (type) {
@@ -261,7 +266,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
                       <p className="text-xs text-slate-500">
                         {suggestion.type === 'category' && 'Categoría'}
                         {suggestion.type === 'brand' && 'Marca'}
-                        {suggestion.type === 'product' && suggestion.price && formatPrice(suggestion.price)}
+                        {suggestion.type === 'product' && suggestion.price && formatPrice(suggestion.price, suggestion.currency)}
                       </p>
                     </div>
 

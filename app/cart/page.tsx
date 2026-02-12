@@ -16,13 +16,11 @@ export default function CartPage() {
   }, []);
 
   // Format price
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('es-UY', {
-      style: 'currency',
-      currency: 'UYU',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
+  const formatPrice = (price: number, currency: string = 'UYU') => {
+    if (currency === 'USD') {
+      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   // Prevent hydration mismatch
@@ -127,7 +125,7 @@ export default function CartPage() {
                       <p className="text-sm text-slate-500 mt-1">{item.product.brand}</p>
                     )}
                     <p className="text-lg font-bold text-slate-900 mt-2">
-                      {formatPrice(item.product.price_numeric)}
+                      {formatPrice(item.product.price_numeric, item.product.currency)}
                     </p>
                   </div>
 
@@ -156,7 +154,7 @@ export default function CartPage() {
                     {/* Subtotal & Remove */}
                     <div className="text-right">
                       <p className="text-sm text-slate-500">
-                        Subtotal: {formatPrice(item.product.price_numeric * item.quantity)}
+                        Subtotal: {formatPrice(item.product.price_numeric * item.quantity, item.product.currency)}
                       </p>
                       <button
                         onClick={() => removeItem(item.product.id)}

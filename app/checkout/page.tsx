@@ -66,13 +66,11 @@ export default function CheckoutPage() {
   }, [mounted, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Format price
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('es-UY', {
-      style: 'currency',
-      currency: 'UYU',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
+  const formatPrice = (price: number, currency: string = 'UYU') => {
+    if (currency === 'USD') {
+      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   // Calculate shipping based on cart contents
@@ -802,7 +800,7 @@ export default function CheckoutPage() {
                           </p>
                           <p className="text-xs text-slate-500">x{item.quantity}</p>
                           <p className="text-sm font-semibold text-slate-900">
-                            {formatPrice(item.product.price_numeric * item.quantity)}
+                            {formatPrice(item.product.price_numeric * item.quantity, item.product.currency)}
                           </p>
                         </div>
                       </div>
