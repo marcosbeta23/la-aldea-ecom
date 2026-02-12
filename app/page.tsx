@@ -296,26 +296,26 @@ const services = [
   {
     icon: Droplets,
     title: "Instalación de Bombas",
-    description: "Bombas sumergibles, de superficie y sistemas de presurización para pozos y cisternas.",
-    features: ["Asesoramiento técnico", "Instalación profesional", "Garantía incluida"],
+    description: "Bombas centrífugas, periféricas, sumergibles y solares. Sistemas de presurización para pozos, cisternas y distribución de agua.",
+    features: ["Todo tipo de bombas", "Instalación profesional", "Garantía incluida"],
   },
   {
     icon: Settings,
     title: "Sistemas de Riego",
-    description: "Diseño e instalación de riego por goteo, aspersión y automatización para agricultura.",
+    description: "Diseño e instalación de riego por goteo, aspersión y automatización para agricultura, jardines y praderas.",
     features: ["Diseño personalizado", "Riego por goteo", "Automatización"],
   },
   {
     icon: Filter,
-    title: "Filtración de Agua",
-    description: "Sistemas de purificación y filtros Gianni para agua potable segura en hogares y establecimientos.",
-    features: ["Agua potable segura", "Filtros certificados", "Mantenimiento"],
+    title: "Almacenamiento de Agua",
+    description: "Instalación de tanques de polietileno y australianos con sistemas de filtración de disco y distribución.",
+    features: ["Tanques de todo tipo", "Filtros de disco", "Distribución de agua"],
   },
   {
-    icon: Waves,
-    title: "Piscinas",
-    description: "Instalación de bombas, filtros y sistemas de mantenimiento para piscinas residenciales.",
-    features: ["Bombas y filtros", "Productos químicos", "Mantenimiento"],
+    icon: Wrench,
+    title: "Soluciones a Medida",
+    description: "Agua para ganado, arcos de desinfección, bombas de calor para piscinas y proyectos personalizados.",
+    features: ["Proyectos especiales", "Asesoramiento técnico", "Consultas sin cargo"],
   },
 ];
 
@@ -600,8 +600,8 @@ export default async function Home() {
                   Instalaciones y Proyectos a Medida
                 </h2>
                 <p className="mt-4 text-lg text-slate-600">
-                  No solo vendemos productos, ofrecemos soluciones completas con instalación 
-                  profesional y asesoramiento técnico personalizado.
+                  Más que productos: ofrecemos soluciones completas. Si tienes una idea, problema 
+                  o proyecto relacionado con agua, consultanos — seguramente podamos ayudarte.
                 </p>
                 
                 {/* Quick stats inline */}
