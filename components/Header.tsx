@@ -151,11 +151,7 @@ export default function Header() {
           ) : (
             <Link
               href="/#contacto"
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                scrolled || mobileMenuOpen
-                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                  : 'text-white/90 hover:bg-white/10'
-              }`}
+              className="px-4 py-2 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:text-blue-600 hover:bg-slate-50"
             >
               Contacto
             </Link>

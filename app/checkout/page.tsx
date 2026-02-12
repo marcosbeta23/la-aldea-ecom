@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote, Receipt, FileText, MessageCircle, Info } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 import { trackBeginCheckout } from '@/components/Analytics';
+import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONFIG, DAC_RATES } from '@/lib/shipping';
 
 interface CouponData {
   code: string;
@@ -37,6 +38,10 @@ export default function CheckoutPage() {
     notes: '',
     shippingMethod: 'pickup' as 'pickup' | 'delivery',
     paymentMethod: 'mercadopago' as 'mercadopago' | 'transfer',
+    // Billing/Invoice fields
+    invoiceType: 'consumer_final' as 'consumer_final' | 'invoice_rut',
+    invoiceTaxId: '',
+    invoiceBusinessName: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,10 +75,31 @@ export default function CheckoutPage() {
     });
   };
 
+  // Calculate shipping based on cart contents
+  const cartShippingType = useMemo(() => {
+    if (!mounted) return 'dac';
+    return getCartShippingType(
+      items.map(item => ({ shippingType: item.product.shipping_type || 'dac' }))
+    );
+  }, [mounted, items]);
+
+  const shippingZone = useMemo(() => {
+    if (!formData.department) return 'interior';
+    return getShippingZone(formData.department, formData.city);
+  }, [formData.department, formData.city]);
+
+  const shippingOptions = useMemo(() => {
+    return getShippingOptions(cartShippingType, shippingZone);
+  }, [cartShippingType, shippingZone]);
+
   // Calculate totals
   const subtotal = mounted ? getSubtotal() : 0;
   const discount = appliedCoupon?.discount_amount || 0;
-  const shippingCost = formData.shippingMethod === 'delivery' ? 350 : 0; // Placeholder shipping
+  // Shipping cost: 0 for pickup, actual cost if known, or 0 if paid on delivery
+  const shippingCost = formData.shippingMethod === 'delivery' && shippingOptions.deliveryCost !== null 
+    ? shippingOptions.deliveryCost 
+    : 0;
+  const shippingPaidOnDelivery = formData.shippingMethod === 'delivery' && shippingOptions.deliveryCost === null;
   const total = subtotal - discount + shippingCost;
 
   // Validate form
@@ -103,6 +129,18 @@ export default function CheckoutPage() {
       }
       if (!formData.department.trim()) {
         newErrors.department = 'El departamento es requerido';
+      }
+    }
+
+    // Validate invoice fields when RUT invoice is selected
+    if (formData.invoiceType === 'invoice_rut') {
+      if (!formData.invoiceTaxId.trim()) {
+        newErrors.invoiceTaxId = 'El RUT es requerido para factura con crédito fiscal';
+      } else if (!/^\d{12}$/.test(formData.invoiceTaxId.replace(/\D/g, ''))) {
+        newErrors.invoiceTaxId = 'RUT inválido (debe tener 12 dígitos)';
+      }
+      if (!formData.invoiceBusinessName.trim()) {
+        newErrors.invoiceBusinessName = 'La razón social es requerida';
       }
     }
 
@@ -178,6 +216,10 @@ export default function CheckoutPage() {
             shipping_cost: shippingCost,
             notes: formData.notes || undefined,
             payment_method: formData.paymentMethod,
+            // Billing/Invoice fields
+            invoice_type: formData.invoiceType,
+            invoice_tax_id: formData.invoiceType === 'invoice_rut' ? formData.invoiceTaxId.replace(/\D/g, '') : undefined,
+            invoice_business_name: formData.invoiceType === 'invoice_rut' ? formData.invoiceBusinessName : undefined,
           },
           items: items.map((item) => ({
             id: item.product.id,
@@ -347,42 +389,105 @@ export default function CheckoutPage() {
                   </h2>
 
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, shippingMethod: 'pickup' })}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        formData.shippingMethod === 'pickup'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-slate-900">Retiro en local</span>
-                        <span className="text-green-600 font-semibold">Gratis</span>
-                      </div>
-                      <p className="text-sm text-slate-500">
-                        Retirá en Tala, Canelones
-                      </p>
-                    </button>
+                    {/* Pickup option - always available */}
+                    {shippingOptions.canPickup && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, shippingMethod: 'pickup' })}
+                        className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                          formData.shippingMethod === 'pickup'
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900">Retiro en local</span>
+                          <span className="text-green-600 font-semibold">Gratis</span>
+                        </div>
+                        <p className="text-sm text-slate-500">
+                          {SHIPPING_CONFIG.pickupAddress}
+                        </p>
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, shippingMethod: 'delivery' })}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        formData.shippingMethod === 'delivery'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-slate-900">Envío a domicilio</span>
-                        <span className="text-slate-900 font-semibold">{formatPrice(350)}</span>
-                      </div>
-                      <p className="text-sm text-slate-500">
-                        3-5 días hábiles
-                      </p>
-                    </button>
+                    {/* Delivery option - conditional based on cart */}
+                    {shippingOptions.canDeliver && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, shippingMethod: 'delivery' })}
+                        className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                          formData.shippingMethod === 'delivery'
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900">{shippingOptions.deliveryLabel}</span>
+                          {shippingOptions.deliveryCost !== null ? (
+                            <span className={shippingOptions.deliveryCost === 0 ? 'text-green-600 font-semibold' : 'text-slate-900 font-semibold'}>
+                              {shippingOptions.deliveryCost === 0 ? 'Gratis' : formatPrice(shippingOptions.deliveryCost)}
+                            </span>
+                          ) : (
+                            <span className="text-amber-600 text-sm font-medium">A pagar en destino</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-500">
+                          {shippingOptions.deliveryNote}
+                        </p>
+                      </button>
+                    )}
                   </div>
+
+                  {/* Freight quote message */}
+                  {shippingOptions.requiresQuote && formData.shippingMethod === 'delivery' && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-sm text-amber-800 font-medium">
+                            Tu pedido incluye productos grandes que requieren flete
+                          </p>
+                          <p className="text-sm text-amber-700 mt-1">
+                            Te contactaremos por WhatsApp para coordinar fecha y costo del envío.
+                          </p>
+                          <a
+                            href={`https://wa.me/59892744725?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 mt-2 text-sm text-green-700 hover:text-green-800 font-medium"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Consultar ahora por WhatsApp
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DAC shipping info - show rates table */}
+                  {cartShippingType === 'dac' && formData.shippingMethod === 'delivery' && shippingOptions.deliveryCost === null && (
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm text-blue-800 font-medium">
+                            El envío se paga al recibir ({SHIPPING_CONFIG.dacDeliveryTime})
+                          </p>
+                          <p className="text-xs text-blue-700 mt-1 mb-2">
+                            Tarifas DAC según tamaño del paquete:
+                          </p>
+                          <div className="space-y-1 text-xs">
+                            {DAC_RATES.slice(0, 4).map((rate, i) => (
+                              <div key={i} className="flex items-center justify-between py-0.5 border-b border-blue-100 last:border-0">
+                                <span className="text-blue-700">{rate.label}</span>
+                                <span className="text-blue-800 font-semibold">${rate.price}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Shipping Address */}
                   {formData.shippingMethod === 'delivery' && (
@@ -475,6 +580,122 @@ export default function CheckoutPage() {
                     className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400"
                     placeholder="Instrucciones especiales, horarios de entrega, etc."
                   />
+                </div>
+
+                {/* Billing / Invoice Type */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                  <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <Receipt className="h-5 w-5 text-blue-600" />
+                    Tipo de comprobante
+                  </h2>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, invoiceType: 'consumer_final', invoiceTaxId: '', invoiceBusinessName: '' })}
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                        formData.invoiceType === 'consumer_final'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Receipt className={`h-5 w-5 ${formData.invoiceType === 'consumer_final' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <div>
+                          <p className="font-medium text-slate-900">Consumidor Final</p>
+                          <p className="text-xs text-slate-500">Sin RUT (boleta/ticket)</p>
+                        </div>
+                      </div>
+                      {formData.invoiceType === 'consumer_final' && (
+                        <Check className="h-5 w-5 text-blue-600 mt-2" />
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, invoiceType: 'invoice_rut' })}
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                        formData.invoiceType === 'invoice_rut'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className={`h-5 w-5 ${formData.invoiceType === 'invoice_rut' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <div>
+                          <p className="font-medium text-slate-900">Factura con RUT</p>
+                          <p className="text-xs text-slate-500">Con crédito fiscal</p>
+                        </div>
+                      </div>
+                      {formData.invoiceType === 'invoice_rut' && (
+                        <Check className="h-5 w-5 text-blue-600 mt-2" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* RUT Invoice Fields */}
+                  {formData.invoiceType === 'invoice_rut' && (
+                    <div className="mt-6 pt-6 border-t border-slate-200">
+                      <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Datos de facturación
+                      </h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
+                            RUT *
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.invoiceTaxId}
+                            onChange={(e) => {
+                              // Format RUT: XX XXXXXX XXXX XX
+                              const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+                              let formatted = digits;
+                              if (digits.length > 2) formatted = digits.slice(0, 2) + ' ' + digits.slice(2);
+                              if (digits.length > 8) formatted = digits.slice(0, 2) + ' ' + digits.slice(2, 8) + ' ' + digits.slice(8);
+                              if (digits.length > 12) formatted = digits.slice(0, 2) + ' ' + digits.slice(2, 8) + ' ' + digits.slice(8, 12) + ' ' + digits.slice(12);
+                              setFormData({ ...formData, invoiceTaxId: formatted });
+                            }}
+                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
+                              errors.invoiceTaxId ? 'border-red-500' : 'border-slate-300'
+                            }`}
+                            placeholder="21 123456 0001 19"
+                          />
+                          {errors.invoiceTaxId && <p className="text-red-500 text-sm mt-1">{errors.invoiceTaxId}</p>}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
+                            Razón Social *
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.invoiceBusinessName}
+                            onChange={(e) => setFormData({ ...formData, invoiceBusinessName: e.target.value })}
+                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
+                              errors.invoiceBusinessName ? 'border-red-500' : 'border-slate-300'
+                            }`}
+                            placeholder="Nombre de la empresa o persona"
+                          />
+                          {errors.invoiceBusinessName && <p className="text-red-500 text-sm mt-1">{errors.invoiceBusinessName}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Invoice Info Note */}
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-blue-800 mb-1">Sobre la facturación</p>
+                        <p className="text-blue-700">
+                          La factura se genera una vez confirmado el pago y será enviada a tu email. 
+                          Si necesitás factura con RUT, seleccioná esa opción y completá los datos.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Payment Method */}
@@ -649,7 +870,17 @@ export default function CheckoutPage() {
                     )}
                     <div className="flex justify-between text-slate-600">
                       <span>Envío</span>
-                      <span>{shippingCost > 0 ? formatPrice(shippingCost) : 'Gratis'}</span>
+                      <span>
+                        {formData.shippingMethod === 'pickup' ? (
+                          'Gratis (retiro)'
+                        ) : shippingPaidOnDelivery ? (
+                          <span className="text-amber-600">A pagar en destino</span>
+                        ) : shippingCost === 0 ? (
+                          'Gratis'
+                        ) : (
+                          formatPrice(shippingCost)
+                        )}
+                      </span>
                     </div>
                     <hr className="border-slate-200" />
                     <div className="flex justify-between text-xl font-bold text-slate-900">

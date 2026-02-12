@@ -11,9 +11,16 @@ import {
   CreditCard,
   Calendar,
   User,
-  FileText
+  FileText,
+  Clock,
+  AlertTriangle,
+  ExternalLink,
+  Activity
 } from 'lucide-react';
 import OrderStatusForm from './OrderStatusForm';
+import InvoiceForm from './InvoiceForm';
+import RefundButton from './RefundButton';
+import DownloadButton from './DownloadButton';
 import type { Order, OrderItem } from '@/types/database';
 
 export default async function OrderDetailPage({
@@ -44,6 +51,16 @@ export default async function OrderDetailPage({
   
   const orderItems = (itemsData || []) as OrderItem[];
   
+  // Fetch order activity logs
+  const { data: logsData } = await supabaseAdmin
+    .from('order_logs')
+    .select('*')
+    .eq('order_id', id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+  
+  const orderLogs = logsData || [];
+  
   const formatCurrency = (value: number) => 
     `UYU ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
   
@@ -73,19 +90,22 @@ export default async function OrderDetailPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link 
-          href="/admin/orders"
-          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 text-slate-600" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Pedido #{order.order_number}
-          </h1>
-          <p className="text-slate-500">{formatDate(order.created_at)}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link 
+            href="/admin/orders"
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 text-slate-600" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              Pedido #{order.order_number}
+            </h1>
+            <p className="text-slate-500">{formatDate(order.created_at)}</p>
+          </div>
         </div>
+        <DownloadButton order={order} items={orderItems || []} />
       </div>
       
       <div className="grid lg:grid-cols-3 gap-6">
@@ -226,12 +246,107 @@ export default async function OrderDetailPage({
               </div>
             )}
           </div>
+          
+          {/* Billing Info (from checkout) */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Datos de Facturación
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 text-slate-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-slate-500">Tipo solicitado por cliente</p>
+                  <p className="font-medium text-slate-900">
+                    {order.invoice_type === 'invoice_rut' 
+                      ? '📋 Factura con RUT (crédito fiscal)' 
+                      : '🧾 Consumidor Final (boleta/ticket)'}
+                  </p>
+                </div>
+              </div>
+              
+              {order.invoice_type === 'invoice_rut' && (
+                <>
+                  {order.invoice_tax_id && (
+                    <div className="flex items-start gap-3">
+                      <CreditCard className="h-5 w-5 text-slate-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-slate-500">RUT</p>
+                        <p className="font-medium font-mono text-slate-900">
+                          {order.invoice_tax_id.replace(/(\d{2})(\d{6})(\d{4})(\d{2})/, '$1 $2 $3 $4') || order.invoice_tax_id}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {order.invoice_business_name && (
+                    <div className="flex items-start gap-3">
+                      <User className="h-5 w-5 text-slate-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-slate-500">Razón Social</p>
+                        <p className="font-medium text-slate-900">{order.invoice_business_name}</p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Reminder about manual invoicing */}
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>💡 Recordatorio:</strong> La factura se genera manualmente desde el sistema ERP. 
+                  Una vez emitida, registrá el número en la sección &quot;Facturación&quot; del panel lateral.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
         
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Stock Reservation Alert */}
+          {order.stock_reserved && order.reserved_until && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-amber-800">Stock Reservado</p>
+                  <p className="text-sm text-amber-600">
+                    Hasta: {new Date(order.reserved_until).toLocaleDateString('es-UY', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Awaiting Stock Alert */}
+          {order.status === 'awaiting_stock' && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-orange-800">Sin Stock</p>
+                  <p className="text-sm text-orange-600">
+                    Contactar al cliente para ofrecer reembolso o espera
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Status Update */}
           <OrderStatusForm orderId={order.id} currentStatus={order.status} />
+          
+          {/* Invoice Form */}
+          <InvoiceForm order={order} />
           
           {/* Payment Info */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
@@ -248,21 +363,78 @@ export default async function OrderDetailPage({
                 </p>
               </div>
               
+              {order.paid_at && (
+                <div>
+                  <p className="text-sm text-slate-500">Fecha de pago</p>
+                  <p className="font-medium text-slate-900">
+                    {new Date(order.paid_at).toLocaleDateString('es-UY', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              )}
+              
               {order.mp_preference_id && (
                 <div>
-                  <p className="text-sm text-slate-500">ID MercadoPago</p>
-                  <p className="font-mono text-sm text-slate-700">{order.mp_preference_id}</p>
+                  <p className="text-sm text-slate-500">ID Preferencia MP</p>
+                  <p className="font-mono text-xs text-slate-600 break-all">{order.mp_preference_id}</p>
                 </div>
               )}
               
               {order.mp_payment_id && (
                 <div>
                   <p className="text-sm text-slate-500">ID de Pago</p>
-                  <p className="font-mono text-sm text-slate-700">{order.mp_payment_id}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-mono text-sm text-slate-700">{order.mp_payment_id}</p>
+                    <a
+                      href={`https://www.mercadopago.com.uy/activities/${order.mp_payment_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700"
+                      title="Ver en MercadoPago"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
           </div>
+          
+          {/* Order Activity Log */}
+          {orderLogs.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-600" />
+                Actividad
+              </h2>
+              
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {orderLogs.map((log: any) => (
+                  <div key={log.id} className="text-sm border-l-2 border-slate-200 pl-3 py-1">
+                    <p className="font-medium text-slate-700">{log.action.replace(/_/g, ' ')}</p>
+                    {log.old_status && log.new_status && (
+                      <p className="text-slate-500 text-xs">
+                        {log.old_status} → {log.new_status}
+                      </p>
+                    )}
+                    <p className="text-slate-400 text-xs">
+                      {new Date(log.created_at).toLocaleDateString('es-UY', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })} • {log.created_by}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           {/* Quick Actions */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
@@ -290,6 +462,9 @@ export default async function OrderDetailPage({
                   Enviar email
                 </a>
               )}
+              
+              {/* Refund Button */}
+              <RefundButton order={order} />
             </div>
           </div>
         </div>

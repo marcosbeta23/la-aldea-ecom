@@ -62,7 +62,15 @@ export async function PUT(
       currency = 'UYU', 
       stock, 
       images = [], 
-      is_active = true 
+      is_active = true,
+      // Shipping fields
+      shipping_type = 'dac',
+      weight_kg = null,
+      requires_quote = false,
+      // Featured & Discount fields
+      is_featured = false,
+      original_price_numeric = null,
+      discount_percentage = null,
     } = body;
 
     // Validate required fields
@@ -99,6 +107,15 @@ export async function PUT(
         stock,
         images,
         is_active,
+        // Shipping fields
+        shipping_type,
+        weight_kg,
+        requires_quote,
+        // Featured & Discount fields
+        is_featured,
+        original_price: original_price_numeric ? `$${original_price_numeric.toLocaleString()}` : null,
+        original_price_numeric,
+        discount_percentage,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

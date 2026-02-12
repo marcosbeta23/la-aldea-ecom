@@ -10,24 +10,34 @@ import {
   Mail
 } from 'lucide-react';
 
-// Order status badge
+// Order status badge - MVP Order Flow
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     pending: 'bg-amber-100 text-amber-800 border-amber-200',
     paid: 'bg-green-100 text-green-800 border-green-200',
-    processing: 'bg-blue-100 text-blue-800 border-blue-200',
+    paid_pending_verification: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    awaiting_stock: 'bg-orange-100 text-orange-800 border-orange-200',
+    ready_to_invoice: 'bg-blue-100 text-blue-800 border-blue-200',
+    invoiced: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    processing: 'bg-cyan-100 text-cyan-800 border-cyan-200',
     shipped: 'bg-purple-100 text-purple-800 border-purple-200',
     delivered: 'bg-slate-100 text-slate-800 border-slate-200',
     cancelled: 'bg-red-100 text-red-800 border-red-200',
+    refunded: 'bg-rose-100 text-rose-800 border-rose-200',
   };
   
   const labels: Record<string, string> = {
     pending: 'Pendiente',
     paid: 'Pagado',
+    paid_pending_verification: 'Verificar',
+    awaiting_stock: 'Sin Stock',
+    ready_to_invoice: 'Por Facturar',
+    invoiced: 'Facturado',
     processing: 'En proceso',
     shipped: 'Enviado',
     delivered: 'Entregado',
     cancelled: 'Cancelado',
+    refunded: 'Reembolsado',
   };
   
   return (
@@ -99,11 +109,15 @@ export default async function OrdersPage({
   
   const statusOptions = [
     { value: '', label: 'Todos' },
+    { value: 'paid_pending_verification', label: '🔔 Por Verificar' },
+    { value: 'awaiting_stock', label: '⚠️ Sin Stock' },
+    { value: 'ready_to_invoice', label: '📝 Por Facturar' },
+    { value: 'invoiced', label: 'Facturados' },
     { value: 'pending', label: 'Pendientes' },
-    { value: 'paid', label: 'Pagados' },
     { value: 'processing', label: 'En proceso' },
     { value: 'shipped', label: 'Enviados' },
     { value: 'delivered', label: 'Entregados' },
+    { value: 'refunded', label: 'Reembolsados' },
     { value: 'cancelled', label: 'Cancelados' },
   ];
 

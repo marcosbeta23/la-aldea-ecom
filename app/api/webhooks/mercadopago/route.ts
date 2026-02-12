@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyMPSignature, getMPPayment } from '@/lib/mercadopago';
+import { sendOrderConfirmation, sendAdminOrderNotification } from '@/lib/email';
 
-// 🔒 SECURE MERCADOPAGO WEBHOOK
-// This handles payment notifications with fraud detection and idempotency
+// 🔒 SECURE MERCADOPAGO WEBHOOK - MVP ORDER FLOW
+// Payment → Reserve Stock → paid_pending_verification → Admin Review → Invoice
+
+const STOCK_RESERVATION_HOURS = 24; // How long to hold stock
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
     
-    console.log('Processing webhook for payment:', paymentId);
+    console.log('📥 Processing webhook for payment:', paymentId);
     
     // 2️⃣ FETCH PAYMENT INFO FROM MERCADOPAGO
     const payment = await getMPPayment(paymentId);
@@ -64,9 +67,10 @@ export async function POST(request: NextRequest) {
     
     const orderData: any = order;
     
-    // 4️⃣ IDEMPOTENCY CHECK - Don't process twice
-    if (orderData.mp_payment_id === paymentId && orderData.status === 'paid') {
-      console.log('Payment already processed, skipping');
+    // 4️⃣ IDEMPOTENCY CHECK - Don't process same payment twice
+    const processedStatuses = ['paid', 'invoiced', 'shipped', 'delivered'];
+    if (orderData.mp_payment_id === paymentId && processedStatuses.includes(orderData.status)) {
+      console.log('✅ Payment already processed, skipping');
       return NextResponse.json({ received: true });
     }
     
@@ -82,27 +86,31 @@ export async function POST(request: NextRequest) {
         paid: paidAmount,
         difference: paidAmount - expectedAmount,
         paymentId: paymentId,
-        customerId: payment.payer?.id,
       });
       
-      // Mark as fraud
+      // Mark as cancelled and log event
       await supabaseAdmin
         .from('orders')
         // @ts-expect-error - Supabase type inference issue
         .update({
           status: 'cancelled',
-          notes: `Payment amount mismatch. Expected: ${expectedAmount}, Paid: ${paidAmount}`,
+          notes: `⚠️ FRAUDE POTENCIAL: Monto esperado ${expectedAmount}, pagado ${paidAmount}`,
           mp_payment_id: paymentId,
           meta: payment,
         })
         .eq('id', orderData.id);
       
-      // TODO: Send alert to admin
+      // Log the fraud attempt
+      await logOrderEvent(orderData.id, 'payment_fraud_detected', orderData.status, 'cancelled', {
+        expected: expectedAmount,
+        paid: paidAmount,
+        payment_id: paymentId,
+      });
       
       return NextResponse.json({ received: true });
     }
     
-    // 6️⃣ PREPARE UPDATE DATA
+    // 6️⃣ PREPARE BASE UPDATE DATA
     const updateData: any = {
       mp_payment_id: paymentId,
       payment_method: payment.payment_type_id,
@@ -111,37 +119,53 @@ export async function POST(request: NextRequest) {
     
     // 7️⃣ PROCESS BASED ON PAYMENT STATUS
     if (payment.status === 'approved') {
-      updateData.status = 'paid';
-      updateData.payment_status = 'approved';
+      updateData.paid_at = new Date().toISOString();
       
-      // Reduce stock atomically
-      const { data: orderItems } = await supabaseAdmin
-        .from('order_items')
-        .select('product_id, quantity')
-        .eq('order_id', orderData.id);
+      // 🔒 ATOMIC STOCK RESERVATION using RPC function
+      const { data: reservationResult, error: reserveError } = await supabaseAdmin
+        .rpc('reserve_stock_for_order', {
+          p_order_id: orderData.id,
+          p_reservation_hours: STOCK_RESERVATION_HOURS,
+        });
       
-      if (orderItems) {
-        for (const item of orderItems) {
-          const itemData: any = item;
-          // Fetch current stock
-          const { data: product } = await supabaseAdmin
-            .from('products')
-            .select('stock')
-            .eq('id', itemData.product_id)
-            .single();
-          
-          if (product) {
-            const productData: any = product;
-            const newStock = Math.max(0, productData.stock - itemData.quantity);
-            await supabaseAdmin
-              .from('products')
-              // @ts-expect-error - Supabase type inference issue
-              .update({ stock: newStock })
-              .eq('id', itemData.product_id);
-            
-            console.log(`Stock updated for product ${itemData.product_id}: ${productData.stock} → ${newStock}`);
-          }
-        }
+      if (reserveError) {
+        console.error('Stock reservation RPC error:', reserveError);
+        // Fallback: mark as out_of_stock for manual review
+        updateData.status = 'out_of_stock';
+        updateData.notes = `Error al reservar stock: ${reserveError.message}. Revisar manualmente.`;
+        
+        await logOrderEvent(orderData.id, 'stock_reservation_error', orderData.status, 'out_of_stock', {
+          error: reserveError.message,
+        });
+      } else if (reservationResult?.success) {
+        // ✅ Stock reserved successfully - mark as PAID (ready for invoice)
+        updateData.status = 'paid';
+        updateData.stock_reserved = true;
+        updateData.reserved_until = reservationResult.expires_at;
+        
+        console.log(`✅ Order ${orderData.order_number} - Paid & stock reserved until ${reservationResult.expires_at}`);
+        
+        await logOrderEvent(orderData.id, 'payment_approved_stock_reserved', orderData.status, 'paid', {
+          payment_id: paymentId,
+          expires_at: reservationResult.expires_at,
+        });
+      } else {
+        // ❌ Stock insufficient
+        updateData.status = 'out_of_stock';
+        updateData.stock_reserved = false;
+        
+        const failedProducts = reservationResult?.failed_products || [];
+        const failedNames = failedProducts.map((p: any) => p.name).join(', ');
+        updateData.notes = `Sin stock suficiente: ${failedNames}. Contactar cliente.`;
+        
+        console.log(`⚠️ Order ${orderData.order_number} - Insufficient stock:`, failedProducts);
+        
+        await logOrderEvent(orderData.id, 'payment_approved_no_stock', orderData.status, 'out_of_stock', {
+          payment_id: paymentId,
+          failed_products: failedProducts,
+        });
+        
+        // TODO: Send notification to customer about stock issue
       }
       
       // Increment coupon usage if used
@@ -164,20 +188,62 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      console.log(`✅ Order ${orderData.order_number} marked as paid`);
+      // 📧 SEND EMAIL CONFIRMATIONS (async, don't block webhook)
+      try {
+        // Fetch order items for email
+        const { data: orderItems } = await supabaseAdmin
+          .from('order_items')
+          .select('*')
+          .eq('order_id', orderData.id);
+        
+        if (orderItems && orderItems.length > 0) {
+          const emailTimestamps: Record<string, string> = {};
+          
+          // Send to customer
+          try {
+            await sendOrderConfirmation({ order: orderData, items: orderItems });
+            emailTimestamps.confirmation_email_sent_at = new Date().toISOString();
+          } catch (err) {
+            console.error('Failed to send customer email:', err);
+          }
+          
+          // Send to admin
+          try {
+            await sendAdminOrderNotification({ order: orderData, items: orderItems });
+            emailTimestamps.admin_notified_at = new Date().toISOString();
+          } catch (err) {
+            console.error('Failed to send admin email:', err);
+          }
+          
+          // Update order with email timestamps
+          if (Object.keys(emailTimestamps).length > 0) {
+            // @ts-expect-error - Supabase type inference issue
+            await supabaseAdmin
+              .from('orders')
+              .update(emailTimestamps)
+              .eq('id', orderData.id);
+          }
+        }
+      } catch (emailError) {
+        console.error('Email sending error (non-blocking):', emailError);
+      }
       
-      // TODO Week 5: Send confirmation email
-      // TODO Week 5: Notify admin via WhatsApp
+      console.log(`✅ Order ${orderData.order_number} payment processed`);
       
     } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
       updateData.status = 'cancelled';
-      updateData.payment_status = payment.status;
+      
+      await logOrderEvent(orderData.id, 'payment_rejected', orderData.status, 'cancelled', {
+        payment_id: paymentId,
+        payment_status: payment.status,
+        status_detail: payment.status_detail,
+      });
+      
       console.log(`❌ Order ${orderData.order_number} cancelled/rejected`);
       
     } else {
       // pending, in_process, etc.
-      updateData.status = payment.status;
-      updateData.payment_status = payment.status;
+      updateData.status = 'pending';
       console.log(`⏳ Order ${orderData.order_number} status: ${payment.status}`);
     }
     
@@ -195,5 +261,30 @@ export async function POST(request: NextRequest) {
     console.error('Webhook error:', error);
     // ALWAYS return 200 so MP doesn't retry on errors
     return NextResponse.json({ received: true }, { status: 200 });
+  }
+}
+
+// Helper function to log order events
+async function logOrderEvent(
+  orderId: string,
+  action: string,
+  oldStatus: string,
+  newStatus: string,
+  details?: Record<string, unknown>
+) {
+  try {
+    await supabaseAdmin
+      .from('order_logs')
+      .insert({
+        order_id: orderId,
+        action,
+        old_status: oldStatus,
+        new_status: newStatus,
+        details,
+        created_by: 'webhook',
+      });
+  } catch (error) {
+    console.error('Failed to log order event:', error);
+    // Don't throw - logging failures shouldn't break the webhook
   }
 }

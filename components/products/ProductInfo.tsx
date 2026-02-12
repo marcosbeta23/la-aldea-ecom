@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star } from 'lucide-react';
+import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star, AlertCircle, MessageCircle } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
@@ -16,6 +16,7 @@ interface ProductInfoProps {
 export default function ProductInfo({ product, avgRating, reviewCount }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const { addItem, isInCart } = useCartStore();
   const { toggleItem, isInWishlist } = useWishlistStore();
@@ -36,26 +37,44 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
     });
   }, [product.id, product.name, product.price_numeric, product.category, product.brand]);
 
+  // Limit quantity selector to available stock
+  const maxQuantity = Math.min(product.stock, 10);
+
   const handleAddToCart = () => {
     if (!inStock) return;
     
-    setIsAdding(true);
-    addItem(product, quantity);
+    setError(null);
+    const result = addItem(product, quantity);
     
-    // Track add_to_cart event
-    trackAddToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price_numeric,
-      quantity: quantity,
-      category: product.category || undefined,
-      brand: product.brand || undefined,
-    });
-    
-    setTimeout(() => {
-      setIsAdding(false);
-      setQuantity(1);
-    }, 1500);
+    if (result.success) {
+      setIsAdding(true);
+      
+      // Track add_to_cart event
+      trackAddToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price_numeric,
+        quantity: quantity,
+        category: product.category || undefined,
+        brand: product.brand || undefined,
+      });
+      
+      setTimeout(() => {
+        setIsAdding(false);
+        setQuantity(1);
+      }, 1500);
+    } else {
+      setError(result.message || 'Error al agregar');
+      setTimeout(() => setError(null), 4000);
+    }
+  };
+
+  const handleQuantityChange = (delta: number) => {
+    const newQty = quantity + delta;
+    if (newQty >= 1 && newQty <= maxQuantity) {
+      setQuantity(newQty);
+      setError(null);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -107,9 +126,23 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
 
       {/* Price */}
       <div className="mb-6">
-        <span className="text-4xl font-bold text-slate-900">
-          {formatPrice(product.price_numeric)}
-        </span>
+        {product.original_price_numeric && product.discount_percentage ? (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-2xl text-slate-400 line-through">
+              {formatPrice(product.original_price_numeric)}
+            </span>
+            <span className="text-4xl font-bold text-green-600">
+              {formatPrice(product.price_numeric)}
+            </span>
+            <span className="px-3 py-1 bg-green-600 text-white text-sm font-bold rounded-full">
+              -{product.discount_percentage}% OFF
+            </span>
+          </div>
+        ) : (
+          <span className="text-4xl font-bold text-slate-900">
+            {formatPrice(product.price_numeric)}
+          </span>
+        )}
       </div>
 
       {/* Description */}
@@ -135,6 +168,17 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             <span className="text-sm font-medium">Sin stock</span>
           </div>
         )}
+        
+        {/* Stock inquiry link */}
+        <a
+          href={`https://wa.me/59899123456?text=${encodeURIComponent(`Hola! Consulto por la disponibilidad de: ${product.name} (SKU: ${product.sku})`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 mt-2 text-sm text-green-600 hover:text-green-700 transition-colors"
+        >
+          <MessageCircle className="h-4 w-4" />
+          Consultar disponibilidad por WhatsApp
+        </a>
       </div>
 
       {/* Quantity Selector */}
@@ -143,22 +187,32 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           <span className="text-sm font-medium text-slate-700">Cantidad:</span>
           <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl p-1">
             <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-700"
+              onClick={() => handleQuantityChange(-1)}
+              disabled={quantity <= 1}
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-slate-700"
               aria-label="Reducir cantidad"
             >
               <Minus className="h-4 w-4" />
             </button>
             <span className="w-12 text-center font-bold text-slate-900 text-lg">{quantity}</span>
             <button
-              onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-              disabled={quantity >= product.stock}
+              onClick={() => handleQuantityChange(1)}
+              disabled={quantity >= maxQuantity}
               className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-slate-700"
               aria-label="Aumentar cantidad"
             >
               <Plus className="h-4 w-4" />
             </button>
           </div>
+          <span className="text-xs text-slate-500">Máx: {maxQuantity}</span>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 flex items-center gap-2 text-sm bg-red-50 text-red-700 px-4 py-3 rounded-xl">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
         </div>
       )}
 

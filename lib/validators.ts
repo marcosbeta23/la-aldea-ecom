@@ -19,6 +19,10 @@ export const CreateOrderSchema = z.object({
     shipping_cost: z.number().min(0, 'Shipping cost cannot be negative').optional().default(0),
     notes: z.string().max(500, 'Notes too long').optional(),
     payment_method: z.enum(['mercadopago', 'transfer']).optional().default('mercadopago'),
+    // Invoice/Billing fields
+    invoice_type: z.enum(['consumer_final', 'invoice_rut']).optional().default('consumer_final'),
+    invoice_tax_id: z.string().regex(/^\d{12}$/, 'Invalid RUT (must be 12 digits)').optional(),
+    invoice_business_name: z.string().max(200, 'Business name too long').optional(),
   }),
   items: z.array(
     z.object({
@@ -27,6 +31,15 @@ export const CreateOrderSchema = z.object({
     })
   ).min(1, 'Cart cannot be empty'),
   couponCode: z.string().max(50).optional(),
+}).refine((data) => {
+  // If invoice_rut is selected, invoice_tax_id and invoice_business_name are required
+  if (data.customer.invoice_type === 'invoice_rut') {
+    return data.customer.invoice_tax_id && data.customer.invoice_business_name;
+  }
+  return true;
+}, {
+  message: 'RUT and business name are required for invoice with RUT',
+  path: ['customer', 'invoice_tax_id'],
 });
 
 // Schema for creating reviews

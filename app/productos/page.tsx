@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { Product } from '@/types/database';
 import ProductGrid from '@/components/products/ProductGrid';
 import ProductFilters from '@/components/products/ProductFilters';
+import ProductSearch from '@/components/products/ProductSearch';
 import Header from '@/components/Header';
 import { Package } from 'lucide-react';
 
@@ -181,7 +182,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <p className="text-blue-100 text-lg max-w-2xl">
               Encontrá bombas de agua, sistemas de riego, insumos agrícolas, herramientas y todo lo que necesitás para tu campo, hogar o piscina.
             </p>
-            <div className="mt-6 flex items-center gap-4 text-sm">
+            
+            {/* Search Bar */}
+            <div className="mt-6">
+              <ProductSearch initialQuery={params.q || ''} />
+            </div>
+            
+            <div className="mt-4 flex items-center gap-4 text-sm">
               <span className="bg-white/10 px-3 py-1 rounded-full">
                 {total} productos
               </span>

@@ -155,6 +155,10 @@ export async function POST(request: NextRequest) {
         total: finalTotal, // THIS is the amount that matters
         status: 'pending',
         payment_method: paymentMethod,
+        // Invoice/Billing fields
+        invoice_type: customer.invoice_type || 'consumer_final',
+        invoice_tax_id: customer.invoice_tax_id || null,
+        invoice_business_name: customer.invoice_business_name || null,
       } as any)
       .select()
       .single();
@@ -359,27 +363,34 @@ async function validateCoupon(code: string, subtotal: number) {
   };
 }
 
-// GET order by order number
+// GET order by order_number or order_id
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const orderNumber = searchParams.get('order_number');
+    const orderId = searchParams.get('order_id');
 
-    if (!orderNumber) {
+    if (!orderNumber && !orderId) {
       return NextResponse.json(
-        { error: 'Order number required' },
+        { error: 'Order number or ID required' },
         { status: 400 }
       );
     }
 
-    const { data: order, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('orders')
       .select(`
         *,
         order_items (*)
-      `)
-      .eq('order_number', orderNumber)
-      .single();
+      `);
+    
+    if (orderId) {
+      query = query.eq('id', orderId);
+    } else {
+      query = query.eq('order_number', orderNumber);
+    }
+
+    const { data: order, error } = await query.single();
 
     if (error || !order) {
       return NextResponse.json(

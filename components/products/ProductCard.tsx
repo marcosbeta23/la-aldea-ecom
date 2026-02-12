@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Check } from 'lucide-react';
+import { ShoppingCart, Check, AlertCircle } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import WishlistButton from '@/components/common/WishlistButton';
@@ -16,6 +16,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const { addItem, isInCart } = useCartStore();
   const [isAdding, setIsAdding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const inCart = isInCart(product.id);
   const inStock = product.stock > 0;
@@ -27,10 +28,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     
     if (!inStock) return;
     
-    setIsAdding(true);
-    addItem(product, 1);
+    setError(null);
+    const result = addItem(product, 1);
     
-    setTimeout(() => setIsAdding(false), 1000);
+    if (result.success) {
+      setIsAdding(true);
+      setTimeout(() => setIsAdding(false), 1000);
+    } else {
+      setError(result.message || 'Error al agregar');
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   // Format price for display
@@ -67,6 +74,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {product.discount_percentage && product.discount_percentage > 0 && (
+            <span className="px-2.5 py-1 text-xs font-bold bg-green-600 text-white rounded-full">
+              -{product.discount_percentage}%
+            </span>
+          )}
           {product.sold_count >= 10 && (
             <span className="px-2.5 py-1 text-xs font-semibold bg-amber-500 text-white rounded-full">
               Popular
@@ -91,6 +103,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Quick Add to Cart - appears on hover */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          {error && (
+            <div className="mb-2 flex items-center gap-1 text-xs bg-red-500 text-white px-2 py-1 rounded-lg">
+              <AlertCircle className="h-3 w-3" />
+              {error}
+            </div>
+          )}
           <button
             onClick={handleAddToCart}
             disabled={!inStock || isAdding}
@@ -154,9 +172,20 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         {/* Price & Stock */}
         <div className="mt-auto flex items-end justify-between">
           <div>
-            <span className="text-2xl font-bold text-slate-900">
-              {formatPrice(product.price_numeric)}
-            </span>
+            {product.original_price_numeric && product.discount_percentage ? (
+              <div className="flex flex-col">
+                <span className="text-sm text-slate-400 line-through">
+                  {formatPrice(product.original_price_numeric)}
+                </span>
+                <span className="text-2xl font-bold text-green-600">
+                  {formatPrice(product.price_numeric)}
+                </span>
+              </div>
+            ) : (
+              <span className="text-2xl font-bold text-slate-900">
+                {formatPrice(product.price_numeric)}
+              </span>
+            )}
           </div>
           
           {inStock && (

@@ -1,5 +1,8 @@
 // Database types matching Supabase schema
 
+// Shipping types for products
+export type ProductShippingType = 'dac' | 'freight' | 'pickup_only';
+
 export interface Product {
   id: string;
   sku: string;
@@ -15,6 +18,16 @@ export interface Product {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // Shipping configuration
+  shipping_type: ProductShippingType; // 'dac' = standard courier, 'freight' = large items, 'pickup_only' = no shipping
+  weight_kg: number | null; // For shipping calculation
+  requires_quote: boolean; // If true, shipping cost needs manual quote
+  // Featured & Discount fields
+  is_featured: boolean; // Show in homepage featured section
+  original_price: string | null; // Original price text before discount
+  original_price_numeric: number | null; // Original price for calculations
+  discount_percentage: number | null; // e.g., 20 for 20% off
+  discount_ends_at: string | null; // When discount expires
 }
 
 export interface Order {
@@ -40,19 +53,52 @@ export interface Order {
   meta: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  // MVP Order Flow - New Fields
+  paid_at: string | null;
+  reserved_until: string | null;
+  stock_reserved: boolean;
+  // Invoice/CFE fields
+  invoice_number: string | null;
+  invoice_type: 'consumer_final' | 'invoice_rut' | null;
+  invoice_tax_id: string | null; // RUT del cliente
+  invoice_business_name: string | null; // Razón social
+  invoice_file_url: string | null; // URL to uploaded invoice PDF in storage
+  invoiced_at: string | null;
+  // Refund fields
+  refund_id: string | null;
+  refund_amount: number | null;
+  refund_reason: string | null;
+  refund_status: 'pending' | 'completed' | 'failed' | null;
+  refunded_at: string | null;
+  // Email tracking fields
+  confirmation_email_sent_at: string | null;
+  invoice_email_sent_at: string | null;
+  admin_notified_at: string | null;
   // Joined data
   order_items?: OrderItem[];
 }
 
 export type OrderStatus =
-  | 'draft'
-  | 'pending'
-  | 'paid'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-  | 'refunded';
+  | 'pending'      // Pendiente de pago (transferencia o MP pendiente)
+  | 'paid'         // Pagado - listo para facturar
+  | 'invoiced'     // Facturado
+  | 'shipped'      // Enviado
+  | 'delivered'    // Entregado
+  | 'cancelled'    // Cancelado
+  | 'refunded'     // Reembolsado
+  | 'out_of_stock'; // Sin stock disponible
+
+// Status labels for display
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  pending: 'Pendiente',
+  paid: 'Pagado',
+  invoiced: 'Facturado',
+  shipped: 'Enviado',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
+  refunded: 'Reembolsado',
+  out_of_stock: 'Sin Stock',
+};
 
 export interface OrderItem {
   id: string;

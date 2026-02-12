@@ -350,12 +350,14 @@ function getCategoryColor(category: string | null): string {
 }
 
 export default async function Home() {
-  // Fetch featured products from database (best sellers first)
+  // Fetch featured products from database
+  // Priority: is_featured=true first, then by sold_count
   const { data } = await supabaseAdmin
     .from('products')
     .select('*')
     .eq('is_active', true)
     .gt('stock', 0)
+    .order('is_featured', { ascending: false, nullsFirst: false })
     .order('sold_count', { ascending: false })
     .limit(4);
   
@@ -1009,6 +1011,16 @@ export default async function Home() {
                   <li>
                     <Link href="/contacto" className="text-slate-600 hover:text-blue-600">
                       Contacto
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/privacidad" className="text-slate-600 hover:text-blue-600">
+                      Política de Privacidad
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/terminos" className="text-slate-600 hover:text-blue-600">
+                      Términos y Condiciones
                     </Link>
                   </li>
                 </ul>

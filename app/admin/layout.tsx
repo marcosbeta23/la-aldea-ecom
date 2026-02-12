@@ -12,16 +12,21 @@ import {
   Menu,
   X,
   ChevronRight,
-  Home
+  Home,
+  BarChart3,
+  TrendingUp,
+  FileText
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
   { href: '/admin/products', label: 'Productos', icon: Package },
   { href: '/admin/coupons', label: 'Cupones', icon: Tag },
   { href: '/admin/reviews', label: 'Reseñas', icon: Star },
+  { href: '/admin/reports', label: 'Reportes', icon: FileText },
 ];
 
 export default function AdminLayout({

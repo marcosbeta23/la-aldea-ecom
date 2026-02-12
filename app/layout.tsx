@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
+import CookieConsent from "@/components/common/CookieConsent";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -213,6 +214,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
         <Analytics />
+        <CookieConsent />
       </body>
     </html>
   );

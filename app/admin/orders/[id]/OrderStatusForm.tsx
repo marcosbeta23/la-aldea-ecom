@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
 const statusOptions = [
-  { value: 'pending', label: 'Pendiente', color: 'bg-amber-100 text-amber-800 border-amber-300' },
-  { value: 'paid', label: 'Pagado', color: 'bg-green-100 text-green-800 border-green-300' },
-  { value: 'processing', label: 'En proceso', color: 'bg-blue-100 text-blue-800 border-blue-300' },
-  { value: 'shipped', label: 'Enviado', color: 'bg-purple-100 text-purple-800 border-purple-300' },
-  { value: 'delivered', label: 'Entregado', color: 'bg-slate-100 text-slate-800 border-slate-300' },
-  { value: 'cancelled', label: 'Cancelado', color: 'bg-red-100 text-red-800 border-red-300' },
+  { value: 'pending', label: '⏳ Pendiente', color: 'bg-amber-100 text-amber-800 border-amber-300', description: 'Esperando pago' },
+  { value: 'paid', label: '💳 Pagado', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', description: 'Listo para facturar' },
+  { value: 'invoiced', label: '📄 Facturado', color: 'bg-blue-100 text-blue-800 border-blue-300', description: 'Factura emitida' },
+  { value: 'shipped', label: '🚚 Enviado', color: 'bg-purple-100 text-purple-800 border-purple-300', description: 'En camino' },
+  { value: 'delivered', label: '✅ Entregado', color: 'bg-slate-100 text-slate-800 border-slate-300', description: 'Pedido completado' },
+  { value: 'out_of_stock', label: '⚠️ Sin Stock', color: 'bg-orange-100 text-orange-800 border-orange-300', description: 'Producto no disponible' },
+  { value: 'refunded', label: '↩️ Reembolsado', color: 'bg-rose-100 text-rose-800 border-rose-300', description: 'Dinero devuelto' },
+  { value: 'cancelled', label: '❌ Cancelado', color: 'bg-red-100 text-red-800 border-red-300', description: 'Pedido cancelado' },
 ];
 
 export default function OrderStatusForm({

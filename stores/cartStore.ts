@@ -12,10 +12,10 @@ interface CartState {
   items: CartItem[];
   isOpen: boolean; // For cart drawer/modal
   
-  // Actions
-  addItem: (product: Product, quantity?: number) => void;
+  // Actions - return result for stock validation feedback
+  addItem: (product: Product, quantity?: number) => { success: boolean; message?: string };
   removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  updateQuantity: (productId: string, quantity: number) => { success: boolean; message?: string };
   clearCart: () => void;
   toggleCart: () => void;
   setCartOpen: (open: boolean) => void;
@@ -37,6 +37,24 @@ export const useCartStore = create<CartState>()(
         const { items } = get();
         const existingItem = items.find((item) => item.product.id === product.id);
 
+        // Check if product is out of stock
+        if (product.stock <= 0) {
+          return { success: false, message: 'Producto sin stock disponible' };
+        }
+
+        // Calculate total quantity (existing + new)
+        const currentQty = existingItem?.quantity || 0;
+        const totalQty = currentQty + quantity;
+
+        // Validate against available stock
+        if (totalQty > product.stock) {
+          const canAdd = product.stock - currentQty;
+          if (canAdd <= 0) {
+            return { success: false, message: `Ya tenés el máximo disponible (${product.stock} unidades)` };
+          }
+          return { success: false, message: `Solo podés agregar ${canAdd} más (stock: ${product.stock})` };
+        }
+
         if (existingItem) {
           // Update quantity if already in cart
           set({
@@ -50,6 +68,8 @@ export const useCartStore = create<CartState>()(
           // Add new item
           set({ items: [...items, { product, quantity }] });
         }
+        
+        return { success: true };
       },
 
       removeItem: (productId) => {
@@ -62,7 +82,17 @@ export const useCartStore = create<CartState>()(
         if (quantity <= 0) {
           // Remove if quantity is 0 or less
           get().removeItem(productId);
-          return;
+          return { success: true };
+        }
+
+        const item = get().items.find((i) => i.product.id === productId);
+        if (!item) {
+          return { success: false, message: 'Producto no encontrado en el carrito' };
+        }
+
+        // Validate against available stock
+        if (quantity > item.product.stock) {
+          return { success: false, message: `Stock máximo disponible: ${item.product.stock} unidades` };
         }
 
         set({
@@ -70,6 +100,8 @@ export const useCartStore = create<CartState>()(
             item.product.id === productId ? { ...item, quantity } : item
           ),
         });
+        
+        return { success: true };
       },
 
       clearCart: () => {
