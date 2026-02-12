@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@next/bundle-analyzer": "^16.1.4",
+    "@sentry/nextjs": "^10.38.0",
     "@supabase/supabase-js": "^2.90.1",
     "dotenv": "^17.2.3",
     "lru-cache": "^10.4.3",

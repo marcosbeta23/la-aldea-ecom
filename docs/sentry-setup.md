@@ -1,37 +1,32 @@
 # Sentry Setup Guide for La Aldea E-Commerce
 
-## Quick Setup
+## ✅ CONFIGURADO
 
-### 1. Create Sentry Account & Project
+Sentry está configurado y listo para usar.
 
-1. Go to [sentry.io](https://sentry.io) and create a free account
-2. Create a new project:
-   - Platform: **Next.js**
-   - Name: `la-aldea-ecom`
-3. Copy your DSN (looks like: `https://xxxxx@xxx.ingest.sentry.io/xxxxx`)
+- **Org:** la-aldea-hn
+- **Project:** javascript-nextjs
+- **DSN:** `https://4b4aa76cb525cd257eb3045b695719ce@o4510870980657152.ingest.us.sentry.io/4510870986031104`
 
-### 2. Add Environment Variables
+### Archivos de Configuración
 
-Add to `.env.local` (development) and Vercel (production):
+| Archivo | Propósito |
+|---------|-----------|
+| `instrumentation-client.ts` | Config cliente (generado por wizard) |
+| `sentry.server.config.ts` | Config servidor |
+| `sentry.edge.config.ts` | Config edge runtime |
+| `instrumentation.ts` | Hook de Next.js |
 
-```bash
-# Sentry DSN
-SENTRY_DSN=https://your-dsn@xxx.ingest.sentry.io/xxxxx
-NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@xxx.ingest.sentry.io/xxxxx
+### Variables de Entorno
 
-# Sentry Auth Token (for source maps - optional but recommended)
-SENTRY_AUTH_TOKEN=your-auth-token
-
-# Sentry Org and Project (for source maps)
-SENTRY_ORG=your-org-slug
-SENTRY_PROJECT=la-aldea-ecom
-```
-
-### 3. Install Sentry SDK
+Ya configuradas en `.env.local`:
 
 ```bash
-pnpm add @sentry/nextjs
+SENTRY_DSN=https://4b4aa76cb525cd257eb3045b695719ce@o4510870980657152.ingest.us.sentry.io/4510870986031104
+NEXT_PUBLIC_SENTRY_DSN=https://4b4aa76cb525cd257eb3045b695719ce@o4510870980657152.ingest.us.sentry.io/4510870986031104
 ```
+
+Auth token en `.env.sentry-build-plugin` (para source maps).
 
 ### 4. Files Already Created
 
