@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'laaldeatala.com.uy',
       },
+      {
+        protocol: 'https',
+        hostname: 'glnyttjgqzpbiquvmujn.supabase.co',
+      },
     ],
   },
   async headers() {
@@ -49,11 +53,12 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://sdk.mercadopago.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://browser.sentry-cdn.com https://*.sentry.io",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.mercadopago.com https://*.supabase.co https://*.ingest.sentry.io https://*.sentry.io",
+              "connect-src 'self' https://api.mercadopago.com https://*.supabase.co https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.sentry.io https://browser.sentry-cdn.com https://www.google-analytics.com https://www.googletagmanager.com",
+              "worker-src 'self' blob:",
               "frame-src 'self' https://www.google.com https://maps.google.com https://www.mercadopago.com",
               "object-src 'none'",
               "base-uri 'self'",

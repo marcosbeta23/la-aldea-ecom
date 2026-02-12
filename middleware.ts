@@ -1,14 +1,15 @@
-// proxy.ts - Security and route protection (Next.js 16+ convention)
+// middleware.ts - Security and route protection
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   // 1. CSRF Protection for API routes
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
-    // Excepciones: webhooks externos que no tienen origin header
+    // Excepciones: webhooks y sentry tunnel
     const isWebhook = request.nextUrl.pathname.startsWith('/api/webhooks/');
+    const isSentryTunnel = request.nextUrl.pathname === '/api/sentry-tunnel';
     
-    if (!isWebhook) {
+    if (!isWebhook && !isSentryTunnel) {
       // Verificar que request venga del mismo origen
       const origin = request.headers.get('origin');
       const host = request.headers.get('host');
@@ -45,10 +46,10 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Security headers
+  // 3. Security headers (CSP is in next.config.ts)
   const response = NextResponse.next();
   
-  // Prevent clickjacking - but allow Google Maps iframe
+  // Prevent clickjacking
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   
   // Prevent MIME type sniffing
@@ -61,12 +62,6 @@ export function proxy(request: NextRequest) {
   response.headers.set(
     'Strict-Transport-Security',
     'max-age=31536000; includeSubDomains'
-  );
-  
-  // Content Security Policy - Allow Google Maps iframe
-  response.headers.set(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.mercadopago.com; frame-src 'self' https://www.google.com https://maps.google.com;"
   );
 
   return response;

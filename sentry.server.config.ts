@@ -20,19 +20,6 @@ Sentry.init({
   // Additional server-side settings
   profilesSampleRate: 0.1,
   
-  // Filter before sending
-  beforeSend(event, hint) {
-    // Don't send in development
-    if (process.env.NODE_ENV !== 'production') {
-      return null;
-    }
-    
-    // Log to console in development
-    console.error('[Sentry]', event.exception?.values?.[0]?.value);
-    
-    return event;
-  },
-  
   // Ignore certain errors
   ignoreErrors: [
     'Unauthorized',
