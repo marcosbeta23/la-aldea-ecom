@@ -327,8 +327,8 @@ export default async function OrderDetailPage({
             </div>
           )}
           
-          {/* Awaiting Stock Alert */}
-          {order.status === 'awaiting_stock' && (
+          {/* Out of Stock Alert */}
+          {order.status === 'out_of_stock' && (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
