@@ -17,26 +17,51 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const search = searchParams.get('search') || '';
-  const perPage = 20;
+  const category = searchParams.get('category') || '';
+  const brand = searchParams.get('brand') || '';
+  const status = searchParams.get('status') || ''; // 'active', 'inactive', ''
+  const hasImages = searchParams.get('hasImages') || ''; // 'yes', 'no', ''
+  const sort = searchParams.get('sort') || 'created_at';
+  const order = searchParams.get('order') || 'desc';
+  const perPage = Math.min(parseInt(searchParams.get('perPage') || '20'), 100);
   const offset = (page - 1) * perPage;
 
   try {
     let query = (supabaseAdmin
       .from('products')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .order(sort, { ascending: order === 'asc' })
       .range(offset, offset + perPage - 1)) as any;
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%`);
+    }
+    if (category) {
+      query = query.eq('category', category);
+    }
+    if (brand) {
+      query = query.eq('brand', brand);
+    }
+    if (status === 'active') {
+      query = query.eq('is_active', true);
+    } else if (status === 'inactive') {
+      query = query.eq('is_active', false);
     }
 
     const { data: products, count, error } = await query;
 
     if (error) throw error;
 
+    // Filter by images client-side (Supabase doesn't support array length filters well)
+    let filtered = products || [];
+    if (hasImages === 'yes') {
+      filtered = filtered.filter((p: any) => p.images && p.images.length > 0);
+    } else if (hasImages === 'no') {
+      filtered = filtered.filter((p: any) => !p.images || p.images.length === 0);
+    }
+
     return NextResponse.json({ 
-      products, 
+      products: filtered, 
       total: count || 0,
       page,
       perPage,
