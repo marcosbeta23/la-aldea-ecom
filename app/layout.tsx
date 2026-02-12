@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieConsent from "@/components/common/CookieConsent";
 
 const inter = Inter({
@@ -216,6 +217,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <VercelAnalytics />
+        <SpeedInsights />
         <CookieConsent />
       </body>
     </html>
