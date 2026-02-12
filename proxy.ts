@@ -1,8 +1,8 @@
-// middleware.ts - Security and route protection
+// proxy.ts - Security and route protection
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 1. CSRF Protection for API routes
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     // Excepciones: webhooks y sentry tunnel
