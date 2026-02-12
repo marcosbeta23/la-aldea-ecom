@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, Loader2, Trash2, X, Plus, Truck, Star, Tag } from 'lucide-react';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 import { SHIPPING_TYPE_LABELS } from '@/lib/shipping';
 import type { ProductShippingType } from '@/types/database';
@@ -67,7 +68,6 @@ export default function ProductForm({ product }: { product?: any }) {
     discount_percentage: product?.discount_percentage || null,
   });
   
-  const [newImageUrl, setNewImageUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
@@ -88,23 +88,6 @@ export default function ProductForm({ product }: { product?: any }) {
     setFormData(prev => ({
       ...prev,
       [name]: checked,
-    }));
-  };
-  
-  const addImage = () => {
-    if (newImageUrl.trim() && !formData.images.includes(newImageUrl.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImageUrl.trim()],
-      }));
-      setNewImageUrl('');
-    }
-  };
-  
-  const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
     }));
   };
   
@@ -260,51 +243,10 @@ export default function ProductForm({ product }: { product?: any }) {
           {/* Images */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Imágenes</h2>
-            
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                />
-                <button
-                  type="button"
-                  onClick={addImage}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
-                >
-                  <Plus className="h-5 w-5" />
-                </button>
-              </div>
-              
-              {formData.images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {formData.images.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Imagen ${index + 1}`}
-                        className="w-full aspect-square object-cover rounded-lg border border-slate-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                      {index === 0 && (
-                        <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-blue-600 text-white text-xs rounded">
-                          Principal
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ImageUpload
+              images={formData.images}
+              onChange={(images) => setFormData(prev => ({ ...prev, images }))}
+            />
           </div>
         </div>
         
