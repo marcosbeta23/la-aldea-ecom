@@ -9,7 +9,8 @@ import {
   Package,
   ChevronLeft,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Upload
 } from 'lucide-react';
 
 export default async function ProductsPage({
@@ -37,8 +38,11 @@ export default async function ProductsPage({
   
   const totalPages = Math.ceil((count || 0) / perPage);
   
-  const formatCurrency = (value: number) => 
-    `UYU ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatCurrency = (value: number, currency: string = 'UYU') => {
+    const prefix = currency === 'USD' ? 'US$' : '$';
+    const decimals = currency === 'USD' ? 2 : 0;
+    return `${prefix} ${value.toLocaleString('es-UY', { maximumFractionDigits: decimals })}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -49,13 +53,22 @@ export default async function ProductsPage({
           <p className="text-slate-500">{count || 0} productos en total</p>
         </div>
         
-        <Link
-          href="/admin/products/new"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          <Plus className="h-5 w-5" />
-          Nuevo producto
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/products/import"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+          >
+            <Upload className="h-5 w-5" />
+            Importar CSV
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            <Plus className="h-5 w-5" />
+            Nuevo producto
+          </Link>
+        </div>
       </div>
       
       {/* Search */}
@@ -121,7 +134,7 @@ export default async function ProductsPage({
                     {product.category || '-'}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                    {formatCurrency(product.price_numeric)}
+                    {formatCurrency(product.price_numeric, product.currency)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

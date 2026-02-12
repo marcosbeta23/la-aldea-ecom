@@ -257,20 +257,56 @@ export default function ProductForm({ product }: { product?: any }) {
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Precio y Stock</h2>
             
             <div className="space-y-4">
+              {/* Currency selector */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Precio (UYU) *
+                  Moneda
                 </label>
-                <input
-                  type="number"
-                  name="price_numeric"
-                  value={formData.price_numeric}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  min="0"
-                  step="1"
-                />
+                <div className="flex rounded-lg border border-slate-300 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, currency: 'UYU' }))}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                      formData.currency === 'UYU'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    🇺🇾 UYU
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, currency: 'USD' }))}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-slate-300 ${
+                      formData.currency === 'USD'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    🇺🇸 USD
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Precio ({formData.currency}) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                    {formData.currency === 'USD' ? 'US$' : '$'}
+                  </span>
+                  <input
+                    type="number"
+                    name="price_numeric"
+                    value={formData.price_numeric}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                    min="0"
+                    step={formData.currency === 'USD' ? '0.01' : '1'}
+                  />
+                </div>
               </div>
               
               <div>
