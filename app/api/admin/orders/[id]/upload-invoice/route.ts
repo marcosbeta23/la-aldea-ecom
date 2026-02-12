@@ -68,7 +68,7 @@ export async function POST(
       .from('orders')
       .select('*')
       .eq('id', orderId)
-      .single();
+      .single() as { data: any; error: any };
     
     if (orderError || !orderData) {
       return NextResponse.json(
@@ -176,7 +176,7 @@ export async function POST(
       const { data: orderItems } = await supabaseAdmin
         .from('order_items')
         .select('*')
-        .eq('order_id', orderId);
+        .eq('order_id', orderId) as { data: any[] | null };
       
       emailSent = await sendInvoiceEmail({
         order: { ...order, ...updateData } as Order,

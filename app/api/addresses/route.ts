@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('customer_email', email.toLowerCase())
       .order('is_default', { ascending: false })
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: any[] | null; error: any };
 
     if (error) {
       console.error('Get addresses error:', error);
@@ -94,9 +94,8 @@ export async function POST(request: NextRequest) {
 
     // If setting as default, unset other defaults first
     if (is_default) {
-      const { error: unsetError } = await supabaseAdmin
+      const { error: unsetError } = await (supabaseAdmin as any)
         .from('addresses')
-        // @ts-expect-error - Supabase type inference issue with addresses table
         .update({ is_default: false })
         .eq('customer_email', customer_email.toLowerCase());
       
@@ -105,9 +104,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('addresses')
-      // @ts-expect-error - Supabase type inference issue with addresses table
       .insert({
         customer_email: customer_email.toLowerCase(),
         customer_name,
@@ -119,7 +117,7 @@ export async function POST(request: NextRequest) {
         is_default: is_default || false,
       })
       .select()
-      .single();
+      .single() as { data: any; error: any };
 
     if (error) {
       console.error('Create address error:', error);

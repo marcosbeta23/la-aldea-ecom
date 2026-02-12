@@ -34,7 +34,7 @@ export default async function ReviewsPage({
     query = query.eq('is_approved', true);
   }
 
-  const { data: reviews } = await query;
+  const { data: reviews } = await query as { data: any[] | null };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-UY', {
@@ -49,7 +49,7 @@ export default async function ReviewsPage({
   const pendingCount = await supabaseAdmin
     .from('product_reviews')
     .select('id', { count: 'exact', head: true })
-    .eq('is_approved', false);
+    .eq('is_approved', false) as { count: number | null };
 
   return (
     <div className="space-y-6">

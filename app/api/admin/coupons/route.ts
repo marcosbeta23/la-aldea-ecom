@@ -19,7 +19,7 @@ export async function GET() {
   const { data: coupons, error } = await supabaseAdmin
     .from('discount_coupons')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false }) as { data: any[] | null; error: any };
 
   if (error) {
     console.error('Error fetching coupons:', error);
@@ -50,15 +50,14 @@ export async function POST(request: NextRequest) {
       .from('discount_coupons')
       .select('id')
       .eq('code', code.toUpperCase())
-      .single();
+      .single() as { data: { id: string } | null };
 
     if (existing) {
       return NextResponse.json({ error: 'Coupon code already exists' }, { status: 400 });
     }
 
-    const { data: coupon, error } = await supabaseAdmin
+    const { data: coupon, error } = await (supabaseAdmin as any)
       .from('discount_coupons')
-      // @ts-expect-error - Supabase type inference issue
       .insert({
         code: code.toUpperCase(),
         description: description || null,

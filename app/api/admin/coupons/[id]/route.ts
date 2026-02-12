@@ -25,7 +25,7 @@ export async function GET(
     .from('discount_coupons')
     .select('*')
     .eq('id', id)
-    .single();
+    .single() as { data: any; error: any };
 
   if (error || !coupon) {
     return NextResponse.json({ error: 'Coupon not found' }, { status: 404 });
@@ -63,9 +63,8 @@ export async function PATCH(
     if (body.valid_until !== undefined) updateData.valid_until = body.valid_until;
     if (body.is_active !== undefined) updateData.is_active = body.is_active;
 
-    const { data: coupon, error } = await supabaseAdmin
+    const { data: coupon, error } = await (supabaseAdmin as any)
       .from('discount_coupons')
-      // @ts-expect-error - Supabase type inference issue
       .update(updateData)
       .eq('id', id)
       .select()
@@ -96,7 +95,7 @@ export async function DELETE(
   const { error } = await supabaseAdmin
     .from('discount_coupons')
     .delete()
-    .eq('id', id);
+    .eq('id', id) as { error: any };
 
   if (error) {
     console.error('Error deleting coupon:', error);

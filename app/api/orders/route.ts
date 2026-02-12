@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const { data: products, error: productsError } = await supabaseAdmin
       .from('products')
       .select('id, sku, name, price_numeric, stock, is_active')
-      .in('id', productIds);
+      .in('id', productIds) as { data: any[] | null; error: any };
     
     if (productsError || !products) {
       return NextResponse.json(
@@ -193,9 +193,8 @@ export async function POST(request: NextRequest) {
     
     // ✅ INCREMENT COUPON USAGE (before payment processing)
     if (validatedCoupon) {
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('discount_coupons')
-        // @ts-expect-error - Supabase type inference issue
         .update({ 
           current_uses: (validatedCoupon.current_uses || 0) + 1 
         })
@@ -284,9 +283,8 @@ export async function POST(request: NextRequest) {
     console.log('✅ MercadoPago preference created:', mpData.id);
     
     // 🔟 UPDATE ORDER WITH PREFERENCE ID
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await (supabaseAdmin as any)
       .from('orders')
-      // @ts-expect-error - Supabase type inference issue
       .update({ mp_preference_id: mpData.id })
       .eq('id', (order as any).id);
     
@@ -319,7 +317,7 @@ async function validateCoupon(code: string, subtotal: number) {
     .select('*')
     .eq('code', code.toUpperCase())
     .eq('is_active', true)
-    .single();
+    .single() as { data: any };
   
   if (!coupon) {
     return { valid: false, error: 'Coupon not found' };
@@ -377,7 +375,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query = supabaseAdmin
+    let query = (supabaseAdmin as any)
       .from('orders')
       .select(`
         *,

@@ -359,7 +359,7 @@ export default async function Home() {
     .gt('stock', 0)
     .order('is_featured', { ascending: false, nullsFirst: false })
     .order('sold_count', { ascending: false })
-    .limit(4);
+    .limit(4) as { data: any[] | null };
   
   const featuredProducts = (data || []) as Product[];
 

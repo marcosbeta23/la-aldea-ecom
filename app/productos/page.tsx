@@ -43,10 +43,10 @@ async function getProducts(searchParams: {
   page?: string;
   q?: string;
 }) {
-  let query = supabaseAdmin
+  let query = (supabaseAdmin
     .from('products')
     .select('*', { count: 'exact' })
-    .eq('is_active', true);
+    .eq('is_active', true)) as any;
 
   // Category filter
   if (searchParams.categoria) {

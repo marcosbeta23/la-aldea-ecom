@@ -35,7 +35,7 @@ export default async function OrderDetailPage({
     .from('orders')
     .select('*')
     .eq('id', id)
-    .single();
+    .single() as { data: any; error: any };
   
   if (error || !data) {
     notFound();
@@ -47,7 +47,7 @@ export default async function OrderDetailPage({
   const { data: itemsData } = await supabaseAdmin
     .from('order_items')
     .select('*')
-    .eq('order_id', id);
+    .eq('order_id', id) as { data: any[] | null };
   
   const orderItems = (itemsData || []) as OrderItem[];
   
@@ -57,7 +57,7 @@ export default async function OrderDetailPage({
     .select('*')
     .eq('order_id', id)
     .order('created_at', { ascending: false })
-    .limit(10);
+    .limit(10) as { data: Array<{ id: string; order_id: string; action: string; old_status: string | null; new_status: string | null; details: Record<string, unknown> | null; created_by: string | null; created_at: string }> | null };
   
   const orderLogs = logsData || [];
   

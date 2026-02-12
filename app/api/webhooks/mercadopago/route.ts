@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       .from('orders')
       .select('*')
       .eq('id', orderId)
-      .single();
+      .single() as { data: any; error: any };
     
     if (orderError || !order) {
       console.error('Order not found:', orderId);
@@ -89,9 +89,8 @@ export async function POST(request: NextRequest) {
       });
       
       // Mark as cancelled and log event
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('orders')
-        // @ts-expect-error - Supabase type inference issue
         .update({
           status: 'cancelled',
           notes: `⚠️ FRAUDE POTENCIAL: Monto esperado ${expectedAmount}, pagado ${paidAmount}`,
@@ -122,7 +121,7 @@ export async function POST(request: NextRequest) {
       updateData.paid_at = new Date().toISOString();
       
       // 🔒 ATOMIC STOCK RESERVATION using RPC function
-      const { data: reservationResult, error: reserveError } = await supabaseAdmin
+      const { data: reservationResult, error: reserveError } = await (supabaseAdmin as any)
         .rpc('reserve_stock_for_order', {
           p_order_id: orderData.id,
           p_reservation_hours: STOCK_RESERVATION_HOURS,
@@ -174,17 +173,16 @@ export async function POST(request: NextRequest) {
           .from('discount_coupons')
           .select('current_uses')
           .eq('code', orderData.coupon_code)
-          .single();
+          .single() as { data: any };
         
         if (coupon) {
           const couponData: any = coupon;
-          await supabaseAdmin
-            .from('discount_coupons')
-            // @ts-expect-error - Supabase type inference issue
-            .update({ 
-              current_uses: (couponData.current_uses || 0) + 1 
-            })
-            .eq('code', orderData.coupon_code);
+            await (supabaseAdmin as any)
+              .from('discount_coupons')
+              .update({ 
+                current_uses: (couponData.current_uses || 0) + 1 
+              })
+              .eq('code', orderData.coupon_code);
         }
       }
       
@@ -194,7 +192,7 @@ export async function POST(request: NextRequest) {
         const { data: orderItems } = await supabaseAdmin
           .from('order_items')
           .select('*')
-          .eq('order_id', orderData.id);
+          .eq('order_id', orderData.id) as { data: any[] | null };
         
         if (orderItems && orderItems.length > 0) {
           const emailTimestamps: Record<string, string> = {};
@@ -217,8 +215,7 @@ export async function POST(request: NextRequest) {
           
           // Update order with email timestamps
           if (Object.keys(emailTimestamps).length > 0) {
-            // @ts-expect-error - Supabase type inference issue
-            await supabaseAdmin
+            await (supabaseAdmin as any)
               .from('orders')
               .update(emailTimestamps)
               .eq('id', orderData.id);
@@ -248,9 +245,8 @@ export async function POST(request: NextRequest) {
     }
     
     // 8️⃣ UPDATE ORDER
-    await supabaseAdmin
+    await (supabaseAdmin as any)
       .from('orders')
-      // @ts-expect-error - Supabase type inference issue
       .update(updateData)
       .eq('id', orderData.id);
     
@@ -273,7 +269,7 @@ async function logOrderEvent(
   details?: Record<string, unknown>
 ) {
   try {
-    await supabaseAdmin
+    await (supabaseAdmin as any)
       .from('order_logs')
       .insert({
         order_id: orderId,

@@ -102,7 +102,7 @@ export async function PATCH(
       .from('orders')
       .select('*')
       .eq('id', id)
-      .single();
+      .single() as { data: any };
     
     // Auto-send notifications on status changes
     if (body.status && updatedOrder) {
@@ -200,7 +200,7 @@ export async function GET(
       .from('orders')
       .select('*, order_items(*)')
       .eq('id', id)
-      .single();
+      .single() as { data: any; error: any };
     
     if (error || !order) {
       return NextResponse.json(

@@ -102,7 +102,7 @@ export default async function AdminDashboard() {
   // Get orders count by status
   const { data: ordersData } = await supabaseAdmin
     .from('orders')
-    .select('id, status, total, created_at');
+    .select('id, status, total, created_at') as { data: any[] | null };
   
   const orders = (ordersData || []) as OrderStat[];
   
@@ -110,14 +110,14 @@ export default async function AdminDashboard() {
   const { count: productsCount } = await supabaseAdmin
     .from('products')
     .select('*', { count: 'exact', head: true })
-    .eq('is_active', true);
+    .eq('is_active', true) as { count: number | null };
   
   // Get recent orders
   const { data: recentOrdersData } = await supabaseAdmin
     .from('orders')
     .select('id, order_number, customer_name, total, status, created_at')
     .order('created_at', { ascending: false })
-    .limit(5);
+    .limit(5) as { data: any[] | null };
   
   const recentOrders = (recentOrdersData || []) as RecentOrder[];
   

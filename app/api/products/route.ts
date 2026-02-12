@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       .from('products')
       .select('*')
       .in('id', productIds)
-      .eq('is_active', true);
+      .eq('is_active', true) as { data: any[] | null; error: any };
 
     if (error) {
       console.error('Error fetching products:', error);

@@ -25,7 +25,7 @@ export async function GET(
       .from('products')
       .select('*')
       .eq('id', id)
-      .single();
+      .single() as { data: any; error: any };
 
     if (error || !product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
@@ -86,7 +86,7 @@ export async function PUT(
       .select('id')
       .eq('sku', sku)
       .neq('id', id)
-      .single();
+      .single() as { data: { id: string } | null };
 
     if (existing) {
       return NextResponse.json({ 
@@ -154,7 +154,7 @@ export async function DELETE(
       .from('products')
       .select('id')
       .eq('id', id)
-      .single();
+      .single() as { data: { id: string } | null };
 
     if (!product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
@@ -165,7 +165,7 @@ export async function DELETE(
       .from('order_items')
       .select('id')
       .eq('product_id', id)
-      .limit(1);
+      .limit(1) as { data: Array<{ id: string }> | null };
 
     if (orderItems && orderItems.length > 0) {
       // Instead of deleting, just deactivate

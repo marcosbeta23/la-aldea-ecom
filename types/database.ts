@@ -79,25 +79,35 @@ export interface Order {
 }
 
 export type OrderStatus =
-  | 'pending'      // Pendiente de pago (transferencia o MP pendiente)
-  | 'paid'         // Pagado - listo para facturar
-  | 'invoiced'     // Facturado
-  | 'shipped'      // Enviado
-  | 'delivered'    // Entregado
-  | 'cancelled'    // Cancelado
-  | 'refunded'     // Reembolsado
-  | 'out_of_stock'; // Sin stock disponible
+  | 'draft'                     // Borrador
+  | 'pending'                   // Pendiente de pago
+  | 'paid'                      // Pagado - stock reservado
+  | 'paid_pending_verification' // Pagado pendiente de verificación
+  | 'awaiting_stock'            // Esperando stock
+  | 'out_of_stock'              // Sin stock disponible
+  | 'ready_to_invoice'          // Listo para facturar
+  | 'invoiced'                  // Facturado
+  | 'processing'                // En proceso / preparando
+  | 'shipped'                   // Enviado
+  | 'delivered'                 // Entregado
+  | 'cancelled'                 // Cancelado
+  | 'refunded';                 // Reembolsado
 
 // Status labels for display
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  draft: 'Borrador',
   pending: 'Pendiente',
   paid: 'Pagado',
+  paid_pending_verification: 'Verificando Pago',
+  awaiting_stock: 'Esperando Stock',
+  out_of_stock: 'Sin Stock',
+  ready_to_invoice: 'Para Facturar',
   invoiced: 'Facturado',
+  processing: 'En Proceso',
   shipped: 'Enviado',
   delivered: 'Entregado',
   cancelled: 'Cancelado',
   refunded: 'Reembolsado',
-  out_of_stock: 'Sin Stock',
 };
 
 export interface OrderItem {

@@ -22,11 +22,11 @@ export async function GET(request: NextRequest) {
   const offset = (page - 1) * perPage;
 
   try {
-    let query = supabaseAdmin
+    let query = (supabaseAdmin
       .from('products')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(offset, offset + perPage - 1);
+      .range(offset, offset + perPage - 1)) as any;
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       .from('products')
       .select('id')
       .eq('sku', sku)
-      .single();
+      .single() as { data: { id: string } | null };
 
     if (existing) {
       return NextResponse.json({ 

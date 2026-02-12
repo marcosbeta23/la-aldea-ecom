@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { data: relationsData, error: relationsError } = await supabaseAdmin
       .from('related_products')
       .select('related_product_id, relationship_type')
-      .eq('product_id', productId);
+      .eq('product_id', productId) as { data: any[] | null; error: any };
 
     if (relationsError) {
       console.error('Get relations error:', relationsError);
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       .from('products')
       .select('*')
       .in('id', relatedIds)
-      .eq('is_active', true);
+      .eq('is_active', true) as { data: any[] | null; error: any };
 
     if (productsError) {
       console.error('Get products error:', productsError);

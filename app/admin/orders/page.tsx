@@ -89,7 +89,7 @@ export default async function OrdersPage({
     query = query.eq('status', statusFilter);
   }
   
-  const { data: orders, count } = await query;
+  const { data: orders, count } = await query as { data: any[] | null; count: number | null };
   
   const totalPages = Math.ceil((count || 0) / perPage);
   

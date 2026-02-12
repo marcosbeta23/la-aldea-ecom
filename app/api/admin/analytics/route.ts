@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       .from('orders')
       .select('id, status, total, created_at, customer_email')
       .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null }> | null };
 
     const orders = ordersData || [];
 
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     const { data: orderItemsData } = await supabaseAdmin
       .from('order_items')
       .select('order_id, product_id, product_name, quantity, unit_price, subtotal')
-      .in('order_id', orderIds.length > 0 ? orderIds : ['none']);
+      .in('order_id', orderIds.length > 0 ? orderIds : ['none']) as { data: Array<{ order_id: string; product_id: string; product_name: string; quantity: number; unit_price: number; subtotal: number }> | null };
 
     const orderItems = orderItemsData || [];
 
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     const { data: productsData } = await supabaseAdmin
       .from('products')
       .select('id, name, sku, images')
-      .in('id', productIds.length > 0 ? productIds : ['none']);
+      .in('id', productIds.length > 0 ? productIds : ['none']) as { data: Array<{ id: string; name: string; sku: string; images: string[] | null }> | null };
 
     const products = productsData || [];
     const productMap = new Map(products.map(p => [p.id, p]));

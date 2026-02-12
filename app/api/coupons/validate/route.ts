@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('code', code.toUpperCase())
       .eq('is_active', true)
-      .single();
+      .single() as { data: any; error: any };
 
     if (error || !data) {
       return NextResponse.json(

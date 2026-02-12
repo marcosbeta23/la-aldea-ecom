@@ -33,7 +33,7 @@ export default async function ProductsPage({
     query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
   }
   
-  const { data: products, count } = await query;
+  const { data: products, count } = await query as { data: any[] | null; count: number | null };
   
   const totalPages = Math.ceil((count || 0) / perPage);
   

@@ -17,7 +17,7 @@ export default async function EditProductPage({
     .from('products')
     .select('*')
     .eq('id', id)
-    .single();
+    .single() as { data: any; error: any };
   
   if (error || !data) {
     notFound();

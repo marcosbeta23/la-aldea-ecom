@@ -75,7 +75,7 @@ export async function POST(
       .from('orders')
       .select('*')
       .eq('id', orderId)
-      .single();
+      .single() as { data: any; error: any };
     
     if (orderError || !order) {
       return NextResponse.json(
@@ -146,7 +146,7 @@ export async function POST(
     // Restore stock if requested
     if (restoreStock && orderData.stock_reserved) {
       try {
-        await supabaseAdmin.rpc('restore_stock_for_order', {
+        await (supabaseAdmin as any).rpc('restore_stock_for_order', {
           p_order_id: orderId,
         });
         console.log('Stock restored for order:', orderId);

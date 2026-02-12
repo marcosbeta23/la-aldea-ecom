@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         is_approved: false, // Requires admin approval
       } as any)
       .select()
-      .single();
+      .single() as { data: any; error: any };
 
     if (error) {
       console.error('Error creating review:', error);
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('product_id', productId)
       .eq('is_approved', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: any[] | null; error: any };
 
     if (error) {
       console.error('Error fetching reviews:', error);

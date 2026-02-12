@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       .select('id, sku, name, category, brand, price_numeric, images')
       .eq('is_active', true)
       .or(`name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%,sku.ilike.%${query}%`)
-      .limit(8);
+      .limit(8) as { data: Array<{ id: string; sku: string; name: string; category: string | null; brand: string | null; price_numeric: number; images: string[] | null }> | null };
 
     // Get unique categories that match
     const { data: categories } = await supabaseAdmin
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       .select('category')
       .eq('is_active', true)
       .ilike('category', `%${query}%`)
-      .limit(3);
+      .limit(3) as { data: Array<{ category: string | null }> | null };
 
     // Get unique brands that match
     const { data: brands } = await supabaseAdmin
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       .select('brand')
       .eq('is_active', true)
       .ilike('brand', `%${query}%`)
-      .limit(3);
+      .limit(3) as { data: Array<{ brand: string | null }> | null };
 
     // Build suggestions array
     const suggestions: Array<{
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         id: product.id,
         sku: product.sku,
         name: product.name,
-        image: product.images?.[0] || null,
+        image: product.images?.[0] || undefined,
         price: product.price_numeric,
       });
     });

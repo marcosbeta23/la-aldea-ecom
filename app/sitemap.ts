@@ -104,7 +104,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("products")
       .select("slug, updated_at")
       .eq("is_active", true)
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false }) as { data: any[] | null; error: any };
 
     if (!error && products && Array.isArray(products)) {
       productPages = products.map((product: { slug: string; updated_at: string | null }) => ({
