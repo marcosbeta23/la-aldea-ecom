@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Verify admin authentication
+// Verify admin authentication via Clerk
 async function verifyAdmin() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin_token')?.value;
-  const secret = process.env.ADMIN_SESSION_SECRET;
-  return token && secret && token === secret;
+  const { userId } = await auth();
+  return !!userId;
 }
 
 // GET all coupons

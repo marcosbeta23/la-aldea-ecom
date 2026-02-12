@@ -1,48 +1,12 @@
-'use client';
+import { SignIn } from '@clerk/nextjs';
+import { ShieldCheck } from 'lucide-react';
 
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+export const metadata = {
+  title: 'Admin Login',
+  robots: { index: false, follow: false },
+};
 
-function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  
-  const redirect = searchParams.get('redirect') || '/admin';
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-    
-    try {
-      const res = await fetch('/api/admin/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || 'Error de autenticación');
-      }
-      
-      // Redirect to admin dashboard or original destination
-      router.push(redirect);
-      router.refresh();
-      
-    } catch (err: any) {
-      setError(err.message || 'Error de autenticación');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
+export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -55,64 +19,34 @@ function LoginForm() {
           <p className="text-slate-400 mt-2">Panel de administración</p>
         </div>
         
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Contraseña de acceso
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900"
-                  placeholder="Ingresá la contraseña"
-                  required
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-slate-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-slate-400" />
-                  )}
-                </button>
-              </div>
-            </div>
-            
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
-                {error}
-              </div>
-            )}
-            
-            <button
-              type="submit"
-              disabled={isLoading || !password}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Verificando...
-                </>
-              ) : (
-                <>
-                  <Lock className="h-5 w-5" />
-                  Ingresar
-                </>
-              )}
-            </button>
-          </form>
+        {/* Clerk SignIn Component */}
+        <div className="flex justify-center">
+          <SignIn 
+            forceRedirectUrl="/admin"
+            appearance={{
+              elements: {
+                rootBox: "w-full max-w-md",
+                cardBox: "shadow-2xl rounded-2xl w-full",
+                card: "rounded-2xl",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+                socialButtonsBlockButton: "rounded-xl",
+                formButtonPrimary: "bg-blue-600 hover:bg-blue-700 rounded-xl h-12 text-base",
+                formFieldInput: "rounded-xl h-12 border-slate-300",
+                formFieldLabel: "text-slate-700 font-medium",
+                footerAction: "hidden",
+                footer: "hidden",
+                dividerLine: "bg-slate-200",
+                dividerText: "text-slate-400",
+                identityPreviewEditButton: "text-blue-600",
+                formResendCodeLink: "text-blue-600",
+              },
+              layout: {
+                socialButtonsPlacement: "bottom",
+                showOptionalFields: false,
+              },
+            }}
+          />
         </div>
         
         {/* Footer */}
@@ -121,17 +55,5 @@ function LoginForm() {
         </p>
       </div>
     </div>
-  );
-}
-
-export default function AdminLoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
   );
 }

@@ -1,19 +1,18 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { UserButton } from '@clerk/nextjs';
 import { 
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
   Tag,
   Star,
-  LogOut,
   Menu,
   X,
   ChevronRight,
   Home,
-  BarChart3,
   TrendingUp,
   FileText
 } from 'lucide-react';
@@ -35,19 +34,12 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Don't show layout for login page
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
-  
-  const handleLogout = async () => {
-    await fetch('/api/admin/auth', { method: 'DELETE' });
-    router.push('/admin/login');
-    router.refresh();
-  };
   
   return (
     <div className="min-h-screen bg-slate-100">
@@ -73,6 +65,7 @@ export default function AdminLayout({
           <button 
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-1 hover:bg-slate-800 rounded"
+            aria-label="Cerrar menú"
           >
             <X className="h-5 w-5" />
           </button>
@@ -113,14 +106,6 @@ export default function AdminLayout({
             <Home className="h-5 w-5" />
             <span>Ver tienda</span>
           </Link>
-          
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Cerrar sesión</span>
-          </button>
         </div>
       </aside>
       
@@ -131,16 +116,24 @@ export default function AdminLayout({
           <button 
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 hover:bg-slate-100 rounded-lg mr-4"
+            aria-label="Abrir menú"
           >
             <Menu className="h-6 w-6 text-slate-600" />
           </button>
           
-          <div className="flex-1">
-            {/* Breadcrumb or title can go here */}
-          </div>
+          <div className="flex-1" />
           
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-500">Admin</span>
+            <span className="text-sm text-slate-500 hidden sm:inline">Admin</span>
+            <UserButton 
+              afterSignOutUrl="/admin/login"
+              appearance={{
+                elements: {
+                  avatarBox: "w-9 h-9",
+                  userButtonPopoverCard: "shadow-xl",
+                }
+              }}
+            />
           </div>
         </header>
         

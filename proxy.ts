@@ -1,20 +1,23 @@
-// proxy.ts - Security and route protection
+// proxy.ts - Clerk Auth + Security middleware
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function proxy(request: NextRequest) {
+// Routes that require Clerk authentication
+const isAdminRoute = createRouteMatcher(['/admin(.*)', '/api/admin(.*)']);
+// Admin login is public (Clerk renders its SignIn component there)
+const isAdminLogin = createRouteMatcher(['/admin/login']);
+
+export default clerkMiddleware(async (auth, request) => {
   // 1. CSRF Protection for API routes
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
-    // Excepciones: webhooks y sentry tunnel
     const isWebhook = request.nextUrl.pathname.startsWith('/api/webhooks/');
     const isSentryTunnel = request.nextUrl.pathname === '/api/sentry-tunnel';
+    const isCron = request.nextUrl.pathname.startsWith('/api/cron/');
     
-    if (!isWebhook && !isSentryTunnel) {
-      // Verificar que request venga del mismo origen
+    if (!isWebhook && !isSentryTunnel && !isCron) {
       const origin = request.headers.get('origin');
       const host = request.headers.get('host');
       
-      // Si hay origin header y NO coincide con nuestro host
       if (origin && !origin.includes(host!)) {
         console.error('CSRF attempt detected:', { 
           origin, 
@@ -31,51 +34,29 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 2. Admin panel protection
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Skip login page
-    if (request.nextUrl.pathname === '/admin/login') {
-      return NextResponse.next();
-    }
-    
-    const adminToken = request.cookies.get('admin_token');
-    
-    // Check if token matches secret
-    if (!adminToken || adminToken.value !== process.env.ADMIN_SESSION_SECRET) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
+  // 2. Protect admin routes with Clerk (except login page)
+  if (isAdminRoute(request) && !isAdminLogin(request)) {
+    await auth.protect();
   }
 
-  // 3. Security headers (CSP is in next.config.ts)
+  // 3. Security headers
   const response = NextResponse.next();
-  
-  // Prevent clickjacking
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  
-  // Prevent MIME type sniffing
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  
-  // XSS Protection
   response.headers.set('X-XSS-Protection', '1; mode=block');
-  
-  // Strict Transport Security (HTTPS only)
   response.headers.set(
     'Strict-Transport-Security',
     'max-age=31536000; includeSubDomains'
   );
 
   return response;
-}
+});
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };

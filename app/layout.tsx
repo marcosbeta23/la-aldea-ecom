@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { esES } from "@clerk/localizations";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
@@ -202,24 +204,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <head>
-        {/* Preconnect to external origins */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        
-        {/* DNS prefetch for performance */}
-        <link rel="dns-prefetch" href="https://supabase.co" />
-        <link rel="dns-prefetch" href="https://api.mercadopago.com" />
-      </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
-        <Analytics />
-        <VercelAnalytics />
-        <SpeedInsights />
-        <CookieConsent />
-      </body>
-    </html>
+    <ClerkProvider localization={esES}>
+      <html lang="es">
+        <head>
+          {/* Preconnect to external origins */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link rel="preconnect" href="https://www.googletagmanager.com" />
+          
+          {/* DNS prefetch for performance */}
+          <link rel="dns-prefetch" href="https://supabase.co" />
+          <link rel="dns-prefetch" href="https://api.mercadopago.com" />
+        </head>
+        <body className={`${inter.variable} font-sans antialiased`}>
+          {children}
+          <Analytics />
+          <VercelAnalytics />
+          <SpeedInsights />
+          <CookieConsent />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

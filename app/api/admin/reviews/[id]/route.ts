@@ -1,12 +1,11 @@
 // app/api/admin/reviews/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 async function checkAdminAuth(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin_token')?.value;
-  return token === process.env.ADMIN_SESSION_SECRET;
+  const { userId } = await auth();
+  return !!userId;
 }
 
 // PATCH - Approve/reject review
