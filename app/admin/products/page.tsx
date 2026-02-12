@@ -30,6 +30,7 @@ import {
   PackageX,
   Camera,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -304,6 +305,30 @@ export default function ProductsPage() {
       fetchStats();
     } catch (err) {
       console.error('Bulk update error:', err);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    const confirmed = window.confirm(
+      `¿Estás seguro de que querés eliminar ${count} producto${count > 1 ? 's' : ''}? Esta acción no se puede deshacer.`
+    );
+    if (!confirmed) return;
+
+    setBulkLoading(true);
+    try {
+      const promises = [...selectedIds].map(id =>
+        fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
+      );
+      await Promise.all(promises);
+      setSelectedIds(new Set());
+      fetchProducts(filters, page, true);
+      fetchStats();
+    } catch (err) {
+      console.error('Bulk delete error:', err);
     } finally {
       setBulkLoading(false);
     }
@@ -628,6 +653,14 @@ export default function ProductsPage() {
             >
               {bulkLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ToggleLeft className="h-3.5 w-3.5" />}
               Desactivar
+            </button>
+            <button
+              onClick={bulkDelete}
+              disabled={bulkLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {bulkLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              Eliminar
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
