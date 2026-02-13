@@ -241,7 +241,7 @@ function convertToCSV(data: any, type: string): string {
     const rows = (data.products || []).map((p: any) => [
       p.sku || '',
       p.name,
-      p.category || '',
+      Array.isArray(p.category) ? p.category.join(', ') : (p.category || ''),
       p.brand || '',
       (p.price_numeric || 0).toFixed(2),
       p.stock,

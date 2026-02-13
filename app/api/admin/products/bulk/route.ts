@@ -79,7 +79,9 @@ export async function POST(request: NextRequest) {
         sku: p.sku.trim(),
         name: p.name.trim(),
         description: (p.description || p.name).trim() || null,
-        category: (p.category || '').trim() || null,
+        category: p.category
+          ? (typeof p.category === 'string' ? p.category.split(',').map((c: string) => c.trim()).filter(Boolean) : Array.isArray(p.category) ? p.category : [])
+          : [],
         brand: (p.brand || '').trim() || null,
         price_numeric: price,
         currency,

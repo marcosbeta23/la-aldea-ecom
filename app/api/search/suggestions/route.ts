@@ -16,16 +16,21 @@ export async function GET(request: NextRequest) {
       .from('products')
       .select('id, sku, name, category, brand, price_numeric, currency, images')
       .eq('is_active', true)
-      .or(`name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%,sku.ilike.%${query}%`)
-      .limit(8) as { data: Array<{ id: string; sku: string; name: string; category: string | null; brand: string | null; price_numeric: number; currency: string; images: string[] | null }> | null };
+      .or(`name.ilike.%${query}%,brand.ilike.%${query}%,sku.ilike.%${query}%`)
+      .limit(8) as { data: Array<{ id: string; sku: string; name: string; category: string[]; brand: string | null; price_numeric: number; currency: string; images: string[] | null }> | null };
 
-    // Get unique categories that match
-    const { data: categories } = await supabaseAdmin
+    // Get unique categories that match from all products (category is now an array)
+    const { data: allCatProducts } = await supabaseAdmin
       .from('products')
       .select('category')
-      .eq('is_active', true)
-      .ilike('category', `%${query}%`)
-      .limit(3) as { data: Array<{ category: string | null }> | null };
+      .eq('is_active', true) as { data: Array<{ category: string[] }> | null };
+
+    const queryLower = query.toLowerCase();
+    const matchingCategories = [...new Set(
+      (allCatProducts || [])
+        .flatMap(p => p.category || [])
+        .filter(c => c.toLowerCase().includes(queryLower))
+    )].slice(0, 3);
 
     // Get unique brands that match
     const { data: brands } = await supabaseAdmin
@@ -47,11 +52,10 @@ export async function GET(request: NextRequest) {
     }> = [];
 
     // Add category suggestions first
-    const uniqueCategories = [...new Set(categories?.map(c => c.category).filter(Boolean))];
-    uniqueCategories.forEach(cat => {
+    matchingCategories.forEach(cat => {
       suggestions.push({
         type: 'category',
-        name: cat as string,
+        name: cat,
       });
     });
 

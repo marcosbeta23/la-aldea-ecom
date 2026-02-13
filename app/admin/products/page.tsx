@@ -151,7 +151,8 @@ export default function ProductsPage() {
       const cats = new Set<string>();
       const brds = new Set<string>();
       allProducts.forEach((p: Product) => {
-        if (p.category) cats.add(p.category);
+        const pCats = Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []);
+        pCats.forEach((c: string) => { if (c) cats.add(c); });
         if (p.brand) brds.add(p.brand);
       });
 
@@ -161,7 +162,8 @@ export default function ProductsPage() {
           const r = await fetch(`/api/admin/products?perPage=100&page=${pg}`);
           const d = await r.json();
           (d.products || []).forEach((p: Product) => {
-            if (p.category) cats.add(p.category);
+            const pCats = Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []);
+            pCats.forEach((c: string) => { if (c) cats.add(c); });
             if (p.brand) brds.add(p.brand);
           });
         }
@@ -777,13 +779,18 @@ export default function ProductsPage() {
 
                     {/* Category */}
                     <td className="px-4 py-3">
-                      {product.category ? (
-                        <button
-                          onClick={() => updateFilter('category', product.category!)}
-                          className="text-xs font-medium px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors"
-                        >
-                          {product.category}
-                        </button>
+                      {product.category && product.category.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {(Array.isArray(product.category) ? product.category : [product.category]).map((cat: string) => (
+                            <button
+                              key={cat}
+                              onClick={() => updateFilter('category', cat)}
+                              className="text-xs font-medium px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors"
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
                       ) : (
                         <span className="text-xs text-slate-300">&mdash;</span>
                       )}
@@ -925,8 +932,8 @@ export default function ProductsPage() {
               <div className="p-3">
                 <p className="text-xs font-mono text-slate-400 mb-0.5">{product.sku}</p>
                 <p className="text-sm font-medium text-slate-900 line-clamp-2 leading-tight">{product.name}</p>
-                {product.category && (
-                  <p className="text-[10px] font-medium text-slate-400 uppercase mt-1">{product.category}</p>
+                {product.category && product.category.length > 0 && (
+                  <p className="text-[10px] font-medium text-slate-400 uppercase mt-1">{Array.isArray(product.category) ? product.category.join(', ') : product.category}</p>
                 )}
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-sm font-bold text-slate-900">

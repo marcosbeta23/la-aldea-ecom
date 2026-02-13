@@ -8,7 +8,7 @@ export interface Product {
   sku: string;
   name: string;
   description: string | null;
-  category: string | null;
+  category: string[]; // Array of categories (multi-tag system)
   brand: string | null;
   price_numeric: number;
   currency: string;

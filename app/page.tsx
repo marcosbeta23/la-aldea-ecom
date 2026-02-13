@@ -335,7 +335,7 @@ function getProductBadge(product: Product): string {
 }
 
 // Helper to get gradient color based on category
-function getCategoryColor(category: string | null): string {
+function getCategoryColor(category: string[] | string | null): string {
   const colors: Record<string, string> = {
     "Bombas": "from-blue-400 to-blue-600",
     "Riego": "from-green-400 to-green-600",
@@ -345,7 +345,8 @@ function getCategoryColor(category: string | null): string {
     "Químicos": "from-purple-400 to-purple-600",
     "Herramientas": "from-orange-400 to-orange-600",
   };
-  return colors[category || ""] || "from-blue-400 to-blue-600";
+  const key = Array.isArray(category) ? category[0] || '' : category || '';
+  return colors[key] || "from-blue-400 to-blue-600";
 }
 
 export default async function Home() {
@@ -507,7 +508,7 @@ export default async function Home() {
                     
                     {/* Content - more compact */}
                     <div className="p-3">
-                      <p className="text-[10px] font-medium text-blue-600">{product.category || 'Producto'}</p>
+                      <p className="text-[10px] font-medium text-blue-600">{Array.isArray(product.category) ? product.category.join(', ') : product.category || 'Producto'}</p>
                       <h3 className="mt-0.5 text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                         {product.name}
                       </h3>

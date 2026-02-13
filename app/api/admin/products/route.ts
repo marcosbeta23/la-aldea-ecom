@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%`);
     }
     if (category) {
-      query = query.eq('category', category);
+      query = query.contains('category', [category]);
     }
     if (brand) {
       query = query.eq('brand', brand);
@@ -129,8 +129,8 @@ export async function POST(request: NextRequest) {
         sku,
         name,
         description: description || null,
-        category: category || null,
-        brand: brand || null,
+        category: Array.isArray(category) ? category.map((c: string) => c.trim()).filter(Boolean) : (category ? [category.trim()] : []),
+        brand: brand?.trim() || null,
         price_numeric,
         currency,
         stock,

@@ -32,7 +32,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       id: product.id,
       name: product.name,
       price: product.price_numeric,
-      category: product.category || undefined,
+      category: (Array.isArray(product.category) ? product.category[0] : product.category) || undefined,
       brand: product.brand || undefined,
     });
   }, [product.id, product.name, product.price_numeric, product.category, product.brand]);
@@ -55,7 +55,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
         name: product.name,
         price: product.price_numeric,
         quantity: quantity,
-        category: product.category || undefined,
+        category: (Array.isArray(product.category) ? product.category[0] : product.category) || undefined,
         brand: product.brand || undefined,
       });
       
@@ -87,10 +87,12 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
   return (
     <div className="p-6 lg:p-8 flex flex-col">
       {/* Category & Brand */}
-      <div className="flex items-center gap-3 mb-4">
-        <span className="px-3 py-1 text-sm font-medium bg-blue-50 text-blue-700 rounded-full">
-          {product.category}
-        </span>
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        {(Array.isArray(product.category) ? product.category : [product.category].filter(Boolean)).map((cat: string) => (
+          <span key={cat} className="px-3 py-1 text-sm font-medium bg-blue-50 text-blue-700 rounded-full">
+            {cat}
+          </span>
+        ))}
         {product.brand && (
           <span className="text-sm text-slate-500">Marca: {product.brand}</span>
         )}

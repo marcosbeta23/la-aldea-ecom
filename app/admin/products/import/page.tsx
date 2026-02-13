@@ -212,7 +212,7 @@ export default function BulkImportPage() {
         <h3 className="font-medium text-blue-900 mb-2">Formato del CSV</h3>
         <div className="text-sm text-blue-800 space-y-1">
           <p><strong>Columnas requeridas:</strong> sku, name, price_numeric</p>
-          <p><strong>Columnas opcionales:</strong> description, category, brand, currency (UYU/USD), stock, is_active, shipping_type, weight_kg</p>
+          <p><strong>Columnas opcionales:</strong> description, category (separar múltiples con coma: &quot;Bombas, Piscinas&quot;), brand, currency (UYU/USD), stock, is_active, shipping_type, weight_kg</p>
           <p><strong>Moneda:</strong> Si no se especifica, se usa UYU por defecto</p>
           <p><strong>Imágenes:</strong> Se agregan después desde el panel de edición del producto</p>
           <p><strong>SKUs duplicados:</strong> Se omiten automáticamente (no se sobreescriben)</p>

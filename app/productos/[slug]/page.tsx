@@ -84,7 +84,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     keywords: [
       product.name,
       product.brand || '',
-      product.category || '',
+      ...(Array.isArray(product.category) ? product.category : [product.category || '']),
       'La Aldea',
       'Tala',
       'Uruguay',
@@ -145,11 +145,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   // Fetch related products (same category)
   let relatedProducts: Product[] = [];
-  if (product.category) {
+  if (product.category && product.category.length > 0) {
     const { data: relatedData } = await supabaseAdmin
       .from('products')
       .select('*')
-      .eq('category', product.category)
+      .overlaps('category', product.category)
       .eq('is_active', true)
       .neq('id', product.id)
       .limit(4);
@@ -217,7 +217,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             items={[
               { name: 'Inicio', url: '/' },
               { name: 'Productos', url: '/productos' },
-              ...(product.category ? [{ name: product.category, url: `/productos?categoria=${encodeURIComponent(product.category)}` }] : []),
+              ...(product.category && product.category.length > 0
+                ? [{ name: product.category[0], url: `/productos?categoria=${encodeURIComponent(product.category[0])}` }]
+                : []),
               { name: product.name },
             ]}
           />

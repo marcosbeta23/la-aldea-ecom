@@ -50,7 +50,7 @@ async function getProducts(searchParams: {
 
   // Category filter
   if (searchParams.categoria) {
-    query = query.eq('category', searchParams.categoria);
+    query = query.contains('category', [searchParams.categoria]);
   }
 
   // Brand filter
@@ -121,9 +121,10 @@ async function getFilterOptions() {
     .eq('is_active', true);
 
   const categoryCounts = ((categoriesData || []) as Pick<Product, 'category'>[]).reduce((acc: Record<string, number>, item) => {
-    if (item.category) {
-      acc[item.category] = (acc[item.category] || 0) + 1;
-    }
+    const cats = Array.isArray(item.category) ? item.category : (item.category ? [item.category] : []);
+    cats.forEach((cat: string) => {
+      if (cat) acc[cat] = (acc[cat] || 0) + 1;
+    });
     return acc;
   }, {});
 

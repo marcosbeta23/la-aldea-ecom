@@ -139,10 +139,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       {/* Content */}
       <div className="flex flex-col flex-1 p-4">
         {/* Category & Brand */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-            {product.category}
-          </span>
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          {(Array.isArray(product.category) ? product.category : [product.category].filter(Boolean)).map((cat: string) => (
+            <span key={cat} className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+              {cat}
+            </span>
+          ))}
           {product.brand && (
             <span className="text-xs text-slate-500">
               {product.brand}

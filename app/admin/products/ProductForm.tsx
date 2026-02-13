@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, Loader2, Trash2, X, Plus, Truck, Star, Tag } from 'lucide-react';
 import ImageUpload from '@/components/admin/ImageUpload';
@@ -13,7 +13,7 @@ interface Product {
   sku: string;
   name: string;
   description: string | null;
-  category: string | null;
+  category: string[];
   brand: string | null;
   price_numeric: number;
   currency: string;
@@ -31,7 +31,7 @@ interface Product {
   discount_percentage: number | null;
 }
 
-const categories = [
+const KNOWN_CATEGORIES = [
   'Bombas',
   'Riego',
   'Filtros',
@@ -40,6 +40,9 @@ const categories = [
   'Químicos',
   'Herramientas',
   'Accesorios',
+  'Hidráulica',
+  'Droguería',
+  'Energía Solar',
 ];
 
 export default function ProductForm({ product }: { product?: any }) {
@@ -50,8 +53,8 @@ export default function ProductForm({ product }: { product?: any }) {
     sku: product?.sku || '',
     name: product?.name || '',
     description: product?.description || '',
-    category: product?.category || '',
-    brand: product?.brand || '',
+    category: Array.isArray(product?.category) ? product.category : (product?.category ? [product.category] : []),
+    brand: product?.brand?.trim() || '',
     price_numeric: product?.price_numeric || 0,
     currency: product?.currency || 'UYU',
     stock: product?.stock || 0,
@@ -72,6 +75,67 @@ export default function ProductForm({ product }: { product?: any }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Brand autocomplete
+  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
+  const [brandQuery, setBrandQuery] = useState(formData.brand || '');
+  const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
+  const brandRef = useRef<HTMLDivElement>(null);
+
+  // Category tag input
+  const [categoryInput, setCategoryInput] = useState('');
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const categoryRef = useRef<HTMLDivElement>(null);
+
+  // Fetch existing brands for autocomplete
+  useEffect(() => {
+    fetch('/api/admin/products?perPage=100&sort=brand&order=asc')
+      .then(res => res.json())
+      .then(data => {
+        const brands = new Set<string>();
+        (data.products || []).forEach((p: any) => {
+          if (p.brand) brands.add(p.brand.trim());
+        });
+        setAvailableBrands([...brands].sort());
+      })
+      .catch(() => {});
+  }, []);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (brandRef.current && !brandRef.current.contains(e.target as Node)) {
+        setShowBrandSuggestions(false);
+      }
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
+        setShowCategorySuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const filteredBrands = availableBrands.filter(b =>
+    b.toLowerCase().includes(brandQuery.toLowerCase().trim()) && b.toLowerCase() !== brandQuery.toLowerCase().trim()
+  );
+
+  const filteredCategories = KNOWN_CATEGORIES.filter(c =>
+    c.toLowerCase().includes(categoryInput.toLowerCase().trim()) &&
+    !formData.category.includes(c)
+  );
+
+  const addCategory = (cat: string) => {
+    const trimmed = cat.trim();
+    if (trimmed && !formData.category.includes(trimmed)) {
+      setFormData(prev => ({ ...prev, category: [...prev.category, trimmed] }));
+    }
+    setCategoryInput('');
+    setShowCategorySuggestions(false);
+  };
+
+  const removeCategory = (cat: string) => {
+    setFormData(prev => ({ ...prev, category: prev.category.filter(c => c !== cat) }));
+  };
   
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -98,6 +162,13 @@ export default function ProductForm({ product }: { product?: any }) {
     setIsSubmitting(true);
     
     try {
+      // Normalize brand before submit
+      const submitData = {
+        ...formData,
+        brand: formData.brand?.trim() || null,
+        category: formData.category.map(c => c.trim()).filter(Boolean),
+      };
+
       const url = isEditing 
         ? `/api/admin/products/${product.id}` 
         : '/api/admin/products';
@@ -105,7 +176,7 @@ export default function ProductForm({ product }: { product?: any }) {
       const res = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
       
       const data = await res.json();
@@ -181,14 +252,46 @@ export default function ProductForm({ product }: { product?: any }) {
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Marca
                   </label>
-                  <input
-                    type="text"
-                    name="brand"
-                    value={formData.brand || ''}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Tigre"
-                  />
+                  <div ref={brandRef} className="relative">
+                    <input
+                      type="text"
+                      value={brandQuery}
+                      onChange={(e) => {
+                        setBrandQuery(e.target.value);
+                        setFormData(prev => ({ ...prev, brand: e.target.value }));
+                        setShowBrandSuggestions(true);
+                      }}
+                      onFocus={() => setShowBrandSuggestions(true)}
+                      onBlur={() => {
+                        // Trim on blur
+                        const trimmed = brandQuery.trim();
+                        setBrandQuery(trimmed);
+                        setFormData(prev => ({ ...prev, brand: trimmed || null }));
+                      }}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Ej: Pedrollo"
+                      autoComplete="off"
+                    />
+                    {showBrandSuggestions && filteredBrands.length > 0 && brandQuery.trim() && (
+                      <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                        {filteredBrands.slice(0, 8).map(brand => (
+                          <button
+                            key={brand}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setBrandQuery(brand);
+                              setFormData(prev => ({ ...prev, brand }));
+                              setShowBrandSuggestions(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700"
+                          >
+                            {brand}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -223,19 +326,75 @@ export default function ProductForm({ product }: { product?: any }) {
               
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Categoría
+                  Categorías
                 </label>
-                <select
-                  name="category"
-                  value={formData.category || ''}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Sin categoría</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                {/* Selected tags */}
+                <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
+                  {formData.category.map(cat => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full"
+                    >
+                      {cat}
+                      <button
+                        type="button"
+                        onClick={() => removeCategory(cat)}
+                        className="hover:text-blue-900"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
                   ))}
-                </select>
+                </div>
+                {/* Category input with suggestions */}
+                <div ref={categoryRef} className="relative">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={categoryInput}
+                      onChange={(e) => {
+                        setCategoryInput(e.target.value);
+                        setShowCategorySuggestions(true);
+                      }}
+                      onFocus={() => setShowCategorySuggestions(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (categoryInput.trim()) addCategory(categoryInput);
+                        }
+                      }}
+                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Escribí para buscar o agregar..."
+                    />
+                    {categoryInput.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => addCategory(categoryInput)}
+                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  {showCategorySuggestions && filteredCategories.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {filteredCategories.map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => addCategory(cat)}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700"
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5">
+                  Un producto puede tener múltiples categorías. Ej: una bomba para piscina → Bombas + Piscinas
+                </p>
               </div>
             </div>
           </div>
