@@ -51,7 +51,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   return (
     <Link 
       href={`/productos/${product.sku}`}
-      className="group relative flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1"
+      className="group relative flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/50 hover:-translate-y-0.5"
     >
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-slate-100">
@@ -71,31 +71,31 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         )}
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.discount_percentage && product.discount_percentage > 0 && (
-            <span className="px-2.5 py-1 text-xs font-bold bg-green-600 text-white rounded-full">
+            <span className="px-2 py-0.5 text-[10px] font-bold bg-green-600 text-white rounded-full">
               -{product.discount_percentage}%
             </span>
           )}
           {product.sold_count >= 10 && (
-            <span className="px-2.5 py-1 text-xs font-semibold bg-amber-500 text-white rounded-full">
+            <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-500 text-white rounded-full">
               Popular
             </span>
           )}
           {!inStock && (
-            <span className="px-2.5 py-1 text-xs font-semibold bg-slate-800 text-white rounded-full">
+            <span className="px-2 py-0.5 text-[10px] font-semibold bg-slate-800 text-white rounded-full">
               Agotado
             </span>
           )}
         </div>
 
         {/* Wishlist Button */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full shadow-lg">
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full shadow-lg">
           <WishlistButton productId={product.id} size="sm" />
         </div>
 
         {/* Quick Add to Cart - appears on hover */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
           {error && (
             <div className="mb-2 flex items-center gap-1 text-xs bg-red-500 text-white px-2 py-1 rounded-lg">
               <AlertCircle className="h-3 w-3" />
@@ -106,7 +106,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             onClick={handleAddToCart}
             disabled={!inStock || isAdding}
             className={`
-              w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm
+              w-full flex items-center justify-center gap-1.5 py-2 rounded-lg font-medium text-xs
               transition-all duration-200
               ${inStock
                 ? inCart || isAdding
@@ -137,7 +137,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       </div>
 
       {/* Content */}
-      <div className="flex flex-col flex-1 p-4">
+      <div className="flex flex-col flex-1 p-3">
         {/* Category & Brand */}
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           {(Array.isArray(product.category) ? product.category : [product.category].filter(Boolean)).map((cat: string) => (
@@ -153,31 +153,24 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
 
         {/* Name */}
-        <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+        <h3 className="text-sm font-semibold text-slate-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">
           {product.name}
         </h3>
-
-        {/* Description */}
-        {product.description && (
-          <p className="text-sm text-slate-500 mb-3 line-clamp-2">
-            {product.description}
-          </p>
-        )}
 
         {/* Price & Stock */}
         <div className="mt-auto flex items-end justify-between">
           <div>
             {product.original_price_numeric && product.discount_percentage ? (
               <div className="flex flex-col">
-                <span className="text-sm text-slate-400 line-through">
+                <span className="text-xs text-slate-400 line-through">
                   {formatPrice(product.original_price_numeric, product.currency)}
                 </span>
-                <span className="text-2xl font-bold text-green-600">
+                <span className="text-lg font-bold text-green-600">
                   {formatPrice(product.price_numeric, product.currency)}
                 </span>
               </div>
             ) : (
-              <span className="text-2xl font-bold text-slate-900">
+              <span className="text-lg font-bold text-slate-900">
                 {formatPrice(product.price_numeric, product.currency)}
               </span>
             )}

@@ -176,7 +176,7 @@ export default function ProductFilters({ categories, brands, className = '' }: P
               {categoryOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </button>
             {categoryOpen && (
-              <div className="mt-2 space-y-0.5 max-h-64 overflow-y-auto pr-1">
+              <div className="mt-2 space-y-0.5">
                 <button
                   onClick={() => updateFilter('categoria', '')}
                   className={`block w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
@@ -217,7 +217,7 @@ export default function ProductFilters({ categories, brands, className = '' }: P
               {brandOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </button>
             {brandOpen && (
-              <div className="mt-2 space-y-0.5 max-h-52 overflow-y-auto pr-1">
+              <div className="mt-2 space-y-0.5">
                 <button
                   onClick={() => updateFilter('marca', '')}
                   className={`block w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
