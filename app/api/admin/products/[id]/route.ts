@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -127,6 +128,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
+    // Bust ISR cache for this product's detail page and listings
+    revalidatePath(`/productos/${product.sku}`);
+    revalidatePath('/productos');
+
     return NextResponse.json({ success: true, product });
   } catch (error: any) {
     console.error('Error updating product:', error);
@@ -179,6 +184,13 @@ export async function DELETE(
       });
     }
 
+    // Get SKU before deletion for cache busting
+    const { data: productData } = await supabaseAdmin
+      .from('products')
+      .select('sku')
+      .eq('id', id)
+      .single() as { data: { sku: string } | null };
+
     // Delete product
     const { error } = await (supabaseAdmin as any)
       .from('products')
@@ -186,6 +198,12 @@ export async function DELETE(
       .eq('id', id);
 
     if (error) throw error;
+
+    // Bust ISR cache
+    if (productData?.sku) {
+      revalidatePath(`/productos/${productData.sku}`);
+    }
+    revalidatePath('/productos');
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

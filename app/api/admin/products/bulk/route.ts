@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -107,6 +108,11 @@ export async function POST(request: NextRequest) {
       } else {
         results.created += batch.length;
       }
+    }
+
+    // Bust ISR cache for product listings
+    if (results.created > 0) {
+      revalidatePath('/productos');
     }
 
     return NextResponse.json({

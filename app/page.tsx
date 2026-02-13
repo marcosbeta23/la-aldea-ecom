@@ -331,7 +331,6 @@ const stats = [
 function getProductBadge(product: Product): string {
   if (product.sold_count >= 20) return "Más Vendido";
   if (product.sold_count >= 10) return "Popular";
-  if (product.stock <= 5 && product.stock > 0) return "Últimas Unidades";
   return "Destacado";
 }
 

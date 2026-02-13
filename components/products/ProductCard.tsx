@@ -20,7 +20,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   
   const inCart = isInCart(product.id);
   const inStock = product.stock > 0;
-  const lowStock = product.stock > 0 && product.stock <= 5;
+  // lowStock removed — most products have 1-10 stock, making the alert appear everywhere
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -85,11 +85,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           {!inStock && (
             <span className="px-2.5 py-1 text-xs font-semibold bg-slate-800 text-white rounded-full">
               Agotado
-            </span>
-          )}
-          {lowStock && inStock && (
-            <span className="px-2.5 py-1 text-xs font-semibold bg-orange-500 text-white rounded-full">
-              ¡Últimas unidades!
             </span>
           )}
         </div>
@@ -187,8 +182,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </div>
           
           {inStock && (
-            <span className={`text-xs font-medium ${lowStock ? 'text-orange-600' : 'text-green-600'}`}>
-              {lowStock ? `Solo ${product.stock}` : `${product.stock} en stock`}
+            <span className="text-xs font-medium text-green-600">
+              En stock
             </span>
           )}
         </div>
