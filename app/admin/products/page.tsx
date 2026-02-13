@@ -1246,6 +1246,10 @@ export default function ProductsPage() {
                         setShowBulkCatSuggestions(true);
                       }}
                       onFocus={() => setShowBulkCatSuggestions(true)}
+                      onBlur={() => {
+                        // Delay to allow button clicks to register
+                        setTimeout(() => setShowBulkCatSuggestions(false), 150);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -1274,7 +1278,10 @@ export default function ProductsPage() {
                             <button
                               key={cat}
                               type="button"
-                              onClick={() => addBulkCategory(cat)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                addBulkCategory(cat);
+                              }}
                               className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                             >
                               {cat}
@@ -1285,7 +1292,10 @@ export default function ProductsPage() {
                           !bulkCategories.includes(bulkCategoryInput.trim()) && (
                             <button
                               type="button"
-                              onClick={() => addBulkCategory(bulkCategoryInput)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                addBulkCategory(bulkCategoryInput);
+                              }}
                               className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-1.5"
                             >
                               <Plus className="h-3.5 w-3.5" />
