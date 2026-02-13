@@ -3,6 +3,9 @@
 // Shipping types for products
 export type ProductShippingType = 'dac' | 'freight' | 'pickup_only';
 
+// Availability / pricing type
+export type ProductAvailabilityType = 'regular' | 'on_request';
+
 export interface Product {
   id: string;
   sku: string;
@@ -18,6 +21,8 @@ export interface Product {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // Availability
+  availability_type: ProductAvailabilityType; // 'regular' = normal, 'on_request' = consultar
   // Shipping configuration
   shipping_type: ProductShippingType; // 'dac' = standard courier, 'freight' = large items, 'pickup_only' = no shipping
   weight_kg: number | null; // For shipping calculation

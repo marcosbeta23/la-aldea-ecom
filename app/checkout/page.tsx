@@ -50,6 +50,23 @@ export default function CheckoutPage() {
     setMounted(true);
   }, []);
 
+  // Refresh product data from API on mount to get latest shipping_type, stock, etc.
+  const { updateProductData } = useCartStore();
+  useEffect(() => {
+    if (!mounted || items.length === 0) return;
+    const ids = items.map(item => item.product.id).join(',');
+    fetch(`/api/products?ids=${ids}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.products && Array.isArray(data.products)) {
+          for (const freshProduct of data.products) {
+            updateProductData(freshProduct.id, freshProduct);
+          }
+        }
+      })
+      .catch(err => console.error('Failed to refresh product data:', err));
+  }, [mounted]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Track begin_checkout event once items are loaded
   useEffect(() => {
     if (mounted && items.length > 0) {

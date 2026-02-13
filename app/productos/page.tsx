@@ -6,6 +6,7 @@ import { Product } from '@/types/database';
 import ProductGrid from '@/components/products/ProductGrid';
 import ProductFilters from '@/components/products/ProductFilters';
 import ProductSearch from '@/components/products/ProductSearch';
+import FilterPersistence from '@/components/products/FilterPersistence';
 import Header from '@/components/Header';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -173,6 +174,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   return (
     <>
       <Header />
+      <FilterPersistence />
       
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
         {/* Hero Banner — compact */}

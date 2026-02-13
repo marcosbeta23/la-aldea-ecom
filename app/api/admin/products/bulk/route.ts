@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
         sold_count: 0,
         images: [],
         is_active: p.is_active === 'False' || p.is_active === false || p.is_active === '0' ? false : true,
+        availability_type: p.availability_type === 'on_request' ? 'on_request' : 'regular',
         shipping_type: p.shipping_type || 'dac',
         weight_kg: p.weight_kg ? parseFloat(p.weight_kg) : null,
         requires_quote: p.requires_quote === 'true' || p.requires_quote === true,

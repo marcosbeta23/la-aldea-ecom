@@ -6,7 +6,7 @@ import { Save, Loader2, Trash2, X, Plus, Truck, Star, Tag } from 'lucide-react';
 import ImageUpload from '@/components/admin/ImageUpload';
 
 import { SHIPPING_TYPE_LABELS } from '@/lib/shipping';
-import type { ProductShippingType } from '@/types/database';
+import type { ProductShippingType, ProductAvailabilityType } from '@/types/database';
 
 interface Product {
   id?: string;
@@ -21,6 +21,8 @@ interface Product {
   sold_count: number;
   images: string[];
   is_active: boolean;
+  // Availability
+  availability_type: ProductAvailabilityType;
   // Shipping fields
   shipping_type: ProductShippingType;
   weight_kg: number | null;
@@ -71,6 +73,8 @@ export default function ProductForm({ product }: { product?: any }) {
     sold_count: product?.sold_count || 0,
     images: product?.images || [],
     is_active: product?.is_active ?? true,
+    // Availability
+    availability_type: product?.availability_type || 'regular',
     // Shipping defaults
     shipping_type: product?.shipping_type || 'dac',
     weight_kg: product?.weight_kg || null,
@@ -516,7 +520,7 @@ export default function ProductForm({ product }: { product?: any }) {
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Estado</h2>
             
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex items-center gap-3 cursor-pointer mb-4">
               <input
                 type="checkbox"
                 name="is_active"
@@ -526,9 +530,26 @@ export default function ProductForm({ product }: { product?: any }) {
               />
               <span className="text-slate-700">Producto activo</span>
             </label>
-            <p className="text-sm text-slate-500 mt-2">
+            <p className="text-sm text-slate-500 mb-4">
               Los productos inactivos no aparecen en la tienda
             </p>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Disponibilidad</label>
+              <select
+                value={formData.availability_type}
+                onChange={(e) => setFormData(prev => ({ ...prev, availability_type: e.target.value as ProductAvailabilityType }))}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="regular">Regular (con precio y stock)</option>
+                <option value="on_request">Consultar por producto</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-1">
+                {formData.availability_type === 'on_request'
+                  ? 'Se muestra "Consultar" en vez del precio. El cliente contacta por WhatsApp.'
+                  : 'El producto se vende normalmente con precio y stock.'}
+              </p>
+            </div>
           </div>
           
           {/* Featured & Discount */}

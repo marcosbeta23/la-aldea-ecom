@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const productIds = items.map((item: any) => item.id);
     const { data: products, error: productsError } = await supabaseAdmin
       .from('products')
-      .select('id, sku, name, price_numeric, stock, is_active')
+      .select('id, sku, name, price_numeric, currency, stock, is_active')
       .in('id', productIds) as { data: any[] | null; error: any };
     
     if (productsError || !products) {
@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         product_name: product.name,
         quantity: item.quantity,
         unit_price: product.price_numeric, // Price from DB!
+        currency: product.currency || 'UYU', // Currency from DB!
         subtotal: itemSubtotal,
       });
     }
@@ -225,7 +226,7 @@ export async function POST(request: NextRequest) {
         title: item.product_name,
         unit_price: Number(item.unit_price), // Price we calculated
         quantity: item.quantity,
-        currency_id: 'UYU',
+        currency_id: item.currency || 'UYU', // Use actual product currency
       })),
       external_reference: (order as any).id, // To find order in webhook
       back_urls: {

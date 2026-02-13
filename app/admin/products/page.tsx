@@ -100,7 +100,15 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('la-aldea-admin-product-page');
+        if (saved) return parseInt(saved, 10) || 1;
+      } catch {}
+    }
+    return 1;
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
@@ -119,15 +127,23 @@ export default function ProductsPage() {
   // Stats
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, noImage: 0 });
 
-  const [filters, setFilters] = useState<Filters>({
-    search: '',
-    category: '',
-    brand: '',
-    status: '',
-    hasImages: '',
-    sort: 'created_at',
-    order: 'desc',
-    perPage: 50,
+  const [filters, setFilters] = useState<Filters>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('la-aldea-admin-product-filters');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return {
+      search: '',
+      category: '',
+      brand: '',
+      status: '',
+      hasImages: '',
+      sort: 'created_at',
+      order: 'desc',
+      perPage: 50,
+    };
   });
 
   // ── Fetch products ──────────────────────────────────────────────────
@@ -225,6 +241,14 @@ export default function ProductsPage() {
   }, []);
 
   // ── Effects ─────────────────────────────────────────────────────────
+
+  // Persist filters & page to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('la-aldea-admin-product-filters', JSON.stringify(filters));
+      sessionStorage.setItem('la-aldea-admin-product-page', String(page));
+    } catch {}
+  }, [filters, page]);
 
   useEffect(() => {
     fetchFilterOptions();

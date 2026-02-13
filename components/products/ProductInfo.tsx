@@ -25,6 +25,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
   const inWishlist = isInWishlist(product.id);
   const inStock = product.stock > 0;
   const lowStock = product.stock > 0 && product.stock <= 5;
+  const isOnRequest = product.availability_type === 'on_request';
 
   // Track view_item event on mount
   useEffect(() => {
@@ -126,7 +127,14 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
 
       {/* Price */}
       <div className="mb-6">
-        {product.original_price_numeric && product.discount_percentage ? (
+        {isOnRequest ? (
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+            <p className="text-lg font-bold text-purple-700 mb-1">Consultar por este producto</p>
+            <p className="text-sm text-purple-600">
+              No tenemos este producto en stock actualmente, pero lo podemos conseguir para vos. Contactanos para más información.
+            </p>
+          </div>
+        ) : product.original_price_numeric && product.discount_percentage ? (
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-2xl text-slate-400 line-through">
               {formatPrice(product.original_price_numeric, product.currency)}
@@ -155,7 +163,12 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
 
       {/* Stock Status */}
       <div className="mb-6">
-        {inStock ? (
+        {isOnRequest ? (
+          <div className="flex items-center gap-2 text-purple-600">
+            <div className="w-2 h-2 rounded-full bg-purple-500" />
+            <span className="text-sm font-medium">Disponible a pedido</span>
+          </div>
+        ) : inStock ? (
           <div className={`flex items-center gap-2 ${lowStock ? 'text-orange-600' : 'text-green-600'}`}>
             <div className={`w-2 h-2 rounded-full ${lowStock ? 'bg-orange-500' : 'bg-green-500'}`} />
             <span className="text-sm font-medium">
@@ -171,7 +184,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
         
         {/* Stock inquiry link */}
         <a
-          href={`https://wa.me/59899123456?text=${encodeURIComponent(`Hola! Consulto por la disponibilidad de: ${product.name} (SKU: ${product.sku})`)}`}
+          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por la disponibilidad de: ${product.name} (SKU: ${product.sku})`)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 mt-2 text-sm text-green-600 hover:text-green-700 transition-colors"
@@ -182,7 +195,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       </div>
 
       {/* Quantity Selector */}
-      {inStock && (
+      {inStock && !isOnRequest && (
         <div className="flex items-center gap-4 mb-6">
           <span className="text-sm font-medium text-slate-700">Cantidad:</span>
           <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl p-1">
@@ -217,10 +230,23 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       )}
 
       {/* Action Buttons */}
+      {isOnRequest ? (
+        <div className="mb-6">
+          <a
+            href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Estoy interesado en: ${product.name} (SKU: ${product.sku}). ¿Lo pueden conseguir?`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-semibold text-lg bg-green-600 text-white hover:bg-green-700 transition-colors w-full"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Consultar por WhatsApp
+          </a>
+        </div>
+      ) : (
       <div className="flex gap-3 mb-6">
         <button
           onClick={handleAddToCart}
-          disabled={!inStock || isAdding}
+          disabled={!inStock || isAdding || isOnRequest}
           className={`
             flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-semibold text-lg
             transition-all duration-200
@@ -264,6 +290,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           <Heart className={`h-6 w-6 ${inWishlist ? 'fill-current' : ''}`} />
         </button>
       </div>
+      )}
 
       {/* Trust Badges */}
       <div className="grid grid-cols-2 gap-4 mt-auto pt-6 border-t border-slate-200">

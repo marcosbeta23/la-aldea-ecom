@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { Product, ProductReview } from '@/types/database';
 import Header from '@/components/Header';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
+import BackToProductsLink from '@/components/products/BackToProductsLink';
 import ProductGallery from '@/components/products/ProductGallery';
 import ProductInfo from '@/components/products/ProductInfo';
 import ProductReviews from '@/components/products/ProductReviews';
@@ -211,18 +212,38 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <Header />
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
-        {/* Breadcrumbs */}
+        {/* Breadcrumbs — with filter-preserving back link */}
         <div className="container mx-auto px-4 py-4">
-          <Breadcrumbs
-            items={[
-              { name: 'Inicio', url: '/' },
-              { name: 'Productos', url: '/productos' },
-              ...(product.category && product.category.length > 0
-                ? [{ name: product.category[0], url: `/productos?categoria=${encodeURIComponent(product.category[0])}` }]
-                : []),
-              { name: product.name },
-            ]}
-          />
+          <nav aria-label="Breadcrumb" className="text-sm">
+            <ol className="flex items-center flex-wrap gap-1">
+              <li className="flex items-center">
+                <a href="/" className="flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:underline transition-colors">
+                  Inicio
+                </a>
+              </li>
+              <li className="flex items-center">
+                <span className="mx-1 text-slate-400">/</span>
+                <BackToProductsLink className="text-slate-600 hover:text-blue-600 hover:underline transition-colors">
+                  Productos
+                </BackToProductsLink>
+              </li>
+              {product.category && product.category.length > 0 && (
+                <li className="flex items-center">
+                  <span className="mx-1 text-slate-400">/</span>
+                  <a
+                    href={`/productos?categoria=${encodeURIComponent(product.category[0])}`}
+                    className="text-slate-600 hover:text-blue-600 hover:underline transition-colors"
+                  >
+                    {product.category[0]}
+                  </a>
+                </li>
+              )}
+              <li className="flex items-center">
+                <span className="mx-1 text-slate-400">/</span>
+                <span className="text-slate-900 font-medium truncate max-w-[200px]">{product.name}</span>
+              </li>
+            </ol>
+          </nav>
         </div>
 
         {/* Product Section */}

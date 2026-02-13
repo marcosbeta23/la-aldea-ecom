@@ -94,6 +94,8 @@ export async function POST(request: NextRequest) {
       stock, 
       images = [], 
       is_active = true,
+      // Availability
+      availability_type = 'regular',
       // Shipping fields
       shipping_type = 'dac',
       weight_kg = null,
@@ -138,6 +140,8 @@ export async function POST(request: NextRequest) {
         sold_count: 0,
         images,
         is_active,
+        // Availability
+        availability_type,
         // Shipping fields
         shipping_type,
         weight_kg,

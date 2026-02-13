@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Check, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Check, AlertCircle, MessageCircle } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import WishlistButton from '@/components/common/WishlistButton';
@@ -20,13 +20,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   
   const inCart = isInCart(product.id);
   const inStock = product.stock > 0;
+  const isOnRequest = product.availability_type === 'on_request';
   // lowStock removed — most products have 1-10 stock, making the alert appear everywhere
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!inStock) return;
+    if (!inStock || isOnRequest) return;
     
     setError(null);
     const result = addItem(product, 1);
@@ -82,9 +83,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               Popular
             </span>
           )}
-          {!inStock && (
+          {!inStock && !isOnRequest && (
             <span className="px-2 py-0.5 text-[10px] font-semibold bg-slate-800 text-white rounded-full">
               Agotado
+            </span>
+          )}
+          {isOnRequest && (
+            <span className="px-2 py-0.5 text-[10px] font-semibold bg-purple-600 text-white rounded-full">
+              Consultar
             </span>
           )}
         </div>
@@ -94,7 +100,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           <WishlistButton productId={product.id} size="sm" />
         </div>
 
-        {/* Quick Add to Cart - appears on hover */}
+        {/* Quick Add to Cart - appears on hover (not for on_request) */}
+        {!isOnRequest && (
         <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
           {error && (
             <div className="mb-2 flex items-center gap-1 text-xs bg-red-500 text-white px-2 py-1 rounded-lg">
@@ -134,6 +141,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             )}
           </button>
         </div>
+        )}
       </div>
 
       {/* Content */}
@@ -159,6 +167,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Price & Stock */}
         <div className="mt-auto flex items-end justify-between">
+          {isOnRequest ? (
+            <div className="flex items-center gap-1.5 text-purple-600">
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-sm font-semibold">Consultar</span>
+            </div>
+          ) : (
           <div>
             {product.original_price_numeric && product.discount_percentage ? (
               <div className="flex flex-col">
@@ -175,8 +189,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               </span>
             )}
           </div>
+          )}
           
-          {inStock && (
+          {inStock && !isOnRequest && (
             <span className="text-xs font-medium text-green-600">
               En stock
             </span>

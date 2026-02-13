@@ -16,6 +16,7 @@ interface CartState {
   addItem: (product: Product, quantity?: number) => { success: boolean; message?: string };
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => { success: boolean; message?: string };
+  updateProductData: (productId: string, freshProduct: Product) => void;
   clearCart: () => void;
   toggleCart: () => void;
   setCartOpen: (open: boolean) => void;
@@ -36,6 +37,11 @@ export const useCartStore = create<CartState>()(
       addItem: (product, quantity = 1) => {
         const { items } = get();
         const existingItem = items.find((item) => item.product.id === product.id);
+
+        // Block on_request products
+        if (product.availability_type === 'on_request') {
+          return { success: false, message: 'Este producto es solo bajo consulta' };
+        }
 
         // Check if product is out of stock
         if (product.stock <= 0) {
@@ -106,6 +112,16 @@ export const useCartStore = create<CartState>()(
 
       clearCart: () => {
         set({ items: [] });
+      },
+
+      updateProductData: (productId, freshProduct) => {
+        set({
+          items: get().items.map((item) =>
+            item.product.id === productId
+              ? { ...item, product: { ...item.product, ...freshProduct } }
+              : item
+          ),
+        });
       },
 
       toggleCart: () => {
