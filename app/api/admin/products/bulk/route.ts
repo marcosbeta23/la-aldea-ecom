@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { normalizeCategory } from '@/lib/validators';
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
         name: p.name.trim(),
         description: (p.description || p.name).trim() || null,
         category: p.category
-          ? (typeof p.category === 'string' ? p.category.split(',').map((c: string) => c.trim()).filter(Boolean) : Array.isArray(p.category) ? p.category : [])
+          ? (typeof p.category === 'string' ? p.category.split(',').map((c: string) => c.trim()).filter(Boolean).map((c: string) => normalizeCategory(c)) : Array.isArray(p.category) ? p.category.map((c: string) => normalizeCategory(c)) : [])
           : [],
         brand: (p.brand || '').trim() || null,
         price_numeric: price,

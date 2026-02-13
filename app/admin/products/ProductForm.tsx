@@ -45,6 +45,16 @@ const KNOWN_CATEGORIES = [
   'Energía Solar',
 ];
 
+/** Normalize a category string: match known categories case-insensitively, or title-case it */
+const normalizeCategory = (cat: string): string => {
+  const trimmed = cat.trim();
+  if (!trimmed) return '';
+  const match = KNOWN_CATEGORIES.find(k => k.toLowerCase() === trimmed.toLowerCase());
+  if (match) return match;
+  // Title case: first letter of each word uppercase
+  return trimmed.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+};
+
 export default function ProductForm({ product }: { product?: any }) {
   const router = useRouter();
   const isEditing = !!product;
@@ -121,13 +131,13 @@ export default function ProductForm({ product }: { product?: any }) {
 
   const filteredCategories = KNOWN_CATEGORIES.filter(c =>
     c.toLowerCase().includes(categoryInput.toLowerCase().trim()) &&
-    !formData.category.includes(c)
+    !formData.category.some(fc => fc.toLowerCase() === c.toLowerCase())
   );
 
   const addCategory = (cat: string) => {
-    const trimmed = cat.trim();
-    if (trimmed && !formData.category.includes(trimmed)) {
-      setFormData(prev => ({ ...prev, category: [...prev.category, trimmed] }));
+    const normalized = normalizeCategory(cat);
+    if (normalized && !formData.category.some(c => c.toLowerCase() === normalized.toLowerCase())) {
+      setFormData(prev => ({ ...prev, category: [...prev.category, normalized] }));
     }
     setCategoryInput('');
     setShowCategorySuggestions(false);
@@ -166,7 +176,7 @@ export default function ProductForm({ product }: { product?: any }) {
       const submitData = {
         ...formData,
         brand: formData.brand?.trim() || null,
-        category: formData.category.map(c => c.trim()).filter(Boolean),
+        category: formData.category.map(c => normalizeCategory(c)).filter(Boolean),
       };
 
       const url = isEditing 

@@ -74,3 +74,20 @@ export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
 export type CreateReviewInput = z.infer<typeof CreateReviewSchema>;
 export type ValidateCouponInput = z.infer<typeof ValidateCouponSchema>;
 export type QuoteRequestInput = z.infer<typeof QuoteRequestSchema>;
+
+// ── Category normalization ──────────────────────────────────────────
+
+const KNOWN_CATEGORIES = [
+  'Bombas', 'Riego', 'Filtros', 'Tanques', 'Piscinas',
+  'Químicos', 'Herramientas', 'Accesorios', 'Hidráulica',
+  'Droguería', 'Energía Solar',
+];
+
+/** Normalize a category string: match known categories case-insensitively, or title-case it */
+export function normalizeCategory(cat: string): string {
+  const trimmed = cat.trim();
+  if (!trimmed) return '';
+  const match = KNOWN_CATEGORIES.find(k => k.toLowerCase() === trimmed.toLowerCase());
+  if (match) return match;
+  return trimmed.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}

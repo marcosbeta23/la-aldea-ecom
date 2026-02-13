@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { normalizeCategory } from '@/lib/validators';
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
         sku,
         name,
         description: description || null,
-        category: Array.isArray(category) ? category.map((c: string) => c.trim()).filter(Boolean) : (category ? [category.trim()] : []),
+        category: Array.isArray(category) ? category.map((c: string) => c.trim()).filter(Boolean).map((c: string) => normalizeCategory(c)) : (category ? [normalizeCategory(category.trim())] : []),
         brand: brand?.trim() || null,
         price_numeric,
         currency,

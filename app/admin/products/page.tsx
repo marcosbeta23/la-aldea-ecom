@@ -42,6 +42,15 @@ const KNOWN_CATEGORIES = [
   'Droguería', 'Energía Solar',
 ];
 
+/** Normalize a category string: match known categories case-insensitively, or title-case it */
+const normalizeCategory = (cat: string): string => {
+  const trimmed = cat.trim();
+  if (!trimmed) return '';
+  const match = KNOWN_CATEGORIES.find(k => k.toLowerCase() === trimmed.toLowerCase());
+  if (match) return match;
+  return trimmed.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+};
+
 // ── Types ──────────────────────────────────────────────────────────────
 
 interface Product {
@@ -361,9 +370,9 @@ export default function ProductsPage() {
   };
 
   const addBulkCategory = (cat: string) => {
-    const trimmed = cat.trim();
-    if (trimmed && !bulkCategories.includes(trimmed)) {
-      setBulkCategories(prev => [...prev, trimmed]);
+    const normalized = normalizeCategory(cat);
+    if (normalized && !bulkCategories.some(c => c.toLowerCase() === normalized.toLowerCase())) {
+      setBulkCategories(prev => [...prev, normalized]);
     }
     setBulkCategoryInput('');
     setShowBulkCatSuggestions(false);
@@ -389,11 +398,14 @@ export default function ProductsPage() {
         if (bulkCategoryMode === 'replace') {
           newCategories = [...bulkCategories];
         } else if (bulkCategoryMode === 'add') {
-          const merged = new Set([...current, ...bulkCategories]);
-          newCategories = [...merged];
+          // Case-insensitive merge: keep existing casing, add only truly new ones
+          const currentLower = current.map(c => c.toLowerCase());
+          const toAdd = bulkCategories.filter(c => !currentLower.includes(c.toLowerCase()));
+          newCategories = [...current, ...toAdd];
         } else {
-          // remove
-          newCategories = current.filter(c => !bulkCategories.includes(c));
+          // remove — case-insensitive
+          const removeLower = bulkCategories.map(c => c.toLowerCase());
+          newCategories = current.filter(c => !removeLower.includes(c.toLowerCase()));
         }
 
         return fetch(`/api/admin/products/${id}`, {
@@ -1271,7 +1283,7 @@ export default function ProductsPage() {
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
                         {KNOWN_CATEGORIES
                           .filter(c =>
-                            !bulkCategories.includes(c) &&
+                            !bulkCategories.some(bc => bc.toLowerCase() === c.toLowerCase()) &&
                             (!bulkCategoryInput || c.toLowerCase().includes(bulkCategoryInput.toLowerCase()))
                           )
                           .map((cat) => (

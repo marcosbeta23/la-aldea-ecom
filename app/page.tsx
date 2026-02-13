@@ -221,7 +221,7 @@ const productCategories = [
     icon: Zap,
     title: "Energías Renovables",
     description: "Paneles solares y bombas solares para instalaciones autónomas",
-    href: "/productos?categoria=Energia",
+    href: "/productos?categoria=Energía Solar",
     color: "from-yellow-500 to-yellow-600",
     image: "/assets/images/products/renewable.webp",
   },
