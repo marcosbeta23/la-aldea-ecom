@@ -31,7 +31,16 @@ import {
   Camera,
   RefreshCw,
   Trash2,
+  Tag,
 } from 'lucide-react';
+
+// ── Known Categories ───────────────────────────────────────────────────
+
+const KNOWN_CATEGORIES = [
+  'Bombas', 'Riego', 'Filtros', 'Tanques', 'Piscinas',
+  'Químicos', 'Herramientas', 'Accesorios', 'Hidráulica',
+  'Droguería', 'Energía Solar',
+];
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -91,6 +100,12 @@ export default function ProductsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [showBulkCategoryModal, setShowBulkCategoryModal] = useState(false);
+  const [bulkCategories, setBulkCategories] = useState<string[]>([]);
+  const [bulkCategoryInput, setBulkCategoryInput] = useState('');
+  const [bulkCategoryMode, setBulkCategoryMode] = useState<'replace' | 'add' | 'remove'>('add');
+  const [showBulkCatSuggestions, setShowBulkCatSuggestions] = useState(false);
+  const bulkCatInputRef = useRef<HTMLInputElement>(null);
 
   // Stats
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, noImage: 0 });
@@ -331,6 +346,81 @@ export default function ProductsPage() {
       fetchStats();
     } catch (err) {
       console.error('Bulk delete error:', err);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  // ── Bulk category edit ─────────────────────────────────────────────
+
+  const openBulkCategoryModal = () => {
+    setBulkCategories([]);
+    setBulkCategoryInput('');
+    setBulkCategoryMode('add');
+    setShowBulkCategoryModal(true);
+  };
+
+  const addBulkCategory = (cat: string) => {
+    const trimmed = cat.trim();
+    if (trimmed && !bulkCategories.includes(trimmed)) {
+      setBulkCategories(prev => [...prev, trimmed]);
+    }
+    setBulkCategoryInput('');
+    setShowBulkCatSuggestions(false);
+    bulkCatInputRef.current?.focus();
+  };
+
+  const removeBulkCategory = (cat: string) => {
+    setBulkCategories(prev => prev.filter(c => c !== cat));
+  };
+
+  const bulkEditCategories = async () => {
+    if (selectedIds.size === 0 || bulkCategories.length === 0) return;
+    setBulkLoading(true);
+
+    try {
+      const promises = [...selectedIds].map(async (id) => {
+        const product = products.find(p => p.id === id);
+        if (!product) return;
+
+        let newCategories: string[];
+        const current = Array.isArray(product.category) ? product.category : (product.category ? [product.category] : []);
+
+        if (bulkCategoryMode === 'replace') {
+          newCategories = [...bulkCategories];
+        } else if (bulkCategoryMode === 'add') {
+          const merged = new Set([...current, ...bulkCategories]);
+          newCategories = [...merged];
+        } else {
+          // remove
+          newCategories = current.filter(c => !bulkCategories.includes(c));
+        }
+
+        return fetch(`/api/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sku: product.sku,
+            name: product.name,
+            description: product.description,
+            category: newCategories,
+            brand: product.brand,
+            price_numeric: product.price_numeric,
+            currency: product.currency,
+            stock: product.stock,
+            images: product.images,
+            is_active: product.is_active,
+          }),
+        });
+      });
+
+      await Promise.all(promises);
+      setShowBulkCategoryModal(false);
+      setSelectedIds(new Set());
+      fetchProducts(filters, page, true);
+      fetchFilterOptions();
+    } catch (err) {
+      console.error('Bulk category edit error:', err);
     } finally {
       setBulkLoading(false);
     }
@@ -655,6 +745,14 @@ export default function ProductsPage() {
             >
               {bulkLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ToggleLeft className="h-3.5 w-3.5" />}
               Desactivar
+            </button>
+            <button
+              onClick={openBulkCategoryModal}
+              disabled={bulkLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {bulkLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Tag className="h-3.5 w-3.5" />}
+              Categorías
             </button>
             <button
               onClick={bulkDelete}
@@ -1051,6 +1149,184 @@ export default function ProductsPage() {
                 }`}
               >
                 <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Bulk Category Edit Modal ────────────────────────── */}
+      {showBulkCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Editar Categorías</h3>
+                <p className="text-sm text-slate-500">
+                  {selectedIds.size} producto{selectedIds.size > 1 ? 's' : ''} seleccionado{selectedIds.size > 1 ? 's' : ''}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBulkCategoryModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Cerrar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-4 space-y-4">
+              {/* Mode selector */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Acción</label>
+                <div className="flex gap-2">
+                  {[
+                    { value: 'add' as const, label: 'Agregar', desc: 'Añadir a las existentes' },
+                    { value: 'replace' as const, label: 'Reemplazar', desc: 'Reemplazar todas' },
+                    { value: 'remove' as const, label: 'Quitar', desc: 'Quitar de las existentes' },
+                  ].map((mode) => (
+                    <button
+                      key={mode.value}
+                      onClick={() => setBulkCategoryMode(mode.value)}
+                      className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        bulkCategoryMode === mode.value
+                          ? mode.value === 'remove'
+                            ? 'border-red-300 bg-red-50 text-red-700'
+                            : mode.value === 'replace'
+                              ? 'border-amber-300 bg-amber-50 text-amber-700'
+                              : 'border-blue-300 bg-blue-50 text-blue-700'
+                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div>{mode.label}</div>
+                      <div className="text-[10px] font-normal opacity-70 mt-0.5">{mode.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category tags */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Categorías</label>
+                <div className="border border-slate-200 rounded-lg p-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+                  {/* Selected tags */}
+                  {bulkCategories.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {bulkCategories.map((cat) => (
+                        <span
+                          key={cat}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                            bulkCategoryMode === 'remove'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}
+                        >
+                          {cat}
+                          <button
+                            onClick={() => removeBulkCategory(cat)}
+                            className={`hover:${bulkCategoryMode === 'remove' ? 'text-red-900' : 'text-blue-900'}`}
+                            title={`Quitar ${cat}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Input */}
+                  <div className="relative">
+                    <input
+                      ref={bulkCatInputRef}
+                      type="text"
+                      value={bulkCategoryInput}
+                      onChange={(e) => {
+                        setBulkCategoryInput(e.target.value);
+                        setShowBulkCatSuggestions(true);
+                      }}
+                      onFocus={() => setShowBulkCatSuggestions(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (bulkCategoryInput.trim()) addBulkCategory(bulkCategoryInput);
+                        }
+                        if (e.key === 'Backspace' && !bulkCategoryInput && bulkCategories.length > 0) {
+                          removeBulkCategory(bulkCategories[bulkCategories.length - 1]);
+                        }
+                        if (e.key === 'Escape') {
+                          setShowBulkCatSuggestions(false);
+                        }
+                      }}
+                      placeholder={bulkCategories.length === 0 ? 'Escribí o elegí una categoría...' : 'Agregar otra...'}
+                      className="w-full text-sm border-0 outline-none focus:ring-0 p-1 bg-transparent placeholder:text-slate-400"
+                    />
+
+                    {/* Suggestions dropdown */}
+                    {showBulkCatSuggestions && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                        {KNOWN_CATEGORIES
+                          .filter(c =>
+                            !bulkCategories.includes(c) &&
+                            (!bulkCategoryInput || c.toLowerCase().includes(bulkCategoryInput.toLowerCase()))
+                          )
+                          .map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => addBulkCategory(cat)}
+                              className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        {bulkCategoryInput.trim() &&
+                          !KNOWN_CATEGORIES.some(c => c.toLowerCase() === bulkCategoryInput.trim().toLowerCase()) &&
+                          !bulkCategories.includes(bulkCategoryInput.trim()) && (
+                            <button
+                              type="button"
+                              onClick={() => addBulkCategory(bulkCategoryInput)}
+                              className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-1.5"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              Crear &ldquo;{bulkCategoryInput.trim()}&rdquo;
+                            </button>
+                          )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Hint */}
+              <p className="text-xs text-slate-400">
+                {bulkCategoryMode === 'add' && 'Las categorías seleccionadas se agregarán a las existentes de cada producto.'}
+                {bulkCategoryMode === 'replace' && 'Las categorías existentes serán reemplazadas por las seleccionadas.'}
+                {bulkCategoryMode === 'remove' && 'Las categorías seleccionadas se quitarán de cada producto.'}
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+              <button
+                onClick={() => setShowBulkCategoryModal(false)}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={bulkEditCategories}
+                disabled={bulkLoading || bulkCategories.length === 0}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
+                  bulkCategoryMode === 'remove'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {bulkLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {bulkCategoryMode === 'add' && 'Agregar categorías'}
+                {bulkCategoryMode === 'replace' && 'Reemplazar categorías'}
+                {bulkCategoryMode === 'remove' && 'Quitar categorías'}
               </button>
             </div>
           </div>
