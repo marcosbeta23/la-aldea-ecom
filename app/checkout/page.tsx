@@ -19,7 +19,7 @@ interface CouponData {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getSubtotal, clearCart } = useCartStore();
+  const { items, getSubtotal, getCartCurrency, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -45,15 +45,17 @@ export default function CheckoutPage() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [freightConfirmed, setFreightConfirmed] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   // Refresh product data from API on mount to get latest shipping_type, stock, etc.
-  const { updateProductData } = useCartStore();
+  const updateProductData = useCartStore((s) => s.updateProductData);
+  const [productDataRefreshed, setProductDataRefreshed] = useState(false);
   useEffect(() => {
-    if (!mounted || items.length === 0) return;
+    if (!mounted || items.length === 0 || productDataRefreshed) return;
     const ids = items.map(item => item.product.id).join(',');
     fetch(`/api/products?ids=${ids}`)
       .then(res => res.json())
@@ -63,9 +65,10 @@ export default function CheckoutPage() {
             updateProductData(freshProduct.id, freshProduct);
           }
         }
+        setProductDataRefreshed(true);
       })
       .catch(err => console.error('Failed to refresh product data:', err));
-  }, [mounted]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mounted, items.length, productDataRefreshed, updateProductData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track begin_checkout event once items are loaded
   useEffect(() => {
@@ -106,6 +109,17 @@ export default function CheckoutPage() {
   const shippingOptions = useMemo(() => {
     return getShippingOptions(cartShippingType, shippingZone);
   }, [cartShippingType, shippingZone]);
+
+  // Cart currency (all items guaranteed same currency)
+  const cartCurrency = mounted ? getCartCurrency() : 'USD';
+
+  // Auto-reset shipping method when delivery isn't available
+  useEffect(() => {
+    const canDeliver = shippingOptions.canDeliver || (shippingOptions.showFreightConsult && freightConfirmed);
+    if (mounted && !canDeliver && formData.shippingMethod === 'delivery') {
+      setFormData(prev => ({ ...prev, shippingMethod: 'pickup' }));
+    }
+  }, [mounted, shippingOptions.canDeliver, shippingOptions.showFreightConsult, freightConfirmed, formData.shippingMethod]);
 
   // Calculate totals
   const subtotal = mounted ? getSubtotal() : 0;
@@ -440,7 +454,7 @@ export default function CheckoutPage() {
                           <span className="font-medium text-slate-900">{shippingOptions.deliveryLabel}</span>
                           {shippingOptions.deliveryCost !== null ? (
                             <span className={shippingOptions.deliveryCost === 0 ? 'text-green-600 font-semibold' : 'text-slate-900 font-semibold'}>
-                              {shippingOptions.deliveryCost === 0 ? 'Gratis' : formatPrice(shippingOptions.deliveryCost)}
+                              {shippingOptions.deliveryCost === 0 ? 'Gratis' : formatPrice(shippingOptions.deliveryCost, cartCurrency)}
                             </span>
                           ) : (
                             <span className="text-amber-600 text-sm font-medium">A pagar en destino</span>
@@ -451,30 +465,101 @@ export default function CheckoutPage() {
                         </p>
                       </button>
                     )}
+
+                    {/* Freight delivery option — only visible after WhatsApp confirmation */}
+                    {shippingOptions.showFreightConsult && freightConfirmed && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, shippingMethod: 'delivery' })}
+                        className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                          formData.shippingMethod === 'delivery'
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900">Flete (coordinado)</span>
+                          <span className="text-amber-600 text-sm font-medium">Acordado por WhatsApp</span>
+                        </div>
+                        <p className="text-sm text-slate-500">
+                          Envío coordinado previamente con La Aldea
+                        </p>
+                      </button>
+                    )}
                   </div>
 
-                  {/* Freight quote message */}
-                  {shippingOptions.requiresQuote && formData.shippingMethod === 'delivery' && (
-                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  {/* Freight consultation card — consult first, then confirm */}
+                  {shippingOptions.showFreightConsult && (
+                    <div className={`mt-4 p-4 border rounded-xl ${
+                      freightConfirmed
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-amber-50 border-amber-200'
+                    }`}>
                       <div className="flex items-start gap-3">
-                        <Info className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-sm text-amber-800 font-medium">
-                            Tu pedido incluye productos grandes que requieren flete
-                          </p>
-                          <p className="text-sm text-amber-700 mt-1">
-                            Te contactaremos por WhatsApp para coordinar fecha y costo del envío.
-                          </p>
-                          <a
-                            href={`https://wa.me/59892744725?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 mt-2 text-sm text-green-700 hover:text-green-800 font-medium"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                            Consultar ahora por WhatsApp
-                          </a>
+                        <Truck className={`h-5 w-5 mt-0.5 shrink-0 ${
+                          freightConfirmed ? 'text-green-600' : 'text-amber-600'
+                        }`} />
+                        <div className="flex-1">
+                          {!freightConfirmed ? (
+                            <>
+                              <p className="text-sm font-medium text-amber-800">
+                                Tu pedido incluye productos que requieren flete
+                              </p>
+                              <p className="text-sm text-amber-700 mt-1">
+                                Coordiná el envío y el costo por WhatsApp antes de comprar. Si preferís, podés retirarlo en nuestro local.
+                              </p>
+                              <a
+                                href={`https://wa.me/59892744725?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido con productos grandes.')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                                Consultar por flete en WhatsApp
+                              </a>
+                            </>
+                          ) : (
+                            <p className="text-sm font-medium text-green-800">
+                              Flete coordinado — ya podés seleccionar &quot;Flete (coordinado)&quot; como método de entrega.
+                            </p>
+                          )}
+
+                          {/* Confirmation checkbox */}
+                          <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={freightConfirmed}
+                              onChange={(e) => {
+                                setFreightConfirmed(e.target.checked);
+                                if (!e.target.checked && formData.shippingMethod === 'delivery') {
+                                  setFormData(prev => ({ ...prev, shippingMethod: 'pickup' }));
+                                }
+                              }}
+                              className={`h-4 w-4 rounded border-slate-300 focus:ring-2 ${
+                                freightConfirmed
+                                  ? 'text-green-600 focus:ring-green-500'
+                                  : 'text-amber-600 focus:ring-amber-500'
+                              }`}
+                            />
+                            <span className={`text-sm font-medium ${
+                              freightConfirmed ? 'text-green-700' : 'text-amber-700'
+                            }`}>
+                              Ya coordiné el flete por WhatsApp
+                            </span>
+                          </label>
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pickup-only notice */}
+                  {cartShippingType === 'pickup_only' && (
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                        <p className="text-sm text-blue-800">
+                          Algunos productos de tu carrito solo están disponibles para retiro en local.
+                        </p>
                       </div>
                     </div>
                   )}
@@ -875,12 +960,12 @@ export default function CheckoutPage() {
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-slate-600">
                       <span>Subtotal</span>
-                      <span>{formatPrice(subtotal)}</span>
+                      <span>{formatPrice(subtotal, cartCurrency)}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Descuento</span>
-                        <span>-{formatPrice(discount)}</span>
+                        <span>-{formatPrice(discount, cartCurrency)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-slate-600">
@@ -900,7 +985,7 @@ export default function CheckoutPage() {
                     <hr className="border-slate-200" />
                     <div className="flex justify-between text-xl font-bold text-slate-900">
                       <span>Total</span>
-                      <span>{formatPrice(total)}</span>
+                      <span>{formatPrice(total, cartCurrency)}</span>
                     </div>
                   </div>
 

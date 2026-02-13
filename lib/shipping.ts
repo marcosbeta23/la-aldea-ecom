@@ -98,17 +98,18 @@ export function getShippingZone(department: string, city?: string): ShippingZone
 export function getCartShippingType(
   cartItems: { shippingType: ProductShippingType }[]
 ): ProductShippingType {
-  // If any item is freight, whole cart needs freight
+  // If any item is pickup_only, the whole cart can only be picked up
+  // (those items physically cannot be shipped)
+  if (cartItems.some(item => item.shippingType === 'pickup_only')) {
+    return 'pickup_only';
+  }
+  
+  // If any item needs freight, whole cart needs freight
   if (cartItems.some(item => item.shippingType === 'freight')) {
     return 'freight';
   }
   
-  // If all items are pickup_only
-  if (cartItems.every(item => item.shippingType === 'pickup_only')) {
-    return 'pickup_only';
-  }
-  
-  // Default to DAC
+  // Default to DAC (standard courier)
   return 'dac';
 }
 
@@ -123,6 +124,7 @@ export function getShippingOptions(
   deliveryNote: string;
   deliveryCost: number | null; // null means "to be determined"
   requiresQuote: boolean;
+  showFreightConsult: boolean; // Show WhatsApp freight consultation instead of delivery option
 } {
   // Pickup only products
   if (cartShippingType === 'pickup_only') {
@@ -133,18 +135,20 @@ export function getShippingOptions(
       deliveryNote: 'Estos productos no se envían',
       deliveryCost: null,
       requiresQuote: false,
+      showFreightConsult: false,
     };
   }
   
-  // Freight (large items)
+  // Freight (large items) — delivery is NOT selectable, only consultable via WhatsApp
   if (cartShippingType === 'freight') {
     return {
-      canDeliver: true,
+      canDeliver: false, // Cannot select delivery as a shipping method
       canPickup: true,
-      deliveryLabel: 'Flete (productos grandes)',
-      deliveryNote: 'Coordinar fecha y costo por WhatsApp',
+      deliveryLabel: 'Consultar por flete',
+      deliveryNote: 'Coordiná el envío por WhatsApp antes de comprar',
       deliveryCost: null,
       requiresQuote: true,
+      showFreightConsult: true, // Show WhatsApp consultation card
     };
   }
   
@@ -158,6 +162,7 @@ export function getShippingOptions(
       deliveryNote: 'Entrega en zona Tala/San Ramón',
       deliveryCost: 0,
       requiresQuote: false,
+      showFreightConsult: false,
     };
   }
   
@@ -169,6 +174,7 @@ export function getShippingOptions(
     deliveryNote: `${SHIPPING_CONFIG.dacDeliveryTime} - ${SHIPPING_CONFIG.dacPaymentNote}`,
     deliveryCost: null, // Customer pays on delivery
     requiresQuote: false,
+    showFreightConsult: false,
   };
 }
 

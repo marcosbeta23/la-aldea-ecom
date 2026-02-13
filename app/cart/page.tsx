@@ -8,7 +8,7 @@ import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, getSubtotal } = useCartStore();
+  const { items, removeItem, updateQuantity, clearCart, getSubtotal, getCartCurrency } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -41,6 +41,7 @@ export default function CartPage() {
   }
 
   const subtotal = getSubtotal();
+  const cartCurrency = getCartCurrency();
   const shipping = 0; // Will be calculated at checkout
   const total = subtotal + shipping;
 
@@ -177,7 +178,7 @@ export default function CartPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} productos)</span>
-                    <span>{formatPrice(subtotal)}</span>
+                    <span>{formatPrice(subtotal, cartCurrency)}</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
                     <span>Envío</span>
@@ -186,7 +187,7 @@ export default function CartPage() {
                   <hr className="border-slate-200" />
                   <div className="flex justify-between text-lg font-bold text-slate-900">
                     <span>Total</span>
-                    <span>{formatPrice(total)}</span>
+                    <span>{formatPrice(total, cartCurrency)}</span>
                   </div>
                 </div>
 

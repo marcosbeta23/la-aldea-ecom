@@ -24,6 +24,7 @@ interface CartState {
   // Computed (as functions for reactivity)
   getItemCount: () => number;
   getSubtotal: () => number;
+  getCartCurrency: () => string;
   getItem: (productId: string) => CartItem | undefined;
   isInCart: (productId: string) => boolean;
 }
@@ -41,6 +42,16 @@ export const useCartStore = create<CartState>()(
         // Block on_request products
         if (product.availability_type === 'on_request') {
           return { success: false, message: 'Este producto es solo bajo consulta' };
+        }
+
+        // Prevent mixing currencies (e.g. USD + UYU)
+        const cartCurrency = get().getCartCurrency();
+        const productCurrency = product.currency || 'UYU';
+        if (items.length > 0 && cartCurrency !== productCurrency) {
+          return {
+            success: false,
+            message: `No podés mezclar productos en ${cartCurrency} con productos en ${productCurrency}. Vaciá el carrito primero o elegí productos en la misma moneda.`,
+          };
         }
 
         // Check if product is out of stock
@@ -141,6 +152,12 @@ export const useCartStore = create<CartState>()(
           (total, item) => total + item.product.price_numeric * item.quantity,
           0
         );
+      },
+
+      getCartCurrency: () => {
+        const { items } = get();
+        if (items.length === 0) return 'USD'; // default
+        return items[0].product.currency || 'UYU';
       },
 
       getItem: (productId) => {
