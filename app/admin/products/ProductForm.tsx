@@ -155,10 +155,19 @@ export default function ProductForm({ product }: { product?: any }) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value,
-    }));
+    if (type === 'number') {
+      // Allow empty and intermediate decimal input (e.g. "204." while typing "204.54")
+      const parsed = value === '' ? 0 : Number(value);
+      setFormData(prev => ({
+        ...prev,
+        [name]: isNaN(parsed) ? prev[name as keyof Product] : parsed,
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
   
   const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -477,7 +486,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                     min="0"
-                    step={formData.currency === 'USD' ? '0.01' : '1'}
+                    step="0.01"
                   />
                 </div>
               </div>
@@ -596,7 +605,7 @@ export default function ProductForm({ product }: { product?: any }) {
                       }))}
                       className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       min="0"
-                      step="1"
+                      step="0.01"
                       placeholder="Ej: 1500"
                     />
                   </div>
