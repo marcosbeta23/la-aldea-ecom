@@ -3,6 +3,7 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Product } from "@/types/database";
+import FeaturedCarousel from "@/components/products/FeaturedCarousel";
 import { 
   Droplets, 
   Wrench, 
@@ -327,39 +328,16 @@ const stats = [
   { value: "19", label: "Departamentos Cubiertos" },
 ];
 
-// Helper to get badge based on product properties
-function getProductBadge(product: Product): string {
-  if (product.sold_count >= 20) return "Más Vendido";
-  if (product.sold_count >= 10) return "Popular";
-  return "Destacado";
-}
-
-// Helper to get gradient color based on category
-function getCategoryColor(category: string[] | string | null): string {
-  const colors: Record<string, string> = {
-    "Bombas": "from-blue-400 to-blue-600",
-    "Riego": "from-green-400 to-green-600",
-    "Filtros": "from-teal-400 to-teal-600",
-    "Tanques": "from-cyan-400 to-cyan-600",
-    "Piscinas": "from-sky-400 to-sky-600",
-    "Químicos": "from-purple-400 to-purple-600",
-    "Herramientas": "from-orange-400 to-orange-600",
-  };
-  const key = Array.isArray(category) ? category[0] || '' : category || '';
-  return colors[key] || "from-blue-400 to-blue-600";
-}
-
 export default async function Home() {
-  // Fetch featured products from database
-  // Priority: is_featured=true first, then by sold_count
+  // Fetch featured products from database — only products marked as featured
   const { data } = await supabaseAdmin
     .from('products')
     .select('*')
     .eq('is_active', true)
+    .eq('is_featured', true)
     .gt('stock', 0)
-    .order('is_featured', { ascending: false, nullsFirst: false })
     .order('sold_count', { ascending: false })
-    .limit(4) as { data: any[] | null };
+    .limit(20) as { data: any[] | null };
   
   const featuredProducts = (data || []) as Product[];
 
@@ -458,70 +436,30 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Featured Products Section - Compact horizontal row */}
-        <section className="relative z-10 bg-white py-12 md:py-16">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
-                  Productos Destacados
-                </h2>
+        {/* Featured Products Carousel */}
+        {featuredProducts.length > 0 && (
+          <section className="relative z-10 bg-white py-12 md:py-16">
+            <div className="container mx-auto px-4">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
+                    Productos Destacados
+                  </h2>
+                </div>
+                <Link
+                  href="/productos"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                >
+                  Ver todos
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
               </div>
-              <Link
-                href="/productos"
-                className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
-              >
-                Ver todos
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
 
-            {/* Horizontal scroll on mobile, 4 columns on desktop */}
-            <div className="mt-6 -mx-4 px-4 pb-2 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4 pb-2 lg:grid lg:grid-cols-4 lg:gap-5 lg:pb-0">
-                {featuredProducts.map((product) => (
-                  <Link
-                    key={product.id}
-                    href={`/productos/${product.sku}`}
-                    className="group relative flex-shrink-0 w-52 lg:w-auto overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg"
-                  >
-                    {/* Badge */}
-                    <div className="absolute left-2 top-2 z-10 rounded-full bg-white/90 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-slate-700">
-                      {getProductBadge(product)}
-                    </div>
-                    
-                    {/* Product Image or Gradient Fallback */}
-                    <div className={`aspect-[4/3] overflow-hidden ${product.images?.[0] ? 'bg-white' : `bg-gradient-to-br ${getCategoryColor(product.category)}`} flex items-center justify-center`}>
-                      {product.images?.[0] ? (
-                        <Image
-                          src={product.images[0]}
-                          alt={product.name}
-                          width={300}
-                          height={225}
-                          className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <Droplets className="h-12 w-12 text-white/40" />
-                      )}
-                    </div>
-                    
-                    {/* Content - more compact */}
-                    <div className="p-3">
-                      <p className="text-[10px] font-medium text-blue-600">{Array.isArray(product.category) ? product.category.join(', ') : product.category || 'Producto'}</p>
-                      <h3 className="mt-0.5 text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                        {product.name}
-                      </h3>
-                      <p className="mt-1 text-base font-bold text-slate-900">
-                        {product.currency} {product.price_numeric.toLocaleString('es-UY')}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <FeaturedCarousel products={featuredProducts} />
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Product Categories Section */}
         <section className="bg-slate-50 py-16 md:py-20">
