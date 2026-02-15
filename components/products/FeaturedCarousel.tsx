@@ -138,9 +138,14 @@ export default function FeaturedCarousel({
   }, []);
 
   // Touch/drag support
-  const handleDragStart = (clientX: number) => {
+  const dragStartYRef = useRef(0);
+  const isHorizontalDragRef = useRef(false);
+
+  const handleDragStart = (clientX: number, clientY?: number) => {
     setIsDragging(true);
     setDragStartX(clientX);
+    dragStartYRef.current = clientY ?? 0;
+    isHorizontalDragRef.current = false;
     setDragOffset(0);
   };
 
@@ -152,11 +157,53 @@ export default function FeaturedCarousel({
   const handleDragEnd = () => {
     if (!isDragging) return;
     setIsDragging(false);
+    isHorizontalDragRef.current = false;
     const threshold = 60;
     if (dragOffset < -threshold) next();
     else if (dragOffset > threshold) prev();
     setDragOffset(0);
   };
+
+  // Attach non-passive touch handlers to prevent page scroll during horizontal swipe
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+      const dx = Math.abs(e.touches[0].clientX - dragStartX);
+      const dy = Math.abs(e.touches[0].clientY - dragStartYRef.current);
+
+      // Once we determine direction, lock it
+      if (!isHorizontalDragRef.current && (dx > 8 || dy > 8)) {
+        isHorizontalDragRef.current = dx > dy;
+      }
+
+      if (isHorizontalDragRef.current) {
+        e.preventDefault(); // Stop page scroll while swiping carousel
+        handleDragMove(e.touches[0].clientX);
+      }
+    };
+
+    const onTouchEnd = () => {
+      handleDragEnd();
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDragging, dragStartX, total, visibleCount]);
 
   if (total === 0) return null;
 
@@ -196,14 +243,11 @@ export default function FeaturedCarousel({
           onMouseMove={(e) => handleDragMove(e.clientX)}
           onMouseUp={handleDragEnd}
           onMouseLeave={() => isDragging && handleDragEnd()}
-          onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-          onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-          onTouchEnd={handleDragEnd}
         >
           {extendedProducts.map((product, i) => (
             <div
               key={`${product.id}-${i}`}
-              className="flex-shrink-0 px-2"
+              className="shrink-0 px-2"
               style={{ width: `${cardWidthPercent}%` }}
             >
               <Link

@@ -214,13 +214,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         {/* Products Section */}
         <section className="container mx-auto px-4 py-6 lg:py-8">
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar Filters — sticky with own scroll */}
-            <aside className="lg:w-60 flex-shrink-0">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 sticky top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:overflow-x-hidden">
-                <div className="p-5">
-                  <Suspense fallback={<div className="animate-pulse h-64 bg-slate-100 rounded-lg" />}>
-                    <ProductFilters categories={categories} brands={brands} />
-                  </Suspense>
+            {/* Sidebar Filters — mobile: sticky toggle, desktop: sidebar with scroll */}
+            <aside className="lg:w-60 shrink-0">
+              <div className="sticky top-18 z-30 lg:relative lg:top-0 lg:z-auto">
+                <div className="lg:bg-white lg:rounded-2xl lg:shadow-sm lg:border lg:border-slate-200 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:overflow-x-hidden">
+                  <div className="lg:p-5">
+                    <Suspense fallback={<div className="animate-pulse h-64 bg-slate-100 rounded-lg" />}>
+                      <ProductFilters categories={categories} brands={brands} />
+                    </Suspense>
+                  </div>
                 </div>
               </div>
             </aside>

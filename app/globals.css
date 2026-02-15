@@ -99,3 +99,13 @@ input[type="number"] {
 .animate-scroll:hover {
   animation-play-state: paused;
 }
+
+/* Mobile filter drawer slide-up */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

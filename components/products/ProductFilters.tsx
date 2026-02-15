@@ -78,22 +78,32 @@ export default function ProductFilters({ categories, brands, className = '' }: P
       {/* Mobile overlay backdrop */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/40 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-60"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Filters panel — mobile: slide-up drawer, desktop: inline */}
-      <div className={`
-        lg:block
-        ${isOpen
-          ? 'fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto p-5 pb-8 animate-in slide-in-from-bottom lg:relative lg:inset-auto lg:z-auto lg:shadow-none lg:rounded-none lg:p-0 lg:max-h-none lg:animate-none'
-          : 'hidden'
-        }
-      `}>
-        {/* Mobile drawer handle */}
-        <div className="lg:hidden flex justify-center mb-4">
+      <div
+        className={`
+          lg:block!
+          ${isOpen
+            ? 'fixed inset-x-0 bottom-0 z-70 bg-white rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto p-5 pb-8 lg:relative lg:inset-auto lg:z-auto lg:shadow-none lg:rounded-none lg:p-0 lg:max-h-none'
+            : 'hidden'
+          }
+        `}
+        style={isOpen ? { animation: 'slideUp 0.25s ease-out' } : undefined}
+      >
+        {/* Mobile drawer handle + close */}
+        <div className="lg:hidden flex items-center justify-between mb-4">
           <div className="w-10 h-1 rounded-full bg-slate-300" />
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-lg"
+            aria-label="Cerrar filtros"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Header with clear */}
@@ -240,7 +250,7 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                   >
                     <span className="truncate mr-2">{brand.label}</span>
                     {brand.count !== undefined && (
-                      <span className="text-xs text-slate-400 tabular-nums flex-shrink-0">{brand.count}</span>
+                      <span className="text-xs text-slate-400 tabular-nums shrink-0">{brand.count}</span>
                     )}
                   </button>
                 ))}
