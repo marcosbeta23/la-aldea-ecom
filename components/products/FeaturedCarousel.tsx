@@ -266,6 +266,7 @@ export default function FeaturedCarousel({
           className={`flex select-none ${isDraggingVisual ? '' : isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
           style={{
             transform: `translateX(calc(${baseTranslate}% + ${dragOffset}px))`,
+            touchAction: 'pan-y',
           }}
           onTransitionEnd={handleTransitionEnd}
           onMouseDown={handleMouseDown}
