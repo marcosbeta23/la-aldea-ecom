@@ -189,7 +189,7 @@ const productCategories = [
     icon: FlaskConical,
     title: "Droguería",
     description: "Productos químicos industriales DIU para limpieza y mantenimiento",
-    href: "/productos?categoria=Drogueria",
+    href: "/productos?categoria=Droguería",
     color: "from-purple-500 to-purple-600",
     image: "/assets/images/products/drogueria.webp",
   },
