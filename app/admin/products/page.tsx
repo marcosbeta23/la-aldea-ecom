@@ -32,6 +32,8 @@ import {
   RefreshCw,
   Trash2,
   Tag,
+  Star,
+  GripVertical,
 } from 'lucide-react';
 
 // ── Known Categories ───────────────────────────────────────────────────
@@ -123,6 +125,19 @@ export default function ProductsPage() {
   const [bulkCategoryMode, setBulkCategoryMode] = useState<'replace' | 'add' | 'remove'>('add');
   const [showBulkCatSuggestions, setShowBulkCatSuggestions] = useState(false);
   const bulkCatInputRef = useRef<HTMLInputElement>(null);
+
+  // Featured modal state
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(false);
+  const [featuredSaving, setFeaturedSaving] = useState(false);
+  const [featuredSearch, setFeaturedSearch] = useState('');
+  const [featuredSearchResults, setFeaturedSearchResults] = useState<Product[]>([]);
+  const [featuredSearchLoading, setFeaturedSearchLoading] = useState(false);
+  const featuredSearchRef = useRef<HTMLInputElement>(null);
+  const featuredDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Stats
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, noImage: 0 });
@@ -462,6 +477,114 @@ export default function ProductsPage() {
     }
   };
 
+  // ── Featured products modal ─────────────────────────────────────────
+
+  const openFeaturedModal = async () => {
+    setShowFeaturedModal(true);
+    setFeaturedLoading(true);
+    setFeaturedSearch('');
+    setFeaturedSearchResults([]);
+    try {
+      const res = await fetch('/api/admin/products/featured');
+      const data = await res.json();
+      setFeaturedProducts(data.products || []);
+    } catch (err) {
+      console.error('Error loading featured products:', err);
+    } finally {
+      setFeaturedLoading(false);
+    }
+  };
+
+  const searchProductsForFeatured = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setFeaturedSearchResults([]);
+      return;
+    }
+    setFeaturedSearchLoading(true);
+    try {
+      const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&perPage=10&sort=name&order=asc`);
+      const data = await res.json();
+      // Filter out already featured
+      const featuredIds = new Set(featuredProducts.map(p => p.id));
+      setFeaturedSearchResults(
+        (data.products || []).filter((p: Product) => !featuredIds.has(p.id) && p.is_active)
+      );
+    } catch (err) {
+      console.error('Error searching products:', err);
+    } finally {
+      setFeaturedSearchLoading(false);
+    }
+  }, [featuredProducts]);
+
+  const handleFeaturedSearchChange = (value: string) => {
+    setFeaturedSearch(value);
+    if (featuredDebounceRef.current) clearTimeout(featuredDebounceRef.current);
+    featuredDebounceRef.current = setTimeout(() => searchProductsForFeatured(value), 300);
+  };
+
+  const addToFeatured = (product: Product) => {
+    setFeaturedProducts(prev => [...prev, { ...product, is_featured: true }]);
+    setFeaturedSearchResults(prev => prev.filter(p => p.id !== product.id));
+    setFeaturedSearch('');
+  };
+
+  const removeFromFeatured = (productId: string) => {
+    setFeaturedProducts(prev => prev.filter(p => p.id !== productId));
+  };
+
+  const handleFeaturedDragStart = (index: number) => {
+    setDragIndex(index);
+  };
+
+  const handleFeaturedDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleFeaturedDrop = (index: number) => {
+    if (dragIndex === null || dragIndex === index) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    setFeaturedProducts(prev => {
+      const updated = [...prev];
+      const [moved] = updated.splice(dragIndex, 1);
+      updated.splice(index, 0, moved);
+      return updated;
+    });
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const moveFeatured = (from: number, direction: 'up' | 'down') => {
+    const to = direction === 'up' ? from - 1 : from + 1;
+    if (to < 0 || to >= featuredProducts.length) return;
+    setFeaturedProducts(prev => {
+      const updated = [...prev];
+      [updated[from], updated[to]] = [updated[to], updated[from]];
+      return updated;
+    });
+  };
+
+  const saveFeaturedOrder = async () => {
+    setFeaturedSaving(true);
+    try {
+      const res = await fetch('/api/admin/products/featured', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productIds: featuredProducts.map(p => p.id) }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      setShowFeaturedModal(false);
+      fetchProducts(filters, page, true);
+    } catch (err) {
+      console.error('Error saving featured order:', err);
+    } finally {
+      setFeaturedSaving(false);
+    }
+  };
+
   // ── Active filter count ──────────────────────────────────────────
 
   const activeFilterCount = [
@@ -504,6 +627,13 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={openFeaturedModal}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-amber-300 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors text-sm font-medium"
+          >
+            <Star className="h-4 w-4" />
+            <span className="hidden sm:inline">Destacados</span>
+          </button>
           <Link
             href="/admin/products/import"
             className="inline-flex items-center gap-2 px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
@@ -1374,6 +1504,196 @@ export default function ProductsPage() {
                 {bulkCategoryMode === 'replace' && 'Reemplazar categorías'}
                 {bulkCategoryMode === 'remove' && 'Quitar categorías'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Featured Products Modal ────────────────────────── */}
+      {showFeaturedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                  <Star className="h-5 w-5 text-amber-500" />
+                  Productos Destacados
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Arrastrá para reordenar. Aparecen en el carrusel de la página principal.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowFeaturedModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Cerrar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {/* Search to add products */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  ref={featuredSearchRef}
+                  type="text"
+                  value={featuredSearch}
+                  onChange={(e) => handleFeaturedSearchChange(e.target.value)}
+                  placeholder="Buscar producto para agregar..."
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                />
+                {featuredSearchLoading && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />
+                )}
+
+                {/* Search Results Dropdown */}
+                {featuredSearchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                    {featuredSearchResults.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => addToFeatured(product)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-amber-50 transition-colors border-b border-slate-100 last:border-0"
+                      >
+                        <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                          {product.images?.[0] ? (
+                            <Image src={product.images[0]} alt="" width={40} height={40} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center">
+                              <Package className="h-4 w-4 text-slate-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 truncate">{product.name}</p>
+                          <p className="text-xs text-slate-500">{product.sku} · {formatCurrency(product.price_numeric, product.currency)}</p>
+                        </div>
+                        <Plus className="h-4 w-4 text-amber-600 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {featuredSearch.trim() && !featuredSearchLoading && featuredSearchResults.length === 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 p-4 text-center text-sm text-slate-500">
+                    No se encontraron productos
+                  </div>
+                )}
+              </div>
+
+              {/* Featured Products List */}
+              {featuredLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+                </div>
+              ) : featuredProducts.length === 0 ? (
+                <div className="text-center py-12">
+                  <Star className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                  <p className="text-sm text-slate-500">No hay productos destacados.</p>
+                  <p className="text-xs text-slate-400 mt-1">Usá la búsqueda de arriba para agregar productos.</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-2">
+                    {featuredProducts.length} producto{featuredProducts.length > 1 ? 's' : ''} en el carrusel
+                  </p>
+                  {featuredProducts.map((product, index) => (
+                    <div
+                      key={product.id}
+                      draggable
+                      onDragStart={() => handleFeaturedDragStart(index)}
+                      onDragOver={(e) => handleFeaturedDragOver(e, index)}
+                      onDrop={() => handleFeaturedDrop(index)}
+                      onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${
+                        dragIndex === index
+                          ? 'opacity-50 border-amber-300 bg-amber-50'
+                          : dragOverIndex === index
+                            ? 'border-amber-400 bg-amber-50 shadow-sm'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      {/* Drag handle */}
+                      <GripVertical className="h-4 w-4 text-slate-400 shrink-0" />
+
+                      {/* Position number */}
+                      <span className="text-xs font-bold text-slate-400 w-5 text-center shrink-0">
+                        {index + 1}
+                      </span>
+
+                      {/* Image */}
+                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                        {product.images?.[0] ? (
+                          <Image src={product.images[0]} alt="" width={40} height={40} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <Package className="h-4 w-4 text-slate-400" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{product.name}</p>
+                        <p className="text-xs text-slate-500">{product.sku} · {formatCurrency(product.price_numeric, product.currency)}</p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => moveFeatured(index, 'up')}
+                          disabled={index === 0}
+                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Mover arriba"
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => moveFeatured(index, 'down')}
+                          disabled={index === featuredProducts.length - 1}
+                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Mover abajo"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => removeFromFeatured(product.id)}
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Quitar de destacados"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+              <p className="text-xs text-slate-500">
+                Los cambios se aplican al guardar
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowFeaturedModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveFeaturedOrder}
+                  disabled={featuredSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+                >
+                  {featuredSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Guardar orden
+                </button>
+              </div>
             </div>
           </div>
         </div>

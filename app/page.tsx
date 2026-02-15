@@ -330,12 +330,14 @@ const stats = [
 
 export default async function Home() {
   // Fetch featured products from database — only products marked as featured
+  // Order by featured_order (nulls last), then by sold_count as fallback
   const { data } = await supabaseAdmin
     .from('products')
     .select('*')
     .eq('is_active', true)
     .eq('is_featured', true)
     .gt('stock', 0)
+    .order('featured_order', { ascending: true, nullsFirst: false })
     .order('sold_count', { ascending: false })
     .limit(20) as { data: any[] | null };
   

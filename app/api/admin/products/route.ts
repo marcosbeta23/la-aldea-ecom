@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
@@ -156,6 +157,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // Bust ISR cache
+    revalidatePath('/productos');
+    revalidatePath('/');
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {

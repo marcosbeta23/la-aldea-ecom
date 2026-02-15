@@ -133,9 +133,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    // Bust ISR cache for this product's detail page and listings
+    // Bust ISR cache for this product's detail page, listings, and homepage
     revalidatePath(`/productos/${product.sku}`);
     revalidatePath('/productos');
+    revalidatePath('/');
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {

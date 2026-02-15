@@ -29,6 +29,7 @@ export interface Product {
   requires_quote: boolean; // If true, shipping cost needs manual quote
   // Featured & Discount fields
   is_featured: boolean; // Show in homepage featured section
+  featured_order: number | null; // Order position in homepage carousel (lower = first)
   original_price: string | null; // Original price text before discount
   original_price_numeric: number | null; // Original price for calculations
   discount_percentage: number | null; // e.g., 20 for 20% off
