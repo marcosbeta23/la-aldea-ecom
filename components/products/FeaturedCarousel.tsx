@@ -48,12 +48,18 @@ export default function FeaturedCarousel({
 }: FeaturedCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStartX, setDragStartX] = useState(0);
-  const [dragOffset, setDragOffset] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
+  const [dragOffset, setDragOffset] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Use refs for drag state to avoid stale closures in touch handlers
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartYRef = useRef(0);
+  const dragOffsetRef = useRef(0);
+  const isHorizontalRef = useRef<boolean | null>(null);
+  const [isDraggingVisual, setIsDraggingVisual] = useState(false);
 
   const total = products.length;
 
@@ -109,7 +115,7 @@ export default function FeaturedCarousel({
   }, [total, visibleCount, autoSlideInterval, slideNext]);
 
   useEffect(() => {
-    if (!isHovered && !isDragging) {
+    if (!isHovered) {
       startAutoSlide();
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -117,15 +123,7 @@ export default function FeaturedCarousel({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isHovered, isDragging, startAutoSlide]);
-
-  const goTo = useCallback(
-    (index: number) => {
-      setIsTransitioning(true);
-      setCurrentIndex(index);
-    },
-    []
-  );
+  }, [isHovered, startAutoSlide]);
 
   const prev = useCallback(() => {
     setIsTransitioning(true);
@@ -137,60 +135,61 @@ export default function FeaturedCarousel({
     setCurrentIndex((prev) => prev + 1);
   }, []);
 
-  // Touch/drag support
-  const dragStartYRef = useRef(0);
-  const isHorizontalDragRef = useRef(false);
+  // Touch/drag support — store next/prev in refs updated via effect
+  const nextRef = useRef(next);
+  const prevRef = useRef(prev);
+  useEffect(() => {
+    nextRef.current = next;
+    prevRef.current = prev;
+  }, [next, prev]);
 
-  const handleDragStart = (clientX: number, clientY?: number) => {
-    setIsDragging(true);
-    setDragStartX(clientX);
-    dragStartYRef.current = clientY ?? 0;
-    isHorizontalDragRef.current = false;
-    setDragOffset(0);
-  };
-
-  const handleDragMove = (clientX: number) => {
-    if (!isDragging) return;
-    setDragOffset(clientX - dragStartX);
-  };
-
-  const handleDragEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    isHorizontalDragRef.current = false;
-    const threshold = 60;
-    if (dragOffset < -threshold) next();
-    else if (dragOffset > threshold) prev();
-    setDragOffset(0);
-  };
-
-  // Attach non-passive touch handlers to prevent page scroll during horizontal swipe
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
 
     const onTouchStart = (e: TouchEvent) => {
-      handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+      isDraggingRef.current = true;
+      setIsDraggingVisual(true);
+      dragStartXRef.current = e.touches[0].clientX;
+      dragStartYRef.current = e.touches[0].clientY;
+      dragOffsetRef.current = 0;
+      isHorizontalRef.current = null; // unknown direction yet
+      setDragOffset(0);
+      // Pause auto-slide
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!isDragging) return;
-      const dx = Math.abs(e.touches[0].clientX - dragStartX);
-      const dy = Math.abs(e.touches[0].clientY - dragStartYRef.current);
+      if (!isDraggingRef.current) return;
 
-      // Once we determine direction, lock it
-      if (!isHorizontalDragRef.current && (dx > 8 || dy > 8)) {
-        isHorizontalDragRef.current = dx > dy;
+      const dx = e.touches[0].clientX - dragStartXRef.current;
+      const dy = e.touches[0].clientY - dragStartYRef.current;
+
+      // Determine direction once we have enough movement
+      if (isHorizontalRef.current === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        isHorizontalRef.current = Math.abs(dx) > Math.abs(dy);
       }
 
-      if (isHorizontalDragRef.current) {
-        e.preventDefault(); // Stop page scroll while swiping carousel
-        handleDragMove(e.touches[0].clientX);
+      if (isHorizontalRef.current) {
+        e.preventDefault(); // Lock page scroll
+        dragOffsetRef.current = dx;
+        setDragOffset(dx);
       }
     };
 
     const onTouchEnd = () => {
-      handleDragEnd();
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      setIsDraggingVisual(false);
+
+      const offset = dragOffsetRef.current;
+      const threshold = 50;
+      if (offset < -threshold) nextRef.current();
+      else if (offset > threshold) prevRef.current();
+
+      dragOffsetRef.current = 0;
+      isHorizontalRef.current = null;
+      setDragOffset(0);
     };
 
     el.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -202,8 +201,35 @@ export default function FeaturedCarousel({
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDragging, dragStartX, total, visibleCount]);
+  }, []); // stable — everything uses refs
+
+  // Mouse drag (desktop)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    setIsDraggingVisual(true);
+    dragStartXRef.current = e.clientX;
+    dragOffsetRef.current = 0;
+    setDragOffset(0);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    const dx = e.clientX - dragStartXRef.current;
+    dragOffsetRef.current = dx;
+    setDragOffset(dx);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setIsDraggingVisual(false);
+    const offset = dragOffsetRef.current;
+    const threshold = 60;
+    if (offset < -threshold) next();
+    else if (offset > threshold) prev();
+    dragOffsetRef.current = 0;
+    setDragOffset(0);
+  };
 
   if (total === 0) return null;
 
@@ -221,8 +247,11 @@ export default function FeaturedCarousel({
   const translateIndex = currentIndex + visibleCount;
   const baseTranslate = -(translateIndex * cardWidthPercent);
 
-  // Normalized index for dot indicators
+  // Normalized index for progress indicator
   const normalizedIndex = ((currentIndex % total) + total) % total;
+
+  // Progress bar: how far through the carousel we are
+  const progressPercent = total <= visibleCount ? 100 : ((normalizedIndex + visibleCount) / total) * 100;
 
   return (
     <div
@@ -234,15 +263,15 @@ export default function FeaturedCarousel({
       <div className="overflow-hidden rounded-xl">
         <div
           ref={trackRef}
-          className={`flex ${isDragging ? '' : isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
+          className={`flex select-none ${isDraggingVisual ? '' : isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
           style={{
             transform: `translateX(calc(${baseTranslate}% + ${dragOffset}px))`,
           }}
           onTransitionEnd={handleTransitionEnd}
-          onMouseDown={(e) => handleDragStart(e.clientX)}
-          onMouseMove={(e) => handleDragMove(e.clientX)}
-          onMouseUp={handleDragEnd}
-          onMouseLeave={() => isDragging && handleDragEnd()}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           {extendedProducts.map((product, i) => (
             <div
@@ -341,21 +370,18 @@ export default function FeaturedCarousel({
         </>
       )}
 
-      {/* Dot indicators */}
+      {/* Progress bar indicator */}
       {total > visibleCount && (
-        <div className="mt-4 flex justify-center gap-1.5">
-          {products.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`Ir a producto ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === normalizedIndex
-                  ? 'w-6 bg-blue-600'
-                  : 'w-1.5 bg-slate-300 hover:bg-slate-400'
-              }`}
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <span className="text-xs text-slate-400 tabular-nums">
+            {normalizedIndex + 1}/{total}
+          </span>
+          <div className="w-24 sm:w-32 h-1 rounded-full bg-slate-200 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all duration-500 ease-in-out"
+              style={{ width: `${Math.min(progressPercent, 100)}%` }}
             />
-          ))}
+          </div>
         </div>
       )}
     </div>
