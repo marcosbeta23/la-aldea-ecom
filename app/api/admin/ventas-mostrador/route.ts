@@ -89,73 +89,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { items, customer_name, customer_phone, payment_method, notes } = validation.data;
-
-    // Fetch products from DB (server-side price validation)
-    const productIds = items.map((item) => item.product_id);
-    const { data: products, error: productsError } = await supabaseAdmin
-      .from('products')
-      .select('id, name, price_numeric, currency, stock, is_active')
-      .in('id', productIds) as { data: Array<{ id: string; name: string; price_numeric: number; currency: string; stock: number; is_active: boolean }> | null; error: any };
-
-    if (productsError || !products) {
-      return NextResponse.json({ error: 'Error al buscar productos' }, { status: 500 });
-    }
-
-    // Build order items with DB prices
-    let subtotal = 0;
-    const orderItems: Array<{
-      product_id: string;
-      product_name: string;
-      quantity: number;
-      unit_price: number;
-      currency: string;
-      subtotal: number;
-    }> = [];
-
-    for (const item of items) {
-      const product = products.find((p: any) => p.id === item.product_id);
-
-      if (!product) {
-        return NextResponse.json(
-          { error: `Producto no encontrado: ${item.product_id}` },
-          { status: 404 }
-        );
-      }
-
-      if (!product.is_active) {
-        return NextResponse.json(
-          { error: `Producto inactivo: ${product.name}` },
-          { status: 400 }
-        );
-      }
-
-      if (!product.price_numeric || product.price_numeric <= 0) {
-        return NextResponse.json(
-          { error: `Precio inválido para: ${product.name}` },
-          { status: 400 }
-        );
-      }
-
-      if (product.stock < item.quantity) {
-        return NextResponse.json(
-          { error: `Stock insuficiente para ${product.name}. Disponible: ${product.stock}` },
-          { status: 400 }
-        );
-      }
-
-      const itemSubtotal = product.price_numeric * item.quantity;
-      subtotal += itemSubtotal;
-
-      orderItems.push({
-        product_id: product.id,
-        product_name: product.name,
-        quantity: item.quantity,
-        unit_price: product.price_numeric,
-        currency: product.currency || 'UYU',
-        subtotal: itemSubtotal,
-      });
-    }
+    const { description, amount, currency, customer_name, customer_phone, payment_method, notes } = validation.data;
 
     // Generate order number with VM prefix (Venta Mostrador)
     const timestamp = Date.now().toString(36).toUpperCase();
@@ -172,9 +106,10 @@ export async function POST(request: NextRequest) {
         customer_phone: customer_phone || '',
         shipping_type: 'pickup',
         shipping_cost: 0,
-        subtotal,
+        subtotal: amount,
         discount_amount: 0,
-        total: subtotal,
+        total: amount,
+        currency: currency || 'UYU',
         status: 'delivered',
         payment_method,
         order_source: 'mostrador',
@@ -191,64 +126,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error al crear la venta' }, { status: 500 });
     }
 
-    // Insert order items
-    const itemsWithOrderId = orderItems.map((item) => ({
-      ...item,
-      order_id: (order as any).id,
-    }));
-
+    // Insert a single line item representing the free-form sale
     const { error: itemsError } = await supabaseAdmin
       .from('order_items')
-      .insert(itemsWithOrderId as any);
+      .insert({
+        order_id: (order as any).id,
+        product_id: null,
+        product_name: description,
+        quantity: 1,
+        unit_price: amount,
+        currency: currency || 'UYU',
+        subtotal: amount,
+      } as any);
 
     if (itemsError) {
       // Rollback
       await supabaseAdmin.from('orders').delete().eq('id', (order as any).id);
       console.error('Counter sale items failed:', itemsError);
-      return NextResponse.json({ error: 'Error al guardar los productos' }, { status: 500 });
-    }
-
-    // Deduct stock immediately (counter sale = already fulfilled)
-    for (const item of orderItems) {
-      await (supabaseAdmin as any).rpc('decrement_stock', {
-        p_product_id: item.product_id,
-        p_quantity: item.quantity,
-      }).then(async (res: any) => {
-        // If RPC doesn't exist, fallback to manual update
-        if (res.error) {
-          const { data: current } = await supabaseAdmin
-            .from('products')
-            .select('stock')
-            .eq('id', item.product_id)
-            .single();
-          if (current) {
-            await (supabaseAdmin as any)
-              .from('products')
-              .update({ stock: Math.max(0, (current as any).stock - item.quantity) })
-              .eq('id', item.product_id);
-          }
-        }
-      });
+      return NextResponse.json({ error: 'Error al guardar la venta' }, { status: 500 });
     }
 
     // Telegram alert
-    const itemsList = orderItems
-      .map((i) => `  • ${i.product_name} x${i.quantity} — $${i.subtotal.toLocaleString('es-UY')}`)
-      .join('\n');
-
+    const prefix = currency === 'USD' ? 'US$' : '$';
     await sendTelegramAlert(
       `🏪 <b>Venta Mostrador</b> ${order_number}\n` +
-      `💰 UYU $${subtotal.toLocaleString('es-UY')}\n` +
+      `💰 ${prefix} ${amount.toLocaleString('es-UY')}\n` +
+      `📝 ${description}\n` +
       `💳 ${payment_method}\n` +
-      `👤 ${customer_name || 'Cliente mostrador'}\n` +
-      `📦 Productos:\n${itemsList}`
+      `👤 ${customer_name || 'Cliente mostrador'}`
     );
 
     return NextResponse.json({
       success: true,
       order_id: (order as any).id,
       order_number,
-      total: subtotal,
+      total: amount,
+      currency,
     });
   } catch (error) {
     console.error('Counter sale error:', error);

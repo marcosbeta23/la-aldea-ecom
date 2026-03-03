@@ -40,14 +40,13 @@ export interface Product {
 export type OrderSource = 'online' | 'mostrador';
 
 // Payment methods
-export type PaymentMethod = 'mercadopago' | 'transfer' | 'efectivo' | 'pos_debito' | 'pos_credito';
+export type PaymentMethod = 'mercadopago' | 'transfer' | 'efectivo' | 'credito';
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   mercadopago: 'MercadoPago',
   transfer: 'Transferencia',
   efectivo: 'Efectivo',
-  pos_debito: 'POS Débito',
-  pos_credito: 'POS Crédito',
+  credito: 'Crédito',
 };
 
 export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {

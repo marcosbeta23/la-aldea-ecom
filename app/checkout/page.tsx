@@ -981,11 +981,6 @@ export default function CheckoutPage() {
                       <span>Total</span>
                       <span>{formatPrice(total, displayCurrency)}</span>
                     </div>
-                    {isMixed && exchangeRate && (
-                      <p className="text-xs text-slate-400 text-right">
-                        TC: 1 USD = ${exchangeRate.toLocaleString('es-UY')} UYU
-                      </p>
-                    )}
                   </div>
 
                   {/* Currency Selector — compact, in sidebar */}
@@ -1019,11 +1014,6 @@ export default function CheckoutPage() {
                           US$ USD
                         </button>
                       </div>
-                      {exchangeRate && (
-                        <p className="text-[10px] text-slate-400 mt-2 text-center">
-                          TC: 1 USD = ${exchangeRate.toLocaleString('es-UY')} UYU
-                        </p>
-                      )}
                     </div>
                   )}
 

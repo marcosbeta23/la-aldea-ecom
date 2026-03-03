@@ -219,9 +219,6 @@ export default function CartDrawer() {
                         {formatPrice(subtotals.UYU + subtotals.USD * exchangeRate, 'UYU')}
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-400">
-                      TC: 1 USD = $ {exchangeRate.toLocaleString('es-UY')} (BROU venta)
-                    </p>
                   </>
                 )}
                 <p className="text-xs text-slate-400">Elegís la moneda de pago en el checkout</p>
