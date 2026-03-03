@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   Eye,
   ExternalLink,
-  LucideIcon
+  LucideIcon,
+  Zap,
 } from 'lucide-react';
 import Image from 'next/image';
 import {
@@ -109,13 +110,43 @@ interface PostHogData {
   topReferrers?: Array<{ referrer: string; visits: number }>;
 }
 
-function StatCard({ 
-  title, 
-  value, 
-  subValue, 
-  icon: Icon, 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const PAYMENT_LABELS: Record<string, string> = {
+  mercadopago: 'MercadoPago',
+  transfer: 'Transferencia',
+  efectivo: 'Efectivo',
+  credito: 'Crédito',
+  pos_debito: 'POS Débito',
+  pos_credito: 'POS Crédito',
+  unknown: 'Sin especificar',
+};
+
+const PAYMENT_COLORS: Record<string, string> = {
+  mercadopago: 'bg-blue-500',
+  transfer: 'bg-amber-500',
+  efectivo: 'bg-green-500',
+  credito: 'bg-indigo-500',
+  pos_debito: 'bg-purple-500',
+  pos_credito: 'bg-violet-500',
+  unknown: 'bg-slate-400',
+};
+
+const DEPT_COLORS = [
+  '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6',
+  '#06b6d4', '#ec4899', '#14b8a6', '#f97316', '#6366f1',
+  '#84cc16', '#64748b',
+];
+
+// ── Components ────────────────────────────────────────────────────────────────
+
+function StatCard({
+  title,
+  value,
+  subValue,
+  icon: Icon,
   trend,
-  color = 'blue'
+  color = 'blue',
 }: {
   title: string;
   value: string | number;
@@ -143,8 +174,8 @@ function StatCard({
               {trend === 'up' && <TrendingUp className="h-3 w-3 text-green-500" />}
               {trend === 'down' && <TrendingDown className="h-3 w-3 text-red-500" />}
               <span className={`text-xs ${
-                trend === 'up' ? 'text-green-600' : 
-                trend === 'down' ? 'text-red-600' : 
+                trend === 'up' ? 'text-green-600' :
+                trend === 'down' ? 'text-red-600' :
                 'text-slate-500'
               }`}>
                 {subValue}
@@ -170,31 +201,26 @@ function RevenueChart({
   data: AnalyticsData['dailySales'];
   chartType: 'line' | 'bar';
   setChartType: (v: 'line' | 'bar') => void;
-  revenueType: 'uyu' | 'usd';
-  setRevenueType: (v: 'uyu' | 'usd') => void;
+  revenueType: 'uyu' | 'usd' | 'canal';
+  setRevenueType: (v: 'uyu' | 'usd' | 'canal') => void;
 }) {
   const formatAxis = (v: number) =>
     v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`;
-  const formatTooltip = (v: number, currency: string) =>
-    currency === 'USD'
-      ? `US$ ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : `$ ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
-
-  const dataKey = revenueType === 'usd' ? 'revenueUSD' : 'revenueUYU';
-  const color = revenueType === 'usd' ? '#22c55e' : '#3b82f6';
-  const currencyLabel = revenueType === 'usd' ? 'USD' : 'UYU';
+  const formatTooltipUYU = (v: number) => `$ ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatTooltipUSD = (v: number) => `US$ ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const formattedData = data.map(d => ({
     ...d,
     label: new Date(d.date + 'T12:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit' }),
   }));
 
+  const isCanalView = revenueType === 'canal';
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h3 className="text-lg font-semibold text-slate-900">Ingresos por Día</h3>
         <div className="flex flex-wrap gap-2">
-          {/* Currency toggle */}
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
             <button
               onClick={() => setRevenueType('uyu')}
@@ -206,10 +232,15 @@ function RevenueChart({
               onClick={() => setRevenueType('usd')}
               className={`px-3 py-1.5 transition-colors ${revenueType === 'usd' ? 'bg-green-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
             >
-              US$ USD
+              US$
+            </button>
+            <button
+              onClick={() => setRevenueType('canal')}
+              className={`px-3 py-1.5 transition-colors ${revenueType === 'canal' ? 'bg-slate-700 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              Canal
             </button>
           </div>
-          {/* Chart type toggle */}
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
             <button
               onClick={() => setChartType('line')}
@@ -228,16 +259,29 @@ function RevenueChart({
       </div>
 
       <ResponsiveContainer width="100%" height={280}>
-        {chartType === 'line' ? (
+        {isCanalView ? (
+          <BarChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+            <YAxis tickFormatter={formatAxis} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
+            <Tooltip
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={(v: any, name: any) => [formatTooltipUYU(Number(v ?? 0)), name === 'onlineRevenue' ? 'Online' : 'Mostrador']}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+            />
+            <Bar dataKey="onlineRevenue" name="Online" fill="#3b82f6" radius={[2, 2, 0, 0]} maxBarSize={32} stackId="a" />
+            <Bar dataKey="mostradorRevenue" name="Mostrador" fill="#22c55e" radius={[2, 2, 0, 0]} maxBarSize={32} stackId="a" />
+          </BarChart>
+        ) : chartType === 'line' ? (
           <LineChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
             <YAxis tickFormatter={formatAxis} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
             <Tooltip
-              formatter={(v) => [formatTooltip(Number(v ?? 0), currencyLabel), currencyLabel]}
+              formatter={(v: any) => [revenueType === 'usd' ? formatTooltipUSD(Number(v ?? 0)) : formatTooltipUYU(Number(v ?? 0)), revenueType === 'usd' ? 'USD' : 'UYU']}
               contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
             />
-            <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+            <Line type="monotone" dataKey={revenueType === 'usd' ? 'revenueUSD' : 'revenueUYU'} stroke={revenueType === 'usd' ? '#22c55e' : '#3b82f6'} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </LineChart>
         ) : (
           <BarChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -245,10 +289,10 @@ function RevenueChart({
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
             <YAxis tickFormatter={formatAxis} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
             <Tooltip
-              formatter={(v) => [formatTooltip(Number(v ?? 0), currencyLabel), currencyLabel]}
+              formatter={(v: any) => [revenueType === 'usd' ? formatTooltipUSD(Number(v ?? 0)) : formatTooltipUYU(Number(v ?? 0)), revenueType === 'usd' ? 'USD' : 'UYU']}
               contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
             />
-            <Bar dataKey={dataKey} fill={color} radius={[3, 3, 0, 0]} maxBarSize={40} />
+            <Bar dataKey={revenueType === 'usd' ? 'revenueUSD' : 'revenueUYU'} fill={revenueType === 'usd' ? '#22c55e' : '#3b82f6'} radius={[3, 3, 0, 0]} maxBarSize={40} />
           </BarChart>
         )}
       </ResponsiveContainer>
@@ -258,27 +302,37 @@ function RevenueChart({
 
 function HourlyChart({ data }: { data: Array<{ hour: number; orders: number }> }) {
   const maxOrders = Math.max(...data.map(d => d.orders), 1);
-  
+  const totalToday = data.reduce((sum, d) => sum + d.orders, 0);
+  const peakHour = data.reduce((max, d) => d.orders > max.orders ? d : max, data[0]);
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Pedidos por Hora (Hoy)</h3>
-      
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-lg font-semibold text-slate-900">Actividad Hoy</h3>
+        {totalToday > 0 && (
+          <span className="text-xs text-slate-500">
+            Pico: {peakHour.hour}:00 ({peakHour.orders} ped.)
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-slate-500 mb-4">{totalToday} pedidos registrados hoy</p>
+
       <div className="h-32 flex items-end gap-0.5">
         {data.map((hour) => {
           const height = (hour.orders / maxOrders) * 100;
           return (
             <div key={hour.hour} className="flex-1 flex flex-col items-center">
-              <div 
-                className="w-full bg-green-500 rounded-t-sm transition-all hover:bg-green-600 cursor-pointer min-h-0.5"
+              <div
+                className="w-full bg-blue-500 rounded-t-sm transition-all hover:bg-blue-600 cursor-pointer min-h-0.5"
                 style={{ height: `${Math.max(2, height)}%` }}
-                title={`${hour.hour}:00 - ${hour.orders} pedidos`}
+                title={`${hour.hour}:00 — ${hour.orders} pedidos`}
               />
             </div>
           );
         })}
       </div>
-      
-      <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+
+      <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
         <span>00:00</span>
         <span>12:00</span>
         <span>23:00</span>
@@ -287,21 +341,19 @@ function HourlyChart({ data }: { data: Array<{ hour: number; orders: number }> }
   );
 }
 
-function TopProductsList({ products }: { products: AnalyticsData['topProducts'] }) {
-  const formatCurrency = (v: number) => `$ ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
-  
+function TopProductsList({ products, formatCurrency }: { products: AnalyticsData['topProducts']; formatCurrency: (v: number) => string }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <h3 className="text-lg font-semibold text-slate-900 mb-4">Productos Más Vendidos</h3>
-      
+
       {products.length === 0 ? (
-        <p className="text-slate-500 text-sm text-center py-8">Sin datos de ventas</p>
+        <p className="text-slate-400 text-sm text-center py-8">Sin ventas en el período</p>
       ) : (
         <div className="space-y-3">
           {products.map((product, index) => (
             <div key={product.id} className="flex items-center gap-3">
-              <span className="text-sm font-bold text-slate-400 w-5">{index + 1}</span>
-              
+              <span className="text-sm font-bold text-slate-300 w-5">{index + 1}</span>
+
               {product.image ? (
                 <Image
                   src={product.image}
@@ -311,17 +363,17 @@ function TopProductsList({ products }: { products: AnalyticsData['topProducts'] 
                   className="w-10 h-10 rounded-lg object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                   <Package className="h-5 w-5 text-slate-400" />
                 </div>
               )}
-              
+
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-900 truncate">{product.name}</p>
-                <p className="text-xs text-slate-500">{product.sold} vendidos</p>
+                <p className="text-xs text-slate-500">{product.sold} vendidos · {product.sku}</p>
               </div>
-              
-              <p className="text-sm font-semibold text-green-600">{formatCurrency(product.revenue)}</p>
+
+              <p className="text-sm font-semibold text-green-600 shrink-0">{formatCurrency(product.revenue)}</p>
             </div>
           ))}
         </div>
@@ -332,14 +384,16 @@ function TopProductsList({ products }: { products: AnalyticsData['topProducts'] 
 
 function StatusDistribution({ data }: { data: Record<string, number> }) {
   const statusLabels: Record<string, { label: string; color: string }> = {
-    pending: { label: 'Pendiente', color: 'bg-amber-500' },
+    pending: { label: 'Pendiente', color: 'bg-amber-400' },
     paid: { label: 'Pagado', color: 'bg-green-500' },
     paid_pending_verification: { label: 'Por verificar', color: 'bg-blue-500' },
     processing: { label: 'Procesando', color: 'bg-indigo-500' },
     shipped: { label: 'Enviado', color: 'bg-purple-500' },
-    delivered: { label: 'Entregado', color: 'bg-slate-500' },
+    delivered: { label: 'Entregado', color: 'bg-slate-400' },
     cancelled: { label: 'Cancelado', color: 'bg-red-500' },
     refunded: { label: 'Reembolsado', color: 'bg-red-400' },
+    ready_to_invoice: { label: 'Por facturar', color: 'bg-teal-500' },
+    invoiced: { label: 'Facturado', color: 'bg-teal-600' },
   };
 
   const total = Object.values(data).reduce((sum, v) => sum + v, 0);
@@ -348,23 +402,26 @@ function StatusDistribution({ data }: { data: Record<string, number> }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <h3 className="text-lg font-semibold text-slate-900 mb-4">Estado de Pedidos</h3>
-      
+
       {entries.length === 0 ? (
-        <p className="text-slate-500 text-sm text-center py-8">Sin pedidos</p>
+        <p className="text-slate-400 text-sm text-center py-8">Sin pedidos</p>
       ) : (
         <div className="space-y-3">
           {entries.map(([status, count]) => {
             const config = statusLabels[status] || { label: status, color: 'bg-slate-400' };
             const percentage = total > 0 ? (count / total) * 100 : 0;
-            
+
             return (
               <div key={status}>
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-slate-600">{config.label}</span>
-                  <span className="text-slate-900 font-medium">{count}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400">{percentage.toFixed(0)}%</span>
+                    <span className="text-slate-900 font-medium w-6 text-right">{count}</span>
+                  </div>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full ${config.color} rounded-full transition-all`}
                     style={{ width: `${percentage}%` }}
                   />
@@ -378,12 +435,6 @@ function StatusDistribution({ data }: { data: Record<string, number> }) {
   );
 }
 
-const DEPT_COLORS = [
-  '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6',
-  '#06b6d4', '#ec4899', '#14b8a6', '#f97316', '#6366f1',
-  '#84cc16', '#64748b',
-];
-
 function DepartmentDonutChart({
   distribution,
   formatCurrency,
@@ -393,94 +444,119 @@ function DepartmentDonutChart({
 }) {
   const [metric, setMetric] = useState<'orders' | 'revenue'>('orders');
 
-  const sorted = Object.entries(distribution).sort((a, b) => b[1].revenue - a[1].revenue);
-  const chartData = sorted.map(([dept, stats]) => ({
-    name: dept,
-    value: metric === 'orders' ? stats.orders : stats.revenue,
-    orders: stats.orders,
-    revenue: stats.revenue,
-  }));
-  const total = chartData.reduce((s, d) => s + d.value, 0);
+  // Only show actual geographic departments (exclude pickup/mostrador orders without dept)
+  const actual = Object.entries(distribution).filter(([dept]) => dept !== 'Sin especificar');
+  const sinEsp = distribution['Sin especificar'];
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <MapPin className="h-5 w-5 text-slate-400" />
-          <h3 className="text-lg font-semibold text-slate-900">Ventas por Departamento</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Envíos por Departamento</h3>
         </div>
-        <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
-          <button
-            onClick={() => setMetric('orders')}
-            className={`px-3 py-1.5 transition-colors ${metric === 'orders' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
-          >
-            Pedidos
-          </button>
-          <button
-            onClick={() => setMetric('revenue')}
-            className={`px-3 py-1.5 transition-colors ${metric === 'revenue' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
-          >
-            Ingresos
-          </button>
-        </div>
+        {actual.length > 0 && (
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
+            <button
+              onClick={() => setMetric('orders')}
+              className={`px-3 py-1.5 transition-colors ${metric === 'orders' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              Pedidos
+            </button>
+            <button
+              onClick={() => setMetric('revenue')}
+              className={`px-3 py-1.5 transition-colors ${metric === 'revenue' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              Ingresos
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Donut Chart */}
-        <div className="flex items-center justify-center">
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {chartData.map((_, i) => (
-                  <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(value: any, _name: any, props: any) => {
-                  const v = Number(value ?? 0);
-                  const pct = total > 0 ? ((v / total) * 100).toFixed(1) : '0';
-                  const label = metric === 'orders'
-                    ? `${v} pedidos (${pct}%)`
-                    : `${formatCurrency(v)} (${pct}%)`;
-                  return [label, props?.payload?.name ?? ''];
-                }}
-                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+      {actual.length === 0 ? (
+        <div className="text-center py-8">
+          <MapPin className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+          <p className="text-sm text-slate-500">
+            {sinEsp
+              ? `${sinEsp.orders} pedido${sinEsp.orders !== 1 ? 's' : ''} sin departamento de envío (retiro en local o mostrador)`
+              : 'Sin pedidos con departamento de envío en este período'}
+          </p>
         </div>
+      ) : (
+        <>
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Donut */}
+            <div className="flex items-center justify-center">
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={actual.sort((a, b) => b[1].revenue - a[1].revenue).map(([dept, stats]) => ({
+                      name: dept,
+                      value: metric === 'orders' ? stats.orders : stats.revenue,
+                      orders: stats.orders,
+                      revenue: stats.revenue,
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {actual.map((_, i) => (
+                      <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    formatter={(value: any, _name: any, props: any) => {
+                      const v = Number(value ?? 0);
+                      const total = actual.reduce((s, [, st]) => s + (metric === 'orders' ? st.orders : st.revenue), 0);
+                      const pct = total > 0 ? ((v / total) * 100).toFixed(1) : '0';
+                      const label = metric === 'orders'
+                        ? `${v} pedidos (${pct}%)`
+                        : `${formatCurrency(v)} (${pct}%)`;
+                      return [label, props?.payload?.name ?? ''];
+                    }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
 
-        {/* Legend list */}
-        <div className="space-y-2 max-h-60 overflow-y-auto">
-          {sorted.map(([dept, stats], i) => {
-            const pct = total > 0 ? ((metric === 'orders' ? stats.orders : stats.revenue) / total * 100).toFixed(0) : '0';
-            return (
-              <div key={dept} className="flex items-center gap-2 py-1.5 border-b border-slate-50 last:border-0">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: DEPT_COLORS[i % DEPT_COLORS.length] }}
-                />
-                <span className="text-sm text-slate-700 flex-1 truncate">{dept}</span>
-                <span className="text-xs text-slate-400 shrink-0">{stats.orders} ped.</span>
-                <span className="text-xs text-slate-500 shrink-0 w-8 text-right">{pct}%</span>
-                <span className="text-sm font-semibold text-slate-900 shrink-0">{formatCurrency(stats.revenue)}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+            {/* Legend */}
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {actual
+                .sort((a, b) => b[1].revenue - a[1].revenue)
+                .map(([dept, stats], i) => {
+                  const total = actual.reduce((s, [, st]) => s + (metric === 'orders' ? st.orders : st.revenue), 0);
+                  const val = metric === 'orders' ? stats.orders : stats.revenue;
+                  const pct = total > 0 ? (val / total * 100).toFixed(0) : '0';
+                  return (
+                    <div key={dept} className="flex items-center gap-2 py-1.5 border-b border-slate-50 last:border-0">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: DEPT_COLORS[i % DEPT_COLORS.length] }} />
+                      <span className="text-sm text-slate-700 flex-1 truncate">{dept}</span>
+                      <span className="text-xs text-slate-400 shrink-0">{stats.orders} ped.</span>
+                      <span className="text-xs text-slate-400 shrink-0 w-8 text-right">{pct}%</span>
+                      <span className="text-sm font-semibold text-slate-900 shrink-0">{formatCurrency(stats.revenue)}</span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          {sinEsp && (
+            <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
+              + {sinEsp.orders} pedido{sinEsp.orders !== 1 ? 's' : ''} de retiro/mostrador sin departamento de envío ({formatCurrency(sinEsp.revenue)})
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 }
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -489,7 +565,7 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState('7d');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
-  const [revenueType, setRevenueType] = useState<'uyu' | 'usd'>('uyu');
+  const [revenueType, setRevenueType] = useState<'uyu' | 'usd' | 'canal'>('uyu');
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -516,8 +592,6 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchData();
-    
-    // Auto-refresh every 60 seconds
     const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, [fetchData]);
@@ -541,33 +615,31 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
-          <p className="text-slate-500">
+          <p className="text-slate-500 text-sm">
             Datos en tiempo real
             {lastUpdated && (
-              <span className="ml-2 text-xs">
-                • Actualizado: {lastUpdated.toLocaleTimeString('es-UY')}
+              <span className="ml-2 text-xs text-slate-400">
+                • {lastUpdated.toLocaleTimeString('es-UY')}
               </span>
             )}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
             className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-            aria-label="Seleccionar período de tiempo"
           >
             <option value="7d">Últimos 7 días</option>
             <option value="30d">Últimos 30 días</option>
             <option value="90d">Últimos 90 días</option>
           </select>
-          
+
           <button
             onClick={fetchData}
             disabled={isLoading}
             className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-            aria-label="Actualizar datos"
           >
             <RefreshCw className={`h-5 w-5 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -576,21 +648,53 @@ export default function AnalyticsPage() {
 
       {data && (
         <>
+          {/* Today banner — show only if there's activity today */}
+          {(data.summary.todayOrders > 0 || data.summary.todayRevenueUYU > 0) && (
+            <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 text-white">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm font-semibold text-slate-300">Hoy</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-slate-400 text-xs">Pedidos</p>
+                  <p className="text-2xl font-bold">{data.summary.todayOrders}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 text-xs">Ingresos UYU</p>
+                  <p className="text-2xl font-bold">{formatCurrency(data.summary.todayRevenueUYU)}</p>
+                </div>
+                {data.summary.todayRevenueUSD > 0 && (
+                  <div>
+                    <p className="text-slate-400 text-xs">Ingresos USD</p>
+                    <p className="text-2xl font-bold">{formatUSD(data.summary.todayRevenueUSD)}</p>
+                  </div>
+                )}
+                {data.summary.pendingOrders > 0 && (
+                  <div>
+                    <p className="text-slate-400 text-xs">Pendientes</p>
+                    <p className="text-2xl font-bold text-amber-400">{data.summary.pendingOrders}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Summary Stats */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Ingresos UYU"
+              title={`Ingresos UYU (${period})`}
               value={formatCurrency(data.summary.totalRevenueUYU)}
-              subValue={`${data.previousPeriod.revenueChangeUYU >= 0 ? '+' : ''}${data.previousPeriod.revenueChangeUYU}% vs anterior`}
+              subValue={`${data.previousPeriod.revenueChangeUYU >= 0 ? '+' : ''}${data.previousPeriod.revenueChangeUYU}% vs período anterior`}
               icon={DollarSign}
               trend={data.previousPeriod.revenueChangeUYU > 0 ? 'up' : data.previousPeriod.revenueChangeUYU < 0 ? 'down' : 'neutral'}
               color="green"
             />
             <StatCard
-              title="Ingresos USD"
+              title={`Ingresos USD (${period})`}
               value={formatUSD(data.summary.totalRevenueUSD)}
               subValue={data.summary.paidOrdersUSD > 0
-                ? `${data.previousPeriod.revenueChangeUSD >= 0 ? '+' : ''}${data.previousPeriod.revenueChangeUSD}% vs anterior`
+                ? `${data.previousPeriod.revenueChangeUSD >= 0 ? '+' : ''}${data.previousPeriod.revenueChangeUSD}% vs período anterior`
                 : `${data.summary.paidOrdersUSD} pedidos USD`}
               icon={Globe}
               trend={data.previousPeriod.revenueChangeUSD > 0 ? 'up' : data.previousPeriod.revenueChangeUSD < 0 ? 'down' : 'neutral'}
@@ -599,194 +703,156 @@ export default function AnalyticsPage() {
             <StatCard
               title="Pedidos Pagados"
               value={data.summary.paidOrders}
-              subValue={`${data.previousPeriod.ordersChange >= 0 ? '+' : ''}${data.previousPeriod.ordersChange}% vs anterior`}
+              subValue={`${data.previousPeriod.ordersChange >= 0 ? '+' : ''}${data.previousPeriod.ordersChange}% vs período anterior`}
               icon={ShoppingCart}
               trend={data.previousPeriod.ordersChange > 0 ? 'up' : data.previousPeriod.ordersChange < 0 ? 'down' : 'neutral'}
               color="blue"
             />
             <StatCard
-              title="Ticket Promedio"
+              title="Ticket Promedio UYU"
               value={formatCurrency(data.summary.avgOrderValue)}
-              subValue={`${data.previousPeriod.aovChange >= 0 ? '+' : ''}${data.previousPeriod.aovChange}% vs anterior`}
+              subValue={`${data.previousPeriod.aovChange >= 0 ? '+' : ''}${data.previousPeriod.aovChange}% vs período anterior`}
               icon={TrendingUp}
               trend={data.previousPeriod.aovChange > 0 ? 'up' : data.previousPeriod.aovChange < 0 ? 'down' : 'neutral'}
               color="purple"
             />
+          </div>
+
+          {/* Second stats row */}
+          <div className="grid gap-4 sm:grid-cols-3">
             <StatCard
               title="Clientes Únicos"
               value={data.summary.uniqueCustomers}
-              subValue={`${data.summary.conversionRate}% conversión`}
+              subValue={`${data.summary.conversionRate}% tasa de conversión`}
               icon={Users}
               color="amber"
             />
+            <StatCard
+              title="Online"
+              value={formatCurrency(data.summary.onlineRevenue)}
+              subValue={`${data.summary.onlineOrders} pedidos online`}
+              icon={Globe}
+              color="blue"
+            />
+            <StatCard
+              title="Mostrador"
+              value={formatCurrency(data.summary.mostradorRevenue)}
+              subValue={`${data.summary.mostradorOrders} ventas en local`}
+              icon={Store}
+              color="green"
+            />
           </div>
 
-          {/* Revenue by Source */}
-          {(data.summary.onlineRevenue > 0 || data.summary.mostradorRevenue > 0) && (
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Ingresos por Canal</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                  <div className="p-3 bg-blue-100 rounded-xl">
-                    <Globe className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-blue-600 font-medium">Online</p>
-                    <p className="text-xl font-bold text-slate-900">{formatCurrency(data.summary.onlineRevenue)}</p>
-                    <p className="text-xs text-slate-500">{data.summary.onlineOrders} pedidos</p>
-                  </div>
-                  {data.summary.totalRevenue > 0 && (
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-blue-600">
-                        {((data.summary.onlineRevenue / data.summary.totalRevenue) * 100).toFixed(0)}%
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <div className="p-3 bg-emerald-100 rounded-xl">
-                    <Store className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-emerald-600 font-medium">Mostrador</p>
-                    <p className="text-xl font-bold text-slate-900">{formatCurrency(data.summary.mostradorRevenue)}</p>
-                    <p className="text-xs text-slate-500">{data.summary.mostradorOrders} ventas</p>
-                  </div>
-                  {data.summary.totalRevenue > 0 && (
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-emerald-600">
-                        {((data.summary.mostradorRevenue / data.summary.totalRevenue) * 100).toFixed(0)}%
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Revenue Chart (full width) */}
+          <RevenueChart
+            data={data.dailySales}
+            chartType={chartType}
+            setChartType={setChartType}
+            revenueType={revenueType}
+            setRevenueType={setRevenueType}
+          />
 
-          {/* Payment Method Distribution */}
-          {Object.keys(data.paymentMethodDistribution).length > 0 && (
+          {/* Geographic + Payment side by side */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Department Donut */}
+            <DepartmentDonutChart
+              distribution={data.departmentDistribution}
+              formatCurrency={formatCurrency}
+            />
+
+            {/* Payment Method Distribution */}
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <CreditCard className="h-5 w-5 text-slate-400" />
                 <h3 className="text-lg font-semibold text-slate-900">Métodos de Pago</h3>
               </div>
-              <div className="space-y-3">
-                {Object.entries(data.paymentMethodDistribution)
-                  .sort((a, b) => b[1].revenue - a[1].revenue)
-                  .map(([method, stats]) => {
-                    const labels: Record<string, string> = {
-                      mercadopago: 'MercadoPago',
-                      transfer: 'Transferencia',
-                      efectivo: 'Efectivo',
-                      pos_debito: 'POS Débito',
-                      pos_credito: 'POS Crédito',
-                      unknown: 'Sin especificar',
-                    };
-                    const colors: Record<string, string> = {
-                      mercadopago: 'bg-blue-500',
-                      transfer: 'bg-amber-500',
-                      efectivo: 'bg-green-500',
-                      pos_debito: 'bg-purple-500',
-                      pos_credito: 'bg-indigo-500',
-                      unknown: 'bg-slate-400',
-                    };
-                    const maxRevenue = Math.max(...Object.values(data.paymentMethodDistribution).map(s => s.revenue));
-                    const pct = maxRevenue > 0 ? (stats.revenue / maxRevenue) * 100 : 0;
+              {Object.keys(data.paymentMethodDistribution).length === 0 ? (
+                <p className="text-slate-400 text-sm text-center py-8">Sin pagos registrados</p>
+              ) : (
+                <div className="space-y-3">
+                  {Object.entries(data.paymentMethodDistribution)
+                    .sort((a, b) => b[1].revenue - a[1].revenue)
+                    .map(([method, stats]) => {
+                      const maxRevenue = Math.max(...Object.values(data.paymentMethodDistribution).map(s => s.revenue));
+                      const pct = maxRevenue > 0 ? (stats.revenue / maxRevenue) * 100 : 0;
+                      const totalOrders = Object.values(data.paymentMethodDistribution).reduce((s, v) => s + v.count, 0);
+                      const orderPct = totalOrders > 0 ? ((stats.count / totalOrders) * 100).toFixed(0) : '0';
 
-                    return (
-                      <div key={method}>
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-slate-700 font-medium">{labels[method] || method}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-slate-500">{stats.count} pedidos</span>
-                            <span className="text-slate-900 font-semibold">{formatCurrency(stats.revenue)}</span>
+                      return (
+                        <div key={method}>
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-slate-700 font-medium">{PAYMENT_LABELS[method] || method}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-slate-400">{stats.count} ped. ({orderPct}%)</span>
+                              <span className="text-slate-900 font-semibold">{formatCurrency(stats.revenue)}</span>
+                            </div>
+                          </div>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${PAYMENT_COLORS[method] || 'bg-slate-400'} rounded-full transition-all`}
+                              style={{ width: `${pct}%` }}
+                            />
                           </div>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${colors[method] || 'bg-slate-400'} rounded-full transition-all`}
-                            style={{ width: `${pct}%` }}
-                          />
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Top products + Status */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            <TopProductsList products={data.topProducts} formatCurrency={formatCurrency} />
+            <StatusDistribution data={data.statusDistribution} />
+          </div>
+
+          {/* Inventory Health */}
+          {data.inventoryHealth.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <h3 className="text-lg font-semibold text-slate-900">Inventario Crítico</h3>
+                <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                  {data.inventoryHealth.length} productos
+                </span>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {data.inventoryHealth.map((product) => {
+                  const urgency = product.daysRemaining <= 7
+                    ? 'text-red-600 bg-red-50 border-red-200'
+                    : product.daysRemaining <= 14
+                      ? 'text-amber-600 bg-amber-50 border-amber-200'
+                      : 'text-blue-600 bg-blue-50 border-blue-200';
+
+                  return (
+                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
+                      {product.image ? (
+                        <Image src={product.image} alt={product.name} width={36} height={36} className="w-9 h-9 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-lg bg-slate-200 flex items-center justify-center shrink-0">
+                          <Package className="h-4 w-4 text-slate-400" />
                         </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{product.name}</p>
+                        <p className="text-xs text-slate-500">
+                          Stock: <span className="font-semibold">{product.stock}</span>
+                          {product.avgDailySales > 0 && ` · ${product.avgDailySales}/día`}
+                        </p>
                       </div>
-                    );
-                  })}
+                      <span className={`px-2 py-1 rounded-lg text-xs font-bold border shrink-0 ${urgency}`}>
+                        {product.daysRemaining}d
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Geographic Breakdown */}
-          {Object.keys(data.departmentDistribution).length > 0 && (
-            <DepartmentDonutChart
-              distribution={data.departmentDistribution}
-              formatCurrency={formatCurrency}
-            />
-          )}
-
-          {/* Inventory Health */}
-          {data.inventoryHealth.length > 0 && (
-              <div className="bg-white rounded-xl border border-slate-200 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertTriangle className="h-5 w-5 text-amber-500" />
-                  <h3 className="text-lg font-semibold text-slate-900">Inventario Crítico</h3>
-                </div>
-                <div className="space-y-3">
-                  {data.inventoryHealth.map((product) => {
-                    const urgency = product.daysRemaining <= 7
-                      ? 'text-red-600 bg-red-50 border-red-200'
-                      : product.daysRemaining <= 14
-                        ? 'text-amber-600 bg-amber-50 border-amber-200'
-                        : 'text-blue-600 bg-blue-50 border-blue-200';
-
-                    return (
-                      <div key={product.id} className="flex items-center gap-3">
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            width={36}
-                            height={36}
-                            className="w-9 h-9 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
-                            <Package className="h-4 w-4 text-slate-400" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">{product.name}</p>
-                          <p className="text-xs text-slate-500">
-                            Stock: {product.stock} | Venta diaria: {product.avgDailySales}
-                          </p>
-                        </div>
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold border ${urgency}`}>
-                          {product.daysRemaining}d
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-          {/* Charts Row */}
-          <div className="grid lg:grid-cols-2 gap-6">
-            <RevenueChart
-              data={data.dailySales}
-              chartType={chartType}
-              setChartType={setChartType}
-              revenueType={revenueType}
-              setRevenueType={setRevenueType}
-            />
-            <HourlyChart data={data.hourlyStats} />
-          </div>
-
-          {/* Bottom Row */}
-          <div className="grid lg:grid-cols-2 gap-6">
-            <TopProductsList products={data.topProducts} />
-            <StatusDistribution data={data.statusDistribution} />
-          </div>
+          {/* Hourly chart */}
+          <HourlyChart data={data.hourlyStats} />
 
           {/* PostHog Web Traffic */}
           {posthogData?.configured && posthogData.visitors && (
@@ -796,27 +862,20 @@ export default function AnalyticsPage() {
                 <h3 className="text-lg font-semibold text-slate-900">Tráfico Web</h3>
               </div>
 
-              {/* Visitor Stats */}
               <div className="grid sm:grid-cols-4 gap-4 mb-6">
-                <div className="text-center p-3 bg-slate-50 rounded-lg">
-                  <p className="text-2xl font-bold text-slate-900">{posthogData.visitors.total.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">Visitantes únicos</p>
-                </div>
-                <div className="text-center p-3 bg-slate-50 rounded-lg">
-                  <p className="text-2xl font-bold text-slate-900">{posthogData.visitors.today.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">Visitantes hoy</p>
-                </div>
-                <div className="text-center p-3 bg-slate-50 rounded-lg">
-                  <p className="text-2xl font-bold text-slate-900">{posthogData.visitors.pageviews.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">Páginas vistas</p>
-                </div>
-                <div className="text-center p-3 bg-slate-50 rounded-lg">
-                  <p className="text-2xl font-bold text-slate-900">{posthogData.visitors.todayPageviews.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">Vistas hoy</p>
-                </div>
+                {[
+                  { label: 'Visitantes únicos', value: posthogData.visitors.total.toLocaleString() },
+                  { label: 'Visitantes hoy', value: posthogData.visitors.today.toLocaleString() },
+                  { label: 'Páginas vistas', value: posthogData.visitors.pageviews.toLocaleString() },
+                  { label: 'Vistas hoy', value: posthogData.visitors.todayPageviews.toLocaleString() },
+                ].map(({ label, value }) => (
+                  <div key={label} className="text-center p-3 bg-slate-50 rounded-lg">
+                    <p className="text-2xl font-bold text-slate-900">{value}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+                  </div>
+                ))}
               </div>
 
-              {/* Top Pages + Referrers */}
               <div className="grid sm:grid-cols-2 gap-6">
                 {posthogData.topPages && posthogData.topPages.length > 0 && (
                   <div>
@@ -852,31 +911,34 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          {/* Quick Stats */}
-          <div className="bg-linear-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+          {/* Period Summary Banner */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 className="h-5 w-5" />
-              <h3 className="font-semibold">Resumen del Período</h3>
+              <h3 className="font-semibold">Resumen del Período ({period})</h3>
             </div>
             <div className="grid sm:grid-cols-4 gap-4">
               <div>
                 <p className="text-blue-200 text-sm">Total Pedidos</p>
                 <p className="text-2xl font-bold">{data.summary.totalOrders}</p>
+                <p className="text-xs text-blue-300 mt-0.5">{data.summary.pendingOrders} pendientes</p>
               </div>
               <div>
-                <p className="text-blue-200 text-sm">Pendientes</p>
-                <p className="text-2xl font-bold">{data.summary.pendingOrders}</p>
-              </div>
-              <div>
-                <p className="text-blue-200 text-sm">Tasa Éxito</p>
+                <p className="text-blue-200 text-sm">Tasa de Pagos</p>
                 <p className="text-2xl font-bold">{data.summary.conversionRate}%</p>
+                <p className="text-xs text-blue-300 mt-0.5">{data.summary.paidOrders} pagados</p>
               </div>
               <div>
                 <p className="text-blue-200 text-sm">Ingresos UYU</p>
                 <p className="text-2xl font-bold">{formatCurrency(data.summary.totalRevenueUYU)}</p>
                 {data.summary.totalRevenueUSD > 0 && (
-                  <p className="text-sm text-blue-200 mt-1">{formatUSD(data.summary.totalRevenueUSD)} USD</p>
+                  <p className="text-xs text-blue-300 mt-0.5">{formatUSD(data.summary.totalRevenueUSD)} USD</p>
                 )}
+              </div>
+              <div>
+                <p className="text-blue-200 text-sm">Clientes Únicos</p>
+                <p className="text-2xl font-bold">{data.summary.uniqueCustomers}</p>
+                <p className="text-xs text-blue-300 mt-0.5">Ticket prom. {formatCurrency(data.summary.avgOrderValue)}</p>
               </div>
             </div>
           </div>
