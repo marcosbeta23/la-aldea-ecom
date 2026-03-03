@@ -11,7 +11,7 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   isOpen: boolean; // For cart drawer/modal
-  
+
   // Actions - return result for stock validation feedback
   addItem: (product: Product, quantity?: number) => { success: boolean; message?: string };
   removeItem: (productId: string) => void;
@@ -20,11 +20,14 @@ interface CartState {
   clearCart: () => void;
   toggleCart: () => void;
   setCartOpen: (open: boolean) => void;
-  
+
   // Computed (as functions for reactivity)
   getItemCount: () => number;
   getSubtotal: () => number;
+  getSubtotalByCurrency: () => { UYU: number; USD: number };
   getCartCurrency: () => string;
+  hasMultipleCurrencies: () => boolean;
+  getCurrenciesInCart: () => string[];
   getItem: (productId: string) => CartItem | undefined;
   isInCart: (productId: string) => boolean;
 }
@@ -42,16 +45,6 @@ export const useCartStore = create<CartState>()(
         // Block on_request products
         if (product.availability_type === 'on_request') {
           return { success: false, message: 'Este producto es solo bajo consulta' };
-        }
-
-        // Prevent mixing currencies (e.g. USD + UYU)
-        const cartCurrency = get().getCartCurrency();
-        const productCurrency = product.currency || 'UYU';
-        if (items.length > 0 && cartCurrency !== productCurrency) {
-          return {
-            success: false,
-            message: `No podés mezclar productos en ${cartCurrency} con productos en ${productCurrency}. Vaciá el carrito primero o elegí productos en la misma moneda.`,
-          };
         }
 
         // Check if product is out of stock
@@ -120,7 +113,7 @@ export const useCartStore = create<CartState>()(
             item.product.id === productId ? { ...item, quantity } : item
           ),
         });
-        
+
         return { success: true };
       },
 
@@ -157,10 +150,31 @@ export const useCartStore = create<CartState>()(
         );
       },
 
-      getCartCurrency: () => {
+      getSubtotalByCurrency: () => {
         const { items } = get();
-        if (items.length === 0) return 'USD'; // default
-        return items[0].product.currency || 'UYU';
+        const totals = { UYU: 0, USD: 0 };
+        for (const item of items) {
+          const cur = (item.product.currency || 'UYU') as 'UYU' | 'USD';
+          totals[cur] = (totals[cur] || 0) + item.product.price_numeric * item.quantity;
+        }
+        return totals;
+      },
+
+      getCartCurrency: () => {
+        const currencies = get().getCurrenciesInCart();
+        if (currencies.length === 0) return 'UYU';
+        if (currencies.length === 1) return currencies[0];
+        return 'mixed';
+      },
+
+      hasMultipleCurrencies: () => {
+        return get().getCurrenciesInCart().length > 1;
+      },
+
+      getCurrenciesInCart: () => {
+        const { items } = get();
+        const currencySet = new Set(items.map(i => i.product.currency || 'UYU'));
+        return Array.from(currencySet);
       },
 
       getItem: (productId) => {

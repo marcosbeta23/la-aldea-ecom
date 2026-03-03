@@ -69,6 +69,8 @@ export interface Order {
   discount_amount: number;
   shipping_cost: number;
   total: number;
+  currency: string; // Payment currency: 'UYU' or 'USD'
+  exchange_rate_used: number | null; // USD/UYU rate at time of order
   status: OrderStatus;
   payment_method: string | null;
   mp_preference_id: string | null;
@@ -143,6 +145,8 @@ export interface OrderItem {
   product_name: string;
   quantity: number;
   unit_price: number;
+  currency: string; // Original product currency
+  unit_price_converted: number | null; // Price in payment currency (null if same)
   subtotal: number;
 }
 
@@ -227,7 +231,7 @@ export interface Database {
       orders: {
         Row: Order;
         Insert: Omit<Order, 'id' | 'created_at' | 'updated_at' | 'order_items'>;
-        Update: Partial<Pick<Order, 'status' | 'updated_at' | 'notes' | 'shipping_address' | 'shipping_city' | 'shipping_department' | 'mp_payment_id' | 'payment_method'>>;
+        Update: Partial<Pick<Order, 'status' | 'updated_at' | 'notes' | 'shipping_address' | 'shipping_city' | 'shipping_department' | 'mp_payment_id' | 'payment_method' | 'currency' | 'exchange_rate_used'>>;
       };
       order_items: {
         Row: OrderItem;

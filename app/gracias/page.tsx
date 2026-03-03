@@ -21,6 +21,7 @@ interface Order {
   subtotal: number;
   discount_amount: number;
   shipping_cost: number;
+  currency: string;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -67,6 +68,9 @@ function GraciasContent() {
 
   const handleDownloadReceipt = () => {
     if (!order) return;
+
+    const cur = order.currency || 'UYU';
+    const prefix = cur === 'USD' ? 'US$' : '$';
     
     // Create printable receipt HTML
     const receiptHTML = `
@@ -131,8 +135,8 @@ function GraciasContent() {
                 <tr>
                   <td>${item.product_name}</td>
                   <td>${item.quantity}</td>
-                  <td>$${item.unit_price.toLocaleString('es-UY')}</td>
-                  <td>$${item.subtotal.toLocaleString('es-UY')}</td>
+                  <td>${prefix}${item.unit_price.toLocaleString('es-UY')}</td>
+                  <td>${prefix}${item.subtotal.toLocaleString('es-UY')}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -140,10 +144,10 @@ function GraciasContent() {
         </div>
 
         <div class="section">
-          <div class="row"><span>Subtotal:</span><span>$${order.subtotal.toLocaleString('es-UY')}</span></div>
-          ${order.discount_amount > 0 ? `<div class="row" style="color: #16a34a;"><span>Descuento:</span><span>-$${order.discount_amount.toLocaleString('es-UY')}</span></div>` : ''}
-          <div class="row"><span>Envío:</span><span>${order.shipping_cost > 0 ? `$${order.shipping_cost.toLocaleString('es-UY')}` : 'Gratis'}</span></div>
-          <div class="row total-row"><span>TOTAL:</span><span>$${order.total.toLocaleString('es-UY')}</span></div>
+          <div class="row"><span>Subtotal:</span><span>${prefix}${order.subtotal.toLocaleString('es-UY')}</span></div>
+          ${order.discount_amount > 0 ? `<div class="row" style="color: #16a34a;"><span>Descuento:</span><span>-${prefix}${order.discount_amount.toLocaleString('es-UY')}</span></div>` : ''}
+          <div class="row"><span>Envío:</span><span>${order.shipping_cost > 0 ? `${prefix}${order.shipping_cost.toLocaleString('es-UY')}` : 'Gratis'}</span></div>
+          <div class="row total-row"><span>TOTAL:</span><span>${prefix}${order.total.toLocaleString('es-UY')}</span></div>
         </div>
 
         <div class="footer">
@@ -235,7 +239,7 @@ function GraciasContent() {
                       <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
                     </div>
                     <p className="font-medium text-gray-900">
-                      ${item.subtotal.toLocaleString('es-UY')}
+                      {(order.currency === 'USD' ? 'US$' : '$')}{item.subtotal.toLocaleString('es-UY')}
                     </p>
                   </div>
                 ))}
@@ -244,21 +248,21 @@ function GraciasContent() {
               <div className="mt-4 pt-4 border-t space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Subtotal</span>
-                  <span>${order.subtotal.toLocaleString('es-UY')}</span>
+                  <span>{(order.currency === 'USD' ? 'US$' : '$')}{order.subtotal.toLocaleString('es-UY')}</span>
                 </div>
                 {order.discount_amount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Descuento</span>
-                    <span>-${order.discount_amount.toLocaleString('es-UY')}</span>
+                    <span>-{(order.currency === 'USD' ? 'US$' : '$')}{order.discount_amount.toLocaleString('es-UY')}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Envío</span>
-                  <span>{order.shipping_cost > 0 ? `$${order.shipping_cost.toLocaleString('es-UY')}` : 'Gratis'}</span>
+                  <span>{order.shipping_cost > 0 ? `${order.currency === 'USD' ? 'US$' : '$'}${order.shipping_cost.toLocaleString('es-UY')}` : 'Gratis'}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg pt-2 border-t">
                   <span>Total</span>
-                  <span className="text-blue-600">${order.total.toLocaleString('es-UY')}</span>
+                  <span className="text-blue-600">{(order.currency === 'USD' ? 'US$' : '$')}{order.total.toLocaleString('es-UY')}</span>
                 </div>
               </div>
             </div>

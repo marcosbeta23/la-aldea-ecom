@@ -19,6 +19,7 @@ export const CreateOrderSchema = z.object({
     shipping_cost: z.number().min(0, 'Shipping cost cannot be negative').optional().default(0),
     notes: z.string().max(500, 'Notes too long').optional(),
     payment_method: z.enum(['mercadopago', 'transfer']).optional().default('mercadopago'),
+    payment_currency: z.enum(['UYU', 'USD']).optional().default('UYU'),
     // Invoice/Billing fields
     invoice_type: z.enum(['consumer_final', 'invoice_rut']).optional().default('consumer_final'),
     invoice_tax_id: z.string().regex(/^\d{12}$/, 'Invalid RUT (must be 12 digits)').optional(),
@@ -90,6 +91,7 @@ export const CheckoutFormSchema = z.object({
   invoiceTaxId: z.string().optional().or(z.literal('')),
   invoiceBusinessName: z.string().max(200, 'Razón social muy larga').optional().or(z.literal('')),
   paymentMethod: z.enum(['mercadopago', 'transfer']),
+  paymentCurrency: z.enum(['UYU', 'USD']),
   acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Debés aceptar los términos y condiciones' }) }),
 }).superRefine((data, ctx) => {
   // Shipping address required when delivery is selected

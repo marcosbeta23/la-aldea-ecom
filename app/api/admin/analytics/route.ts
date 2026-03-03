@@ -51,51 +51,33 @@ export async function GET(request: NextRequest) {
     // Fetch current period orders
     const { data: ordersData } = await supabaseAdmin
       .from('orders')
-      .select('id, status, total, created_at, customer_email, order_source, payment_method, shipping_department')
+      .select('id, status, total, created_at, customer_email, order_source, payment_method, shipping_department, currency')
       .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false }) as { data: Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null; order_source: string | null; payment_method: string | null; shipping_department: string | null }> | null };
+      .order('created_at', { ascending: false }) as { data: Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null; order_source: string | null; payment_method: string | null; shipping_department: string | null; currency: string | null }> | null };
 
     const orders = ordersData || [];
 
     // Fetch previous period orders (for comparison)
     const { data: prevOrdersData } = await supabaseAdmin
       .from('orders')
-      .select('id, status, total, payment_method')
+      .select('id, status, total, payment_method, currency')
       .gte('created_at', prevStartDate.toISOString())
-      .lt('created_at', startDate.toISOString()) as { data: Array<{ id: string; status: string; total: number; payment_method: string | null }> | null };
+      .lt('created_at', startDate.toISOString()) as { data: Array<{ id: string; status: string; total: number; payment_method: string | null; currency: string | null }> | null };
 
     const prevOrders = prevOrdersData || [];
 
-    // Fetch order items for product analytics + currency detection
+    // Fetch order items for product analytics
     const orderIds = orders.map(o => o.id);
-    const prevOrderIds = prevOrders.map(o => o.id);
 
     const { data: orderItemsData } = await supabaseAdmin
       .from('order_items')
       .select('order_id, product_id, product_name, quantity, unit_price, subtotal, currency')
       .in('order_id', orderIds.length > 0 ? orderIds : ['none']) as { data: Array<{ order_id: string; product_id: string; product_name: string; quantity: number; unit_price: number; subtotal: number; currency: string | null }> | null };
 
-    // Lightweight currency query for previous period
-    const { data: prevOrderItemsCurrencyData } = await supabaseAdmin
-      .from('order_items')
-      .select('order_id, currency')
-      .in('order_id', prevOrderIds.length > 0 ? prevOrderIds : ['none']) as { data: Array<{ order_id: string; currency: string | null }> | null };
-
     const orderItems = orderItemsData || [];
 
-    // Build order currency map (first item's currency = order currency, default UYU)
-    const orderCurrencyMap = new Map<string, string>();
-    for (const item of orderItems) {
-      if (!orderCurrencyMap.has(item.order_id)) {
-        orderCurrencyMap.set(item.order_id, item.currency || 'UYU');
-      }
-    }
-    for (const item of (prevOrderItemsCurrencyData || [])) {
-      if (!orderCurrencyMap.has(item.order_id)) {
-        orderCurrencyMap.set(item.order_id, item.currency || 'UYU');
-      }
-    }
-    const orderCurrency = (id: string) => orderCurrencyMap.get(id) || 'UYU';
+    // Order currency helper — use orders.currency directly (set during order creation)
+    const orderCurrency = (order: { currency: string | null }) => order.currency || 'UYU';
 
     // Fetch products for images
     const productIds = [...new Set(orderItems.map(i => i.product_id).filter(Boolean))];
@@ -116,14 +98,14 @@ export async function GET(request: NextRequest) {
     const todayPaidOrders = paidOrders.filter(o => new Date(o.created_at) >= startOfToday);
 
     // Revenue calculations (currency-aware)
-    const paidOrdersUYU = paidOrders.filter(o => orderCurrency(o.id) === 'UYU');
-    const paidOrdersUSD = paidOrders.filter(o => orderCurrency(o.id) === 'USD');
+    const paidOrdersUYU = paidOrders.filter(o => orderCurrency(o) === 'UYU');
+    const paidOrdersUSD = paidOrders.filter(o => orderCurrency(o) === 'USD');
     const totalRevenueUYU = paidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
     const totalRevenueUSD = paidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
     const totalRevenue = totalRevenueUYU; // Legacy field — UYU only to avoid mixing
 
-    const todayPaidOrdersUYU = todayPaidOrders.filter(o => orderCurrency(o.id) === 'UYU');
-    const todayPaidOrdersUSD = todayPaidOrders.filter(o => orderCurrency(o.id) === 'USD');
+    const todayPaidOrdersUYU = todayPaidOrders.filter(o => orderCurrency(o) === 'UYU');
+    const todayPaidOrdersUSD = todayPaidOrders.filter(o => orderCurrency(o) === 'USD');
     const todayRevenueUYU = todayPaidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
     const todayRevenueUSD = todayPaidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
     const todayRevenue = todayRevenueUYU;
@@ -143,8 +125,8 @@ export async function GET(request: NextRequest) {
 
     // === Previous Period Comparison (per currency) ===
     const prevPaidOrders = prevOrders.filter(o => paidStatuses.includes(o.status));
-    const prevPaidOrdersUYU = prevPaidOrders.filter(o => orderCurrency(o.id) === 'UYU');
-    const prevPaidOrdersUSD = prevPaidOrders.filter(o => orderCurrency(o.id) === 'USD');
+    const prevPaidOrdersUYU = prevPaidOrders.filter(o => orderCurrency(o) === 'UYU');
+    const prevPaidOrdersUSD = prevPaidOrders.filter(o => orderCurrency(o) === 'USD');
     const prevTotalRevenue = prevPaidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const prevTotalRevenueUYU = prevPaidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
     const prevTotalRevenueUSD = prevPaidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -258,8 +240,8 @@ export async function GET(request: NextRequest) {
       dailySales.push({
         date: dateStr,
         orders: dayOrders.length,
-        revenueUYU: dayOrders.filter(o => orderCurrency(o.id) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
-        revenueUSD: dayOrders.filter(o => orderCurrency(o.id) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0),
+        revenueUYU: dayOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
+        revenueUSD: dayOrders.filter(o => orderCurrency(o) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0),
         onlineRevenue: dayOrders.filter(o => (o.order_source || 'online') !== 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
         mostradorRevenue: dayOrders.filter(o => o.order_source === 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
       });

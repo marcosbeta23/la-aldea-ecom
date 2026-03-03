@@ -11,23 +11,35 @@ function PendienteContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('order');
   const method = searchParams.get('method');
+  const currency = searchParams.get('currency') || 'UYU';
   const isBankTransfer = method === 'transfer';
-  
+
   const [copied, setCopied] = useState<string | null>(null);
-  
+
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopied(field);
     setTimeout(() => setCopied(null), 2000);
   };
-  
-  const bankDetails = {
-    banco: 'BROU',
-    cuenta: '001234567-00001',
-    titular: 'La Aldea',
-    rut: '21 123456 0001 19',
-    whatsapp: '092744725',
+
+  const bankDetailsByCurrency: Record<string, { banco: string; cuenta: string; titular: string; rut: string; moneda: string }> = {
+    UYU: {
+      banco: 'BROU',
+      cuenta: '001234567-00001',
+      titular: 'La Aldea',
+      rut: '21 123456 0001 19',
+      moneda: 'Pesos Uruguayos (UYU)',
+    },
+    USD: {
+      banco: 'BROU',
+      cuenta: '001234567-00002', // TODO: Get actual USD account number from business owner
+      titular: 'La Aldea',
+      rut: '21 123456 0001 19',
+      moneda: 'Dólares Americanos (USD)',
+    },
   };
+  const bankDetails = bankDetailsByCurrency[currency] || bankDetailsByCurrency.UYU;
+  const whatsapp = '092744725';
 
   return (
     <>
@@ -66,15 +78,16 @@ function PendienteContent() {
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 text-left">
                   <h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-blue-600" />
-                    Datos para transferencia
+                    Datos para transferencia en {bankDetails.moneda}
                   </h2>
-                  
+
                   <div className="space-y-3 text-sm">
                     {[
                       { label: 'Banco', value: bankDetails.banco },
                       { label: 'Cuenta', value: bankDetails.cuenta },
                       { label: 'Titular', value: bankDetails.titular },
                       { label: 'RUT', value: bankDetails.rut },
+                      { label: 'Moneda', value: bankDetails.moneda },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex justify-between items-center">
                         <span className="text-slate-600">{label}:</span>
@@ -100,7 +113,7 @@ function PendienteContent() {
               {/* WhatsApp CTA for bank transfer */}
               {isBankTransfer && (
                 <a
-                  href={`https://wa.me/${bankDetails.whatsapp}?text=Hola! Realicé una transferencia para el pedido ${orderNumber || ''}`}
+                  href={`https://wa.me/${whatsapp}?text=Hola! Realicé una transferencia para el pedido ${orderNumber || ''}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors mb-4"

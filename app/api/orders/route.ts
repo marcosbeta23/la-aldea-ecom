@@ -4,6 +4,7 @@ import { CreateOrderSchema } from '@/lib/validators';
 import { ordersLimiter } from '@/lib/rate-limit';
 import { ordersRatelimit, getClientIp } from '@/lib/redis';
 import { alertNewOrder, alertNewTransferOrder } from '@/lib/telegram';
+import { getExchangeRate, convertPrice } from '@/lib/exchange-rate';
 
 // 🔒 SECURE ORDER CREATION
 // This version NEVER trusts frontend prices
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
     }
     
     const { items, couponCode, customer } = validation.data;
+    const paymentCurrency = customer.payment_currency || 'UYU';
     
     // 2️⃣ FETCH PRODUCTS FROM DATABASE (source of truth)
     const productIds = items.map((item: any) => item.id);
@@ -65,28 +67,45 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 3️⃣ RECALCULATE TOTAL (DO NOT trust frontend prices)
+    // 3️⃣ FETCH EXCHANGE RATE if needed
+    const productCurrencies = new Set(products.map((p: any) => p.currency || 'UYU'));
+    const needsConversion = productCurrencies.size > 1 || !productCurrencies.has(paymentCurrency);
+    let exchangeRate: number | null = null;
+
+    if (needsConversion) {
+      try {
+        const rateData = await getExchangeRate();
+        exchangeRate = rateData.rate;
+      } catch {
+        return NextResponse.json(
+          { success: false, error: 'No se pudo obtener el tipo de cambio. Intentá nuevamente.' },
+          { status: 503 }
+        );
+      }
+    }
+
+    // 4️⃣ RECALCULATE TOTAL in payment currency (DO NOT trust frontend prices)
     let subtotal = 0;
     const orderItems: any[] = [];
-    
+
     for (const item of items) {
       // Find product in database
       const product: any = products.find((p: any) => p.id === item.id);
-      
+
       if (!product) {
         return NextResponse.json(
           { success: false, error: `Product ${item.id} not found` },
           { status: 404 }
         );
       }
-      
+
       if (!product.is_active) {
         return NextResponse.json(
           { success: false, error: `Product ${product.name} is not available` },
           { status: 400 }
         );
       }
-      
+
       // Block on_request products from checkout
       if (product.availability_type === 'on_request') {
         return NextResponse.json(
@@ -114,17 +133,24 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Calculate with DATABASE price (NOT frontend price)
-      const itemSubtotal = product.price_numeric * item.quantity;
+      // Convert price to payment currency if needed
+      const productCurrency = product.currency || 'UYU';
+      const unitPriceConverted = exchangeRate && productCurrency !== paymentCurrency
+        ? convertPrice(product.price_numeric, productCurrency, paymentCurrency, exchangeRate)
+        : product.price_numeric;
+
+      // Calculate with converted price in payment currency
+      const itemSubtotal = unitPriceConverted * item.quantity;
       subtotal += itemSubtotal;
-      
+
       orderItems.push({
         product_id: product.id,
         product_name: product.name,
         quantity: item.quantity,
-        unit_price: product.price_numeric, // Price from DB!
-        currency: product.currency || 'UYU', // Currency from DB!
-        subtotal: itemSubtotal,
+        unit_price: product.price_numeric, // Original price from DB
+        currency: productCurrency, // Original currency from DB
+        unit_price_converted: productCurrency !== paymentCurrency ? unitPriceConverted : null,
+        subtotal: itemSubtotal, // Subtotal in payment currency
       });
     }
     
@@ -181,7 +207,9 @@ export async function POST(request: NextRequest) {
         subtotal: subtotal,
         discount_amount: discountAmount,
         coupon_code: validatedCoupon?.code || null,
-        total: finalTotal, // THIS is the amount that matters
+        total: finalTotal, // THIS is the amount in payment currency
+        currency: paymentCurrency,
+        exchange_rate_used: exchangeRate,
         status: 'pending',
         payment_method: paymentMethod,
         // Invoice/Billing fields
@@ -236,14 +264,16 @@ export async function POST(request: NextRequest) {
       console.log('🏦 Bank transfer order created:', (order as any).order_number);
 
       // Telegram alerts (fire-and-forget)
-      alertNewOrder((order as any).order_number, finalTotal, customer.name).catch(() => {});
-      alertNewTransferOrder((order as any).order_number, finalTotal, customer.name).catch(() => {});
+      const currencyPrefix = paymentCurrency === 'USD' ? 'US$' : '$';
+      alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
+      alertNewTransferOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
 
       return NextResponse.json({
         success: true,
         order_id: (order as any).id,
         order_number: (order as any).order_number,
         payment_method: 'transfer',
+        currency: paymentCurrency,
       });
     }
     
@@ -264,11 +294,11 @@ export async function POST(request: NextRequest) {
     
     const mpPayload: any = {
       items: orderItems.map((item: any) => ({
-        id: item.product_id, // Use product_id instead of product_sku
+        id: item.product_id,
         title: item.product_name,
-        unit_price: Number(item.unit_price), // Price we calculated
+        unit_price: Number(item.unit_price_converted || item.unit_price), // Price in payment currency
         quantity: item.quantity,
-        currency_id: item.currency || 'UYU', // Use actual product currency
+        currency_id: paymentCurrency, // ALL items same currency for MP
       })),
       external_reference: (order as any).id, // To find order in webhook
       back_urls: {
@@ -326,7 +356,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ MercadoPago preference created:', mpData.id);
 
     // Telegram alert for new order (fire-and-forget)
-    alertNewOrder((order as any).order_number, finalTotal, customer.name).catch(() => {});
+    alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
     
     // 🔟 UPDATE ORDER WITH PREFERENCE ID
     const { error: updateError } = await (supabaseAdmin as any)

@@ -78,7 +78,16 @@ export async function POST(request: NextRequest) {
     // 5️⃣ VERIFY PAYMENT AMOUNT (CRITICAL ANTI-FRAUD)
     const expectedAmount = Number(orderData.total);
     const paidAmount = Number(payment.transaction_amount);
-    
+
+    // Log currency info for debugging
+    if (orderData.currency && payment.currency_id && orderData.currency !== payment.currency_id) {
+      console.warn('⚠️ Currency mismatch between order and payment:', {
+        orderCurrency: orderData.currency,
+        paymentCurrency: payment.currency_id,
+        orderNumber: orderData.order_number,
+      });
+    }
+
     if (Math.abs(expectedAmount - paidAmount) > 0.01) {
       console.error('⚠️ PAYMENT AMOUNT MISMATCH!', {
         orderId: orderData.id,

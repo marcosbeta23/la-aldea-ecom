@@ -8,12 +8,23 @@ import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, getSubtotal, getCartCurrency } = useCartStore();
+  const { items, removeItem, updateQuantity, clearCart, getSubtotalByCurrency, getCartCurrency, hasMultipleCurrencies } = useCartStore();
   const [mounted, setMounted] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState<{ rate: number; updatedAt: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch exchange rate when cart has mixed currencies
+  useEffect(() => {
+    if (mounted && hasMultipleCurrencies()) {
+      fetch('/api/exchange-rate')
+        .then(r => r.json())
+        .then(data => { if (data.rate) setExchangeRate(data); })
+        .catch(() => {});
+    }
+  }, [mounted, items.length]);
 
   // Format price
   const formatPrice = (price: number, currency: string = 'UYU') => {
@@ -40,10 +51,10 @@ export default function CartPage() {
     );
   }
 
-  const subtotal = getSubtotal();
+  const subtotals = mounted ? getSubtotalByCurrency() : { UYU: 0, USD: 0 };
   const cartCurrency = getCartCurrency();
+  const isMixed = cartCurrency === 'mixed';
   const shipping = 0; // Will be calculated at checkout
-  const total = subtotal + shipping;
 
   // Empty cart state
   if (items.length === 0) {
@@ -176,19 +187,57 @@ export default function CartPage() {
                 <h2 className="text-lg font-semibold text-slate-900 mb-4">Resumen del pedido</h2>
 
                 <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} productos)</span>
-                    <span>{formatPrice(subtotal, cartCurrency)}</span>
-                  </div>
+                  {isMixed ? (
+                    <>
+                      {subtotals.UYU > 0 && (
+                        <div className="flex justify-between text-slate-600">
+                          <span>Subtotal UYU</span>
+                          <span className="font-semibold">{formatPrice(subtotals.UYU, 'UYU')}</span>
+                        </div>
+                      )}
+                      {subtotals.USD > 0 && (
+                        <div className="flex justify-between text-slate-600">
+                          <span>Subtotal USD</span>
+                          <span className="font-semibold">{formatPrice(subtotals.USD, 'USD')}</span>
+                        </div>
+                      )}
+                      {exchangeRate && (
+                        <div className="text-xs text-slate-400 bg-slate-50 rounded-lg px-3 py-2">
+                          Tipo de cambio: 1 USD = $ {exchangeRate.rate.toLocaleString('es-UY')} (BROU venta)
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-slate-600">
+                      <span>Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} productos)</span>
+                      <span>{formatPrice(subtotals.UYU + subtotals.USD, cartCurrency)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-slate-600">
                     <span>Envío</span>
                     <span className="text-sm text-slate-400">Se calcula al finalizar</span>
                   </div>
                   <hr className="border-slate-200" />
-                  <div className="flex justify-between text-lg font-bold text-slate-900">
-                    <span>Total</span>
-                    <span>{formatPrice(total, cartCurrency)}</span>
-                  </div>
+                  {isMixed ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-lg font-bold text-slate-900">
+                        <span>Total UYU</span>
+                        <span>{formatPrice(subtotals.UYU + (exchangeRate ? subtotals.USD * exchangeRate.rate : 0), 'UYU')}</span>
+                      </div>
+                      {exchangeRate && (
+                        <div className="flex justify-between text-sm text-slate-500">
+                          <span>Total USD</span>
+                          <span>{formatPrice(subtotals.USD + subtotals.UYU / exchangeRate.rate, 'USD')}</span>
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-400 mt-1">Elegís la moneda de pago en el checkout</p>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-lg font-bold text-slate-900">
+                      <span>Total</span>
+                      <span>{formatPrice(subtotals.UYU + subtotals.USD, cartCurrency)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <Link

@@ -75,11 +75,13 @@ export function alertFraudAttempt(orderNumber: string, expected: number, paid: n
   );
 }
 
-export function alertNewTransferOrder(orderNumber: string, total: number, customerName: string) {
+export function alertNewTransferOrder(orderNumber: string, total: number, customerName: string, currency: string = 'UYU') {
+  const prefix = currency === 'USD' ? 'US$' : '$';
   return sendTelegramAlert(
     `<b>Transferencia pendiente #${orderNumber}</b>\n` +
-    `$${total.toLocaleString('es-UY')}\n` +
+    `${prefix} ${total.toLocaleString('es-UY')}\n` +
     `${customerName}\n` +
+    `Moneda: ${currency}\n` +
     `Verificar pago en la cuenta bancaria.`
   );
 }

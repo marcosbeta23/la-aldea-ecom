@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote, Receipt, FileText, MessageCircle, Info } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote, Receipt, FileText, MessageCircle, Info, ArrowRightLeft } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 import { trackBeginCheckout } from '@/components/Analytics';
@@ -22,7 +22,7 @@ interface CouponData {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getSubtotal, getCartCurrency, clearCart } = useCartStore();
+  const { items, getSubtotal, getCartCurrency, getSubtotalByCurrency, hasMultipleCurrencies, getCurrenciesInCart, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -31,6 +31,7 @@ export default function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<CouponData | null>(null);
   const [submitError, setSubmitError] = useState('');
   const [freightConfirmed, setFreightConfirmed] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
 
   // React Hook Form with Zod validation
   const {
@@ -52,6 +53,7 @@ export default function CheckoutPage() {
       notes: '',
       shippingMethod: 'pickup',
       paymentMethod: 'mercadopago',
+      paymentCurrency: 'UYU' as const,
       invoiceType: 'consumer_final',
       invoiceTaxId: '',
       invoiceBusinessName: '',
@@ -63,6 +65,7 @@ export default function CheckoutPage() {
   // Watch form values for conditional rendering
   const shippingMethod = watch('shippingMethod');
   const paymentMethod = watch('paymentMethod');
+  const paymentCurrency = watch('paymentCurrency');
   const invoiceType = watch('invoiceType');
   const department = watch('department');
   const city = watch('city');
@@ -106,6 +109,27 @@ export default function CheckoutPage() {
     }
   }, [mounted, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Set initial paymentCurrency based on cart contents
+  const isMixed = mounted ? hasMultipleCurrencies() : false;
+  useEffect(() => {
+    if (!mounted) return;
+    const currencies = getCurrenciesInCart();
+    if (currencies.length === 1) {
+      setValue('paymentCurrency', currencies[0] as 'UYU' | 'USD');
+    }
+  }, [mounted]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch exchange rate when cart has mixed currencies
+  useEffect(() => {
+    if (!mounted || !isMixed) return;
+    fetch('/api/exchange-rate')
+      .then(res => res.json())
+      .then(data => {
+        if (data.rate) setExchangeRate(data.rate);
+      })
+      .catch(() => {});
+  }, [mounted, isMixed]);
+
   // Format price
   const formatPrice = (price: number, currency: string = 'UYU') => {
     if (currency === 'USD') {
@@ -131,8 +155,8 @@ export default function CheckoutPage() {
     return getShippingOptions(cartShippingType, shippingZone);
   }, [cartShippingType, shippingZone]);
 
-  // Cart currency (all items guaranteed same currency)
-  const cartCurrency = mounted ? getCartCurrency() : 'USD';
+  // Cart currency (may be 'mixed' if multiple currencies)
+  const cartCurrency = mounted ? getCartCurrency() : 'UYU';
 
   // Auto-reset shipping method when delivery isn't available
   useEffect(() => {
@@ -142,8 +166,17 @@ export default function CheckoutPage() {
     }
   }, [mounted, shippingOptions.canDeliver, shippingOptions.showFreightConsult, freightConfirmed, shippingMethod, setValue]);
 
-  // Calculate totals
-  const subtotal = mounted ? getSubtotal() : 0;
+  // Calculate totals — convert to payment currency when mixed
+  const subtotal = useMemo(() => {
+    if (!mounted) return 0;
+    if (!isMixed) return getSubtotal();
+    if (!exchangeRate) return getSubtotal(); // fallback until rate loads
+    const byCur = getSubtotalByCurrency();
+    if (paymentCurrency === 'UYU') {
+      return byCur.UYU + byCur.USD * exchangeRate;
+    }
+    return byCur.USD + byCur.UYU / exchangeRate;
+  }, [mounted, isMixed, exchangeRate, paymentCurrency, items]); // eslint-disable-line react-hooks/exhaustive-deps
   const discount = appliedCoupon?.discount_amount || 0;
   // Shipping cost: 0 for pickup, actual cost if known, or 0 if paid on delivery
   const shippingCost = shippingMethod === 'delivery' && shippingOptions.deliveryCost !== null
@@ -151,6 +184,8 @@ export default function CheckoutPage() {
     : 0;
   const shippingPaidOnDelivery = shippingMethod === 'delivery' && shippingOptions.deliveryCost === null;
   const total = subtotal - discount + shippingCost;
+  // Display currency for totals
+  const displayCurrency = isMixed ? paymentCurrency : cartCurrency;
 
 
   // Apply coupon
@@ -214,6 +249,7 @@ export default function CheckoutPage() {
             shipping_cost: shippingCost,
             notes: formData.notes || undefined,
             payment_method: formData.paymentMethod,
+            payment_currency: formData.paymentCurrency,
             invoice_type: formData.invoiceType,
             invoice_tax_id: formData.invoiceType === 'invoice_rut' ? (formData.invoiceTaxId || '').replace(/\D/g, '') : undefined,
             invoice_business_name: formData.invoiceType === 'invoice_rut' ? formData.invoiceBusinessName : undefined,
@@ -235,7 +271,7 @@ export default function CheckoutPage() {
       // Handle redirect based on payment method
       if (formData.paymentMethod === 'transfer') {
         clearCart();
-        router.push(`/pendiente?order=${data.order_number}&method=transfer`);
+        router.push(`/pendiente?order=${data.order_number}&method=transfer&currency=${formData.paymentCurrency}`);
       } else if (data.init_point) {
         clearCart();
         const processingUrl = `/procesando?redirect=${encodeURIComponent(data.init_point)}&order=${data.order_number}&method=mercadopago`;
@@ -829,6 +865,50 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Currency Selector — only shown when cart has mixed currencies */}
+                {isMixed && (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                      <ArrowRightLeft className="h-5 w-5 text-blue-600" />
+                      Moneda de pago
+                    </h2>
+                    <p className="text-sm text-slate-500 mb-4">
+                      Tu carrito tiene productos en distintas monedas. Elegí en qué moneda querés pagar.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setValue('paymentCurrency', 'UYU')}
+                        className={`p-4 rounded-xl border-2 text-center transition-colors ${
+                          paymentCurrency === 'UYU'
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <p className="text-lg font-bold text-slate-900">$ UYU</p>
+                        <p className="text-xs text-slate-500">Pesos uruguayos</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValue('paymentCurrency', 'USD')}
+                        className={`p-4 rounded-xl border-2 text-center transition-colors ${
+                          paymentCurrency === 'USD'
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <p className="text-lg font-bold text-slate-900">US$ USD</p>
+                        <p className="text-xs text-slate-500">Dólares americanos</p>
+                      </button>
+                    </div>
+                    {exchangeRate && (
+                      <p className="text-xs text-slate-400 mt-3 text-center">
+                        Tipo de cambio: 1 USD = ${exchangeRate.toLocaleString('es-UY')} UYU (BROU venta)
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Order Summary */}
@@ -918,12 +998,12 @@ export default function CheckoutPage() {
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-slate-600">
                       <span>Subtotal</span>
-                      <span>{formatPrice(subtotal, cartCurrency)}</span>
+                      <span>{formatPrice(subtotal, displayCurrency)}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Descuento</span>
-                        <span>-{formatPrice(discount, cartCurrency)}</span>
+                        <span>-{formatPrice(discount, displayCurrency)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-slate-600">
@@ -936,15 +1016,20 @@ export default function CheckoutPage() {
                         ) : shippingCost === 0 ? (
                           'Gratis'
                         ) : (
-                          formatPrice(shippingCost)
+                          formatPrice(shippingCost, displayCurrency)
                         )}
                       </span>
                     </div>
                     <hr className="border-slate-200" />
                     <div className="flex justify-between text-xl font-bold text-slate-900">
                       <span>Total</span>
-                      <span>{formatPrice(total, cartCurrency)}</span>
+                      <span>{formatPrice(total, displayCurrency)}</span>
                     </div>
+                    {isMixed && exchangeRate && (
+                      <p className="text-xs text-slate-400 text-right">
+                        TC: 1 USD = ${exchangeRate.toLocaleString('es-UY')} UYU
+                      </p>
+                    )}
                   </div>
 
                   {/* Terms */}
