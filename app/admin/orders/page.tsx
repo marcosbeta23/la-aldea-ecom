@@ -5,6 +5,8 @@ import {
   ChevronRight,
   Eye,
   Phone,
+  Store,
+  Globe,
 } from 'lucide-react';
 import OrderSearch from './OrderSearch';
 
@@ -52,11 +54,17 @@ function PaymentBadge({ method }: { method: string | null }) {
   const styles: Record<string, string> = {
     mercadopago: 'bg-blue-50 text-blue-700',
     transfer: 'bg-amber-50 text-amber-700',
+    efectivo: 'bg-green-50 text-green-700',
+    pos_debito: 'bg-purple-50 text-purple-700',
+    pos_credito: 'bg-indigo-50 text-indigo-700',
   };
 
   const labels: Record<string, string> = {
     mercadopago: 'MercadoPago',
     transfer: 'Transferencia',
+    efectivo: 'Efectivo',
+    pos_debito: 'POS Débito',
+    pos_credito: 'POS Crédito',
   };
 
   return (
@@ -86,6 +94,7 @@ export default async function OrdersPage({
 }) {
   const params = await searchParams;
   const statusFilter = typeof params.status === 'string' ? params.status : undefined;
+  const sourceFilter = typeof params.source === 'string' ? params.source : undefined;
   const searchQuery = typeof params.q === 'string' ? params.q.trim() : '';
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1;
   const perPage = 20;
@@ -99,6 +108,10 @@ export default async function OrdersPage({
 
   if (statusFilter) {
     query = query.eq('status', statusFilter);
+  }
+
+  if (sourceFilter === 'online' || sourceFilter === 'mostrador') {
+    query = query.eq('order_source', sourceFilter);
   }
 
   // Search by order number, customer name, or phone
@@ -156,6 +169,7 @@ export default async function OrdersPage({
   const buildUrl = (p: number) => {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
+    if (sourceFilter) params.set('source', sourceFilter);
     if (searchQuery) params.set('q', searchQuery);
     if (p > 1) params.set('page', String(p));
     const qs = params.toString();
@@ -177,6 +191,37 @@ export default async function OrdersPage({
         <OrderSearch initialQuery={searchQuery} statusFilter={statusFilter} />
       </div>
 
+      {/* Source Filter (Online / Mostrador) */}
+      <div className="flex gap-2">
+        {([
+          { value: '', label: 'Todos', icon: null },
+          { value: 'online', label: 'Online', icon: Globe },
+          { value: 'mostrador', label: 'Mostrador', icon: Store },
+        ] as const).map((option) => {
+          const isActive = (sourceFilter === option.value) || (!sourceFilter && !option.value);
+          const sourceQs = new URLSearchParams();
+          if (option.value) sourceQs.set('source', option.value);
+          if (statusFilter) sourceQs.set('status', statusFilter);
+          if (searchQuery) sourceQs.set('q', searchQuery);
+          const href = `/admin/orders${sourceQs.toString() ? `?${sourceQs.toString()}` : ''}`;
+
+          return (
+            <Link
+              key={option.value}
+              href={href}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                isActive
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {option.icon && <option.icon className="h-4 w-4" />}
+              {option.label}
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Status Filters with counts */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex flex-wrap gap-2">
@@ -187,7 +232,7 @@ export default async function OrdersPage({
             return (
               <Link
                 key={option.value}
-                href={option.value ? `/admin/orders?status=${option.value}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ''}` : `/admin/orders${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`}
+                href={option.value ? `/admin/orders?status=${option.value}${sourceFilter ? `&source=${sourceFilter}` : ''}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ''}` : `/admin/orders${sourceFilter ? `?source=${sourceFilter}` : ''}${searchQuery ? `${sourceFilter ? '&' : '?'}q=${encodeURIComponent(searchQuery)}` : ''}`}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   isActive
                     ? 'bg-blue-600 text-white'
@@ -233,12 +278,19 @@ export default async function OrdersPage({
               {(orders || []).map((order: any) => (
                 <tr key={order.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="font-mono text-sm text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      #{order.order_number}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="font-mono text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        #{order.order_number}
+                      </Link>
+                      {order.order_source === 'mostrador' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Mostrador
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div>

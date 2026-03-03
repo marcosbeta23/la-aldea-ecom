@@ -607,7 +607,7 @@ export default async function Home() {
             </div>
 
             {/* Services Grid */}
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {services.map((service, i) => (
                 <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg hover:border-blue-200">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
@@ -671,7 +671,7 @@ export default async function Home() {
               </h2>
             </div>
 
-            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {testimonials.map((testimonial, i) => (
                 <div
                   key={i}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyMPSignature, getMPPayment } from '@/lib/mercadopago';
 import { sendOrderConfirmation, sendAdminOrderNotification } from '@/lib/email';
-import { alertPaymentApproved, alertPaymentFailed, alertFraudAttempt } from '@/lib/telegram';
+import { alertPaymentApproved, alertPaymentFailed, alertFraudAttempt, alertOutOfStockAfterPayment } from '@/lib/telegram';
 
 // 🔒 SECURE MERCADOPAGO WEBHOOK - MVP ORDER FLOW
 // Payment → Reserve Stock → paid_pending_verification → Admin Review → Invoice
@@ -162,13 +162,18 @@ export async function POST(request: NextRequest) {
         updateData.notes = `Sin stock suficiente: ${failedNames}. Contactar cliente.`;
         
         console.log(`⚠️ Order ${orderData.order_number} - Insufficient stock:`, failedProducts);
-        
+
         await logOrderEvent(orderData.id, 'payment_approved_no_stock', orderData.status, 'out_of_stock', {
           payment_id: paymentId,
           failed_products: failedProducts,
         });
-        
-        // TODO: Send notification to customer about stock issue
+
+        // Telegram alert for out of stock after payment
+        alertOutOfStockAfterPayment(
+          orderData.order_number,
+          orderData.customer_name || '',
+          failedProducts.map((p: any) => p.name || 'Producto desconocido')
+        ).catch(() => {});
       }
       
       // Increment coupon usage if used

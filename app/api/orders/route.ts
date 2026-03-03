@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { CreateOrderSchema } from '@/lib/validators';
 import { ordersLimiter } from '@/lib/rate-limit';
 import { ordersRatelimit, getClientIp } from '@/lib/redis';
+import { alertNewOrder, alertNewTransferOrder } from '@/lib/telegram';
 
 // 🔒 SECURE ORDER CREATION
 // This version NEVER trusts frontend prices
@@ -233,7 +234,11 @@ export async function POST(request: NextRequest) {
     if (paymentMethod === 'transfer') {
       // Bank transfer: no MercadoPago, return order info only
       console.log('🏦 Bank transfer order created:', (order as any).order_number);
-      
+
+      // Telegram alerts (fire-and-forget)
+      alertNewOrder((order as any).order_number, finalTotal, customer.name).catch(() => {});
+      alertNewTransferOrder((order as any).order_number, finalTotal, customer.name).catch(() => {});
+
       return NextResponse.json({
         success: true,
         order_id: (order as any).id,
@@ -319,6 +324,9 @@ export async function POST(request: NextRequest) {
     
     const mpData = await mpResponse.json();
     console.log('✅ MercadoPago preference created:', mpData.id);
+
+    // Telegram alert for new order (fire-and-forget)
+    alertNewOrder((order as any).order_number, finalTotal, customer.name).catch(() => {});
     
     // 🔟 UPDATE ORDER WITH PREFERENCE ID
     const { error: updateError } = await (supabaseAdmin as any)

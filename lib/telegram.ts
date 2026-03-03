@@ -74,3 +74,51 @@ export function alertFraudAttempt(orderNumber: string, expected: number, paid: n
     `Orden cancelada automaticamente.`
   );
 }
+
+export function alertNewTransferOrder(orderNumber: string, total: number, customerName: string) {
+  return sendTelegramAlert(
+    `<b>Transferencia pendiente #${orderNumber}</b>\n` +
+    `$${total.toLocaleString('es-UY')}\n` +
+    `${customerName}\n` +
+    `Verificar pago en la cuenta bancaria.`
+  );
+}
+
+export function alertOrderStatusChanged(orderNumber: string, oldStatus: string, newStatus: string, customerName: string) {
+  const labels: Record<string, string> = {
+    pending: 'Pendiente', paid: 'Pagado', paid_pending_verification: 'Por verificar',
+    awaiting_stock: 'Sin stock', ready_to_invoice: 'Por facturar', invoiced: 'Facturado',
+    processing: 'En preparación', shipped: 'Enviado', delivered: 'Entregado',
+    cancelled: 'Cancelado', refunded: 'Reembolsado',
+  };
+  return sendTelegramAlert(
+    `<b>Pedido #${orderNumber} actualizado</b>\n` +
+    `${labels[oldStatus] || oldStatus} → ${labels[newStatus] || newStatus}\n` +
+    `${customerName}`
+  );
+}
+
+export function alertRefundProcessed(orderNumber: string, amount: number, success: boolean, customerName: string) {
+  return sendTelegramAlert(
+    success
+      ? `<b>Reembolso exitoso #${orderNumber}</b>\n$${amount.toLocaleString('es-UY')}\n${customerName}`
+      : `<b>Reembolso fallido #${orderNumber}</b>\n$${amount.toLocaleString('es-UY')}\n${customerName}\nRevisar manualmente.`
+  );
+}
+
+export function alertOutOfStockAfterPayment(orderNumber: string, customerName: string, failedProducts: string[]) {
+  return sendTelegramAlert(
+    `<b>SIN STOCK tras pago #${orderNumber}</b>\n` +
+    `${customerName}\n` +
+    `Productos:\n${failedProducts.map(p => `  - ${p}`).join('\n')}\n` +
+    `Contactar al cliente.`
+  );
+}
+
+export function alertLowStock(productName: string, sku: string, currentStock: number) {
+  return sendTelegramAlert(
+    `<b>Stock bajo: ${productName}</b>\n` +
+    `SKU: ${sku}\n` +
+    `Quedan: ${currentStock} unidades`
+  );
+}

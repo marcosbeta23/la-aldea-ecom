@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
   const format = searchParams.get('format') || 'json';
   const startDate = searchParams.get('start');
   const endDate = searchParams.get('end');
+  const source = searchParams.get('source') || ''; // 'online' | 'mostrador' | '' (all)
 
   try {
     let data;
@@ -27,8 +28,8 @@ export async function GET(request: NextRequest) {
 
     switch (type) {
       case 'sales':
-        data = await generateSalesReport(period, startDate, endDate);
-        filename = `ventas-${period}`;
+        data = await generateSalesReport(period, startDate, endDate, source);
+        filename = `ventas-${period}${source ? `-${source}` : ''}`;
         break;
       case 'products':
         data = await generateProductsReport();
@@ -91,15 +92,21 @@ function getDateRange(period: string, startDate?: string | null, endDate?: strin
   return { start, end };
 }
 
-async function generateSalesReport(period: string, startDate?: string | null, endDate?: string | null) {
+async function generateSalesReport(period: string, startDate?: string | null, endDate?: string | null, source?: string) {
   const { start, end } = getDateRange(period, startDate, endDate);
 
-  const { data: orders } = await (supabaseAdmin as any)
+  let query = (supabaseAdmin as any)
     .from('orders')
-    .select('id, order_number, customer_name, customer_email, total, status, payment_method, created_at')
+    .select('id, order_number, customer_name, customer_email, total, status, payment_method, order_source, created_at')
     .gte('created_at', start.toISOString())
     .lte('created_at', end.toISOString())
     .order('created_at', { ascending: false });
+
+  if (source === 'online' || source === 'mostrador') {
+    query = query.eq('order_source', source);
+  }
+
+  const { data: orders } = await query;
 
   const { data: items } = await (supabaseAdmin as any)
     .from('order_items')
@@ -223,7 +230,7 @@ async function generateCustomersReport(period: string, startDate?: string | null
 
 function convertToCSV(data: any, type: string): string {
   if (type === 'sales' && data.orders) {
-    const headers = ['Fecha', 'Nº Pedido', 'Cliente', 'Email', 'Total', 'Estado', 'Método Pago'];
+    const headers = ['Fecha', 'Nº Pedido', 'Cliente', 'Email', 'Total', 'Estado', 'Método Pago', 'Canal'];
     const rows = (data.orders || []).map((order: any) => [
       new Date(order.created_at).toLocaleDateString('es-UY'),
       order.order_number,
@@ -232,6 +239,7 @@ function convertToCSV(data: any, type: string): string {
       (order.total || 0).toFixed(2),
       order.status,
       order.payment_method || '',
+      order.order_source || 'online',
     ]);
     return [headers.join(','), ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(','))].join('\n');
   }

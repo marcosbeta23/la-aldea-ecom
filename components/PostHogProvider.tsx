@@ -9,8 +9,8 @@ const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
 
-// Initialize PostHog once
-if (typeof window !== 'undefined' && POSTHOG_KEY) {
+// Initialize PostHog once (production only — avoids remote config fetch errors in dev)
+if (typeof window !== 'undefined' && POSTHOG_KEY && process.env.NODE_ENV === 'production') {
   // Check cookie consent before initializing
   let persistence: 'localStorage+cookie' | 'memory' = 'memory';
   try {
@@ -29,11 +29,6 @@ if (typeof window !== 'undefined' && POSTHOG_KEY) {
     capture_pageview: false, // We capture manually for SPA navigation
     capture_pageleave: true,
     persistence,
-    loaded: (ph) => {
-      if (process.env.NODE_ENV === 'development') {
-        ph.debug();
-      }
-    },
   });
 }
 
@@ -42,7 +37,7 @@ function PostHogPageview() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (pathname && POSTHOG_KEY) {
+    if (pathname && POSTHOG_KEY && process.env.NODE_ENV === 'production') {
       let url = window.origin + pathname;
       const search = searchParams.toString();
       if (search) {

@@ -36,6 +36,25 @@ export interface Product {
   discount_ends_at: string | null; // When discount expires
 }
 
+// Order source / sales channel
+export type OrderSource = 'online' | 'mostrador';
+
+// Payment methods
+export type PaymentMethod = 'mercadopago' | 'transfer' | 'efectivo' | 'pos_debito' | 'pos_credito';
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  mercadopago: 'MercadoPago',
+  transfer: 'Transferencia',
+  efectivo: 'Efectivo',
+  pos_debito: 'POS Débito',
+  pos_credito: 'POS Crédito',
+};
+
+export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
+  online: 'Online',
+  mostrador: 'Mostrador',
+};
+
 export interface Order {
   id: string;
   order_number: string;
@@ -57,6 +76,7 @@ export interface Order {
   coupon_code: string | null;
   notes: string | null;
   meta: Record<string, unknown> | null;
+  order_source: OrderSource;
   created_at: string;
   updated_at: string;
   // MVP Order Flow - New Fields

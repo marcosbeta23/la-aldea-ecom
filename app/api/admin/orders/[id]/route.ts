@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { OrderStatus } from '@/types/database';
-import { 
-  getOrderShippedMessage, 
+import {
+  getOrderShippedMessage,
   getReadyToInvoiceMessage,
-  type NotificationContext 
+  type NotificationContext
 } from '@/lib/notifications';
+import { alertOrderStatusChanged } from '@/lib/telegram';
 
 // Verify admin authentication via Clerk
 async function verifyAdmin() {
@@ -27,10 +28,19 @@ export async function PATCH(
   }
   
   const { id } = await params;
-  
+
   try {
     const body = await request.json();
-    
+
+    // Fetch current order for old status comparison
+    const { data: currentOrder } = await supabaseAdmin
+      .from('orders')
+      .select('status, customer_name, order_number')
+      .eq('id', id)
+      .single() as { data: { status: string; customer_name: string; order_number: string } | null };
+
+    const oldStatus = currentOrder?.status;
+
     // Build update data - accept multiple fields
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -104,6 +114,19 @@ export async function PATCH(
     // Auto-send notifications on status changes
     if (body.status && updatedOrder) {
       await sendStatusNotification(updatedOrder, body.status);
+
+      // Telegram alert for meaningful status transitions
+      if (oldStatus && oldStatus !== body.status) {
+        const notifyStatuses = ['shipped', 'delivered', 'cancelled', 'invoiced', 'processing', 'paid'];
+        if (notifyStatuses.includes(body.status)) {
+          alertOrderStatusChanged(
+            updatedOrder.order_number || id,
+            oldStatus,
+            body.status,
+            updatedOrder.customer_name || ''
+          ).catch(() => {});
+        }
+      }
     }
     
     return NextResponse.json({ success: true, order: updatedOrder });

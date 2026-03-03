@@ -139,6 +139,18 @@ export async function GET(request: NextRequest) {
     // Cache for 60 seconds
     await cacheSet(cacheKey, result, 60);
 
+    // Log search analytics (fire-and-forget, non-blocking)
+    const productCount = products?.length || 0;
+    (supabaseAdmin as any)
+      .from('search_analytics')
+      .insert({
+        query: query.toLowerCase(),
+        results_count: productCount,
+        source: 'suggestions',
+      })
+      .then(() => {})
+      .catch(() => {});
+
     return NextResponse.json(result);
 
   } catch (error) {

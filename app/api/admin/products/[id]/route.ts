@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
-import { alertOutOfStock } from '@/lib/telegram';
+import { alertOutOfStock, alertLowStock } from '@/lib/telegram';
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -137,6 +137,8 @@ export async function PUT(
     // Alert if product stock dropped to 0
     if (product.stock === 0 && product.is_active) {
       alertOutOfStock(product.name, product.sku).catch(() => {});
+    } else if (product.stock > 0 && product.stock < 5 && product.is_active) {
+      alertLowStock(product.name, product.sku, product.stock).catch(() => {});
     }
 
     // Bust ISR cache for this product's detail page, listings, and homepage

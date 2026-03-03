@@ -2,5 +2,8 @@
   "crons": [{
     "path": "/api/cron/release-stock",
     "schedule": "0 3 * * *"
+  }, {
+    "path": "/api/cron/weekly-report",
+    "schedule": "0 12 * * 1"
   }]
 }
