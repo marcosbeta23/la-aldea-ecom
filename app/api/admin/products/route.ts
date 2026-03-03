@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + perPage - 1)) as any;
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%,description.ilike.%${search}%`);
     }
     if (category) {
       query = query.contains('category', [category]);

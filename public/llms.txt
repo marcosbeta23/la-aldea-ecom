@@ -133,8 +133,28 @@ Ubicación: Uruguay (es-UY)
 
 ## Estructura del Sitio Web
 - Inicio: https://laaldeatala.com.uy/
+- Catálogo de Productos: https://laaldeatala.com.uy/productos
 - Preguntas Frecuentes: https://laaldeatala.com.uy/faq
-- Política de Privacidad: https://laaldeatala.com.uy/privacy-policy
+- Contacto: https://laaldeatala.com.uy/contacto
+- Política de Privacidad: https://laaldeatala.com.uy/privacidad
+- Términos y Condiciones: https://laaldeatala.com.uy/terminos
+
+## Categorías de Productos
+- Bombas: https://laaldeatala.com.uy/productos?categoria=Bombas
+- Riego: https://laaldeatala.com.uy/productos?categoria=Riego
+- Filtros: https://laaldeatala.com.uy/productos?categoria=Filtros
+- Tanques: https://laaldeatala.com.uy/productos?categoria=Tanques
+- Piscinas: https://laaldeatala.com.uy/productos?categoria=Piscinas
+- Químicos: https://laaldeatala.com.uy/productos?categoria=Qu%C3%ADmicos
+- Herramientas: https://laaldeatala.com.uy/productos?categoria=Herramientas
+- Accesorios: https://laaldeatala.com.uy/productos?categoria=Accesorios
+- Hidráulica: https://laaldeatala.com.uy/productos?categoria=Hidr%C3%A1ulica
+- Droguería: https://laaldeatala.com.uy/productos?categoria=Droguer%C3%ADa
+- Energía Solar: https://laaldeatala.com.uy/productos?categoria=Energ%C3%ADa%20Solar
+
+## Búsqueda de Productos
+Se puede buscar productos por nombre, descripción o marca:
+https://laaldeatala.com.uy/productos?q={término_de_búsqueda}
 
 ## Última Actualización
-Diciembre 2025
+Marzo 2026

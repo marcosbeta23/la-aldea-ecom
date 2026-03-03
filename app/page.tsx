@@ -92,6 +92,22 @@ const localBusinessSchema = {
     "@type": "Country",
     "name": "Uruguay"
   },
+  "contactPoint": [
+    {
+      "@type": "ContactPoint",
+      "telephone": "+59892744725",
+      "contactType": "customer service",
+      "availableLanguage": "Spanish",
+      "areaServed": "UY"
+    },
+    {
+      "@type": "ContactPoint",
+      "telephone": "+59843154393",
+      "contactType": "technical support",
+      "availableLanguage": "Spanish",
+      "areaServed": "UY"
+    }
+  ],
   "sameAs": [
     "https://www.facebook.com/profile.php?id=61561171162882",
     "https://www.instagram.com/laaldeatala/",

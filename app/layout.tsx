@@ -7,6 +7,8 @@ import { Analytics } from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieConsent from "@/components/common/CookieConsent";
+import CartDrawer from "@/components/cart/CartDrawer";
+import { PostHogProvider } from "@/components/PostHogProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -215,9 +217,33 @@ export default function RootLayout({
           {/* DNS prefetch for performance */}
           <link rel="dns-prefetch" href="https://supabase.co" />
           <link rel="dns-prefetch" href="https://api.mercadopago.com" />
+          <link rel="dns-prefetch" href="https://us.i.posthog.com" />
         </head>
         <body className={`${inter.variable} font-sans antialiased`}>
-          {children}
+          {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "La Aldea",
+                "url": siteUrl,
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": `${siteUrl}/productos?q={search_term_string}`,
+                  },
+                  "query-input": "required name=search_term_string",
+                },
+              }),
+            }}
+          />
+          <PostHogProvider>
+            {children}
+            <CartDrawer />
+          </PostHogProvider>
           <Analytics />
           <VercelAnalytics />
           <SpeedInsights />

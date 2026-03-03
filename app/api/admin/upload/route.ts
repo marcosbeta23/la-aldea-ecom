@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { isCfImagesConfigured, uploadToCfImages } from '@/lib/cloudflare-images';
 
 const BUCKET = 'product-images';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -49,7 +50,23 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Supabase Storage
+    // Try Cloudflare Images first (better CDN, automatic variants)
+    if (isCfImagesConfigured()) {
+      const cfResult = await uploadToCfImages(buffer, filename, {
+        source: 'admin-upload',
+        originalName: file.name,
+      });
+      if (cfResult) {
+        return NextResponse.json({
+          url: cfResult.url,
+          path: cfResult.id,
+          provider: 'cloudflare',
+        });
+      }
+      // Fall through to Supabase if CF upload fails
+    }
+
+    // Fallback: Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage
       .from(BUCKET)
       .upload(filename, buffer, {
@@ -74,6 +91,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       url: urlData.publicUrl,
       path: data.path,
+      provider: 'supabase',
     });
   } catch (error: any) {
     console.error('Upload error:', error);

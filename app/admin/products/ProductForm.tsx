@@ -6,6 +6,7 @@ import { Save, Loader2, Trash2, X, Plus, Truck, Star, Tag } from 'lucide-react';
 import ImageUpload from '@/components/admin/ImageUpload';
 
 import { SHIPPING_TYPE_LABELS } from '@/lib/shipping';
+import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
 import type { ProductShippingType, ProductAvailabilityType } from '@/types/database';
 
 interface Product {
@@ -33,19 +34,7 @@ interface Product {
   discount_percentage: number | null;
 }
 
-const KNOWN_CATEGORIES = [
-  'Bombas',
-  'Riego',
-  'Filtros',
-  'Tanques',
-  'Piscinas',
-  'Químicos',
-  'Herramientas',
-  'Accesorios',
-  'Hidráulica',
-  'Droguería',
-  'Energía Solar',
-];
+const KNOWN_CATEGORIES = CATEGORY_HIERARCHY.map(c => c.value);
 
 /** Normalize a category string: match known categories case-insensitively, or title-case it */
 const normalizeCategory = (cat: string): string => {
@@ -65,7 +54,7 @@ export default function ProductForm({ product }: { product?: any }) {
     sku: product?.sku || '',
     name: product?.name || '',
     description: product?.description || '',
-    category: Array.isArray(product?.category) ? product.category : (product?.category ? [product.category] : []),
+    category: product?.category || [],
     brand: product?.brand?.trim() || '',
     price_numeric: product?.price_numeric || 0,
     currency: product?.currency || 'UYU',
@@ -133,7 +122,16 @@ export default function ProductForm({ product }: { product?: any }) {
     b.toLowerCase().includes(brandQuery.toLowerCase().trim()) && b.toLowerCase() !== brandQuery.toLowerCase().trim()
   );
 
-  const filteredCategories = KNOWN_CATEGORIES.filter(c =>
+  // Get subcategory suggestions based on selected main categories
+  const selectedMainCats = formData.category.filter(c => isMainCategory(c));
+  const subcategorySuggestions = selectedMainCats.flatMap(mc =>
+    getSubcategories(mc).map(s => s.value)
+  ).filter(s => !formData.category.some(fc => fc.toLowerCase() === s.toLowerCase()));
+
+  // Combine main categories + subcategory suggestions for the dropdown
+  const allSuggestions = [...KNOWN_CATEGORIES, ...subcategorySuggestions];
+
+  const filteredCategories = allSuggestions.filter(c =>
     c.toLowerCase().includes(categoryInput.toLowerCase().trim()) &&
     !formData.category.some(fc => fc.toLowerCase() === c.toLowerCase())
   );
@@ -400,23 +398,27 @@ export default function ProductForm({ product }: { product?: any }) {
                     )}
                   </div>
                   {showCategorySuggestions && filteredCategories.length > 0 && (
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                      {filteredCategories.map(cat => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => addCategory(cat)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700"
-                        >
-                          {cat}
-                        </button>
-                      ))}
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      {filteredCategories.map(cat => {
+                        const isSub = !isMainCategory(cat);
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => addCategory(cat)}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700 ${isSub ? 'pl-8' : 'font-medium'}`}
+                          >
+                            {isSub && <span className="text-slate-400 mr-1">↳</span>}
+                            {cat}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1.5">
-                  Un producto puede tener múltiples categorías. Ej: una bomba para piscina → Bombas + Piscinas
+                  Categoría principal + subcategoría. Ej: Bombas + Sumergibles. Las subcategorías aparecen al seleccionar una categoría principal.
                 </p>
               </div>
             </div>

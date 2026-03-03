@@ -163,7 +163,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;
 
-  // JSON-LD Schema
+  // JSON-LD Schema — Product
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -183,7 +183,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         product.stock > 0
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
-      url: `https://laaldeatala.com.uy/productos/${slug}`,
+      url: `${siteUrl}/productos/${slug}`,
       seller: {
         '@type': 'Organization',
         name: 'La Aldea',
@@ -202,11 +202,59 @@ export default async function ProductPage({ params }: ProductPageProps) {
       }),
   };
 
+  // JSON-LD Schema — BreadcrumbList
+  const mainCategory = product.category?.[0] || null;
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Inicio',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Productos',
+        item: `${siteUrl}/productos`,
+      },
+      ...(mainCategory
+        ? [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: mainCategory,
+              item: `${siteUrl}/productos?categoria=${encodeURIComponent(mainCategory)}`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 4,
+              name: product.name,
+              item: `${siteUrl}/productos/${slug}`,
+            },
+          ]
+        : [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: product.name,
+              item: `${siteUrl}/productos/${slug}`,
+            },
+          ]),
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
       <Header />

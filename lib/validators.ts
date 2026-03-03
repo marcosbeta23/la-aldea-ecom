@@ -75,19 +75,63 @@ export type CreateReviewInput = z.infer<typeof CreateReviewSchema>;
 export type ValidateCouponInput = z.infer<typeof ValidateCouponSchema>;
 export type QuoteRequestInput = z.infer<typeof QuoteRequestSchema>;
 
+// ── Client-side checkout form schema ─────────────────────────────────
+
+export const CheckoutFormSchema = z.object({
+  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'Nombre muy largo'),
+  email: z.string().email('Email inválido').or(z.literal('')),
+  phone: z.string().min(1, 'El teléfono es requerido'),
+  shippingMethod: z.enum(['pickup', 'delivery']),
+  address: z.string().max(200, 'Dirección muy larga').optional().or(z.literal('')),
+  city: z.string().max(100, 'Ciudad muy larga').optional().or(z.literal('')),
+  department: z.string().optional().or(z.literal('')),
+  notes: z.string().max(500, 'Las notas no pueden superar 500 caracteres').optional().or(z.literal('')),
+  invoiceType: z.enum(['consumer_final', 'invoice_rut']),
+  invoiceTaxId: z.string().optional().or(z.literal('')),
+  invoiceBusinessName: z.string().max(200, 'Razón social muy larga').optional().or(z.literal('')),
+  paymentMethod: z.enum(['mercadopago', 'transfer']),
+  acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Debés aceptar los términos y condiciones' }) }),
+}).superRefine((data, ctx) => {
+  // Shipping address required when delivery is selected
+  if (data.shippingMethod === 'delivery') {
+    if (!data.address?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La dirección es requerida para envío', path: ['address'] });
+    }
+    if (!data.city?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La ciudad es requerida', path: ['city'] });
+    }
+    if (!data.department?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El departamento es requerido', path: ['department'] });
+    }
+  }
+  // RUT fields required when invoice_rut is selected
+  if (data.invoiceType === 'invoice_rut') {
+    const digits = (data.invoiceTaxId || '').replace(/\D/g, '');
+    if (!digits) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El RUT es requerido para factura con crédito fiscal', path: ['invoiceTaxId'] });
+    } else if (digits.length !== 12) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'RUT inválido (debe tener 12 dígitos)', path: ['invoiceTaxId'] });
+    }
+    if (!data.invoiceBusinessName?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La razón social es requerida', path: ['invoiceBusinessName'] });
+    }
+  }
+});
+
+export type CheckoutFormData = z.infer<typeof CheckoutFormSchema>;
+
 // ── Category normalization ──────────────────────────────────────────
 
-const KNOWN_CATEGORIES = [
-  'Bombas', 'Riego', 'Filtros', 'Tanques', 'Piscinas',
-  'Químicos', 'Herramientas', 'Accesorios', 'Hidráulica',
-  'Droguería', 'Energía Solar',
-];
+import { KNOWN_CATEGORIES as CATEGORIES_LIST, getAllSubcategoryValues } from './categories';
 
-/** Normalize a category string: match known categories case-insensitively, or title-case it */
+const KNOWN_CATEGORIES = CATEGORIES_LIST;
+const ALL_KNOWN = [...KNOWN_CATEGORIES, ...getAllSubcategoryValues()];
+
+/** Normalize a category string: match known categories/subcategories case-insensitively, or title-case it */
 export function normalizeCategory(cat: string): string {
   const trimmed = cat.trim();
   if (!trimmed) return '';
-  const match = KNOWN_CATEGORIES.find(k => k.toLowerCase() === trimmed.toLowerCase());
+  const match = ALL_KNOWN.find(k => k.toLowerCase() === trimmed.toLowerCase());
   if (match) return match;
   return trimmed.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }

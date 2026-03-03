@@ -4,11 +4,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote, Receipt, FileText, MessageCircle, Info } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 import { trackBeginCheckout } from '@/components/Analytics';
 import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONFIG, DAC_RATES } from '@/lib/shipping';
+import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
 
 interface CouponData {
   code: string;
@@ -26,26 +29,44 @@ export default function CheckoutPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<CouponData | null>(null);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    department: '',
-    notes: '',
-    shippingMethod: 'pickup' as 'pickup' | 'delivery',
-    paymentMethod: 'mercadopago' as 'mercadopago' | 'transfer',
-    // Billing/Invoice fields
-    invoiceType: 'consumer_final' as 'consumer_final' | 'invoice_rut',
-    invoiceTaxId: '',
-    invoiceBusinessName: '',
+  const [submitError, setSubmitError] = useState('');
+  const [freightConfirmed, setFreightConfirmed] = useState(false);
+
+  // React Hook Form with Zod validation
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    watch,
+    setValue,
+    trigger,
+    formState: { errors },
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(CheckoutFormSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      department: '',
+      notes: '',
+      shippingMethod: 'pickup',
+      paymentMethod: 'mercadopago',
+      invoiceType: 'consumer_final',
+      invoiceTaxId: '',
+      invoiceBusinessName: '',
+      acceptedTerms: undefined as unknown as true,
+    },
+    mode: 'onBlur',
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [freightConfirmed, setFreightConfirmed] = useState(false);
+  // Watch form values for conditional rendering
+  const shippingMethod = watch('shippingMethod');
+  const paymentMethod = watch('paymentMethod');
+  const invoiceType = watch('invoiceType');
+  const department = watch('department');
+  const city = watch('city');
+  const acceptedTerms = watch('acceptedTerms');
 
   useEffect(() => {
     setMounted(true);
@@ -102,9 +123,9 @@ export default function CheckoutPage() {
   }, [mounted, items]);
 
   const shippingZone = useMemo(() => {
-    if (!formData.department) return 'interior';
-    return getShippingZone(formData.department, formData.city);
-  }, [formData.department, formData.city]);
+    if (!department) return 'interior';
+    return getShippingZone(department, city || '');
+  }, [department, city]);
 
   const shippingOptions = useMemo(() => {
     return getShippingOptions(cartShippingType, shippingZone);
@@ -116,70 +137,21 @@ export default function CheckoutPage() {
   // Auto-reset shipping method when delivery isn't available
   useEffect(() => {
     const canDeliver = shippingOptions.canDeliver || (shippingOptions.showFreightConsult && freightConfirmed);
-    if (mounted && !canDeliver && formData.shippingMethod === 'delivery') {
-      setFormData(prev => ({ ...prev, shippingMethod: 'pickup' }));
+    if (mounted && !canDeliver && shippingMethod === 'delivery') {
+      setValue('shippingMethod', 'pickup');
     }
-  }, [mounted, shippingOptions.canDeliver, shippingOptions.showFreightConsult, freightConfirmed, formData.shippingMethod]);
+  }, [mounted, shippingOptions.canDeliver, shippingOptions.showFreightConsult, freightConfirmed, shippingMethod, setValue]);
 
   // Calculate totals
   const subtotal = mounted ? getSubtotal() : 0;
   const discount = appliedCoupon?.discount_amount || 0;
   // Shipping cost: 0 for pickup, actual cost if known, or 0 if paid on delivery
-  const shippingCost = formData.shippingMethod === 'delivery' && shippingOptions.deliveryCost !== null 
-    ? shippingOptions.deliveryCost 
+  const shippingCost = shippingMethod === 'delivery' && shippingOptions.deliveryCost !== null
+    ? shippingOptions.deliveryCost
     : 0;
-  const shippingPaidOnDelivery = formData.shippingMethod === 'delivery' && shippingOptions.deliveryCost === null;
+  const shippingPaidOnDelivery = shippingMethod === 'delivery' && shippingOptions.deliveryCost === null;
   const total = subtotal - discount + shippingCost;
 
-  // Validate form
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es requerido';
-    }
-
-    if (formData.shippingMethod === 'delivery') {
-      if (!formData.address.trim()) {
-        newErrors.address = 'La dirección es requerida para envío';
-      }
-      if (!formData.city.trim()) {
-        newErrors.city = 'La ciudad es requerida';
-      }
-      if (!formData.department.trim()) {
-        newErrors.department = 'El departamento es requerido';
-      }
-    }
-
-    // Validate invoice fields when RUT invoice is selected
-    if (formData.invoiceType === 'invoice_rut') {
-      if (!formData.invoiceTaxId.trim()) {
-        newErrors.invoiceTaxId = 'El RUT es requerido para factura con crédito fiscal';
-      } else if (!/^\d{12}$/.test(formData.invoiceTaxId.replace(/\D/g, ''))) {
-        newErrors.invoiceTaxId = 'RUT inválido (debe tener 12 dígitos)';
-      }
-      if (!formData.invoiceBusinessName.trim()) {
-        newErrors.invoiceBusinessName = 'La razón social es requerida';
-      }
-    }
-
-    if (!acceptedTerms) {
-      newErrors.terms = 'Debés aceptar los términos y condiciones';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   // Apply coupon
   const handleApplyCoupon = async () => {
@@ -220,16 +192,13 @@ export default function CheckoutPage() {
     setCouponError('');
   };
 
-  // Submit order
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
+  // Submit order — called by react-hook-form after Zod validation passes
+  const onSubmit = async (formData: CheckoutFormData) => {
     setIsSubmitting(true);
+    setSubmitError('');
 
     try {
-      // Create order (matching Zod schema structure)
+      // Create order (matching server Zod schema structure)
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -245,9 +214,8 @@ export default function CheckoutPage() {
             shipping_cost: shippingCost,
             notes: formData.notes || undefined,
             payment_method: formData.paymentMethod,
-            // Billing/Invoice fields
             invoice_type: formData.invoiceType,
-            invoice_tax_id: formData.invoiceType === 'invoice_rut' ? formData.invoiceTaxId.replace(/\D/g, '') : undefined,
+            invoice_tax_id: formData.invoiceType === 'invoice_rut' ? (formData.invoiceTaxId || '').replace(/\D/g, '') : undefined,
             invoice_business_name: formData.invoiceType === 'invoice_rut' ? formData.invoiceBusinessName : undefined,
           },
           items: items.map((item) => ({
@@ -266,22 +234,19 @@ export default function CheckoutPage() {
 
       // Handle redirect based on payment method
       if (formData.paymentMethod === 'transfer') {
-        // Bank transfer: redirect to pending page with order info
         clearCart();
         router.push(`/pendiente?order=${data.order_number}&method=transfer`);
       } else if (data.init_point) {
-        // MercadoPago: redirect to processing page first
         clearCart();
         const processingUrl = `/procesando?redirect=${encodeURIComponent(data.init_point)}&order=${data.order_number}&method=mercadopago`;
         router.push(processingUrl);
       } else {
-        // Fallback: redirect to success page
         clearCart();
         router.push(`/pedido/${data.order_number}?success=true`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error);
-      setErrors({ submit: 'Error al procesar el pedido. Intentá de nuevo.' });
+      setSubmitError(error.message || 'Error al procesar el pedido. Intentá de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -346,7 +311,7 @@ export default function CheckoutPage() {
             <h1 className="text-3xl font-bold text-slate-900">Finalizar compra</h1>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={rhfHandleSubmit(onSubmit)}>
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Form Section */}
               <div className="lg:col-span-2 space-y-6">
@@ -364,31 +329,29 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        {...register('name')}
                         className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
                           errors.name ? 'border-red-500' : 'border-slate-300'
                         }`}
                         placeholder="Juan Pérez"
                       />
-                      {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                      {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
                         <Mail className="inline h-4 w-4 mr-1" />
-                        Email *
+                        Email
                       </label>
                       <input
                         type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        {...register('email')}
                         className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
                           errors.email ? 'border-red-500' : 'border-slate-300'
                         }`}
                         placeholder="juan@email.com"
                       />
-                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                     </div>
 
                     <div>
@@ -398,14 +361,13 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        {...register('phone')}
                         className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
                           errors.phone ? 'border-red-500' : 'border-slate-300'
                         }`}
                         placeholder="099 123 456"
                       />
-                      {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                      {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
                     </div>
                   </div>
                 </div>
@@ -422,9 +384,9 @@ export default function CheckoutPage() {
                     {shippingOptions.canPickup && (
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, shippingMethod: 'pickup' })}
+                        onClick={() => setValue('shippingMethod', 'pickup')}
                         className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          formData.shippingMethod === 'pickup'
+                          shippingMethod === 'pickup'
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
@@ -443,9 +405,9 @@ export default function CheckoutPage() {
                     {shippingOptions.canDeliver && (
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, shippingMethod: 'delivery' })}
+                        onClick={() => setValue('shippingMethod', 'delivery')}
                         className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          formData.shippingMethod === 'delivery'
+                          shippingMethod === 'delivery'
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
@@ -470,9 +432,9 @@ export default function CheckoutPage() {
                     {shippingOptions.showFreightConsult && freightConfirmed && (
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, shippingMethod: 'delivery' })}
+                        onClick={() => setValue('shippingMethod', 'delivery')}
                         className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          formData.shippingMethod === 'delivery'
+                          shippingMethod === 'delivery'
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
@@ -531,8 +493,8 @@ export default function CheckoutPage() {
                               checked={freightConfirmed}
                               onChange={(e) => {
                                 setFreightConfirmed(e.target.checked);
-                                if (!e.target.checked && formData.shippingMethod === 'delivery') {
-                                  setFormData(prev => ({ ...prev, shippingMethod: 'pickup' }));
+                                if (!e.target.checked && shippingMethod === 'delivery') {
+                                  setValue('shippingMethod', 'pickup');
                                 }
                               }}
                               className={`h-4 w-4 rounded border-slate-300 focus:ring-2 ${
@@ -565,7 +527,7 @@ export default function CheckoutPage() {
                   )}
 
                   {/* DAC shipping info - show rates table */}
-                  {cartShippingType === 'dac' && formData.shippingMethod === 'delivery' && shippingOptions.deliveryCost === null && (
+                  {cartShippingType === 'dac' && shippingMethod === 'delivery' && shippingOptions.deliveryCost === null && (
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                       <div className="flex items-start gap-3">
                         <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
@@ -590,7 +552,7 @@ export default function CheckoutPage() {
                   )}
 
                   {/* Shipping Address */}
-                  {formData.shippingMethod === 'delivery' && (
+                  {shippingMethod === 'delivery' && (
                     <div className="mt-6 pt-6 border-t border-slate-200">
                       <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
@@ -603,14 +565,13 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
-                            value={formData.address}
-                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            {...register('address')}
                             className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
                               errors.address ? 'border-red-500' : 'border-slate-300'
                             }`}
                             placeholder="Av. Principal 1234"
                           />
-                          {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+                          {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
                           <div>
@@ -619,22 +580,20 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
-                              value={formData.city}
-                              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                              {...register('city')}
                               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
                                 errors.city ? 'border-red-500' : 'border-slate-300'
                               }`}
                               placeholder="Montevideo"
                             />
-                            {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                            {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>}
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Departamento *
                             </label>
                             <select
-                              value={formData.department}
-                              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                              {...register('department')}
                               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 ${
                                 errors.department ? 'border-red-500' : 'border-slate-300'
                               }`}
@@ -660,7 +619,7 @@ export default function CheckoutPage() {
                               <option value="Salto">Salto</option>
                               <option value="Artigas">Artigas</option>
                             </select>
-                            {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department}</p>}
+                            {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department.message}</p>}
                           </div>
                         </div>
                       </div>
@@ -674,8 +633,7 @@ export default function CheckoutPage() {
                     Notas adicionales (opcional)
                   </label>
                   <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    {...register('notes')}
                     rows={3}
                     className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400"
                     placeholder="Instrucciones especiales, horarios de entrega, etc."
@@ -692,49 +650,49 @@ export default function CheckoutPage() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, invoiceType: 'consumer_final', invoiceTaxId: '', invoiceBusinessName: '' })}
+                      onClick={() => { setValue('invoiceType', 'consumer_final'); setValue('invoiceTaxId', ''); setValue('invoiceBusinessName', ''); }}
                       className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        formData.invoiceType === 'consumer_final'
+                        invoiceType === 'consumer_final'
                           ? 'border-blue-600 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Receipt className={`h-5 w-5 ${formData.invoiceType === 'consumer_final' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <Receipt className={`h-5 w-5 ${invoiceType === 'consumer_final' ? 'text-blue-600' : 'text-slate-400'}`} />
                         <div>
                           <p className="font-medium text-slate-900">Consumidor Final</p>
                           <p className="text-xs text-slate-500">Sin RUT (boleta/ticket)</p>
                         </div>
                       </div>
-                      {formData.invoiceType === 'consumer_final' && (
+                      {invoiceType === 'consumer_final' && (
                         <Check className="h-5 w-5 text-blue-600 mt-2" />
                       )}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, invoiceType: 'invoice_rut' })}
+                      onClick={() => setValue('invoiceType', 'invoice_rut')}
                       className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        formData.invoiceType === 'invoice_rut'
+                        invoiceType === 'invoice_rut'
                           ? 'border-blue-600 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <FileText className={`h-5 w-5 ${formData.invoiceType === 'invoice_rut' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <FileText className={`h-5 w-5 ${invoiceType === 'invoice_rut' ? 'text-blue-600' : 'text-slate-400'}`} />
                         <div>
                           <p className="font-medium text-slate-900">Factura con RUT</p>
                           <p className="text-xs text-slate-500">Con crédito fiscal</p>
                         </div>
                       </div>
-                      {formData.invoiceType === 'invoice_rut' && (
+                      {invoiceType === 'invoice_rut' && (
                         <Check className="h-5 w-5 text-blue-600 mt-2" />
                       )}
                     </button>
                   </div>
 
                   {/* RUT Invoice Fields */}
-                  {formData.invoiceType === 'invoice_rut' && (
+                  {invoiceType === 'invoice_rut' && (
                     <div className="mt-6 pt-6 border-t border-slate-200">
                       <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
                         <Building2 className="h-4 w-4" />
@@ -747,22 +705,23 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
-                            value={formData.invoiceTaxId}
-                            onChange={(e) => {
-                              // Format RUT: XX XXXXXX XXXX XX
-                              const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
-                              let formatted = digits;
-                              if (digits.length > 2) formatted = digits.slice(0, 2) + ' ' + digits.slice(2);
-                              if (digits.length > 8) formatted = digits.slice(0, 2) + ' ' + digits.slice(2, 8) + ' ' + digits.slice(8);
-                              if (digits.length > 12) formatted = digits.slice(0, 2) + ' ' + digits.slice(2, 8) + ' ' + digits.slice(8, 12) + ' ' + digits.slice(12);
-                              setFormData({ ...formData, invoiceTaxId: formatted });
-                            }}
+                            {...register('invoiceTaxId', {
+                              onChange: (e) => {
+                                // Format RUT: XX XXXXXX XXXX XX
+                                const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                let formatted = digits;
+                                if (digits.length > 2) formatted = digits.slice(0, 2) + ' ' + digits.slice(2);
+                                if (digits.length > 8) formatted = digits.slice(0, 2) + ' ' + digits.slice(2, 8) + ' ' + digits.slice(8);
+                                if (digits.length > 12) formatted = digits.slice(0, 2) + ' ' + digits.slice(2, 8) + ' ' + digits.slice(8, 12) + ' ' + digits.slice(12);
+                                setValue('invoiceTaxId', formatted);
+                              },
+                            })}
                             className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
                               errors.invoiceTaxId ? 'border-red-500' : 'border-slate-300'
                             }`}
                             placeholder="21 123456 0001 19"
                           />
-                          {errors.invoiceTaxId && <p className="text-red-500 text-sm mt-1">{errors.invoiceTaxId}</p>}
+                          {errors.invoiceTaxId && <p className="text-red-500 text-sm mt-1">{errors.invoiceTaxId.message}</p>}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -770,14 +729,13 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
-                            value={formData.invoiceBusinessName}
-                            onChange={(e) => setFormData({ ...formData, invoiceBusinessName: e.target.value })}
+                            {...register('invoiceBusinessName')}
                             className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
                               errors.invoiceBusinessName ? 'border-red-500' : 'border-slate-300'
                             }`}
                             placeholder="Nombre de la empresa o persona"
                           />
-                          {errors.invoiceBusinessName && <p className="text-red-500 text-sm mt-1">{errors.invoiceBusinessName}</p>}
+                          {errors.invoiceBusinessName && <p className="text-red-500 text-sm mt-1">{errors.invoiceBusinessName.message}</p>}
                         </div>
                       </div>
                     </div>
@@ -808,49 +766,49 @@ export default function CheckoutPage() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, paymentMethod: 'mercadopago' })}
+                      onClick={() => setValue('paymentMethod', 'mercadopago')}
                       className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        formData.paymentMethod === 'mercadopago'
+                        paymentMethod === 'mercadopago'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <CreditCard className={`h-5 w-5 ${formData.paymentMethod === 'mercadopago' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <CreditCard className={`h-5 w-5 ${paymentMethod === 'mercadopago' ? 'text-blue-600' : 'text-slate-400'}`} />
                         <div>
                           <p className="font-medium text-slate-900">MercadoPago</p>
                           <p className="text-xs text-slate-500">Tarjeta, débito o billetera</p>
                         </div>
                       </div>
-                      {formData.paymentMethod === 'mercadopago' && (
+                      {paymentMethod === 'mercadopago' && (
                         <Check className="h-5 w-5 text-blue-600 mt-2" />
                       )}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, paymentMethod: 'transfer' })}
+                      onClick={() => setValue('paymentMethod', 'transfer')}
                       className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        formData.paymentMethod === 'transfer'
+                        paymentMethod === 'transfer'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Building2 className={`h-5 w-5 ${formData.paymentMethod === 'transfer' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <Building2 className={`h-5 w-5 ${paymentMethod === 'transfer' ? 'text-blue-600' : 'text-slate-400'}`} />
                         <div>
                           <p className="font-medium text-slate-900">Transferencia</p>
                           <p className="text-xs text-slate-500">Transferencia bancaria</p>
                         </div>
                       </div>
-                      {formData.paymentMethod === 'transfer' && (
+                      {paymentMethod === 'transfer' && (
                         <Check className="h-5 w-5 text-blue-600 mt-2" />
                       )}
                     </button>
                   </div>
 
                   {/* Bank Transfer Info */}
-                  {formData.paymentMethod === 'transfer' && (
+                  {paymentMethod === 'transfer' && (
                     <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
                       <div className="flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -971,7 +929,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-slate-600">
                       <span>Envío</span>
                       <span>
-                        {formData.shippingMethod === 'pickup' ? (
+                        {shippingMethod === 'pickup' ? (
                           'Gratis (retiro)'
                         ) : shippingPaidOnDelivery ? (
                           <span className="text-amber-600">A pagar en destino</span>
@@ -994,8 +952,7 @@ export default function CheckoutPage() {
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={acceptedTerms}
-                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        {...register('acceptedTerms')}
                         className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm text-slate-600">
@@ -1009,13 +966,13 @@ export default function CheckoutPage() {
                         </Link>
                       </span>
                     </label>
-                    {errors.terms && <p className="text-red-500 text-xs mt-1">{errors.terms}</p>}
+                    {errors.acceptedTerms && <p className="text-red-500 text-xs mt-1">{errors.acceptedTerms.message}</p>}
                   </div>
 
                   {/* Submit */}
-                  {errors.submit && (
+                  {submitError && (
                     <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
-                      {errors.submit}
+                      {submitError}
                     </div>
                   )}
 
@@ -1024,14 +981,14 @@ export default function CheckoutPage() {
                     disabled={isSubmitting}
                     className="w-full flex items-center justify-center gap-2 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
                   >
-                    {formData.paymentMethod === 'transfer' ? (
+                    {paymentMethod === 'transfer' ? (
                       <Banknote className="h-5 w-5" />
                     ) : (
                       <CreditCard className="h-5 w-5" />
                     )}
-                    {isSubmitting 
-                      ? 'Procesando...' 
-                      : formData.paymentMethod === 'transfer' 
+                    {isSubmitting
+                      ? 'Procesando...'
+                      : paymentMethod === 'transfer'
                         ? 'Confirmar pedido'
                         : 'Continuar al pago'}
                   </button>
@@ -1039,7 +996,7 @@ export default function CheckoutPage() {
                   {/* Trust badges */}
                   <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
                     <ShieldCheck className="h-4 w-4 text-green-500" />
-                    {formData.paymentMethod === 'transfer' 
+                    {paymentMethod === 'transfer'
                       ? 'Pedido seguro • Confirmación por WhatsApp' 
                       : 'Pago seguro con MercadoPago'}
                   </div>

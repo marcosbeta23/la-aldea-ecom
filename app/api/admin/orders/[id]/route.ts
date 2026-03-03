@@ -152,10 +152,9 @@ async function sendStatusNotification(order: Record<string, unknown>, newStatus:
         return; // No notification for other statuses
     }
     
-    // Log notification attempt
+    // Log notification attempt (sanitized — no PII in logs)
     console.log(`[Notification] Order ${order.id} -> ${newStatus}`);
-    console.log(`[Notification] Customer: ${order.customer_email || order.customer_phone}`);
-    console.log(`[Notification] Message preview: ${message.substring(0, 100)}...`);
+    console.log(`[Notification] Message preview: ${message.substring(0, 50)}...`);
     
     // Store notification for manual sending via WhatsApp
     await (supabaseAdmin as unknown as any)

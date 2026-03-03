@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyMPSignature, getMPPayment } from '@/lib/mercadopago';
 import { sendOrderConfirmation, sendAdminOrderNotification } from '@/lib/email';
+import { alertPaymentApproved, alertPaymentFailed, alertFraudAttempt } from '@/lib/telegram';
 
 // 🔒 SECURE MERCADOPAGO WEBHOOK - MVP ORDER FLOW
 // Payment → Reserve Stock → paid_pending_verification → Admin Review → Invoice
@@ -105,7 +106,10 @@ export async function POST(request: NextRequest) {
         paid: paidAmount,
         payment_id: paymentId,
       });
-      
+
+      // Alert admin via Telegram
+      alertFraudAttempt(orderData.order_number, expectedAmount, paidAmount).catch(() => {});
+
       return NextResponse.json({ received: true });
     }
     
@@ -226,16 +230,31 @@ export async function POST(request: NextRequest) {
       }
       
       console.log(`✅ Order ${orderData.order_number} payment processed`);
-      
+
+      // Alert admin via Telegram
+      alertPaymentApproved(
+        orderData.order_number,
+        Number(orderData.total),
+        orderData.customer_name || 'Cliente',
+        orderData.currency || 'UYU'
+      ).catch(() => {});
+
     } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
       updateData.status = 'cancelled';
-      
+
       await logOrderEvent(orderData.id, 'payment_rejected', orderData.status, 'cancelled', {
         payment_id: paymentId,
         payment_status: payment.status,
         status_detail: payment.status_detail,
       });
-      
+
+      // Alert admin via Telegram
+      alertPaymentFailed(
+        orderData.order_number,
+        orderData.customer_name || 'Cliente',
+        payment.status_detail || payment.status
+      ).catch(() => {});
+
       console.log(`❌ Order ${orderData.order_number} cancelled/rejected`);
       
     } else {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star, AlertCircle, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star, AlertCircle, MessageCircle, Share2 } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
@@ -33,7 +33,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       id: product.id,
       name: product.name,
       price: product.price_numeric,
-      category: (Array.isArray(product.category) ? product.category[0] : product.category) || undefined,
+      category: product.category?.[0] || undefined,
       brand: product.brand || undefined,
     });
   }, [product.id, product.name, product.price_numeric, product.category, product.brand]);
@@ -56,7 +56,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
         name: product.name,
         price: product.price_numeric,
         quantity: quantity,
-        category: (Array.isArray(product.category) ? product.category[0] : product.category) || undefined,
+        category: product.category?.[0] || undefined,
         brand: product.brand || undefined,
       });
       
@@ -78,6 +78,20 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
     }
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    const text = `${product.name} - ${formatPrice(product.price_numeric, product.currency)}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.name, text, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      setError('Enlace copiado al portapapeles');
+      setTimeout(() => setError(null), 2000);
+    }
+  };
+
   const formatPrice = (price: number, currency: string = 'UYU') => {
     if (currency === 'USD') {
       return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -89,7 +103,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
     <div className="p-6 lg:p-8 flex flex-col">
       {/* Category & Brand */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        {(Array.isArray(product.category) ? product.category : [product.category].filter(Boolean)).map((cat: string) => (
+        {(product.category || []).map((cat: string) => (
           <span key={cat} className="px-3 py-1 text-sm font-medium bg-blue-50 text-blue-700 rounded-full">
             {cat}
           </span>
@@ -288,6 +302,14 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           aria-label={inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}
         >
           <Heart className={`h-6 w-6 ${inWishlist ? 'fill-current' : ''}`} />
+        </button>
+
+        <button
+          onClick={handleShare}
+          className="p-4 rounded-xl border-2 border-slate-200 text-slate-400 hover:border-blue-200 hover:text-blue-500 transition-colors"
+          aria-label="Compartir producto"
+        >
+          <Share2 className="h-6 w-6" />
         </button>
       </div>
       )}

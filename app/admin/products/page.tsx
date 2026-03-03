@@ -34,6 +34,7 @@ import {
   Tag,
   Star,
   GripVertical,
+  Download,
 } from 'lucide-react';
 
 // ── Known Categories ───────────────────────────────────────────────────
@@ -60,7 +61,7 @@ interface Product {
   sku: string;
   name: string;
   description: string | null;
-  category: string | null;
+  category: string[];
   brand: string | null;
   price_numeric: number;
   currency: string;
@@ -199,33 +200,10 @@ export default function ProductsPage() {
 
   const fetchFilterOptions = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/products?perPage=100&sort=category&order=asc');
+      const res = await fetch('/api/admin/products/filters');
       const data = await res.json();
-      const allProducts = data.products || [];
-
-      const cats = new Set<string>();
-      const brds = new Set<string>();
-      allProducts.forEach((p: Product) => {
-        const pCats = Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []);
-        pCats.forEach((c: string) => { if (c) cats.add(c); });
-        if (p.brand) brds.add(p.brand);
-      });
-
-      // Fetch remaining pages for full filter options
-      if (data.totalPages > 1) {
-        for (let pg = 2; pg <= Math.min(data.totalPages, 20); pg++) {
-          const r = await fetch(`/api/admin/products?perPage=100&page=${pg}`);
-          const d = await r.json();
-          (d.products || []).forEach((p: Product) => {
-            const pCats = Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []);
-            pCats.forEach((c: string) => { if (c) cats.add(c); });
-            if (p.brand) brds.add(p.brand);
-          });
-        }
-      }
-
-      setCategories([...cats].sort());
-      setBrands([...brds].sort());
+      setCategories(data.categories || []);
+      setBrands(data.brands || []);
     } catch (err) {
       console.error('Error fetching filter options:', err);
     }
@@ -235,19 +213,12 @@ export default function ProductsPage() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const [allRes, activeRes, inactiveRes] = await Promise.all([
-        fetch('/api/admin/products?perPage=1'),
-        fetch('/api/admin/products?perPage=1&status=active'),
-        fetch('/api/admin/products?perPage=1&status=inactive'),
-      ]);
-      const [all, active, inactive] = await Promise.all([
-        allRes.json(), activeRes.json(), inactiveRes.json(),
-      ]);
-
+      const res = await fetch('/api/admin/products/stats');
+      const data = await res.json();
       setStats({
-        total: all.total || 0,
-        active: active.total || 0,
-        inactive: inactive.total || 0,
+        total: data.total || 0,
+        active: data.active || 0,
+        inactive: data.inactive || 0,
         noImage: 0,
       });
     } catch (err) {
@@ -287,7 +258,7 @@ export default function ProductsPage() {
     debounceRef.current = setTimeout(() => {
       setFilters(prev => ({ ...prev, search: value }));
       setPage(1);
-    }, 300);
+    }, 200);
   };
 
   const updateFilter = (key: keyof Filters, value: string | number) => {
@@ -432,7 +403,7 @@ export default function ProductsPage() {
         if (!product) return;
 
         let newCategories: string[];
-        const current = Array.isArray(product.category) ? product.category : (product.category ? [product.category] : []);
+        const current = product.category || [];
 
         if (bulkCategoryMode === 'replace') {
           newCategories = [...bulkCategories];
@@ -634,6 +605,13 @@ export default function ProductsPage() {
             <Star className="h-4 w-4" />
             <span className="hidden sm:inline">Destacados</span>
           </button>
+          <a
+            href="/api/admin/export?type=products"
+            className="inline-flex items-center gap-2 px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Exportar CSV</span>
+          </a>
           <Link
             href="/admin/products/import"
             className="inline-flex items-center gap-2 px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
@@ -1045,7 +1023,7 @@ export default function ProductsPage() {
                     <td className="px-4 py-3">
                       {product.category && product.category.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {(Array.isArray(product.category) ? product.category : [product.category]).map((cat: string) => (
+                          {product.category.map((cat: string) => (
                             <button
                               key={cat}
                               onClick={() => updateFilter('category', cat)}
@@ -1197,7 +1175,7 @@ export default function ProductsPage() {
                 <p className="text-xs font-mono text-slate-400 mb-0.5">{product.sku}</p>
                 <p className="text-sm font-medium text-slate-900 line-clamp-2 leading-tight">{product.name}</p>
                 {product.category && product.category.length > 0 && (
-                  <p className="text-[10px] font-medium text-slate-400 uppercase mt-1">{Array.isArray(product.category) ? product.category.join(', ') : product.category}</p>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase mt-1">{product.category.join(', ')}</p>
                 )}
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-sm font-bold text-slate-900">

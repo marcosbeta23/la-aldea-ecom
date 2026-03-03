@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
+import { CATEGORY_HIERARCHY } from "@/lib/categories";
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || "https://laaldeatala.com.uy";
 
@@ -31,6 +32,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
   ];
+
+  // Category landing pages — one per main category
+  const categoryPages: MetadataRoute.Sitemap = CATEGORY_HIERARCHY.map((cat) => ({
+    url: `${siteUrl}/productos?categoria=${encodeURIComponent(cat.value)}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.85,
+  }));
 
   // FAQ subpages
   const faqPages: MetadataRoute.Sitemap = [
@@ -121,5 +130,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching products for sitemap:", error);
   }
 
-  return [...staticPages, ...faqPages, ...productPages];
+  return [...staticPages, ...categoryPages, ...faqPages, ...productPages];
 }

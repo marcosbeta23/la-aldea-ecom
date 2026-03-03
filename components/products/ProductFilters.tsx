@@ -25,11 +25,16 @@ export default function ProductFilters({ categories, brands, className = '' }: P
   const [brandOpen, setBrandOpen] = useState(true);
   const [stockOpen, setStockOpen] = useState(true);
   const [sortOpen, setSortOpen] = useState(true);
+  const [priceOpen, setPriceOpen] = useState(true);
+  const [priceMin, setPriceMin] = useState(searchParams.get('precio_min') || '');
+  const [priceMax, setPriceMax] = useState(searchParams.get('precio_max') || '');
 
   const currentCategory = searchParams.get('categoria') || '';
   const currentBrand = searchParams.get('marca') || '';
   const currentStock = searchParams.get('stock') || '';
-  const currentSort = searchParams.get('orden') || 'name';
+  const currentSort = searchParams.get('orden') || 'popular';
+  const currentPriceMin = searchParams.get('precio_min') || '';
+  const currentPriceMax = searchParams.get('precio_max') || '';
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -38,16 +43,38 @@ export default function ProductFilters({ categories, brands, className = '' }: P
     } else {
       params.delete(key);
     }
+    // When changing category, clear subcategory
+    if (key === 'categoria') {
+      params.delete('sub');
+    }
+    params.delete('page');
+    router.push(`/productos?${params.toString()}`);
+  };
+
+  const applyPriceFilter = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (priceMin) {
+      params.set('precio_min', priceMin);
+    } else {
+      params.delete('precio_min');
+    }
+    if (priceMax) {
+      params.set('precio_max', priceMax);
+    } else {
+      params.delete('precio_max');
+    }
     params.delete('page');
     router.push(`/productos?${params.toString()}`);
   };
 
   const clearAllFilters = () => {
+    setPriceMin('');
+    setPriceMax('');
     router.push('/productos');
   };
 
-  const hasActiveFilters = !!(currentCategory || currentBrand || currentStock);
-  const activeCount = [currentCategory, currentBrand, currentStock].filter(Boolean).length;
+  const hasActiveFilters = !!(currentCategory || currentBrand || currentStock || currentPriceMin || currentPriceMax);
+  const activeCount = [currentCategory, currentBrand, currentStock, currentPriceMin || currentPriceMax].filter(Boolean).length;
 
   // Show first 8 brands by default, expand to show all
   const BRAND_LIMIT = 8;
@@ -147,6 +174,30 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                 </button>
               </span>
             )}
+            {(currentPriceMin || currentPriceMax) && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium">
+                {currentPriceMin && currentPriceMax
+                  ? `$${currentPriceMin} - $${currentPriceMax}`
+                  : currentPriceMin
+                    ? `Desde $${currentPriceMin}`
+                    : `Hasta $${currentPriceMax}`}
+                <button
+                  onClick={() => {
+                    setPriceMin('');
+                    setPriceMax('');
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.delete('precio_min');
+                    params.delete('precio_max');
+                    params.delete('page');
+                    router.push(`/productos?${params.toString()}`);
+                  }}
+                  className="hover:text-purple-900"
+                  aria-label="Quitar filtro precio"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
           </div>
         )}
 
@@ -167,6 +218,7 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                 className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Ordenar productos"
               >
+                <option value="popular">Más populares</option>
                 <option value="name">Nombre A-Z</option>
                 <option value="name-desc">Nombre Z-A</option>
                 <option value="price">Menor precio</option>
@@ -262,6 +314,50 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                     {showAllBrands ? 'Ver menos' : `Ver todas (${brands.length})`}
                   </button>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Price Range ─────────────────── */}
+          <div className="py-3 border-b border-slate-100">
+            <button
+              onClick={() => setPriceOpen(!priceOpen)}
+              className="flex items-center justify-between w-full py-1 text-sm font-semibold text-slate-900"
+            >
+              Precio
+              {priceOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </button>
+            {priceOpen && (
+              <div className="mt-2 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Mín"
+                    value={priceMin}
+                    onChange={(e) => setPriceMin(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && applyPriceFilter()}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    aria-label="Precio mínimo"
+                  />
+                  <span className="text-slate-400 self-center text-xs shrink-0">—</span>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Máx"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && applyPriceFilter()}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    aria-label="Precio máximo"
+                  />
+                </div>
+                <button
+                  onClick={applyPriceFilter}
+                  className="w-full py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                >
+                  Aplicar
+                </button>
               </div>
             )}
           </div>

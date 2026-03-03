@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
+import { alertOutOfStock } from '@/lib/telegram';
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -131,6 +132,11 @@ export async function PUT(
 
     if (!product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+    }
+
+    // Alert if product stock dropped to 0
+    if (product.stock === 0 && product.is_active) {
+      alertOutOfStock(product.name, product.sku).catch(() => {});
     }
 
     // Bust ISR cache for this product's detail page, listings, and homepage

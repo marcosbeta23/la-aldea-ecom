@@ -85,7 +85,10 @@ export const useCartStore = create<CartState>()(
           // Add new item
           set({ items: [...items, { product, quantity }] });
         }
-        
+
+        // Open cart drawer to show feedback
+        set({ isOpen: true });
+
         return { success: true };
       },
 

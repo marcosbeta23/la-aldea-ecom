@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { CreateOrderSchema } from '@/lib/validators';
 import { ordersLimiter } from '@/lib/rate-limit';
+import { ordersRatelimit, getClientIp } from '@/lib/redis';
 
 // 🔒 SECURE ORDER CREATION
 // This version NEVER trusts frontend prices
@@ -9,16 +10,26 @@ import { ordersLimiter } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   // ⚡ RATE LIMITING - Max 5 orders per minute per IP
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'anonymous';
-  
-  try {
-    await ordersLimiter.check(5, ip);
-  } catch {
-    return NextResponse.json(
-      { success: false, error: 'Too many requests. Please try again in a minute.' },
-      { status: 429 }
-    );
+  const ip = getClientIp(request);
+
+  // Prefer Upstash distributed rate limiter; fall back to in-memory LRU
+  if (ordersRatelimit) {
+    const { success } = await ordersRatelimit.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
+  } else {
+    try {
+      await ordersLimiter.check(5, ip);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
   }
   try {
     const body = await request.json();
@@ -43,7 +54,7 @@ export async function POST(request: NextRequest) {
     const productIds = items.map((item: any) => item.id);
     const { data: products, error: productsError } = await supabaseAdmin
       .from('products')
-      .select('id, sku, name, price_numeric, currency, stock, is_active')
+      .select('id, sku, name, price_numeric, currency, stock, is_active, availability_type')
       .in('id', productIds) as { data: any[] | null; error: any };
     
     if (productsError || !products) {
@@ -75,17 +86,33 @@ export async function POST(request: NextRequest) {
         );
       }
       
+      // Block on_request products from checkout
+      if (product.availability_type === 'on_request') {
+        return NextResponse.json(
+          { success: false, error: `${product.name} es solo bajo consulta` },
+          { status: 400 }
+        );
+      }
+
       // Verify stock BEFORE creating order
       if (product.stock < item.quantity) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Insufficient stock for ${product.name}. Available: ${product.stock}` 
+          {
+            success: false,
+            error: `Insufficient stock for ${product.name}. Available: ${product.stock}`
           },
           { status: 400 }
         );
       }
-      
+
+      // Validate price is valid (prevents MP rejection from null/0/NaN prices)
+      if (!product.price_numeric || product.price_numeric <= 0 || isNaN(Number(product.price_numeric))) {
+        return NextResponse.json(
+          { success: false, error: `Precio inválido para ${product.name}` },
+          { status: 400 }
+        );
+      }
+
       // Calculate with DATABASE price (NOT frontend price)
       const itemSubtotal = product.price_numeric * item.quantity;
       subtotal += itemSubtotal;
@@ -216,6 +243,16 @@ export async function POST(request: NextRequest) {
     }
     
     // MercadoPago flow
+    // Final safety check: validate all order items have valid prices before MP payload
+    for (const item of orderItems) {
+      if (!item.unit_price || item.unit_price <= 0 || isNaN(Number(item.unit_price))) {
+        return NextResponse.json(
+          { success: false, error: `Precio inválido para ${item.product_name}` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Use APP_URL for server-side (NEXT_PUBLIC_URL only works client-side)
     const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
     const isLocalhost = appUrl.includes('localhost') || appUrl.includes('127.0.0.1');
@@ -267,8 +304,8 @@ export async function POST(request: NextRequest) {
     
     if (!mpResponse.ok) {
       const mpError = await mpResponse.json();
-      console.error('❌ MercadoPago error:', mpError);
-      console.error('❌ Request payload was:', mpPayload);
+      console.error('❌ MercadoPago error:', JSON.stringify(mpError));
+      console.error('❌ Request payload was:', JSON.stringify(mpPayload));
       
       // Rollback: delete order and items
       await supabaseAdmin.from('order_items').delete().eq('order_id', (order as any).id);
