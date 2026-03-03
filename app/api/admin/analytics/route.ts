@@ -12,6 +12,8 @@ interface DailySales {
   date: string;
   orders: number;
   revenue: number;
+  onlineRevenue: number;
+  mostradorRevenue: number;
 }
 
 interface TopProduct {
@@ -211,6 +213,8 @@ export async function GET(request: NextRequest) {
         date: dateStr,
         orders: dayOrders.length,
         revenue: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+        onlineRevenue: dayOrders.filter(o => (o.order_source || 'online') !== 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
+        mostradorRevenue: dayOrders.filter(o => o.order_source === 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
       });
     }
 

@@ -57,12 +57,12 @@ export default function AdminLayout({
       
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-slate-900 text-white transform transition-transform duration-200 ease-in-out
+        fixed top-0 left-0 z-50 h-full w-64 bg-slate-900 text-white transform transition-transform duration-200 ease-in-out flex flex-col
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
       `}>
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-700">
+        <div className="shrink-0 flex items-center justify-between h-16 px-6 border-b border-slate-700">
           <Link href="/admin" className="text-xl font-bold text-white">
             La Aldea
           </Link>
@@ -76,7 +76,7 @@ export default function AdminLayout({
         </div>
         
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto min-h-0 p-4 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href || 
               (item.href !== '/admin' && pathname.startsWith(item.href));
@@ -102,7 +102,7 @@ export default function AdminLayout({
         </nav>
         
         {/* Bottom Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700 space-y-2">
+        <div className="shrink-0 p-4 border-t border-slate-700 space-y-2">
           <Link
             href="/"
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"

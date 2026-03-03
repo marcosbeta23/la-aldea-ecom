@@ -8,6 +8,7 @@ import ProductGrid from '@/components/products/ProductGrid';
 import ProductFilters from '@/components/products/ProductFilters';
 import ProductSearch from '@/components/products/ProductSearch';
 import FilterPersistence from '@/components/products/FilterPersistence';
+import { SubcategoryChips } from '@/components/products/SubcategoryChips';
 import CategoryBrowse from '@/components/products/CategoryBrowse';
 import Header from '@/components/Header';
 import Link from 'next/link';
@@ -364,35 +365,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         {params.categoria && subcategories.length > 0 && (
           <section className="bg-white border-b border-slate-200">
             <div className="container mx-auto px-4 py-3">
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                <Link
-                  href={`/productos?categoria=${encodeURIComponent(params.categoria)}`}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    !params.sub
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Todos
-                </Link>
-                {subcategories.map(sub => {
-                  const cat = params.categoria!;
-                  return (
-                    <Link
-                      key={sub.value}
-                      href={`/productos?categoria=${encodeURIComponent(cat)}&sub=${encodeURIComponent(sub.value)}`}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                        params.sub === sub.value
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {sub.label}
-                      <span className="ml-1 text-xs opacity-70">({sub.count})</span>
-                    </Link>
-                  );
-                })}
-              </div>
+              <SubcategoryChips
+                subcategories={subcategories}
+                categoria={params.categoria}
+                currentSub={params.sub}
+              />
             </div>
           </section>
         )}

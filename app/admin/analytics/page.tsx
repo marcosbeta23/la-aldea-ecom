@@ -20,6 +20,17 @@ import {
   LucideIcon
 } from 'lucide-react';
 import Image from 'next/image';
+import {
+  ResponsiveContainer,
+  LineChart,
+  BarChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts';
 
 interface AnalyticsData {
   summary: {
@@ -56,7 +67,7 @@ interface AnalyticsData {
     daysRemaining: number;
     image: string | null;
   }>;
-  dailySales: Array<{ date: string; orders: number; revenue: number }>;
+  dailySales: Array<{ date: string; orders: number; revenue: number; onlineRevenue: number; mostradorRevenue: number }>;
   hourlyStats: Array<{ hour: number; orders: number }>;
   topProducts: Array<{
     id: string;
@@ -134,38 +145,102 @@ function StatCard({
   );
 }
 
-function SalesChart({ data }: { data: Array<{ date: string; revenue: number; orders: number }> }) {
-  const maxRevenue = Math.max(...data.map(d => d.revenue), 1);
-  
+function RevenueChart({
+  data,
+  chartType,
+  setChartType,
+  revenueType,
+  setRevenueType,
+}: {
+  data: AnalyticsData['dailySales'];
+  chartType: 'line' | 'bar';
+  setChartType: (v: 'line' | 'bar') => void;
+  revenueType: 'total' | 'online' | 'mostrador';
+  setRevenueType: (v: 'total' | 'online' | 'mostrador') => void;
+}) {
+  const formatCurrency = (v: number) =>
+    v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`;
+  const formatTooltip = (v: number) =>
+    `UYU ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+
+  const dataKey =
+    revenueType === 'online' ? 'onlineRevenue' :
+    revenueType === 'mostrador' ? 'mostradorRevenue' : 'revenue';
+  const color =
+    revenueType === 'online' ? '#22c55e' :
+    revenueType === 'mostrador' ? '#f97316' : '#3b82f6';
+
+  const formattedData = data.map(d => ({
+    ...d,
+    label: new Date(d.date + 'T12:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit' }),
+  }));
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Ventas por Día</h3>
-      
-      <div className="h-48 flex items-end gap-1">
-        {data.slice(-14).map((day) => {
-          const height = (day.revenue / maxRevenue) * 100;
-          const date = new Date(day.date);
-          const dayLabel = date.toLocaleDateString('es-UY', { weekday: 'short' });
-          
-          return (
-            <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-              <div 
-                className="w-full bg-blue-500 rounded-t-sm transition-all hover:bg-blue-600 cursor-pointer min-h-1"
-                style={{ height: `${Math.max(2, height)}%` }}
-                title={`${dayLabel}: UYU ${day.revenue.toLocaleString('es-UY')}`}
-              />
-              <span className="text-[10px] text-slate-400 truncate w-full text-center">
-                {date.getDate()}
-              </span>
-            </div>
-          );
-        })}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <h3 className="text-lg font-semibold text-slate-900">Ingresos por Día</h3>
+        <div className="flex flex-wrap gap-2">
+          {/* Revenue type toggle */}
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
+            {(['total', 'online', 'mostrador'] as const).map(type => (
+              <button
+                key={type}
+                onClick={() => setRevenueType(type)}
+                className={`px-3 py-1.5 transition-colors ${
+                  revenueType === type
+                    ? type === 'total' ? 'bg-blue-600 text-white'
+                      : type === 'online' ? 'bg-green-600 text-white'
+                      : 'bg-orange-500 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {type === 'total' ? 'Total' : type === 'online' ? 'Online' : 'Mostrador'}
+              </button>
+            ))}
+          </div>
+          {/* Chart type toggle */}
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
+            <button
+              onClick={() => setChartType('line')}
+              className={`px-3 py-1.5 transition-colors ${chartType === 'line' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              Línea
+            </button>
+            <button
+              onClick={() => setChartType('bar')}
+              className={`px-3 py-1.5 transition-colors ${chartType === 'bar' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              Barras
+            </button>
+          </div>
+        </div>
       </div>
-      
-      <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-        <span>{data.length > 0 ? new Date(data[0].date).toLocaleDateString('es-UY', { month: 'short', day: 'numeric' }) : ''}</span>
-        <span>{data.length > 0 ? new Date(data[data.length - 1].date).toLocaleDateString('es-UY', { month: 'short', day: 'numeric' }) : ''}</span>
-      </div>
+
+      <ResponsiveContainer width="100%" height={280}>
+        {chartType === 'line' ? (
+          <LineChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+            <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
+            <Tooltip
+              formatter={(v) => [formatTooltip(Number(v ?? 0)), 'Ingresos']}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+            />
+            <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+          </LineChart>
+        ) : (
+          <BarChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+            <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
+            <Tooltip
+              formatter={(v) => [formatTooltip(Number(v ?? 0)), 'Ingresos']}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+            />
+            <Bar dataKey={dataKey} fill={color} radius={[3, 3, 0, 0]} maxBarSize={40} />
+          </BarChart>
+        )}
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -298,6 +373,8 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState('7d');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+  const [revenueType, setRevenueType] = useState<'total' | 'online' | 'mostrador'>('total');
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -593,7 +670,13 @@ export default function AnalyticsPage() {
 
           {/* Charts Row */}
           <div className="grid lg:grid-cols-2 gap-6">
-            <SalesChart data={data.dailySales} />
+            <RevenueChart
+              data={data.dailySales}
+              chartType={chartType}
+              setChartType={setChartType}
+              revenueType={revenueType}
+              setRevenueType={setRevenueType}
+            />
             <HourlyChart data={data.hourlyStats} />
           </div>
 
