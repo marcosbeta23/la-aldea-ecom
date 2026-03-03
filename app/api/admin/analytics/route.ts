@@ -11,7 +11,8 @@ async function checkAdminAuth(): Promise<boolean> {
 interface DailySales {
   date: string;
   orders: number;
-  revenue: number;
+  revenueUYU: number;
+  revenueUSD: number;
   onlineRevenue: number;
   mostradorRevenue: number;
 }
@@ -65,14 +66,36 @@ export async function GET(request: NextRequest) {
 
     const prevOrders = prevOrdersData || [];
 
-    // Fetch order items for product analytics
+    // Fetch order items for product analytics + currency detection
     const orderIds = orders.map(o => o.id);
+    const prevOrderIds = prevOrders.map(o => o.id);
+
     const { data: orderItemsData } = await supabaseAdmin
       .from('order_items')
-      .select('order_id, product_id, product_name, quantity, unit_price, subtotal')
-      .in('order_id', orderIds.length > 0 ? orderIds : ['none']) as { data: Array<{ order_id: string; product_id: string; product_name: string; quantity: number; unit_price: number; subtotal: number }> | null };
+      .select('order_id, product_id, product_name, quantity, unit_price, subtotal, currency')
+      .in('order_id', orderIds.length > 0 ? orderIds : ['none']) as { data: Array<{ order_id: string; product_id: string; product_name: string; quantity: number; unit_price: number; subtotal: number; currency: string | null }> | null };
+
+    // Lightweight currency query for previous period
+    const { data: prevOrderItemsCurrencyData } = await supabaseAdmin
+      .from('order_items')
+      .select('order_id, currency')
+      .in('order_id', prevOrderIds.length > 0 ? prevOrderIds : ['none']) as { data: Array<{ order_id: string; currency: string | null }> | null };
 
     const orderItems = orderItemsData || [];
+
+    // Build order currency map (first item's currency = order currency, default UYU)
+    const orderCurrencyMap = new Map<string, string>();
+    for (const item of orderItems) {
+      if (!orderCurrencyMap.has(item.order_id)) {
+        orderCurrencyMap.set(item.order_id, item.currency || 'UYU');
+      }
+    }
+    for (const item of (prevOrderItemsCurrencyData || [])) {
+      if (!orderCurrencyMap.has(item.order_id)) {
+        orderCurrencyMap.set(item.order_id, item.currency || 'UYU');
+      }
+    }
+    const orderCurrency = (id: string) => orderCurrencyMap.get(id) || 'UYU';
 
     // Fetch products for images
     const productIds = [...new Set(orderItems.map(i => i.product_id).filter(Boolean))];
@@ -92,10 +115,22 @@ export async function GET(request: NextRequest) {
     const todayOrders = orders.filter(o => new Date(o.created_at) >= startOfToday);
     const todayPaidOrders = paidOrders.filter(o => new Date(o.created_at) >= startOfToday);
 
-    // Revenue calculations
-    const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const todayRevenue = todayPaidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const avgOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
+    // Revenue calculations (currency-aware)
+    const paidOrdersUYU = paidOrders.filter(o => orderCurrency(o.id) === 'UYU');
+    const paidOrdersUSD = paidOrders.filter(o => orderCurrency(o.id) === 'USD');
+    const totalRevenueUYU = paidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
+    const totalRevenueUSD = paidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
+    const totalRevenue = totalRevenueUYU; // Legacy field — UYU only to avoid mixing
+
+    const todayPaidOrdersUYU = todayPaidOrders.filter(o => orderCurrency(o.id) === 'UYU');
+    const todayPaidOrdersUSD = todayPaidOrders.filter(o => orderCurrency(o.id) === 'USD');
+    const todayRevenueUYU = todayPaidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
+    const todayRevenueUSD = todayPaidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
+    const todayRevenue = todayRevenueUYU;
+
+    const avgOrderValueUYU = paidOrdersUYU.length > 0 ? totalRevenueUYU / paidOrdersUYU.length : 0;
+    const avgOrderValueUSD = paidOrdersUSD.length > 0 ? totalRevenueUSD / paidOrdersUSD.length : 0;
+    const avgOrderValue = avgOrderValueUYU;
 
     // Unique customers
     const uniqueCustomers = new Set(orders.map(o => o.customer_email?.toLowerCase()).filter(Boolean)).size;
@@ -106,20 +141,31 @@ export async function GET(request: NextRequest) {
     const onlineRevenue = onlinePaidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const mostradorRevenue = mostradorPaidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-    // === Previous Period Comparison ===
+    // === Previous Period Comparison (per currency) ===
     const prevPaidOrders = prevOrders.filter(o => paidStatuses.includes(o.status));
+    const prevPaidOrdersUYU = prevPaidOrders.filter(o => orderCurrency(o.id) === 'UYU');
+    const prevPaidOrdersUSD = prevPaidOrders.filter(o => orderCurrency(o.id) === 'USD');
     const prevTotalRevenue = prevPaidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const prevTotalRevenueUYU = prevPaidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
+    const prevTotalRevenueUSD = prevPaidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
     const prevAvgOrderValue = prevPaidOrders.length > 0 ? prevTotalRevenue / prevPaidOrders.length : 0;
+    const prevAvgOrderValueUYU = prevPaidOrdersUYU.length > 0 ? prevTotalRevenueUYU / prevPaidOrdersUYU.length : 0;
 
     const revenueChange = prevTotalRevenue > 0
-      ? ((totalRevenue - prevTotalRevenue) / prevTotalRevenue) * 100
-      : totalRevenue > 0 ? 100 : 0;
+      ? ((totalRevenueUYU - prevTotalRevenue) / prevTotalRevenue) * 100
+      : totalRevenueUYU > 0 ? 100 : 0;
+    const revenueChangeUYU = prevTotalRevenueUYU > 0
+      ? ((totalRevenueUYU - prevTotalRevenueUYU) / prevTotalRevenueUYU) * 100
+      : totalRevenueUYU > 0 ? 100 : 0;
+    const revenueChangeUSD = prevTotalRevenueUSD > 0
+      ? ((totalRevenueUSD - prevTotalRevenueUSD) / prevTotalRevenueUSD) * 100
+      : totalRevenueUSD > 0 ? 100 : 0;
     const ordersChange = prevPaidOrders.length > 0
       ? ((paidOrders.length - prevPaidOrders.length) / prevPaidOrders.length) * 100
       : paidOrders.length > 0 ? 100 : 0;
-    const aovChange = prevAvgOrderValue > 0
-      ? ((avgOrderValue - prevAvgOrderValue) / prevAvgOrderValue) * 100
-      : avgOrderValue > 0 ? 100 : 0;
+    const aovChange = prevAvgOrderValueUYU > 0
+      ? ((avgOrderValueUYU - prevAvgOrderValueUYU) / prevAvgOrderValueUYU) * 100
+      : avgOrderValueUYU > 0 ? 100 : 0;
 
     // === Payment Method Distribution ===
     const paymentMethodDistribution: Record<string, { count: number; revenue: number }> = {};
@@ -212,7 +258,8 @@ export async function GET(request: NextRequest) {
       dailySales.push({
         date: dateStr,
         orders: dayOrders.length,
-        revenue: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+        revenueUYU: dayOrders.filter(o => orderCurrency(o.id) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
+        revenueUSD: dayOrders.filter(o => orderCurrency(o.id) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0),
         onlineRevenue: dayOrders.filter(o => (o.order_source || 'online') !== 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
         mostradorRevenue: dayOrders.filter(o => o.order_source === 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
       });
@@ -273,11 +320,19 @@ export async function GET(request: NextRequest) {
       summary: {
         totalOrders: orders.length,
         paidOrders: paidOrders.length,
+        paidOrdersUYU: paidOrdersUYU.length,
+        paidOrdersUSD: paidOrdersUSD.length,
         pendingOrders,
         totalRevenue,
+        totalRevenueUYU,
+        totalRevenueUSD,
         todayRevenue,
+        todayRevenueUYU,
+        todayRevenueUSD,
         todayOrders: todayOrders.length,
         avgOrderValue,
+        avgOrderValueUYU,
+        avgOrderValueUSD,
         uniqueCustomers,
         conversionRate: parseFloat(conversionRate),
         onlineRevenue,
@@ -287,9 +342,13 @@ export async function GET(request: NextRequest) {
       },
       previousPeriod: {
         totalRevenue: prevTotalRevenue,
+        totalRevenueUYU: prevTotalRevenueUYU,
+        totalRevenueUSD: prevTotalRevenueUSD,
         paidOrders: prevPaidOrders.length,
         avgOrderValue: prevAvgOrderValue,
         revenueChange: Math.round(revenueChange * 10) / 10,
+        revenueChangeUYU: Math.round(revenueChangeUYU * 10) / 10,
+        revenueChangeUSD: Math.round(revenueChangeUSD * 10) / 10,
         ordersChange: Math.round(ordersChange * 10) / 10,
         aovChange: Math.round(aovChange * 10) / 10,
       },

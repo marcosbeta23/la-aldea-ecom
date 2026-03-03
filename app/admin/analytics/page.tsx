@@ -36,11 +36,19 @@ interface AnalyticsData {
   summary: {
     totalOrders: number;
     paidOrders: number;
+    paidOrdersUYU: number;
+    paidOrdersUSD: number;
     pendingOrders: number;
     totalRevenue: number;
+    totalRevenueUYU: number;
+    totalRevenueUSD: number;
     todayRevenue: number;
+    todayRevenueUYU: number;
+    todayRevenueUSD: number;
     todayOrders: number;
     avgOrderValue: number;
+    avgOrderValueUYU: number;
+    avgOrderValueUSD: number;
     uniqueCustomers: number;
     conversionRate: number;
     onlineRevenue: number;
@@ -50,9 +58,13 @@ interface AnalyticsData {
   };
   previousPeriod: {
     totalRevenue: number;
+    totalRevenueUYU: number;
+    totalRevenueUSD: number;
     paidOrders: number;
     avgOrderValue: number;
     revenueChange: number;
+    revenueChangeUYU: number;
+    revenueChangeUSD: number;
     ordersChange: number;
     aovChange: number;
   };
@@ -67,7 +79,7 @@ interface AnalyticsData {
     daysRemaining: number;
     image: string | null;
   }>;
-  dailySales: Array<{ date: string; orders: number; revenue: number; onlineRevenue: number; mostradorRevenue: number }>;
+  dailySales: Array<{ date: string; orders: number; revenueUYU: number; revenueUSD: number; onlineRevenue: number; mostradorRevenue: number }>;
   hourlyStats: Array<{ hour: number; orders: number }>;
   topProducts: Array<{
     id: string;
@@ -155,20 +167,19 @@ function RevenueChart({
   data: AnalyticsData['dailySales'];
   chartType: 'line' | 'bar';
   setChartType: (v: 'line' | 'bar') => void;
-  revenueType: 'total' | 'online' | 'mostrador';
-  setRevenueType: (v: 'total' | 'online' | 'mostrador') => void;
+  revenueType: 'uyu' | 'usd';
+  setRevenueType: (v: 'uyu' | 'usd') => void;
 }) {
-  const formatCurrency = (v: number) =>
+  const formatAxis = (v: number) =>
     v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`;
-  const formatTooltip = (v: number) =>
-    `UYU ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatTooltip = (v: number, currency: string) =>
+    currency === 'USD'
+      ? `US$ ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : `$ ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 
-  const dataKey =
-    revenueType === 'online' ? 'onlineRevenue' :
-    revenueType === 'mostrador' ? 'mostradorRevenue' : 'revenue';
-  const color =
-    revenueType === 'online' ? '#22c55e' :
-    revenueType === 'mostrador' ? '#f97316' : '#3b82f6';
+  const dataKey = revenueType === 'usd' ? 'revenueUSD' : 'revenueUYU';
+  const color = revenueType === 'usd' ? '#22c55e' : '#3b82f6';
+  const currencyLabel = revenueType === 'usd' ? 'USD' : 'UYU';
 
   const formattedData = data.map(d => ({
     ...d,
@@ -180,23 +191,20 @@ function RevenueChart({
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h3 className="text-lg font-semibold text-slate-900">Ingresos por Día</h3>
         <div className="flex flex-wrap gap-2">
-          {/* Revenue type toggle */}
+          {/* Currency toggle */}
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
-            {(['total', 'online', 'mostrador'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setRevenueType(type)}
-                className={`px-3 py-1.5 transition-colors ${
-                  revenueType === type
-                    ? type === 'total' ? 'bg-blue-600 text-white'
-                      : type === 'online' ? 'bg-green-600 text-white'
-                      : 'bg-orange-500 text-white'
-                    : 'bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {type === 'total' ? 'Total' : type === 'online' ? 'Online' : 'Mostrador'}
-              </button>
-            ))}
+            <button
+              onClick={() => setRevenueType('uyu')}
+              className={`px-3 py-1.5 transition-colors ${revenueType === 'uyu' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              $ UYU
+            </button>
+            <button
+              onClick={() => setRevenueType('usd')}
+              className={`px-3 py-1.5 transition-colors ${revenueType === 'usd' ? 'bg-green-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              US$ USD
+            </button>
           </div>
           {/* Chart type toggle */}
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
@@ -221,9 +229,9 @@ function RevenueChart({
           <LineChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-            <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
+            <YAxis tickFormatter={formatAxis} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
             <Tooltip
-              formatter={(v) => [formatTooltip(Number(v ?? 0)), 'Ingresos']}
+              formatter={(v) => [formatTooltip(Number(v ?? 0), currencyLabel), currencyLabel]}
               contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
             />
             <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
@@ -232,9 +240,9 @@ function RevenueChart({
           <BarChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-            <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
+            <YAxis tickFormatter={formatAxis} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
             <Tooltip
-              formatter={(v) => [formatTooltip(Number(v ?? 0)), 'Ingresos']}
+              formatter={(v) => [formatTooltip(Number(v ?? 0), currencyLabel), currencyLabel]}
               contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
             />
             <Bar dataKey={dataKey} fill={color} radius={[3, 3, 0, 0]} maxBarSize={40} />
@@ -277,7 +285,7 @@ function HourlyChart({ data }: { data: Array<{ hour: number; orders: number }> }
 }
 
 function TopProductsList({ products }: { products: AnalyticsData['topProducts'] }) {
-  const formatCurrency = (v: number) => `UYU ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatCurrency = (v: number) => `$ ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
   
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
@@ -374,7 +382,7 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState('7d');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
-  const [revenueType, setRevenueType] = useState<'total' | 'online' | 'mostrador'>('total');
+  const [revenueType, setRevenueType] = useState<'uyu' | 'usd'>('uyu');
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -407,8 +415,10 @@ export default function AnalyticsPage() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const formatCurrency = (value: number) => 
-    `UYU ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatCurrency = (value: number) =>
+    `$ ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatUSD = (value: number) =>
+    `US$ ${value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   if (isLoading && !data) {
     return (
@@ -462,12 +472,22 @@ export default function AnalyticsPage() {
           {/* Summary Stats */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Ingresos Totales"
-              value={formatCurrency(data.summary.totalRevenue)}
-              subValue={`${data.previousPeriod.revenueChange >= 0 ? '+' : ''}${data.previousPeriod.revenueChange}% vs anterior`}
+              title="Ingresos UYU"
+              value={formatCurrency(data.summary.totalRevenueUYU)}
+              subValue={`${data.previousPeriod.revenueChangeUYU >= 0 ? '+' : ''}${data.previousPeriod.revenueChangeUYU}% vs anterior`}
               icon={DollarSign}
-              trend={data.previousPeriod.revenueChange > 0 ? 'up' : data.previousPeriod.revenueChange < 0 ? 'down' : 'neutral'}
+              trend={data.previousPeriod.revenueChangeUYU > 0 ? 'up' : data.previousPeriod.revenueChangeUYU < 0 ? 'down' : 'neutral'}
               color="green"
+            />
+            <StatCard
+              title="Ingresos USD"
+              value={formatUSD(data.summary.totalRevenueUSD)}
+              subValue={data.summary.paidOrdersUSD > 0
+                ? `${data.previousPeriod.revenueChangeUSD >= 0 ? '+' : ''}${data.previousPeriod.revenueChangeUSD}% vs anterior`
+                : `${data.summary.paidOrdersUSD} pedidos USD`}
+              icon={Globe}
+              trend={data.previousPeriod.revenueChangeUSD > 0 ? 'up' : data.previousPeriod.revenueChangeUSD < 0 ? 'down' : 'neutral'}
+              color="blue"
             />
             <StatCard
               title="Pedidos Pagados"
@@ -770,8 +790,11 @@ export default function AnalyticsPage() {
                 <p className="text-2xl font-bold">{data.summary.conversionRate}%</p>
               </div>
               <div>
-                <p className="text-blue-200 text-sm">Ingresos</p>
-                <p className="text-2xl font-bold">{formatCurrency(data.summary.totalRevenue)}</p>
+                <p className="text-blue-200 text-sm">Ingresos UYU</p>
+                <p className="text-2xl font-bold">{formatCurrency(data.summary.totalRevenueUYU)}</p>
+                {data.summary.totalRevenueUSD > 0 && (
+                  <p className="text-sm text-blue-200 mt-1">{formatUSD(data.summary.totalRevenueUSD)} USD</p>
+                )}
               </div>
             </div>
           </div>
