@@ -266,20 +266,18 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {revenueUSD > 0 && (
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Ingresos USD (30d)</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{formatUSD(revenueUSD)}</p>
-                <p className="mt-1 text-xs text-slate-400">{paidOrders.filter(o => orderCurrency(o) === 'USD').length} pedidos USD</p>
-              </div>
-              <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                <Globe className="h-5 w-5" />
-              </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Ingresos USD (30d)</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUSD(revenueUSD)}</p>
+              <p className="mt-1 text-xs text-slate-400">{paidOrders.filter(o => orderCurrency(o) === 'USD').length} pedidos USD</p>
+            </div>
+            <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+              <Globe className="h-5 w-5" />
             </div>
           </div>
-        )}
+        </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">

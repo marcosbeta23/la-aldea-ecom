@@ -61,8 +61,14 @@ export default async function OrderDetailPage({
   
   const orderLogs = logsData || [];
   
-  const formatCurrency = (value: number) => 
-    `UYU ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const currency = (order as any).currency || 'UYU';
+
+  const formatCurrency = (value: number, cur: string = currency) => {
+    if (cur === 'USD') {
+      return `US$ ${value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$ ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  };
   
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -85,6 +91,10 @@ export default async function OrderDetailPage({
   const paymentLabels: Record<string, string> = {
     mercadopago: 'MercadoPago',
     transfer: 'Transferencia bancaria',
+    efectivo: 'Efectivo',
+    credito: 'Crédito',
+    pos_debito: 'POS Débito',
+    pos_credito: 'POS Crédito',
   };
 
   return (
@@ -99,9 +109,21 @@ export default async function OrderDetailPage({
             <ArrowLeft className="h-5 w-5 text-slate-600" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Pedido #{order.order_number}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">
+                Pedido #{order.order_number}
+              </h1>
+              {(order as any).order_source === 'mostrador' && (
+                <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  Mostrador
+                </span>
+              )}
+              {currency === 'USD' && (
+                <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                  USD
+                </span>
+              )}
+            </div>
             <p className="text-slate-500">{formatDate(order.created_at)}</p>
           </div>
         </div>
@@ -247,26 +269,27 @@ export default async function OrderDetailPage({
             )}
           </div>
           
-          {/* Billing Info (from checkout) */}
+          {/* Billing Info (from checkout) - only for online orders or orders with billing data */}
+          {(order.invoice_type || (order as any).order_source !== 'mostrador') && (
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
               <FileText className="h-5 w-5 text-blue-600" />
               Datos de Facturación
             </h2>
-            
+
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <FileText className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-slate-500">Tipo solicitado por cliente</p>
                   <p className="font-medium text-slate-900">
-                    {order.invoice_type === 'invoice_rut' 
-                      ? '📋 Factura con RUT (crédito fiscal)' 
+                    {order.invoice_type === 'invoice_rut'
+                      ? '📋 Factura con RUT (crédito fiscal)'
                       : '🧾 Consumidor Final (boleta/ticket)'}
                   </p>
                 </div>
               </div>
-              
+
               {order.invoice_type === 'invoice_rut' && (
                 <>
                   {order.invoice_tax_id && (
@@ -280,7 +303,7 @@ export default async function OrderDetailPage({
                       </div>
                     </div>
                   )}
-                  
+
                   {order.invoice_business_name && (
                     <div className="flex items-start gap-3">
                       <User className="h-5 w-5 text-slate-400 mt-0.5" />
@@ -292,16 +315,17 @@ export default async function OrderDetailPage({
                   )}
                 </>
               )}
-              
+
               {/* Reminder about manual invoicing */}
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>💡 Recordatorio:</strong> La factura se genera manualmente desde el sistema ERP. 
+                  <strong>💡 Recordatorio:</strong> La factura se genera manualmente desde el sistema ERP.
                   Una vez emitida, registrá el número en la sección &quot;Facturación&quot; del panel lateral.
                 </p>
               </div>
             </div>
           </div>
+          )}
         </div>
         
         {/* Sidebar */}

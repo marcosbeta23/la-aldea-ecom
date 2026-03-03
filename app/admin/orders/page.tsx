@@ -55,14 +55,16 @@ function PaymentBadge({ method }: { method: string | null }) {
     mercadopago: 'bg-blue-50 text-blue-700',
     transfer: 'bg-amber-50 text-amber-700',
     efectivo: 'bg-green-50 text-green-700',
+    credito: 'bg-indigo-50 text-indigo-700',
     pos_debito: 'bg-purple-50 text-purple-700',
-    pos_credito: 'bg-indigo-50 text-indigo-700',
+    pos_credito: 'bg-purple-50 text-purple-700',
   };
 
   const labels: Record<string, string> = {
     mercadopago: 'MercadoPago',
     transfer: 'Transferencia',
     efectivo: 'Efectivo',
+    credito: 'Crédito',
     pos_debito: 'POS Débito',
     pos_credito: 'POS Crédito',
   };
@@ -135,8 +137,12 @@ export default async function OrdersPage({
 
   const totalPages = Math.ceil((count || 0) / perPage);
 
-  const formatCurrency = (value: number) =>
-    `UYU ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatCurrency = (value: number, currency?: string | null) => {
+    if (currency === 'USD') {
+      return `US$ ${value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$ ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -312,7 +318,7 @@ export default async function OrdersPage({
                     <PaymentBadge method={order.payment_method} />
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                    {formatCurrency(order.total)}
+                    {formatCurrency(order.total, order.currency)}
                   </td>
                   <td className="px-6 py-4">
                     <StatusBadge status={order.status} />

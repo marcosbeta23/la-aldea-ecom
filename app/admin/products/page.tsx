@@ -1020,18 +1020,23 @@ export default function ProductsPage() {
                     </td>
 
                     {/* Category */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 max-w-[140px]">
                       {product.category && product.category.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {product.category.map((cat: string) => (
+                          {product.category.slice(0, 2).map((cat: string) => (
                             <button
                               key={cat}
                               onClick={() => updateFilter('category', cat)}
-                              className="text-xs font-medium px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors"
+                              className="text-xs font-medium px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors whitespace-nowrap"
                             >
                               {cat}
                             </button>
                           ))}
+                          {product.category.length > 2 && (
+                            <span className="text-xs font-medium px-2 py-0.5 bg-slate-100 text-slate-400 rounded-md whitespace-nowrap">
+                              +{product.category.length - 2}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <span className="text-xs text-slate-300">&mdash;</span>
