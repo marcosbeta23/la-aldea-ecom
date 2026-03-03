@@ -136,7 +136,7 @@ export async function POST(
         .eq('id', orderId);
 
       // Telegram alert for failed refund
-      alertRefundProcessed(orderData.order_number, refundAmount, false, orderData.customer_name || '').catch(() => {});
+      alertRefundProcessed(orderData.order_number, refundAmount, false, orderData.customer_name || '', orderData.currency || 'UYU').catch(() => {});
 
       return NextResponse.json(
         { success: false, error: `MercadoPago refund failed: ${mpError.message}` },
@@ -195,7 +195,7 @@ export async function POST(
       });
 
     // Telegram alert for successful refund
-    alertRefundProcessed(orderData.order_number, refundAmount, true, orderData.customer_name || '').catch(() => {});
+    alertRefundProcessed(orderData.order_number, refundAmount, true, orderData.customer_name || '', orderData.currency || 'UYU').catch(() => {});
 
     return NextResponse.json({
       success: true,

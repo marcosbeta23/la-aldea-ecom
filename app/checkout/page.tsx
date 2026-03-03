@@ -865,50 +865,6 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </div>
-
-                {/* Currency Selector — only shown when cart has mixed currencies */}
-                {isMixed && (
-                  <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                      <ArrowRightLeft className="h-5 w-5 text-blue-600" />
-                      Moneda de pago
-                    </h2>
-                    <p className="text-sm text-slate-500 mb-4">
-                      Tu carrito tiene productos en distintas monedas. Elegí en qué moneda querés pagar.
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setValue('paymentCurrency', 'UYU')}
-                        className={`p-4 rounded-xl border-2 text-center transition-colors ${
-                          paymentCurrency === 'UYU'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <p className="text-lg font-bold text-slate-900">$ UYU</p>
-                        <p className="text-xs text-slate-500">Pesos uruguayos</p>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setValue('paymentCurrency', 'USD')}
-                        className={`p-4 rounded-xl border-2 text-center transition-colors ${
-                          paymentCurrency === 'USD'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <p className="text-lg font-bold text-slate-900">US$ USD</p>
-                        <p className="text-xs text-slate-500">Dólares americanos</p>
-                      </button>
-                    </div>
-                    {exchangeRate && (
-                      <p className="text-xs text-slate-400 mt-3 text-center">
-                        Tipo de cambio: 1 USD = ${exchangeRate.toLocaleString('es-UY')} UYU (BROU venta)
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Order Summary */}
@@ -1031,6 +987,45 @@ export default function CheckoutPage() {
                       </p>
                     )}
                   </div>
+
+                  {/* Currency Selector — compact, in sidebar */}
+                  {isMixed && (
+                    <div className="mb-6 p-4 bg-slate-50 rounded-xl">
+                      <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5">
+                        <ArrowRightLeft className="h-3.5 w-3.5" />
+                        Moneda de pago
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setValue('paymentCurrency', 'UYU')}
+                          className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
+                            paymentCurrency === 'UYU'
+                              ? 'border-blue-600 bg-blue-50 text-blue-700'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          $ UYU
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setValue('paymentCurrency', 'USD')}
+                          className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
+                            paymentCurrency === 'USD'
+                              ? 'border-blue-600 bg-blue-50 text-blue-700'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          US$ USD
+                        </button>
+                      </div>
+                      {exchangeRate && (
+                        <p className="text-[10px] text-slate-400 mt-2 text-center">
+                          TC: 1 USD = ${exchangeRate.toLocaleString('es-UY')} UYU
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Terms */}
                   <div className="mb-6">

@@ -66,11 +66,12 @@ export function alertOutOfStock(productName: string, sku: string) {
   );
 }
 
-export function alertFraudAttempt(orderNumber: string, expected: number, paid: number) {
+export function alertFraudAttempt(orderNumber: string, expected: number, paid: number, currency: string = 'UYU') {
+  const prefix = currency === 'USD' ? 'US$' : '$';
   return sendTelegramAlert(
     `<b>ALERTA FRAUDE #${orderNumber}</b>\n` +
-    `Esperado: $${expected}\n` +
-    `Pagado: $${paid}\n` +
+    `Esperado: ${prefix} ${expected.toLocaleString('es-UY')}\n` +
+    `Pagado: ${prefix} ${paid.toLocaleString('es-UY')}\n` +
     `Orden cancelada automaticamente.`
   );
 }
@@ -100,11 +101,12 @@ export function alertOrderStatusChanged(orderNumber: string, oldStatus: string, 
   );
 }
 
-export function alertRefundProcessed(orderNumber: string, amount: number, success: boolean, customerName: string) {
+export function alertRefundProcessed(orderNumber: string, amount: number, success: boolean, customerName: string, currency: string = 'UYU') {
+  const prefix = currency === 'USD' ? 'US$' : '$';
   return sendTelegramAlert(
     success
-      ? `<b>Reembolso exitoso #${orderNumber}</b>\n$${amount.toLocaleString('es-UY')}\n${customerName}`
-      : `<b>Reembolso fallido #${orderNumber}</b>\n$${amount.toLocaleString('es-UY')}\n${customerName}\nRevisar manualmente.`
+      ? `<b>Reembolso exitoso #${orderNumber}</b>\n${prefix} ${amount.toLocaleString('es-UY')}\n${customerName}`
+      : `<b>Reembolso fallido #${orderNumber}</b>\n${prefix} ${amount.toLocaleString('es-UY')}\n${customerName}\nRevisar manualmente.`
   );
 }
 

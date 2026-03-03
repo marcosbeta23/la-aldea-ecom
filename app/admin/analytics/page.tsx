@@ -30,6 +30,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 
 interface AnalyticsData {
@@ -375,6 +378,110 @@ function StatusDistribution({ data }: { data: Record<string, number> }) {
   );
 }
 
+const DEPT_COLORS = [
+  '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6',
+  '#06b6d4', '#ec4899', '#14b8a6', '#f97316', '#6366f1',
+  '#84cc16', '#64748b',
+];
+
+function DepartmentDonutChart({
+  distribution,
+  formatCurrency,
+}: {
+  distribution: Record<string, { orders: number; revenue: number }>;
+  formatCurrency: (v: number) => string;
+}) {
+  const [metric, setMetric] = useState<'orders' | 'revenue'>('orders');
+
+  const sorted = Object.entries(distribution).sort((a, b) => b[1].revenue - a[1].revenue);
+  const chartData = sorted.map(([dept, stats]) => ({
+    name: dept,
+    value: metric === 'orders' ? stats.orders : stats.revenue,
+    orders: stats.orders,
+    revenue: stats.revenue,
+  }));
+  const total = chartData.reduce((s, d) => s + d.value, 0);
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-slate-400" />
+          <h3 className="text-lg font-semibold text-slate-900">Ventas por Departamento</h3>
+        </div>
+        <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
+          <button
+            onClick={() => setMetric('orders')}
+            className={`px-3 py-1.5 transition-colors ${metric === 'orders' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+          >
+            Pedidos
+          </button>
+          <button
+            onClick={() => setMetric('revenue')}
+            className={`px-3 py-1.5 transition-colors ${metric === 'revenue' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+          >
+            Ingresos
+          </button>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Donut Chart */}
+        <div className="flex items-center justify-center">
+          <ResponsiveContainer width="100%" height={240}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {chartData.map((_, i) => (
+                  <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                formatter={(value: any, _name: any, props: any) => {
+                  const v = Number(value ?? 0);
+                  const pct = total > 0 ? ((v / total) * 100).toFixed(1) : '0';
+                  const label = metric === 'orders'
+                    ? `${v} pedidos (${pct}%)`
+                    : `${formatCurrency(v)} (${pct}%)`;
+                  return [label, props?.payload?.name ?? ''];
+                }}
+                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Legend list */}
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          {sorted.map(([dept, stats], i) => {
+            const pct = total > 0 ? ((metric === 'orders' ? stats.orders : stats.revenue) / total * 100).toFixed(0) : '0';
+            return (
+              <div key={dept} className="flex items-center gap-2 py-1.5 border-b border-slate-50 last:border-0">
+                <span
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: DEPT_COLORS[i % DEPT_COLORS.length] }}
+                />
+                <span className="text-sm text-slate-700 flex-1 truncate">{dept}</span>
+                <span className="text-xs text-slate-400 shrink-0">{stats.orders} ped.</span>
+                <span className="text-xs text-slate-500 shrink-0 w-8 text-right">{pct}%</span>
+                <span className="text-sm font-semibold text-slate-900 shrink-0">{formatCurrency(stats.revenue)}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [posthogData, setPosthogData] = useState<PostHogData | null>(null);
@@ -609,40 +716,16 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          {/* Geographic Breakdown + Inventory Health */}
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Geographic Breakdown */}
-            {Object.keys(data.departmentDistribution).length > 0 && (
-              <div className="bg-white rounded-xl border border-slate-200 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <MapPin className="h-5 w-5 text-slate-400" />
-                  <h3 className="text-lg font-semibold text-slate-900">Ventas por Departamento</h3>
-                </div>
-                <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {Object.entries(data.departmentDistribution)
-                    .sort((a, b) => b[1].revenue - a[1].revenue)
-                    .map(([dept, stats]) => {
-                      const total = Object.values(data.departmentDistribution).reduce((s, d) => s + d.revenue, 0);
-                      const pct = total > 0 ? ((stats.revenue / total) * 100).toFixed(0) : '0';
-                      return (
-                        <div key={dept} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-700">{dept}</span>
-                            <span className="text-xs text-slate-400">{stats.orders} ped.</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-500">{pct}%</span>
-                            <span className="text-sm font-semibold text-slate-900">{formatCurrency(stats.revenue)}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            )}
+          {/* Geographic Breakdown */}
+          {Object.keys(data.departmentDistribution).length > 0 && (
+            <DepartmentDonutChart
+              distribution={data.departmentDistribution}
+              formatCurrency={formatCurrency}
+            />
+          )}
 
-            {/* Inventory Health */}
-            {data.inventoryHealth.length > 0 && (
+          {/* Inventory Health */}
+          {data.inventoryHealth.length > 0 && (
               <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -686,7 +769,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             )}
-          </div>
 
           {/* Charts Row */}
           <div className="grid lg:grid-cols-2 gap-6">

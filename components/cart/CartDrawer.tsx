@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { usePathname } from 'next/navigation';
 
 export default function CartDrawer() {
-  const { items, isOpen, setCartOpen, removeItem, updateQuantity, getSubtotal, getCartCurrency } = useCartStore();
+  const { items, isOpen, setCartOpen, removeItem, updateQuantity, getSubtotal, getCartCurrency, getSubtotalByCurrency, hasMultipleCurrencies } = useCartStore();
   const pathname = usePathname();
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +32,18 @@ export default function CartDrawer() {
     };
   }, [isOpen, setCartOpen]);
 
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const isMixed = hasMultipleCurrencies();
+
+  // Fetch exchange rate when cart has mixed currencies
+  useEffect(() => {
+    if (!isOpen || !isMixed) return;
+    fetch('/api/exchange-rate')
+      .then(r => r.json())
+      .then(data => { if (data.rate) setExchangeRate(data.rate); })
+      .catch(() => {});
+  }, [isOpen, isMixed]);
+
   const formatPrice = (price: number, currency: string = 'UYU') => {
     if (currency === 'USD') {
       return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -40,6 +52,7 @@ export default function CartDrawer() {
   };
 
   const subtotal = getSubtotal();
+  const subtotals = getSubtotalByCurrency();
   const cartCurrency = getCartCurrency();
   const itemCount = items.reduce((acc, i) => acc + i.quantity, 0);
 
@@ -184,12 +197,43 @@ export default function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-slate-200 px-5 py-4 space-y-3 bg-white">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">Subtotal</span>
-              <span className="text-lg font-bold text-slate-900">
-                {formatPrice(subtotal, cartCurrency)}
-              </span>
-            </div>
+            {isMixed ? (
+              <div className="space-y-1.5">
+                {subtotals.UYU > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Subtotal UYU</span>
+                    <span className="text-sm font-bold text-slate-900">{formatPrice(subtotals.UYU, 'UYU')}</span>
+                  </div>
+                )}
+                {subtotals.USD > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Subtotal USD</span>
+                    <span className="text-sm font-bold text-slate-900">{formatPrice(subtotals.USD, 'USD')}</span>
+                  </div>
+                )}
+                {exchangeRate && (
+                  <>
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                      <span className="text-sm text-slate-600">Total UYU</span>
+                      <span className="text-lg font-bold text-slate-900">
+                        {formatPrice(subtotals.UYU + subtotals.USD * exchangeRate, 'UYU')}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      TC: 1 USD = $ {exchangeRate.toLocaleString('es-UY')} (BROU venta)
+                    </p>
+                  </>
+                )}
+                <p className="text-xs text-slate-400">Elegís la moneda de pago en el checkout</p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600">Subtotal</span>
+                <span className="text-lg font-bold text-slate-900">
+                  {formatPrice(subtotal, cartCurrency)}
+                </span>
+              </div>
+            )}
             <p className="text-xs text-slate-500">Envío se calcula al finalizar la compra</p>
             <Link
               href="/checkout"

@@ -97,7 +97,7 @@ async function generateSalesReport(period: string, startDate?: string | null, en
 
   let query = (supabaseAdmin as any)
     .from('orders')
-    .select('id, order_number, customer_name, customer_email, total, status, payment_method, order_source, created_at')
+    .select('id, order_number, customer_name, customer_email, total, status, payment_method, order_source, currency, shipping_department, created_at')
     .gte('created_at', start.toISOString())
     .lte('created_at', end.toISOString())
     .order('created_at', { ascending: false });
@@ -230,16 +230,18 @@ async function generateCustomersReport(period: string, startDate?: string | null
 
 function convertToCSV(data: any, type: string): string {
   if (type === 'sales' && data.orders) {
-    const headers = ['Fecha', 'Nº Pedido', 'Cliente', 'Email', 'Total', 'Estado', 'Método Pago', 'Canal'];
+    const headers = ['Fecha', 'Nº Pedido', 'Cliente', 'Email', 'Total', 'Moneda', 'Estado', 'Método Pago', 'Canal', 'Departamento'];
     const rows = (data.orders || []).map((order: any) => [
       new Date(order.created_at).toLocaleDateString('es-UY'),
       order.order_number,
       order.customer_name,
       order.customer_email || '',
       (order.total || 0).toFixed(2),
+      order.currency || 'UYU',
       order.status,
       order.payment_method || '',
       order.order_source || 'online',
+      order.shipping_department || '',
     ]);
     return [headers.join(','), ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(','))].join('\n');
   }

@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Alert admin via Telegram
-      alertFraudAttempt(orderData.order_number, expectedAmount, paidAmount).catch(() => {});
+      alertFraudAttempt(orderData.order_number, expectedAmount, paidAmount, orderData.currency || 'UYU').catch(() => {});
 
       return NextResponse.json({ received: true });
     }
