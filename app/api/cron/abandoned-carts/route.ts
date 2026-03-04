@@ -3,7 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { render } from '@react-email/components';
 import AbandonedCart from '@/emails/AbandonedCart';
 
-// Vercel Cron: runs every hour to detect and recover abandoned carts
+// Abandoned cart recovery — detects and emails customers who left items in checkout
+// Called by /api/cron/maintenance daily, or manually for testing
 // Looks for checkout_attempts older than 2 hours with no matching order
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;

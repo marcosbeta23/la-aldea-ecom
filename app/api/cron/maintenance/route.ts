@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Unified daily maintenance cron — replaces two separate cron entries
-// to stay within Vercel Hobby's 2-cron limit.
+// Unified daily maintenance cron — single cron entry for Vercel Hobby plan.
+// Hobby plans only allow cron jobs that run once per day.
 //
 // Runs daily at 3am (UTC):
-//   - release_expired_reservations: always
-//   - weekly report: only on Mondays
+//   1. release_expired_reservations: always
+//   2. abandoned cart recovery: always
+//   3. weekly report: only on Mondays
 //
-// The original routes (/api/cron/release-stock, /api/cron/weekly-report)
-// still work and can be called manually for testing.
+// The original routes (/api/cron/release-stock, /api/cron/weekly-report,
+// /api/cron/abandoned-carts) still work and can be called manually for testing.
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -33,7 +34,16 @@ export async function GET(request: NextRequest) {
     results.releaseStock = { success: false, error: err.message };
   }
 
-  // 2. Weekly report — only on Mondays (UTC)
+  // 2. Abandoned cart recovery — runs every day
+  // Catches all carts abandoned since last run (2+ hours old, no matching order)
+  try {
+    const res = await fetch(`${baseUrl}/api/cron/abandoned-carts`, { headers });
+    results.abandonedCarts = await res.json();
+  } catch (err: any) {
+    results.abandonedCarts = { success: false, error: err.message };
+  }
+
+  // 3. Weekly report — only on Mondays (UTC)
   const dayOfWeek = new Date().getUTCDay(); // 0=Sun, 1=Mon
   if (dayOfWeek === 1) {
     try {

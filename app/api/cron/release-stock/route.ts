@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Vercel Cron job to release expired stock reservations
-// Configure in vercel.json: { "crons": [{ "path": "/api/cron/release-stock", "schedule": "0 * * * *" }] }
+// Release expired stock reservations
+// Called by /api/cron/maintenance daily, or manually for testing
 
 export async function GET(request: NextRequest) {
   // Verify cron secret (optional but recommended)
