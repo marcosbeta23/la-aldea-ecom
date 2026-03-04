@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { inngest } from '@/lib/inngest';
 
 // POST /api/checkout-attempt
 // Saves a checkout attempt for abandoned cart recovery.
@@ -47,6 +48,8 @@ export async function POST(request: NextRequest) {
       currency: currency || 'UYU',
     };
 
+    let attemptId: string | undefined;
+
     if (existing) {
       // Update existing attempt
       await (supabaseAdmin as any)
@@ -56,11 +59,37 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
         })
         .eq('id', existing.id);
+      attemptId = existing.id;
     } else {
-      // Insert new attempt
-      await (supabaseAdmin as any)
+      // Insert new attempt — capture the ID for Inngest
+      const { data: inserted } = await (supabaseAdmin as any)
         .from('checkout_attempts')
-        .insert(attemptData);
+        .insert(attemptData)
+        .select('id')
+        .single();
+      attemptId = inserted?.id;
+    }
+
+    // Fire Inngest event for abandoned cart recovery (non-blocking)
+    if (attemptId) {
+      inngest.send({
+        name: 'checkout/attempt.created',
+        data: {
+          attemptId,
+          email: attemptData.email,
+          customerName: attemptData.customer_name,
+          phone: attemptData.phone,
+          items: items.map((item: any) => ({
+            product_name: item.product_name || item.name || 'Producto',
+            quantity: item.quantity || 1,
+            unit_price: item.unit_price || item.price || 0,
+          })),
+          subtotal,
+          currency: currency || 'UYU',
+        },
+      }).catch((err) => {
+        console.error('[Inngest] Failed to send checkout/attempt.created:', err);
+      });
     }
 
     return NextResponse.json({ success: true });

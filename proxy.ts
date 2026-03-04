@@ -13,8 +13,9 @@ export default clerkMiddleware(async (auth, request) => {
     const isWebhook = request.nextUrl.pathname.startsWith('/api/webhooks/');
     const isSentryTunnel = request.nextUrl.pathname === '/api/sentry-tunnel';
     const isCron = request.nextUrl.pathname.startsWith('/api/cron/');
-    
-    if (!isWebhook && !isSentryTunnel && !isCron) {
+    const isInngest = request.nextUrl.pathname === '/api/inngest';
+
+    if (!isWebhook && !isSentryTunnel && !isCron && !isInngest) {
       const origin = request.headers.get('origin');
       const host = request.headers.get('host');
       

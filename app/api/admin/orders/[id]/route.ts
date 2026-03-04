@@ -2,17 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { OrderStatus } from '@/types/database';
-import {
-  getPaymentReceivedMessage,
-  getAwaitingStockMessage,
-  getReadyToInvoiceMessage,
-  getInvoiceGeneratedMessage,
-  getOrderShippedMessage,
-  getRefundCompletedMessage,
-  type NotificationContext
-} from '@/lib/notifications';
-import { alertOrderStatusChanged } from '@/lib/telegram';
-import { sendWhatsAppMessage } from '@/lib/whatsapp';
+import { inngest } from '@/lib/inngest';
 
 // Verify admin authentication via Clerk
 async function verifyAdmin() {
@@ -116,22 +106,24 @@ export async function PATCH(
       .eq('id', id)
       .single() as { data: any };
     
-    // Auto-send notifications on status changes
-    if (body.status && updatedOrder) {
-      await sendStatusNotification(updatedOrder, body.status);
-
-      // Telegram alert for meaningful status transitions
-      if (oldStatus && oldStatus !== body.status) {
-        const notifyStatuses = ['shipped', 'delivered', 'cancelled', 'invoiced', 'processing', 'paid'];
-        if (notifyStatuses.includes(body.status)) {
-          alertOrderStatusChanged(
-            updatedOrder.order_number || id,
-            oldStatus,
-            body.status,
-            updatedOrder.customer_name || ''
-          ).catch(() => {});
-        }
-      }
+    // Fire Inngest event for background notifications
+    if (body.status && updatedOrder && oldStatus !== body.status) {
+      inngest.send({
+        name: 'order/status.changed',
+        data: {
+          orderId: id,
+          orderNumber: updatedOrder.order_number || id,
+          oldStatus: oldStatus || '',
+          newStatus: body.status,
+          customerName: updatedOrder.customer_name || '',
+          customerEmail: updatedOrder.customer_email || null,
+          customerPhone: updatedOrder.customer_phone || null,
+          total: Number(updatedOrder.total || 0),
+          currency: updatedOrder.currency || 'UYU',
+        },
+      }).catch((err) => {
+        console.error('[Inngest] Failed to send order/status.changed:', err);
+      });
     }
     
     return NextResponse.json({ success: true, order: updatedOrder });
@@ -160,65 +152,6 @@ async function logOrderEvent(orderId: string, action: string, oldStatus: string 
       });
   } catch (error) {
     console.error('Failed to log order event:', error);
-  }
-}
-
-// Helper to send notifications on status change (WhatsApp + log)
-async function sendStatusNotification(order: Record<string, unknown>, newStatus: string) {
-  try {
-    const ctx: NotificationContext = { order: order as any };
-    let message = '';
-
-    switch (newStatus) {
-      case 'paid':
-        message = getPaymentReceivedMessage(ctx);
-        break;
-      case 'awaiting_stock':
-        message = getAwaitingStockMessage(ctx);
-        break;
-      case 'ready_to_invoice':
-        message = getReadyToInvoiceMessage(ctx);
-        break;
-      case 'invoiced':
-        message = getInvoiceGeneratedMessage(ctx);
-        break;
-      case 'shipped':
-        message = getOrderShippedMessage(ctx);
-        break;
-      case 'refunded':
-        message = getRefundCompletedMessage(ctx);
-        break;
-      default:
-        return; // No notification for other statuses
-    }
-
-    const phone = order.customer_phone as string | undefined;
-
-    // Send WhatsApp message (non-blocking)
-    const whatsappResult = phone
-      ? await sendWhatsAppMessage(phone, message).catch(() => ({ success: false, error: 'exception' }))
-      : { success: false, error: 'no phone' };
-
-    console.log(`[Notification] Order ${order.id} -> ${newStatus}, WhatsApp: ${whatsappResult.success ? 'sent' : 'skipped'}`);
-
-    // Log notification attempt
-    await (supabaseAdmin as unknown as any)
-      .from('order_logs')
-      .insert({
-        order_id: order.id,
-        action: whatsappResult.success ? 'whatsapp_sent' : 'notification_generated',
-        details: {
-          status: newStatus,
-          channel: 'whatsapp',
-          whatsapp_sent: whatsappResult.success,
-          whatsapp_message_id: whatsappResult.success ? (whatsappResult as any).messageId : undefined,
-          whatsapp_error: whatsappResult.success ? undefined : whatsappResult.error,
-        },
-        created_by: 'system',
-      });
-
-  } catch (error) {
-    console.error('Failed to send notification:', error);
   }
 }
 

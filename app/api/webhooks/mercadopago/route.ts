@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyMPSignature, getMPPayment } from '@/lib/mercadopago';
-import { sendOrderConfirmation, sendAdminOrderNotification } from '@/lib/email';
-import { alertPaymentApproved, alertPaymentFailed, alertFraudAttempt, alertOutOfStockAfterPayment } from '@/lib/telegram';
-import { sendWhatsAppMessage } from '@/lib/whatsapp';
-import { getPaymentReceivedMessage } from '@/lib/notifications';
+import { alertPaymentFailed, alertFraudAttempt, alertOutOfStockAfterPayment } from '@/lib/telegram';
+import { inngest } from '@/lib/inngest';
 
 // 🔒 SECURE MERCADOPAGO WEBHOOK - MVP ORDER FLOW
 // Payment → Reserve Stock → paid_pending_verification → Admin Review → Invoice
@@ -206,61 +204,42 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      // 📧 SEND EMAIL CONFIRMATIONS (async, don't block webhook)
-      try {
-        // Fetch order items for email
-        const { data: orderItems } = await supabaseAdmin
-          .from('order_items')
-          .select('*')
-          .eq('order_id', orderData.id) as { data: any[] | null };
-        
-        if (orderItems && orderItems.length > 0) {
-          const emailTimestamps: Record<string, string> = {};
-          
-          // Send to customer
-          try {
-            await sendOrderConfirmation({ order: orderData, items: orderItems });
-            emailTimestamps.confirmation_email_sent_at = new Date().toISOString();
-          } catch (err) {
-            console.error('Failed to send customer email:', err);
-          }
-          
-          // Send to admin
-          try {
-            await sendAdminOrderNotification({ order: orderData, items: orderItems });
-            emailTimestamps.admin_notified_at = new Date().toISOString();
-          } catch (err) {
-            console.error('Failed to send admin email:', err);
-          }
-          
-          // Update order with email timestamps
-          if (Object.keys(emailTimestamps).length > 0) {
-            await (supabaseAdmin as any)
-              .from('orders')
-              .update(emailTimestamps)
-              .eq('id', orderData.id);
-          }
-        }
-      } catch (emailError) {
-        console.error('Email sending error (non-blocking):', emailError);
-      }
-      
       console.log(`✅ Order ${orderData.order_number} payment processed`);
 
-      // Alert admin via Telegram
-      alertPaymentApproved(
-        orderData.order_number,
-        Number(orderData.total),
-        orderData.customer_name || 'Cliente',
-        orderData.currency || 'UYU'
-      ).catch(() => {});
+      // Fire Inngest events for background notifications + stock expiry
+      const inngestEvents: Parameters<typeof inngest.send>[0] = [
+        {
+          name: 'order/payment.approved' as const,
+          data: {
+            orderId: orderData.id,
+            orderNumber: orderData.order_number,
+            customerName: orderData.customer_name || '',
+            customerEmail: orderData.customer_email || null,
+            customerPhone: orderData.customer_phone || null,
+            total: Number(orderData.total),
+            currency: orderData.currency || 'UYU',
+            paymentId: paymentId,
+            status: updateData.status,
+            stockReserved: updateData.stock_reserved || false,
+          },
+        },
+      ];
 
-      // Send WhatsApp payment confirmation to customer (non-blocking)
-      if (orderData.customer_phone) {
-        const ctx = { order: orderData };
-        const waMessage = getPaymentReceivedMessage(ctx);
-        sendWhatsAppMessage(orderData.customer_phone, waMessage).catch(() => {});
+      // If stock was reserved, schedule precise expiry check
+      if (reservationResult?.success) {
+        inngestEvents.push({
+          name: 'order/stock.reserved' as const,
+          data: {
+            orderId: orderData.id,
+            orderNumber: orderData.order_number,
+            reservedUntil: reservationResult.expires_at,
+          },
+        });
       }
+
+      inngest.send(inngestEvents).catch((err) => {
+        console.error('[Inngest] Failed to send payment events:', err);
+      });
 
     } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
       updateData.status = 'cancelled';

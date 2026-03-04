@@ -3,13 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 // Unified daily maintenance cron — single cron entry for Vercel Hobby plan.
 // Hobby plans only allow cron jobs that run once per day.
 //
-// Runs daily at 3am (UTC):
-//   1. release_expired_reservations: always
-//   2. abandoned cart recovery: always
-//   3. weekly report: only on Mondays
+// SAFETY NET: Inngest now handles abandoned carts and stock release in real-time
+// (event-driven with precise timing). This cron is a daily fallback that catches
+// anything Inngest might have missed.
 //
-// The original routes (/api/cron/release-stock, /api/cron/weekly-report,
-// /api/cron/abandoned-carts) still work and can be called manually for testing.
+// Runs daily at 3am (UTC):
+//   1. release_expired_reservations: always (safety net for inngest/stock-reservation-expiry)
+//   2. abandoned cart recovery: always (safety net for inngest/abandoned-cart-recovery)
+//   3. weekly report: only on Mondays
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
