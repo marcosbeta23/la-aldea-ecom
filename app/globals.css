@@ -105,6 +105,32 @@ input[type="number"] {
   animation-play-state: paused;
 }
 
+/* Skip to content — Accessibility */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+}
+.skip-to-content:focus {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1.5rem;
+  background: #1e40af;
+  color: white;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
 /* Mobile filter drawer slide-up */
 @keyframes slideUp {
   from {

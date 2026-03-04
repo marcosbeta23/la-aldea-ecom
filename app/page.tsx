@@ -4,15 +4,16 @@ import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Product } from "@/types/database";
 import FeaturedCarousel from "@/components/products/FeaturedCarousel";
-import { 
-  Droplets, 
-  Wrench, 
-  Phone, 
-  MapPin, 
-  Clock, 
-  ChevronRight, 
-  Sparkles, 
-  Shield, 
+import FAQAccordion from "@/components/faq/FAQAccordion";
+import {
+  Droplets,
+  Wrench,
+  Phone,
+  MapPin,
+  Clock,
+  ChevronRight,
+  Sparkles,
+  Shield,
   Truck,
   Filter,
   Zap,
@@ -22,17 +23,13 @@ import {
   Mail,
   Instagram,
   Facebook,
-  Menu,
-  ShoppingCart,
   MessageCircle,
   Star,
   ExternalLink,
   TrendingUp,
   Users,
   Award,
-  Hammer,
-  Settings,
-  ClipboardList
+  Settings
 } from "lucide-react";
 
 // LocalBusiness JSON-LD Schema (Complete)
@@ -244,7 +241,7 @@ const productCategories = [
   },
 ];
 
-// Brand partners
+// Brand partners (fallback — DB used when available)
 const partners = [
   { name: "Gianni", logo: "/assets/images/partners/gianni.webp" },
   { name: "DIU", logo: "/assets/images/partners/diu.webp" },
@@ -344,6 +341,26 @@ const stats = [
   { value: "19", label: "Departamentos Cubiertos" },
 ];
 
+// Homepage FAQs for AEO (Answer Engine Optimization)
+const homepageFaqs = [
+  {
+    question: "¿Cuál es el horario de atención?",
+    answer: "Lunes a viernes de 08:00 a 12:00 y de 14:00 a 18:00. Sábados de 08:30 a 12:00. Domingos cerrado.",
+  },
+  {
+    question: "¿Hacen envíos a todo Uruguay?",
+    answer: "Sí, enviamos productos a los 19 departamentos. Montevideo y áreas cercanas: 24-48 horas. Interior: 3-5 días hábiles. También podés retirar en nuestro local de Tala sin costo.",
+  },
+  {
+    question: "¿Qué formas de pago aceptan?",
+    answer: "Aceptamos MercadoPago (tarjetas de crédito y débito en hasta 12 cuotas), transferencia bancaria y efectivo en el local.",
+  },
+  {
+    question: "¿Cómo puedo solicitar asesoramiento técnico?",
+    answer: "Podés llamarnos al +598 92 744 725, escribirnos por WhatsApp o completar el formulario de contacto. El asesoramiento técnico es sin costo.",
+  },
+];
+
 export default async function Home() {
   // Fetch featured products from database — only products marked as featured
   // Order by featured_order (nulls last), then by sold_count as fallback
@@ -359,6 +376,18 @@ export default async function Home() {
   
   const featuredProducts = (data || []) as Product[];
 
+  // Fetch partners/brands from database
+  const { data: dbPartners } = await supabaseAdmin
+    .from('partners')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true }) as { data: any[] | null };
+
+  // Use DB partners with fallback to hardcoded array
+  const activePartners = (dbPartners && dbPartners.length > 0)
+    ? dbPartners.map((p: any) => ({ name: p.name, logo: p.logo_url }))
+    : partners;
+
   return (
     <>
       {/* JSON-LD Schema */}
@@ -366,8 +395,31 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
+      {/* FAQPage JSON-LD Schema (AEO) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: homepageFaqs.map((faq) => ({
+              "@type": "Question",
+              name: faq.question,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: faq.answer,
+              },
+            })),
+          }),
+        }}
+      />
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+        {/* Skip to content — Accessibility */}
+        <a href="#main-content" className="skip-to-content">
+          Ir al contenido principal
+        </a>
+
         {/* Header with auto-hide on scroll */}
         <Header />
 
@@ -428,28 +480,25 @@ export default async function Home() {
                   <ChevronRight className="h-5 w-5" />
                 </Link>
               </div>
-              
-              {/* Social Icons */}
-              <div className="mt-10 mb-12 flex justify-center gap-4">
-                <a
-                  href="https://www.instagram.com/laaldeatala/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:bg-white/20 hover:scale-110"
-                  aria-label="Instagram"
-                >
-                  <Instagram className="h-5 w-5" />
-                </a>
-                <a
-                  href="https://www.facebook.com/profile.php?id=61561171162882"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:bg-white/20 hover:scale-110"
-                  aria-label="Facebook"
-                >
-                  <Facebook className="h-5 w-5" />
-                </a>
-              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trust / Benefits Bar */}
+        <section id="main-content" className="relative z-10 border-b border-slate-100 bg-white py-4">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {[
+                { icon: Award, text: "25+ Años de Experiencia" },
+                { icon: Truck, text: "Envío a Todo Uruguay" },
+                { icon: Sparkles, text: "Asesoramiento Técnico" },
+                { icon: Shield, text: "Garantía de Calidad" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center justify-center gap-2 py-2 text-center">
+                  <item.icon className="h-5 w-5 shrink-0 text-blue-600" />
+                  <span className="text-xs font-medium text-slate-700 sm:text-sm">{item.text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -478,6 +527,56 @@ export default async function Home() {
             </div>
           </section>
         )}
+
+        {/* Partners Carousel - Infinite smooth scroll */}
+        <section className="border-b border-slate-100 bg-white py-6 overflow-hidden">
+          <div className="container mx-auto px-4 mb-4">
+            <p className="text-center text-sm font-medium text-slate-500 uppercase tracking-wider">
+              Marcas que nos respaldan
+            </p>
+          </div>
+
+          {/* Infinite carousel */}
+          <div className="relative">
+            <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-white to-transparent" />
+            <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-white to-transparent" />
+
+            <div className="flex animate-scroll">
+              <div className="flex shrink-0 items-center gap-12 px-6">
+                {activePartners.map((partner, i) => (
+                  <div
+                    key={`a-${i}`}
+                    className="grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100"
+                  >
+                    <Image
+                      src={partner.logo}
+                      alt={partner.name}
+                      width={100}
+                      height={50}
+                      className="h-10 w-auto object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex shrink-0 items-center gap-12 px-6">
+                {activePartners.map((partner, i) => (
+                  <div
+                    key={`b-${i}`}
+                    className="grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100"
+                  >
+                    <Image
+                      src={partner.logo}
+                      alt={partner.name}
+                      width={100}
+                      height={50}
+                      className="h-10 w-auto object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Product Categories Section */}
         <section className="bg-slate-50 py-16 md:py-20">
@@ -659,6 +758,34 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* FAQ Section — AEO (Answer Engine Optimization) */}
+        <section className="bg-slate-50 py-16 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-3xl">
+              <div className="text-center">
+                <span className="inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
+                  Preguntas Frecuentes
+                </span>
+                <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+                  Lo que más nos preguntan
+                </h2>
+              </div>
+              <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <FAQAccordion faqs={homepageFaqs} />
+              </div>
+              <div className="mt-6 text-center">
+                <Link
+                  href="/faq"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                >
+                  Ver todas las preguntas
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Testimonials Section */}
         <section className="bg-slate-900 py-20 md:py-28">
           <div className="container mx-auto px-4">
@@ -715,60 +842,6 @@ export default async function Home() {
                 Dejanos tu opinión en Google
                 <ExternalLink className="h-4 w-4 text-slate-400" />
               </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Partners Carousel - Infinite smooth scroll */}
-        <section className="border-b border-slate-200 bg-white py-6 overflow-hidden">
-          <div className="container mx-auto px-4 mb-4">
-            <p className="text-center text-sm font-medium text-slate-500 uppercase tracking-wider">
-              Marcas que nos respaldan
-            </p>
-          </div>
-          
-          {/* Infinite carousel */}
-          <div className="relative">
-            {/* Gradient overlays for smooth fade effect */}
-            <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-white to-transparent" />
-            <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-white to-transparent" />
-            
-            {/* Scrolling container */}
-            <div className="flex animate-scroll">
-              {/* First set of logos */}
-              <div className="flex shrink-0 items-center gap-12 px-6">
-                {partners.map((partner, i) => (
-                  <div
-                    key={`a-${i}`}
-                    className="grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100"
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      width={100}
-                      height={50}
-                      className="h-10 w-auto object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-              {/* Duplicate for seamless loop */}
-              <div className="flex shrink-0 items-center gap-12 px-6">
-                {partners.map((partner, i) => (
-                  <div
-                    key={`b-${i}`}
-                    className="grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100"
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      width={100}
-                      height={50}
-                      className="h-10 w-auto object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </section>
@@ -1020,7 +1093,7 @@ export default async function Home() {
           href="https://wa.me/59892744725"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30 transition-all hover:bg-green-600 hover:scale-110 hover:shadow-xl sm:hidden"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30 transition-all hover:bg-green-600 hover:scale-110 hover:shadow-xl"
           aria-label="Contactar por WhatsApp"
         >
           <MessageCircle className="h-6 w-6" />

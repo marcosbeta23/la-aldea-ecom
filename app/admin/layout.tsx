@@ -18,7 +18,8 @@ import {
   FileText,
   Search,
   Boxes,
-  Users
+  Users,
+  Building2
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -33,6 +34,7 @@ const navItems = [
   { href: '/admin/inventory', label: 'Inventario', icon: Boxes },
   { href: '/admin/coupons', label: 'Cupones', icon: Tag },
   { href: '/admin/reviews', label: 'Reseñas', icon: Star },
+  { href: '/admin/partners', label: 'Marcas', icon: Building2 },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
 ];
 
