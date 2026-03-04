@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Product } from "@/types/database";
 import FeaturedCarousel from "@/components/products/FeaturedCarousel";
+import FloatingWhatsApp from "@/components/common/FloatingWhatsApp";
 import {
   Droplets,
   Wrench,
@@ -375,7 +376,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
 
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50">
         {/* Skip to content — Accessibility */}
         <a href="#main-content" className="skip-to-content">
           Ir al contenido principal
@@ -385,7 +386,7 @@ export default async function Home() {
         <Header />
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden min-h-screen flex items-center touch-pan-y">
+        <section className="relative overflow-hidden min-h-dvh flex items-center touch-pan-y">
           {/* Background Image */}
           <div className="absolute inset-0 will-change-transform">
             <Image
@@ -1021,16 +1022,8 @@ export default async function Home() {
           </div>
         </footer>
 
-        {/* Floating WhatsApp Button */}
-        <a
-          href="https://wa.me/59892744725"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30 transition-all hover:bg-green-600 hover:scale-110 hover:shadow-xl"
-          aria-label="Contactar por WhatsApp"
-        >
-          <MessageCircle className="h-6 w-6" />
-        </a>
+        {/* Floating WhatsApp Button — appears after scrolling past hero */}
+        <FloatingWhatsApp />
       </div>
     </>
   );

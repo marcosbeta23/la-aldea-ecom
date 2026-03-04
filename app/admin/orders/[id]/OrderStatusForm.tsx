@@ -2,27 +2,38 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertTriangle, Clock, CreditCard, Bell, FileText, FileCheck, Package, Truck, CheckCircle, AlertCircle, RotateCcw, XCircle } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+interface StatusOption {
+  value: string;
+  label: string;
+  Icon: LucideIcon;
+  color: string;
+  description: string;
+  group: 'workflow' | 'problem';
+  allowedFrom: string[];
+}
 
 /**
  * All status options with logical grouping and transition rules.
  * The `allowedFrom` array defines which statuses can transition TO this one.
  * If empty, it's reachable from any status (for initial/reset states).
  */
-const statusOptions = [
+const statusOptions: StatusOption[] = [
   // ── Active workflow ──
-  { value: 'pending', label: 'Pendiente', icon: '⏳', color: 'bg-amber-100 text-amber-800 border-amber-300', description: 'Esperando pago del cliente', group: 'workflow', allowedFrom: [] as string[] },
-  { value: 'paid', label: 'Pagado', icon: '💳', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', description: 'Pago confirmado', group: 'workflow', allowedFrom: ['pending', 'paid_pending_verification'] },
-  { value: 'paid_pending_verification', label: 'Por Verificar', icon: '🔔', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', description: 'Pago recibido, verificar monto', group: 'workflow', allowedFrom: ['pending'] },
-  { value: 'ready_to_invoice', label: 'Por Facturar', icon: '📝', color: 'bg-blue-100 text-blue-800 border-blue-300', description: 'Listo para emitir factura', group: 'workflow', allowedFrom: ['paid', 'paid_pending_verification'] },
-  { value: 'invoiced', label: 'Facturado', icon: '📄', color: 'bg-indigo-100 text-indigo-800 border-indigo-300', description: 'Factura emitida', group: 'workflow', allowedFrom: ['ready_to_invoice', 'paid'] },
-  { value: 'processing', label: 'En Preparación', icon: '📦', color: 'bg-cyan-100 text-cyan-800 border-cyan-300', description: 'Preparando pedido', group: 'workflow', allowedFrom: ['invoiced', 'paid', 'ready_to_invoice'] },
-  { value: 'shipped', label: 'Enviado', icon: '🚚', color: 'bg-purple-100 text-purple-800 border-purple-300', description: 'En camino al cliente', group: 'workflow', allowedFrom: ['invoiced', 'processing'] },
-  { value: 'delivered', label: 'Entregado', icon: '✅', color: 'bg-green-100 text-green-800 border-green-300', description: 'Pedido completado', group: 'workflow', allowedFrom: ['shipped', 'processing', 'invoiced'] },
+  { value: 'pending', label: 'Pendiente', Icon: Clock, color: 'bg-amber-100 text-amber-800 border-amber-300', description: 'Esperando pago del cliente', group: 'workflow', allowedFrom: [] },
+  { value: 'paid', label: 'Pagado', Icon: CreditCard, color: 'bg-emerald-100 text-emerald-800 border-emerald-300', description: 'Pago confirmado', group: 'workflow', allowedFrom: ['pending', 'paid_pending_verification'] },
+  { value: 'paid_pending_verification', label: 'Por Verificar', Icon: Bell, color: 'bg-yellow-100 text-yellow-800 border-yellow-300', description: 'Pago recibido, verificar monto', group: 'workflow', allowedFrom: ['pending'] },
+  { value: 'ready_to_invoice', label: 'Por Facturar', Icon: FileText, color: 'bg-blue-100 text-blue-800 border-blue-300', description: 'Listo para emitir factura', group: 'workflow', allowedFrom: ['paid', 'paid_pending_verification'] },
+  { value: 'invoiced', label: 'Facturado', Icon: FileCheck, color: 'bg-indigo-100 text-indigo-800 border-indigo-300', description: 'Factura emitida', group: 'workflow', allowedFrom: ['ready_to_invoice', 'paid'] },
+  { value: 'processing', label: 'En Preparación', Icon: Package, color: 'bg-cyan-100 text-cyan-800 border-cyan-300', description: 'Preparando pedido', group: 'workflow', allowedFrom: ['invoiced', 'paid', 'ready_to_invoice'] },
+  { value: 'shipped', label: 'Enviado', Icon: Truck, color: 'bg-purple-100 text-purple-800 border-purple-300', description: 'En camino al cliente', group: 'workflow', allowedFrom: ['invoiced', 'processing'] },
+  { value: 'delivered', label: 'Entregado', Icon: CheckCircle, color: 'bg-green-100 text-green-800 border-green-300', description: 'Pedido completado', group: 'workflow', allowedFrom: ['shipped', 'processing', 'invoiced'] },
   // ── Problem states ──
-  { value: 'awaiting_stock', label: 'Sin Stock', icon: '⚠️', color: 'bg-orange-100 text-orange-800 border-orange-300', description: 'Producto sin stock, contactar cliente', group: 'problem', allowedFrom: ['paid', 'paid_pending_verification', 'ready_to_invoice', 'processing'] },
-  { value: 'refunded', label: 'Reembolsado', icon: '↩️', color: 'bg-rose-100 text-rose-800 border-rose-300', description: 'Dinero devuelto al cliente', group: 'problem', allowedFrom: ['paid', 'paid_pending_verification', 'awaiting_stock', 'ready_to_invoice', 'invoiced'] },
-  { value: 'cancelled', label: 'Cancelado', icon: '❌', color: 'bg-red-100 text-red-800 border-red-300', description: 'Pedido cancelado', group: 'problem', allowedFrom: ['pending', 'paid', 'paid_pending_verification', 'awaiting_stock'] },
+  { value: 'awaiting_stock', label: 'Sin Stock', Icon: AlertCircle, color: 'bg-orange-100 text-orange-800 border-orange-300', description: 'Producto sin stock, contactar cliente', group: 'problem', allowedFrom: ['paid', 'paid_pending_verification', 'ready_to_invoice', 'processing'] },
+  { value: 'refunded', label: 'Reembolsado', Icon: RotateCcw, color: 'bg-rose-100 text-rose-800 border-rose-300', description: 'Dinero devuelto al cliente', group: 'problem', allowedFrom: ['paid', 'paid_pending_verification', 'awaiting_stock', 'ready_to_invoice', 'invoiced'] },
+  { value: 'cancelled', label: 'Cancelado', Icon: XCircle, color: 'bg-red-100 text-red-800 border-red-300', description: 'Pedido cancelado', group: 'problem', allowedFrom: ['pending', 'paid', 'paid_pending_verification', 'awaiting_stock'] },
 ];
 
 function getAvailableTransitions(currentStatus: string) {
@@ -90,6 +101,32 @@ export default function OrderStatusForm({
   const workflowOptions = availableOptions.filter(o => o.group === 'workflow');
   const problemOptions = availableOptions.filter(o => o.group === 'problem');
 
+  const renderStatusButton = (option: StatusOption) => (
+    <button
+      key={option.value}
+      type="button"
+      onClick={() => setStatus(option.value)}
+      className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
+        status === option.value
+          ? option.color + ' border-current shadow-sm'
+          : 'bg-white border-slate-200 hover:border-slate-300'
+      }`}
+    >
+      <option.Icon className="h-5 w-5 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <span className={`font-medium text-sm ${status === option.value ? '' : 'text-slate-700'}`}>
+          {option.label}
+        </span>
+        <p className={`text-xs mt-0.5 ${status === option.value ? 'opacity-80' : 'text-slate-400'}`}>
+          {option.description}
+        </p>
+      </div>
+      {status === option.value && (
+        <CheckCircle2 className="h-5 w-5 shrink-0" />
+      )}
+    </button>
+  );
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -105,31 +142,7 @@ export default function OrderStatusForm({
 
       {/* Workflow states */}
       <div className="space-y-2">
-        {workflowOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setStatus(option.value)}
-            className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
-              status === option.value
-                ? option.color + ' border-current shadow-sm'
-                : 'bg-white border-slate-200 hover:border-slate-300'
-            }`}
-          >
-            <span className="text-lg shrink-0">{option.icon}</span>
-            <div className="flex-1 min-w-0">
-              <span className={`font-medium text-sm ${status === option.value ? '' : 'text-slate-700'}`}>
-                {option.label}
-              </span>
-              <p className={`text-xs mt-0.5 ${status === option.value ? 'opacity-80' : 'text-slate-400'}`}>
-                {option.description}
-              </p>
-            </div>
-            {status === option.value && (
-              <CheckCircle2 className="h-5 w-5 shrink-0" />
-            )}
-          </button>
-        ))}
+        {workflowOptions.map(renderStatusButton)}
       </div>
 
       {/* Problem states — visually separated */}
@@ -138,31 +151,7 @@ export default function OrderStatusForm({
           <div className="my-3 border-t border-slate-200" />
           <p className="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Problemas</p>
           <div className="space-y-2">
-            {problemOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setStatus(option.value)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
-                  status === option.value
-                    ? option.color + ' border-current shadow-sm'
-                    : 'bg-white border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <span className="text-lg shrink-0">{option.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <span className={`font-medium text-sm ${status === option.value ? '' : 'text-slate-700'}`}>
-                    {option.label}
-                  </span>
-                  <p className={`text-xs mt-0.5 ${status === option.value ? 'opacity-80' : 'text-slate-400'}`}>
-                    {option.description}
-                  </p>
-                </div>
-                {status === option.value && (
-                  <CheckCircle2 className="h-5 w-5 shrink-0" />
-                )}
-              </button>
-            ))}
+            {problemOptions.map(renderStatusButton)}
           </div>
         </>
       )}

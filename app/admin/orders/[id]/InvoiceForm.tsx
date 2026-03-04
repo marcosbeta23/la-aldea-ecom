@@ -112,7 +112,7 @@ export default function InvoiceForm({ order }: InvoiceFormProps) {
       {!isInvoiced && (
         <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm">
           <p className="text-slate-700">
-            <strong>📋 Proceso:</strong> Generá la factura en el sistema ERP/contable y luego registrá el número aquí para actualizar el estado del pedido.
+            <strong>Proceso:</strong> Generá la factura en el sistema ERP/contable y luego registrá el número aquí para actualizar el estado del pedido.
           </p>
         </div>
       )}

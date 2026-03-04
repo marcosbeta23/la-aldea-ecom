@@ -69,7 +69,7 @@ export default function FeaturedCarousel({
   useEffect(() => {
     const updateVisible = () => {
       const w = window.innerWidth;
-      if (w < 640) setVisibleCount(1);
+      if (w < 640) setVisibleCount(2);
       else if (w < 768) setVisibleCount(2);
       else if (w < 1024) setVisibleCount(3);
       else setVisibleCount(4);
