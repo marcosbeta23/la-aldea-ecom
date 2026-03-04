@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star, AlertCircle, MessageCircle, Share2 } from 'lucide-react';
+import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star, AlertCircle, MessageCircle, Share2, CreditCard, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
@@ -17,6 +17,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showStickyCart, setShowStickyCart] = useState(false);
   
   const { addItem, isInCart } = useCartStore();
   const { toggleItem, isInWishlist } = useWishlistStore();
@@ -37,6 +38,15 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       brand: product.brand || undefined,
     });
   }, [product.id, product.name, product.price_numeric, product.category, product.brand]);
+
+  // Show sticky cart button on mobile when scrolled past main CTA
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowStickyCart(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Limit quantity selector to available stock
   const maxQuantity = Math.min(product.stock, 10);
@@ -183,19 +193,26 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             <span className="text-sm font-medium">Disponible a pedido</span>
           </div>
         ) : inStock ? (
-          <div className={`flex items-center gap-2 ${lowStock ? 'text-orange-600' : 'text-green-600'}`}>
-            <div className={`w-2 h-2 rounded-full ${lowStock ? 'bg-orange-500' : 'bg-green-500'}`} />
-            <span className="text-sm font-medium">
-              {lowStock ? `¡Últimas ${product.stock} unidades!` : `${product.stock} en stock`}
-            </span>
-          </div>
+          lowStock ? (
+            <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+              <span className="text-sm font-semibold text-amber-800">
+                ¡Solo quedan {product.stock} unidades!
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-green-600">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-sm font-medium">En stock</span>
+            </div>
+          )
         ) : (
           <div className="flex items-center gap-2 text-slate-500">
             <div className="w-2 h-2 rounded-full bg-slate-400" />
             <span className="text-sm font-medium">Sin stock</span>
           </div>
         )}
-        
+
         {/* Stock inquiry link */}
         <a
           href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por la disponibilidad de: ${product.name} (SKU: ${product.sku})`)}`}
@@ -207,6 +224,17 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           Consultar disponibilidad por WhatsApp
         </a>
       </div>
+
+      {/* Installment Display */}
+      {inStock && !isOnRequest && product.price_numeric >= 1000 && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
+          <CreditCard className="h-4 w-4 text-green-600 shrink-0" />
+          <span className="text-sm text-green-800">
+            <span className="font-semibold">Hasta 12 cuotas</span>
+            {' '}de {formatPrice(Math.ceil(product.price_numeric / 12), product.currency)} con MercadoPago
+          </span>
+        </div>
+      )}
 
       {/* Quantity Selector */}
       {inStock && !isOnRequest && (
@@ -314,6 +342,19 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       </div>
       )}
 
+      {/* WhatsApp Buy Button */}
+      {inStock && !isOnRequest && (
+        <a
+          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Me interesa comprar: ${product.name} (SKU: ${product.sku}) - ${formatPrice(product.price_numeric, product.currency)}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 mb-6 py-3 rounded-xl font-medium text-sm bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition-colors w-full"
+        >
+          <MessageCircle className="h-4 w-4" />
+          Comprar por WhatsApp
+        </a>
+      )}
+
       {/* Trust Badges */}
       <div className="grid grid-cols-2 gap-4 mt-auto pt-6 border-t border-slate-200">
         <div className="flex items-center gap-3">
@@ -322,7 +363,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           </div>
           <div>
             <p className="text-sm font-medium text-slate-900">Envío a todo Uruguay</p>
-            <p className="text-xs text-slate-500">Consultar costos</p>
+            <p className="text-xs text-slate-500">19 departamentos</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -330,11 +371,67 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             <Shield className="h-5 w-5 text-green-600" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-900">Garantía incluida</p>
+            <p className="text-sm font-medium text-slate-900">Compra Segura</p>
+            <p className="text-xs text-slate-500">MercadoPago</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-50 rounded-lg">
+            <RotateCcw className="h-5 w-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-900">Garantía Incluida</p>
             <p className="text-xs text-slate-500">Según fabricante</p>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-50 rounded-lg">
+            <Star className="h-5 w-5 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-900">25+ Años</p>
+            <p className="text-xs text-slate-500">De experiencia</p>
+          </div>
+        </div>
       </div>
+
+      {/* Sticky Add to Cart — Mobile Only */}
+      {showStickyCart && inStock && !isOnRequest && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-sm p-3 shadow-[0_-4px_12px_rgba(0,0,0,0.1)] lg:hidden">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900 truncate">{product.name}</p>
+              <p className="text-lg font-bold text-blue-600">{formatPrice(product.price_numeric, product.currency)}</p>
+            </div>
+            <button
+              onClick={handleAddToCart}
+              disabled={isAdding}
+              className={`shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
+                isAdding || inCart
+                  ? 'bg-green-600 text-white'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isAdding ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Agregado
+                </>
+              ) : inCart ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  En carrito
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="h-4 w-4" />
+                  Agregar
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

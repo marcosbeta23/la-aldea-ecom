@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Check, AlertCircle, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Check, AlertCircle, MessageCircle, CreditCard } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import WishlistButton from '@/components/common/WishlistButton';
@@ -197,6 +197,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </span>
           )}
         </div>
+
+        {/* Installment hint for higher-price items */}
+        {inStock && !isOnRequest && product.price_numeric >= 3000 && (
+          <div className="flex items-center gap-1 mt-1 text-[11px] text-green-700">
+            <CreditCard className="h-3 w-3" />
+            <span>12 cuotas de {formatPrice(Math.ceil(product.price_numeric / 12), product.currency)}</span>
+          </div>
+        )}
       </div>
     </Link>
   );
