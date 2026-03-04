@@ -5,7 +5,7 @@ import { isCfImagesConfigured, uploadToCfImages } from '@/lib/cloudflare-images'
 
 const BUCKET = 'product-images';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/svg+xml'];
 
 export async function POST(request: NextRequest) {
   // Auth check
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Formato no permitido. Usa JPG, PNG o WebP' },
+        { error: 'Formato no permitido. Usa JPG, PNG, WebP o SVG' },
         { status: 400 }
       );
     }

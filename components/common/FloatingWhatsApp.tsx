@@ -1,21 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageCircle } from 'lucide-react';
 
 export default function FloatingWhatsApp() {
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
+  const isHomepage = pathname === '/';
 
   useEffect(() => {
-    const handleScroll = () => {
-      // Show after scrolling past ~100vh (hero section)
-      setVisible(window.scrollY > window.innerHeight * 0.85);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check initial position
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    if (!isHomepage) {
+      // On non-homepage pages, show after a small scroll (100px)
+      const handleScroll = () => {
+        setVisible(window.scrollY > 100);
+      };
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      return () => window.removeEventListener('scroll', handleScroll);
+    } else {
+      // On homepage, show after scrolling past hero (~85vh)
+      const handleScroll = () => {
+        setVisible(window.scrollY > window.innerHeight * 0.85);
+      };
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [isHomepage]);
 
   return (
     <a

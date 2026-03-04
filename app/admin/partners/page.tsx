@@ -127,11 +127,15 @@ export default function PartnersPage() {
 
     try {
       const res = await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
+      const data = await res.json();
       if (res.ok) {
         fetchPartners();
+      } else {
+        alert(data.error || 'Error al eliminar la marca');
       }
     } catch (err) {
       console.error('Error deleting partner:', err);
+      alert('Error de conexión al eliminar la marca');
     }
   }
 

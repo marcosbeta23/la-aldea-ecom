@@ -159,7 +159,7 @@ export default function ImageUpload({ images, onChange, maxImages = 10 }: ImageU
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/avif"
+          accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml"
           multiple
           onChange={handleFileInput}
           className="hidden"
@@ -180,7 +180,7 @@ export default function ImageUpload({ images, onChange, maxImages = 10 }: ImageU
                 Arrastrá imágenes acá o hacé click para subir
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                JPG, PNG o WebP · Máximo 5MB cada una · {images.length}/{maxImages} imágenes
+                JPG, PNG, WebP o SVG · Máximo 5MB cada una · {images.length}/{maxImages} imágenes
               </p>
             </div>
           </div>

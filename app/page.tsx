@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Product } from "@/types/database";
 import FeaturedCarousel from "@/components/products/FeaturedCarousel";
-import FloatingWhatsApp from "@/components/common/FloatingWhatsApp";
 import {
   Droplets,
   Wrench,
@@ -1021,9 +1020,6 @@ export default async function Home() {
             </div>
           </div>
         </footer>
-
-        {/* Floating WhatsApp Button — appears after scrolling past hero */}
-        <FloatingWhatsApp />
       </div>
     </>
   );
