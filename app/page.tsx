@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Product } from "@/types/database";
 import FeaturedCarousel from "@/components/products/FeaturedCarousel";
-import FAQAccordion from "@/components/faq/FAQAccordion";
 import {
   Droplets,
   Wrench,
@@ -341,26 +340,6 @@ const stats = [
   { value: "19", label: "Departamentos Cubiertos" },
 ];
 
-// Homepage FAQs for AEO (Answer Engine Optimization)
-const homepageFaqs = [
-  {
-    question: "¿Cuál es el horario de atención?",
-    answer: "Lunes a viernes de 08:00 a 12:00 y de 14:00 a 18:00. Sábados de 08:30 a 12:00. Domingos cerrado.",
-  },
-  {
-    question: "¿Hacen envíos a todo Uruguay?",
-    answer: "Sí, enviamos productos a los 19 departamentos. Montevideo y áreas cercanas: 24-48 horas. Interior: 3-5 días hábiles. También podés retirar en nuestro local de Tala sin costo.",
-  },
-  {
-    question: "¿Qué formas de pago aceptan?",
-    answer: "Aceptamos MercadoPago (tarjetas de crédito y débito en hasta 12 cuotas), transferencia bancaria y efectivo en el local.",
-  },
-  {
-    question: "¿Cómo puedo solicitar asesoramiento técnico?",
-    answer: "Podés llamarnos al +598 92 744 725, escribirnos por WhatsApp o completar el formulario de contacto. El asesoramiento técnico es sin costo.",
-  },
-];
-
 export default async function Home() {
   // Fetch featured products from database — only products marked as featured
   // Order by featured_order (nulls last), then by sold_count as fallback
@@ -394,24 +373,6 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
-      />
-      {/* FAQPage JSON-LD Schema (AEO) */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: homepageFaqs.map((faq) => ({
-              "@type": "Question",
-              name: faq.question,
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: faq.answer,
-              },
-            })),
-          }),
-        }}
       />
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -753,34 +714,6 @@ export default async function Home() {
                     Llamar
                   </a>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ Section — AEO (Answer Engine Optimization) */}
-        <section className="bg-slate-50 py-16 md:py-20">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-3xl">
-              <div className="text-center">
-                <span className="inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
-                  Preguntas Frecuentes
-                </span>
-                <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-                  Lo que más nos preguntan
-                </h2>
-              </div>
-              <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                <FAQAccordion faqs={homepageFaqs} />
-              </div>
-              <div className="mt-6 text-center">
-                <Link
-                  href="/faq"
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
-                >
-                  Ver todas las preguntas
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
               </div>
             </div>
           </div>
