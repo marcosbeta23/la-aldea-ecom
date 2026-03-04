@@ -7,9 +7,10 @@ import type { Order } from '@/types/database';
 
 interface RefundButtonProps {
   order: Order;
+  currency?: string;
 }
 
-export default function RefundButton({ order }: RefundButtonProps) {
+export default function RefundButton({ order, currency = 'UYU' }: RefundButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,6 +28,12 @@ export default function RefundButton({ order }: RefundButtonProps) {
     !['cancelled', 'refunded', 'pending', 'draft'].includes(order.status);
   
   const isRefunded = order.status === 'refunded' || !!order.refund_id;
+
+  const formatAmount = (v: number) => {
+    if (currency === 'USD') return `US$ ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$ ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  };
+  const currencyLabel = currency === 'USD' ? 'USD' : 'UYU';
   
   const handleRefund = async () => {
     if (!refundData.reason.trim()) {
@@ -74,7 +81,7 @@ export default function RefundButton({ order }: RefundButtonProps) {
         </div>
         {order.refund_amount && (
           <p className="text-sm text-rose-600 mt-1">
-            Monto: UYU {order.refund_amount.toLocaleString('es-UY')}
+            Monto: {formatAmount(order.refund_amount)}
           </p>
         )}
         {order.refund_reason && (
@@ -115,7 +122,7 @@ export default function RefundButton({ order }: RefundButtonProps) {
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Monto a reembolsar (UYU)
+              Monto a reembolsar ({currencyLabel})
             </label>
             <input
               type="number"
@@ -126,7 +133,7 @@ export default function RefundButton({ order }: RefundButtonProps) {
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
             />
             <p className="mt-1 text-xs text-slate-500">
-              Máximo: UYU {order.total.toLocaleString('es-UY')}
+              Máximo: {formatAmount(order.total)}
             </p>
           </div>
           

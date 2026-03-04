@@ -19,6 +19,7 @@ import {
   ExternalLink,
   LucideIcon,
   Zap,
+  Truck,
 } from 'lucide-react';
 import Image from 'next/image';
 import {
@@ -74,6 +75,7 @@ interface AnalyticsData {
   };
   paymentMethodDistribution: Record<string, { count: number; revenue: number }>;
   departmentDistribution: Record<string, { orders: number; revenue: number }>;
+  shippingTypeDistribution: Record<string, { orders: number; revenue: number }>;
   inventoryHealth: Array<{
     id: string;
     name: string;
@@ -108,6 +110,7 @@ interface PostHogData {
   };
   topPages?: Array<{ page: string; views: number }>;
   topReferrers?: Array<{ referrer: string; visits: number }>;
+  funnel?: Array<{ step: string; label: string; visitors: number; rate: number }>;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -130,6 +133,30 @@ const PAYMENT_COLORS: Record<string, string> = {
   pos_debito: 'bg-purple-500',
   pos_credito: 'bg-violet-500',
   unknown: 'bg-slate-400',
+};
+
+const PAYMENT_HEX_COLORS: Record<string, string> = {
+  mercadopago: '#3b82f6',
+  transfer: '#f59e0b',
+  efectivo: '#22c55e',
+  credito: '#6366f1',
+  pos_debito: '#a855f7',
+  pos_credito: '#8b5cf6',
+  unknown: '#94a3b8',
+};
+
+const SHIPPING_LABELS: Record<string, string> = {
+  pickup: 'Retiro en local',
+  standard: 'Envío estándar',
+  express: 'Envío express',
+  'Sin especificar': 'Sin especificar',
+};
+
+const SHIPPING_HEX_COLORS: Record<string, string> = {
+  pickup: '#22c55e',
+  standard: '#3b82f6',
+  express: '#a855f7',
+  'Sin especificar': '#94a3b8',
 };
 
 const DEPT_COLORS = [
@@ -556,6 +583,73 @@ function DepartmentDonutChart({
   );
 }
 
+// ── Conversion Funnel ───────────────────────────────────────────────────────
+
+const FUNNEL_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#22c55e'];
+
+function ConversionFunnel({ funnel }: { funnel: PostHogData['funnel'] }) {
+  if (!funnel || funnel.length === 0) return null;
+
+  const maxVisitors = funnel[0]?.visitors || 1;
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <Zap className="h-5 w-5 text-purple-500" />
+        <h3 className="text-lg font-semibold text-slate-900">Embudo de Conversión</h3>
+      </div>
+
+      <div className="space-y-3">
+        {funnel.map((step, i) => {
+          const widthPct = maxVisitors > 0 ? Math.max((step.visitors / maxVisitors) * 100, 4) : 4;
+          const prevVisitors = i > 0 ? funnel[i - 1].visitors : step.visitors;
+          const dropOff = prevVisitors > 0 ? Math.round(((prevVisitors - step.visitors) / prevVisitors) * 100) : 0;
+
+          return (
+            <div key={step.step}>
+              {i > 0 && dropOff > 0 && (
+                <div className="flex items-center gap-2 py-1 pl-3">
+                  <TrendingDown className="h-3 w-3 text-red-400" />
+                  <span className="text-xs text-red-500">-{dropOff}% abandono</span>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-slate-600 w-20 shrink-0">{step.label}</span>
+                <div className="flex-1 relative">
+                  <div
+                    className="h-9 rounded-lg flex items-center px-3 transition-all"
+                    style={{
+                      width: `${widthPct}%`,
+                      backgroundColor: FUNNEL_COLORS[i] || FUNNEL_COLORS[0],
+                      minWidth: '60px',
+                    }}
+                  >
+                    <span className="text-white text-sm font-bold whitespace-nowrap">
+                      {step.visitors}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-xs text-slate-400 w-14 text-right shrink-0">{step.rate}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {funnel.length >= 2 && (
+        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-xs text-slate-400">Conversión total</span>
+          <span className="text-sm font-bold text-green-600">
+            {funnel[0].visitors > 0
+              ? `${((funnel[funnel.length - 1].visitors / funnel[0].visitors) * 100).toFixed(1)}%`
+              : '0%'}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
@@ -760,7 +854,7 @@ export default function AnalyticsPage() {
               formatCurrency={formatCurrency}
             />
 
-            {/* Payment Method Distribution */}
+            {/* Payment Method Distribution — PieChart */}
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <CreditCard className="h-5 w-5 text-slate-400" />
@@ -768,44 +862,141 @@ export default function AnalyticsPage() {
               </div>
               {Object.keys(data.paymentMethodDistribution).length === 0 ? (
                 <p className="text-slate-400 text-sm text-center py-8">Sin pagos registrados</p>
-              ) : (
-                <div className="space-y-3">
-                  {Object.entries(data.paymentMethodDistribution)
-                    .sort((a, b) => b[1].revenue - a[1].revenue)
-                    .map(([method, stats]) => {
-                      const maxRevenue = Math.max(...Object.values(data.paymentMethodDistribution).map(s => s.revenue));
-                      const pct = maxRevenue > 0 ? (stats.revenue / maxRevenue) * 100 : 0;
-                      const totalOrders = Object.values(data.paymentMethodDistribution).reduce((s, v) => s + v.count, 0);
-                      const orderPct = totalOrders > 0 ? ((stats.count / totalOrders) * 100).toFixed(0) : '0';
+              ) : (() => {
+                const paymentData = Object.entries(data.paymentMethodDistribution)
+                  .sort((a, b) => b[1].revenue - a[1].revenue)
+                  .map(([method, stats]) => ({
+                    name: PAYMENT_LABELS[method] || method,
+                    value: stats.revenue,
+                    count: stats.count,
+                    method,
+                  }));
+                const totalRevenue = paymentData.reduce((s, d) => s + d.value, 0);
+                const totalCount = paymentData.reduce((s, d) => s + d.count, 0);
 
-                      return (
-                        <div key={method}>
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span className="text-slate-700 font-medium">{PAYMENT_LABELS[method] || method}</span>
+                return (
+                  <div>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={paymentData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={85}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {paymentData.map((entry) => (
+                            <Cell key={entry.method} fill={PAYMENT_HEX_COLORS[entry.method] || '#94a3b8'} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          formatter={(v: any) => [formatCurrency(Number(v ?? 0)), 'Ingresos']}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="space-y-2 mt-3">
+                      {paymentData.map((entry) => {
+                        const pct = totalCount > 0 ? ((entry.count / totalCount) * 100).toFixed(0) : '0';
+                        return (
+                          <div key={entry.method} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PAYMENT_HEX_COLORS[entry.method] || '#94a3b8' }} />
+                              <span className="text-slate-700">{entry.name}</span>
+                            </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-xs text-slate-400">{stats.count} ped. ({orderPct}%)</span>
-                              <span className="text-slate-900 font-semibold">{formatCurrency(stats.revenue)}</span>
+                              <span className="text-xs text-slate-400">{entry.count} ({pct}%)</span>
+                              <span className="text-slate-900 font-semibold">{formatCurrency(entry.value)}</span>
                             </div>
                           </div>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full ${PAYMENT_COLORS[method] || 'bg-slate-400'} rounded-full transition-all`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
-          {/* Top products + Status */}
+          {/* Shipping Distribution + Top products */}
           <div className="grid lg:grid-cols-2 gap-6">
-            <TopProductsList products={data.topProducts} formatCurrency={formatCurrency} />
+            {/* Shipping Type Distribution */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Truck className="h-5 w-5 text-slate-400" />
+                <h3 className="text-lg font-semibold text-slate-900">Tipo de Envío</h3>
+              </div>
+              {Object.keys(data.shippingTypeDistribution).length === 0 ? (
+                <p className="text-slate-400 text-sm text-center py-8">Sin datos de envío</p>
+              ) : (() => {
+                const shippingData = Object.entries(data.shippingTypeDistribution)
+                  .sort((a, b) => b[1].orders - a[1].orders)
+                  .map(([type, stats]) => ({
+                    name: SHIPPING_LABELS[type] || type,
+                    value: stats.orders,
+                    revenue: stats.revenue,
+                    type,
+                  }));
+                const totalOrders = shippingData.reduce((s, d) => s + d.value, 0);
+
+                return (
+                  <div>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={shippingData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={85}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {shippingData.map((entry) => (
+                            <Cell key={entry.type} fill={SHIPPING_HEX_COLORS[entry.type] || '#94a3b8'} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          formatter={(v: any) => {
+                            const pct = totalOrders > 0 ? ((Number(v ?? 0) / totalOrders) * 100).toFixed(0) : '0';
+                            return [`${v} pedidos (${pct}%)`, 'Pedidos'];
+                          }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="space-y-2 mt-3">
+                      {shippingData.map((entry) => {
+                        const pct = totalOrders > 0 ? ((entry.value / totalOrders) * 100).toFixed(0) : '0';
+                        return (
+                          <div key={entry.type} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: SHIPPING_HEX_COLORS[entry.type] || '#94a3b8' }} />
+                              <span className="text-slate-700">{entry.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-slate-400">{entry.value} ped. ({pct}%)</span>
+                              <span className="text-slate-900 font-semibold">{formatCurrency(entry.revenue)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Status Distribution */}
             <StatusDistribution data={data.statusDistribution} />
           </div>
+
+          {/* Top products (full width) */}
+          <TopProductsList products={data.topProducts} formatCurrency={formatCurrency} />
 
           {/* Inventory Health */}
           {data.inventoryHealth.length > 0 && (
@@ -853,6 +1044,11 @@ export default function AnalyticsPage() {
 
           {/* Hourly chart */}
           <HourlyChart data={data.hourlyStats} />
+
+          {/* PostHog Conversion Funnel */}
+          {posthogData?.configured && posthogData.funnel && posthogData.funnel.length > 0 && (
+            <ConversionFunnel funnel={posthogData.funnel} />
+          )}
 
           {/* PostHog Web Traffic */}
           {posthogData?.configured && posthogData.visitors && (

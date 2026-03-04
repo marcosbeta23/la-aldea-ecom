@@ -928,10 +928,21 @@ export default function ProductsPage() {
       {!loading && viewMode === 'table' && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[960px] table-fixed">
+              <colgroup>
+                <col className="w-10" />
+                <col className="w-56" />
+                <col className="w-32" />
+                <col className="w-36" />
+                <col className="w-28" />
+                <col className="w-16" />
+                <col className="w-14" />
+                <col className="w-24" />
+                <col className="w-20" />
+              </colgroup>
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="w-10 px-3 py-3">
+                  <th className="px-3 py-3 w-10">
                     <button onClick={toggleSelectAll} className="text-slate-400 hover:text-slate-600" title="Seleccionar todos">
                       {selectedIds.size === products.length && products.length > 0 ? (
                         <CheckSquare className="h-4 w-4 text-blue-600" />
@@ -940,7 +951,7 @@ export default function ProductsPage() {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left min-w-62.5">
+                  <th className="px-4 py-3 text-left">
                     <SortButton field="name" label="Producto" />
                   </th>
                   <th className="px-4 py-3 text-left">
@@ -1004,7 +1015,7 @@ export default function ProductsPage() {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate max-w-55 group-hover:text-blue-600 transition-colors">
+                          <p className="text-sm font-medium text-slate-900 truncate group-hover:text-blue-600 transition-colors">
                             {product.name}
                           </p>
                           {product.brand && (

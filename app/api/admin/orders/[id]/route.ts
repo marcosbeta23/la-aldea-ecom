@@ -3,11 +3,16 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { OrderStatus } from '@/types/database';
 import {
-  getOrderShippedMessage,
+  getPaymentReceivedMessage,
+  getAwaitingStockMessage,
   getReadyToInvoiceMessage,
+  getInvoiceGeneratedMessage,
+  getOrderShippedMessage,
+  getRefundCompletedMessage,
   type NotificationContext
 } from '@/lib/notifications';
 import { alertOrderStatusChanged } from '@/lib/telegram';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
 
 // Verify admin authentication via Clerk
 async function verifyAdmin() {
@@ -158,45 +163,62 @@ async function logOrderEvent(orderId: string, action: string, oldStatus: string 
   }
 }
 
-// Helper to send notifications on status change
+// Helper to send notifications on status change (WhatsApp + log)
 async function sendStatusNotification(order: Record<string, unknown>, newStatus: string) {
   try {
     const ctx: NotificationContext = { order: order as any };
     let message = '';
-    
+
     switch (newStatus) {
-      case 'shipped':
-        message = getOrderShippedMessage(ctx);
+      case 'paid':
+        message = getPaymentReceivedMessage(ctx);
+        break;
+      case 'awaiting_stock':
+        message = getAwaitingStockMessage(ctx);
         break;
       case 'ready_to_invoice':
         message = getReadyToInvoiceMessage(ctx);
         break;
+      case 'invoiced':
+        message = getInvoiceGeneratedMessage(ctx);
+        break;
+      case 'shipped':
+        message = getOrderShippedMessage(ctx);
+        break;
+      case 'refunded':
+        message = getRefundCompletedMessage(ctx);
+        break;
       default:
         return; // No notification for other statuses
     }
-    
-    // Log notification attempt (sanitized — no PII in logs)
-    console.log(`[Notification] Order ${order.id} -> ${newStatus}`);
-    console.log(`[Notification] Message preview: ${message.substring(0, 50)}...`);
-    
-    // Store notification for manual sending via WhatsApp
+
+    const phone = order.customer_phone as string | undefined;
+
+    // Send WhatsApp message (non-blocking)
+    const whatsappResult = phone
+      ? await sendWhatsAppMessage(phone, message).catch(() => ({ success: false, error: 'exception' }))
+      : { success: false, error: 'no phone' };
+
+    console.log(`[Notification] Order ${order.id} -> ${newStatus}, WhatsApp: ${whatsappResult.success ? 'sent' : 'skipped'}`);
+
+    // Log notification attempt
     await (supabaseAdmin as unknown as any)
       .from('order_logs')
       .insert({
         order_id: order.id,
-        action: 'notification_generated',
+        action: whatsappResult.success ? 'whatsapp_sent' : 'notification_generated',
         details: {
           status: newStatus,
           channel: 'whatsapp',
-          message,
-          customer_phone: order.customer_phone,
-          customer_email: order.customer_email,
+          whatsapp_sent: whatsappResult.success,
+          whatsapp_message_id: whatsappResult.success ? (whatsappResult as any).messageId : undefined,
+          whatsapp_error: whatsappResult.success ? undefined : whatsappResult.error,
         },
         created_by: 'system',
       });
-      
+
   } catch (error) {
-    console.error('Failed to generate notification:', error);
+    console.error('Failed to send notification:', error);
   }
 }
 

@@ -51,9 +51,9 @@ export async function GET(request: NextRequest) {
     // Fetch current period orders
     const { data: ordersData } = await supabaseAdmin
       .from('orders')
-      .select('id, status, total, created_at, customer_email, order_source, payment_method, shipping_department, currency')
+      .select('id, status, total, created_at, customer_email, order_source, payment_method, shipping_department, shipping_type, currency')
       .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false }) as { data: Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null; order_source: string | null; payment_method: string | null; shipping_department: string | null; currency: string | null }> | null };
+      .order('created_at', { ascending: false }) as { data: Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null; order_source: string | null; payment_method: string | null; shipping_department: string | null; shipping_type: string | null; currency: string | null }> | null };
 
     const orders = ordersData || [];
 
@@ -169,6 +169,17 @@ export async function GET(request: NextRequest) {
       }
       departmentDistribution[dept].orders++;
       departmentDistribution[dept].revenue += order.total || 0;
+    }
+
+    // === Shipping Type Distribution ===
+    const shippingTypeDistribution: Record<string, { orders: number; revenue: number }> = {};
+    for (const order of paidOrders) {
+      const type = order.shipping_type || 'Sin especificar';
+      if (!shippingTypeDistribution[type]) {
+        shippingTypeDistribution[type] = { orders: 0, revenue: 0 };
+      }
+      shippingTypeDistribution[type].orders++;
+      shippingTypeDistribution[type].revenue += order.total || 0;
     }
 
     // === Inventory Health ===
@@ -336,6 +347,7 @@ export async function GET(request: NextRequest) {
       },
       paymentMethodDistribution,
       departmentDistribution,
+      shippingTypeDistribution,
       inventoryHealth,
       dailySales,
       hourlyStats,

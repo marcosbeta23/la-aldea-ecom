@@ -1,9 +1,9 @@
 {
   "crons": [{
-    "path": "/api/cron/release-stock",
+    "path": "/api/cron/maintenance",
     "schedule": "0 3 * * *"
   }, {
-    "path": "/api/cron/weekly-report",
-    "schedule": "0 12 * * 1"
+    "path": "/api/cron/abandoned-carts",
+    "schedule": "0 * * * *"
   }]
 }

@@ -424,7 +424,7 @@ export default async function Home() {
                   href="/productos"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-white/20 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/30"
                 >
-                  Ver Productos
+                  Ver Tienda
                   <ChevronRight className="h-5 w-5" />
                 </Link>
               </div>
@@ -536,7 +536,7 @@ export default async function Home() {
                 href="/productos"
                 className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-8 py-4 text-base font-semibold text-white shadow-lg transition-all hover:bg-slate-800"
               >
-                Ver Todos los Productos
+                Ver Toda la Tienda
                 <ChevronRight className="h-5 w-5" />
               </Link>
             </div>
@@ -956,7 +956,7 @@ export default async function Home() {
                 <ul className="mt-4 space-y-3">
                   <li>
                     <Link href="/productos" className="text-slate-600 hover:text-blue-600">
-                      Productos
+                      Tienda
                     </Link>
                   </li>
                   <li>

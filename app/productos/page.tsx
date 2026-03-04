@@ -9,7 +9,6 @@ import ProductFilters from '@/components/products/ProductFilters';
 import ProductSearch from '@/components/products/ProductSearch';
 import FilterPersistence from '@/components/products/FilterPersistence';
 import { SubcategoryChips } from '@/components/products/SubcategoryChips';
-import CategoryBrowse from '@/components/products/CategoryBrowse';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -313,10 +312,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const { categories, subcategories, brands } = filterResult;
   const totalPages = Math.ceil(total / perPage);
 
-  // Build category counts map for the browse grid
-  const categoryCounts: Record<string, number> = {};
-  categories.forEach(c => { categoryCounts[c.value] = c.count; });
-
   return (
     <>
       <Header />
@@ -358,6 +353,33 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <div className="mt-5">
               <ProductSearch initialQuery={params.q || ''} />
             </div>
+
+            {/* Quick category pills */}
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <Link
+                href="/productos"
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  !params.categoria
+                    ? 'bg-white text-blue-700'
+                    : 'bg-white/15 text-white hover:bg-white/25'
+                }`}
+              >
+                Todos
+              </Link>
+              {categories.map(cat => (
+                <Link
+                  key={cat.value}
+                  href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    params.categoria === cat.value
+                      ? 'bg-white text-blue-700'
+                      : 'bg-white/15 text-white hover:bg-white/25'
+                  }`}
+                >
+                  {cat.value} ({cat.count})
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -371,14 +393,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 currentSub={params.sub}
               />
             </div>
-          </section>
-        )}
-
-        {/* Category Browse Grid — only when landing with no filters */}
-        {!browsing && (
-          <section className="container mx-auto px-4 py-8">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Explorar por categoría</h2>
-            <CategoryBrowse categoryCounts={categoryCounts} />
           </section>
         )}
 
@@ -400,11 +414,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
             {/* Products Grid */}
             <div className="flex-1 min-w-0">
-              {!browsing && (
-                <h2 className="text-lg font-bold text-slate-900 mb-4">
-                  Más populares
-                </h2>
-              )}
               <ProductGrid products={products} />
 
               {/* Pagination */}

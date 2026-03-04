@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -70,6 +70,9 @@ export default function CheckoutPage() {
   const department = watch('department');
   const city = watch('city');
   const acceptedTerms = watch('acceptedTerms');
+  const watchedEmail = watch('email');
+  const watchedName = watch('name');
+  const watchedPhone = watch('phone');
 
   useEffect(() => {
     setMounted(true);
@@ -129,6 +132,48 @@ export default function CheckoutPage() {
       })
       .catch(() => {});
   }, [mounted, isMixed]);
+
+  // Track checkout attempt for abandoned cart recovery
+  const checkoutAttemptSent = useRef(false);
+  const mountTimestamp = useRef(Date.now());
+  useEffect(() => {
+    if (!mounted || checkoutAttemptSent.current || items.length === 0) return;
+    if (!watchedEmail || !watchedEmail.includes('@')) return;
+
+    // Wait at least 30 seconds on the checkout page
+    const elapsed = Date.now() - mountTimestamp.current;
+    if (elapsed < 30_000) {
+      const timer = setTimeout(() => {
+        // Re-check conditions after delay
+        if (!checkoutAttemptSent.current && watchedEmail && watchedEmail.includes('@') && items.length > 0) {
+          sendCheckoutAttempt();
+        }
+      }, 30_000 - elapsed);
+      return () => clearTimeout(timer);
+    }
+
+    sendCheckoutAttempt();
+
+    function sendCheckoutAttempt() {
+      checkoutAttemptSent.current = true;
+      fetch('/api/checkout-attempt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: watchedEmail,
+          phone: watchedPhone || undefined,
+          customer_name: watchedName || undefined,
+          items: items.map(item => ({
+            product_name: item.product.name,
+            quantity: item.quantity,
+            unit_price: item.product.price_numeric,
+          })),
+          subtotal: getSubtotal(),
+          currency: getCartCurrency(),
+        }),
+      }).catch(() => {}); // Non-blocking
+    }
+  }, [mounted, watchedEmail, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Format price
   const formatPrice = (price: number, currency: string = 'UYU') => {

@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { verifyMPSignature, getMPPayment } from '@/lib/mercadopago';
 import { sendOrderConfirmation, sendAdminOrderNotification } from '@/lib/email';
 import { alertPaymentApproved, alertPaymentFailed, alertFraudAttempt, alertOutOfStockAfterPayment } from '@/lib/telegram';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
+import { getPaymentReceivedMessage } from '@/lib/notifications';
 
 // 🔒 SECURE MERCADOPAGO WEBHOOK - MVP ORDER FLOW
 // Payment → Reserve Stock → paid_pending_verification → Admin Review → Invoice
@@ -252,6 +254,13 @@ export async function POST(request: NextRequest) {
         orderData.customer_name || 'Cliente',
         orderData.currency || 'UYU'
       ).catch(() => {});
+
+      // Send WhatsApp payment confirmation to customer (non-blocking)
+      if (orderData.customer_phone) {
+        const ctx = { order: orderData };
+        const waMessage = getPaymentReceivedMessage(ctx);
+        sendWhatsAppMessage(orderData.customer_phone, waMessage).catch(() => {});
+      }
 
     } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
       updateData.status = 'cancelled';

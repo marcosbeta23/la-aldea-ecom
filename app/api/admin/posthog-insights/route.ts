@@ -116,6 +116,51 @@ export async function GET(request: NextRequest) {
       dailyViews[dateStr] = (dailyViews[dateStr] || 0) + 1;
     }
 
+    // === Conversion Funnel ===
+    // Group events by distinct_id and determine which funnel steps each visitor reached
+    const visitorPaths = new Map<string, Set<string>>();
+    for (const event of events) {
+      const distinctId = event.properties?.distinct_id;
+      if (!distinctId || typeof distinctId !== 'string') continue;
+
+      const url = event.properties?.$current_url || event.properties?.$pathname || '';
+      if (typeof url !== 'string') continue;
+
+      let pathname: string;
+      try {
+        pathname = new URL(url).pathname;
+      } catch {
+        pathname = url;
+      }
+
+      if (pathname.startsWith('/admin')) continue;
+
+      if (!visitorPaths.has(distinctId)) {
+        visitorPaths.set(distinctId, new Set());
+      }
+      visitorPaths.get(distinctId)!.add(pathname);
+    }
+
+    // Count visitors who reached each funnel step
+    const funnelSteps = [
+      { step: 'homepage', label: 'Inicio', match: (paths: Set<string>) => paths.has('/') },
+      { step: 'product', label: 'Producto', match: (paths: Set<string>) => [...paths].some(p => p.startsWith('/producto/')) },
+      { step: 'cart', label: 'Carrito', match: (paths: Set<string>) => paths.has('/cart') },
+      { step: 'checkout', label: 'Checkout', match: (paths: Set<string>) => paths.has('/checkout') },
+      { step: 'purchase', label: 'Compra', match: (paths: Set<string>) => [...paths].some(p => p.startsWith('/gracias') || p.startsWith('/pedido/')) },
+    ];
+
+    const totalVisitors = visitorPaths.size;
+    const funnel = funnelSteps.map((step) => {
+      const visitors = [...visitorPaths.values()].filter(paths => step.match(paths)).length;
+      return {
+        step: step.step,
+        label: step.label,
+        visitors,
+        rate: totalVisitors > 0 ? Math.round((visitors / totalVisitors) * 1000) / 10 : 0,
+      };
+    });
+
     return NextResponse.json({
       configured: true,
       visitors: {
@@ -127,6 +172,7 @@ export async function GET(request: NextRequest) {
       topPages,
       topReferrers,
       dailyViews,
+      funnel,
       period,
     });
   } catch (error) {

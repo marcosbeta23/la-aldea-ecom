@@ -111,9 +111,9 @@ export default function Header() {
                     : 'text-white/90 hover:bg-white/10')
             }`}
           >
-            Productos
+            Tienda
           </Link>
-          <Link 
+          <Link
             href="/faq" 
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               pathname === '/faq'
@@ -244,9 +244,9 @@ export default function Header() {
                 : 'text-slate-900 hover:bg-slate-50'
             }`}
           >
-            Productos
+            Tienda
           </Link>
-          <Link 
+          <Link
             href="/cart" 
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
               pathname === '/cart'

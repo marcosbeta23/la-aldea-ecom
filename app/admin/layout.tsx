@@ -16,7 +16,9 @@ import {
   Home,
   TrendingUp,
   FileText,
-  Search
+  Search,
+  Boxes,
+  Users
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -25,8 +27,10 @@ const navItems = [
   { href: '/admin/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/admin/search-analytics', label: 'Búsquedas', icon: Search },
   { href: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
+  { href: '/admin/customers', label: 'Clientes', icon: Users },
   { href: '/admin/ventas-mostrador', label: 'Ventas Mostrador', icon: Store },
   { href: '/admin/products', label: 'Productos', icon: Package },
+  { href: '/admin/inventory', label: 'Inventario', icon: Boxes },
   { href: '/admin/coupons', label: 'Cupones', icon: Tag },
   { href: '/admin/reviews', label: 'Reseñas', icon: Star },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },

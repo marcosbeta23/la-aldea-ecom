@@ -7,6 +7,9 @@ import {
   Phone,
   Store,
   Globe,
+  MessageCircle,
+  Truck,
+  MapPin,
 } from 'lucide-react';
 import OrderSearch from './OrderSearch';
 
@@ -72,6 +75,27 @@ function PaymentBadge({ method }: { method: string | null }) {
   return (
     <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles[method] || 'bg-slate-50 text-slate-700'}`}>
       {labels[method] || method}
+    </span>
+  );
+}
+
+// Shipping type badge
+function ShippingBadge({ type }: { type: string | null }) {
+  if (!type) return null;
+
+  const config: Record<string, { label: string; classes: string; icon: 'truck' | 'store' }> = {
+    pickup: { label: 'Retiro', classes: 'bg-emerald-50 text-emerald-700', icon: 'store' },
+    standard: { label: 'Estándar', classes: 'bg-blue-50 text-blue-700', icon: 'truck' },
+    express: { label: 'Express', classes: 'bg-purple-50 text-purple-700', icon: 'truck' },
+  };
+
+  const cfg = config[type];
+  if (!cfg) return <span className="text-xs text-slate-400">{type}</span>;
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}>
+      {cfg.icon === 'store' ? <MapPin className="h-3 w-3" /> : <Truck className="h-3 w-3" />}
+      {cfg.label}
     </span>
   );
 }
@@ -146,10 +170,16 @@ export default async function OrdersPage({
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
+    // Show time-only for today's orders (compare in es-UY locale which handles UY timezone)
+    const todayStr = new Date().toLocaleDateString('es-UY', { timeZone: 'America/Montevideo', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const orderDayStr = date.toLocaleDateString('es-UY', { timeZone: 'America/Montevideo', day: '2-digit', month: '2-digit', year: 'numeric' });
+    if (todayStr === orderDayStr) {
+      return date.toLocaleTimeString('es-UY', { timeZone: 'America/Montevideo', hour: '2-digit', minute: '2-digit' });
+    }
     return date.toLocaleDateString('es-UY', {
+      timeZone: 'America/Montevideo',
       day: '2-digit',
       month: '2-digit',
-      year: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -158,6 +188,7 @@ export default async function OrdersPage({
   // Priority statuses first (need attention), then workflow, then terminal
   const statusOptions = [
     { value: '', label: 'Todos', count: allOrders?.length || 0 },
+    { value: 'pending', label: 'Pendientes', count: statusCounts.pending || 0, priority: true },
     { value: 'paid_pending_verification', label: 'Por Verificar', count: statusCounts.paid_pending_verification || 0, priority: true },
     { value: 'awaiting_stock', label: 'Sin Stock', count: statusCounts.awaiting_stock || 0, priority: true },
     { value: 'ready_to_invoice', label: 'Por Facturar', count: statusCounts.ready_to_invoice || 0, priority: true },
@@ -166,7 +197,6 @@ export default async function OrdersPage({
     { value: 'processing', label: 'En Preparación', count: statusCounts.processing || 0 },
     { value: 'shipped', label: 'Enviados', count: statusCounts.shipped || 0 },
     { value: 'delivered', label: 'Entregados', count: statusCounts.delivered || 0 },
-    { value: 'pending', label: 'Pendientes', count: statusCounts.pending || 0 },
     { value: 'refunded', label: 'Reembolsados', count: statusCounts.refunded || 0 },
     { value: 'cancelled', label: 'Cancelados', count: statusCounts.cancelled || 0 },
   ];
@@ -274,6 +304,7 @@ export default async function OrdersPage({
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Pedido</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Cliente</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Pago</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Envío</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Total</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Estado</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Fecha</th>
@@ -317,6 +348,9 @@ export default async function OrdersPage({
                   <td className="px-6 py-4">
                     <PaymentBadge method={order.payment_method} />
                   </td>
+                  <td className="px-6 py-4">
+                    <ShippingBadge type={order.shipping_type} />
+                  </td>
                   <td className="px-6 py-4 text-sm font-semibold text-slate-900">
                     {formatCurrency(order.total, order.currency)}
                   </td>
@@ -327,20 +361,33 @@ export default async function OrdersPage({
                     {formatDate(order.created_at)}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Ver
-                    </Link>
+                    <div className="flex items-center justify-end gap-1">
+                      {order.customer_phone && (
+                        <a
+                          href={`https://wa.me/${order.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${order.customer_name}, te contactamos por tu pedido #${order.order_number}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </a>
+                      )}
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Ver
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
 
               {(!orders || orders.length === 0) && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
                     {searchQuery
                       ? `No se encontraron pedidos para "${searchQuery}"`
                       : `No hay pedidos ${statusFilter ? 'con este estado' : ''}`}
@@ -355,7 +402,7 @@ export default async function OrdersPage({
         {totalPages > 1 && (
           <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
             <p className="text-sm text-slate-500">
-              Página {page} de {totalPages}
+              {Math.min((page - 1) * perPage + 1, count || 0)}–{Math.min(page * perPage, count || 0)} de {count || 0} pedidos
             </p>
             <div className="flex gap-2">
               <Link

@@ -11,9 +11,12 @@ interface DownloadButtonProps {
 
 export default function DownloadButton({ order, items }: DownloadButtonProps) {
   const [downloading, setDownloading] = useState(false);
+  const currency = (order as any).currency || 'UYU';
 
-  const formatPrice = (value: number) =>
-    `UYU ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  const formatPrice = (value: number) => {
+    if (currency === 'USD') return `US$ ${value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$ ${value.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
