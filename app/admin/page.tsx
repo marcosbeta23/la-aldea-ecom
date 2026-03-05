@@ -17,7 +17,6 @@ import {
   ArrowRight,
   Plus,
   RefreshCw,
-  Landmark,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -126,6 +125,7 @@ export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [onlineCurrency, setOnlineCurrency] = useState<'UYU' | 'USD'>('UYU');
 
   const fetchData = useCallback(async () => {
     try {
@@ -295,26 +295,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* KPI row — 5 cards including store total */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {/* Combined Store Total */}
-        {data.exchangeRate > 0 && (
-          <div className="bg-white rounded-xl border border-slate-200 p-5 sm:col-span-2 lg:col-span-1">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Total Tienda (30d)</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.period30d.combinedRevenueUYU)}</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  USD+UYU · TC {data.exchangeRate.toFixed(2)}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                <Landmark className="h-5 w-5" />
-              </div>
-            </div>
-          </div>
-        )}
-
+      {/* KPI row — 4 cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
@@ -373,11 +355,27 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Online (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.channels.onlineRevenueUYU)}</p>
-              {data.channels.onlineRevenueUSD > 0 && (
-                <p className="mt-0.5 text-sm font-semibold text-blue-600">{formatUSD(data.channels.onlineRevenueUSD)}</p>
-              )}
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-slate-500">Online (30d)</p>
+                <button
+                  onClick={() => setOnlineCurrency(onlineCurrency === 'UYU' ? 'USD' : 'UYU')}
+                  className="relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none"
+                  style={{ backgroundColor: onlineCurrency === 'USD' ? '#3b82f6' : '#94a3b8' }}
+                  title={`Mostrar en ${onlineCurrency === 'UYU' ? 'USD' : 'UYU'}`}
+                >
+                  <span
+                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                      onlineCurrency === 'USD' ? 'translate-x-5' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className="text-xs font-medium text-slate-400">{onlineCurrency}</span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {onlineCurrency === 'UYU'
+                  ? formatUYU(data.channels.onlineRevenueUYU)
+                  : formatUSD(data.channels.onlineRevenueUSD)}
+              </p>
               <p className="mt-1 text-xs text-slate-400">
                 {data.channels.onlineOrders} pedidos online
               </p>
