@@ -260,12 +260,18 @@ $$ LANGUAGE plpgsql SET search_path = public;
 -- First ensure the extensions schema exists (Supabase creates it by default).
 CREATE SCHEMA IF NOT EXISTS extensions;
 
--- Drop from public and re-create in extensions
-DROP EXTENSION IF EXISTS pg_trgm;
+-- Drop from public with CASCADE (removes dependent idx_products_name_trgm index)
+-- then re-create in extensions schema. The index is recreated below.
+DROP EXTENSION IF EXISTS pg_trgm CASCADE;
 CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA extensions;
 
 -- Grant usage so queries using pg_trgm functions still work
 GRANT USAGE ON SCHEMA extensions TO anon, authenticated, service_role;
+
+-- Recreate the GIN index that was dropped by CASCADE above.
+-- Supabase's search_path includes 'extensions' so gin_trgm_ops resolves correctly.
+CREATE INDEX IF NOT EXISTS idx_products_name_trgm
+  ON public.products USING gin (name gin_trgm_ops);
 
 
 -- =====================================================
