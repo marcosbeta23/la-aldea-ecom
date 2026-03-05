@@ -36,6 +36,8 @@ export default function AdminGuidesPage() {
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [migrating, setMigrating] = useState(false);
+  const [migrateResult, setMigrateResult] = useState('');
 
   useEffect(() => {
     fetchGuides();
@@ -81,6 +83,24 @@ export default function AdminGuidesPage() {
       setError('Error al eliminar la guia');
     } finally {
       setDeleting(null);
+    }
+  }
+
+  async function runMigration() {
+    if (!confirm('Esto importara las 22 guias estaticas a la base de datos. Las que ya existan se omitiran. ¿Continuar?')) return;
+    setMigrating(true);
+    setMigrateResult('');
+    try {
+      const res = await fetch('/api/admin/guides/migrate', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to migrate');
+      const data = await res.json();
+      setMigrateResult(data.message);
+      // Refresh the list
+      fetchGuides();
+    } catch {
+      setError('Error al migrar las guias');
+    } finally {
+      setMigrating(false);
     }
   }
 
@@ -310,17 +330,38 @@ export default function AdminGuidesPage() {
         </div>
       )}
 
-      {/* Info box about static guides */}
+      {/* Migration tool */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
         <div className="flex gap-3">
           <BookOpen className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-medium text-blue-900 text-sm">Guias estaticas</h4>
+          <div className="flex-1">
+            <h4 className="font-medium text-blue-900 text-sm">Importar guias estaticas</h4>
             <p className="text-xs text-blue-700 mt-1">
-              Ademas de las guias creadas aqui, hay{' '}
-              <strong>22 guias integradas en el codigo</strong> que aparecen automaticamente en /guias/.
-              Las guias creadas desde este panel se suman a las existentes en el sitio.
+              Importa las 22 guias originales del codigo a la base de datos para poder editarlas desde este panel.
+              Las guias que ya existan en la base de datos se omiten automaticamente.
             </p>
+            {migrateResult && (
+              <p className="text-xs text-green-700 bg-green-50 rounded px-2 py-1 mt-2">
+                {migrateResult}
+              </p>
+            )}
+            <button
+              onClick={runMigration}
+              disabled={migrating}
+              className="mt-3 inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              {migrating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Migrando...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Importar guias al panel
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
