@@ -68,8 +68,11 @@ export async function POST(request: NextRequest) {
     }
     
     // 3️⃣ FETCH EXCHANGE RATE if needed
+    // Always fetch rate when ANY product is USD or payment is USD,
+    // since MercadoPago Uruguay only accepts UYU preferences.
     const productCurrencies = new Set(products.map((p: any) => p.currency || 'UYU'));
-    const needsConversion = productCurrencies.size > 1 || !productCurrencies.has(paymentCurrency);
+    const hasUSD = productCurrencies.has('USD') || paymentCurrency === 'USD';
+    const needsConversion = productCurrencies.size > 1 || !productCurrencies.has(paymentCurrency) || hasUSD;
     let exchangeRate: number | null = null;
 
     if (needsConversion) {
@@ -294,14 +297,30 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
     const isLocalhost = appUrl.includes('localhost') || appUrl.includes('127.0.0.1');
     
+    // MercadoPago Uruguay only supports UYU — convert all prices to UYU for MP
     const mpPayload: any = {
-      items: orderItems.map((item: any) => ({
-        id: item.product_id,
-        title: item.product_name,
-        unit_price: Number(item.unit_price_converted || item.unit_price), // Price in payment currency
-        quantity: item.quantity,
-        currency_id: paymentCurrency, // ALL items same currency for MP
-      })),
+      items: orderItems.map((item: any) => {
+        // Convert to UYU for MercadoPago if item is in a different currency
+        let mpUnitPrice: number;
+        if (paymentCurrency === 'UYU') {
+          // Already in UYU (possibly converted earlier)
+          mpUnitPrice = Number(item.unit_price_converted || item.unit_price);
+        } else if (paymentCurrency === 'USD' && exchangeRate) {
+          // Customer chose USD — convert to UYU for MP
+          const priceInPaymentCurrency = Number(item.unit_price_converted || item.unit_price);
+          mpUnitPrice = Math.round(priceInPaymentCurrency * exchangeRate * 100) / 100;
+        } else {
+          mpUnitPrice = Number(item.unit_price);
+        }
+
+        return {
+          id: item.product_id,
+          title: item.product_name,
+          unit_price: mpUnitPrice,
+          quantity: item.quantity,
+          currency_id: 'UYU', // MercadoPago Uruguay only supports UYU
+        };
+      }),
       external_reference: (order as any).id, // To find order in webhook
       back_urls: {
         success: `${appUrl}/gracias?order_id=${(order as any).id}`,

@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Download, CheckCircle, Package, Mail, Home, ShoppingBag, AlertTriangle } from 'lucide-react';
+import { useCartStore } from '@/stores/cartStore';
 
 interface OrderItem {
   id: string;
@@ -39,6 +40,7 @@ function GraciasContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
     async function fetchOrder() {
@@ -50,12 +52,14 @@ function GraciasContent() {
       try {
         const res = await fetch(`/api/orders?order_id=${orderId}`);
         const data = await res.json();
-        
+
         if (!res.ok) {
           throw new Error(data.error || 'Error al cargar pedido');
         }
-        
+
         setOrder(data.order);
+        // Clear cart after confirmed payment
+        clearCart();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
@@ -64,7 +68,7 @@ function GraciasContent() {
     }
 
     fetchOrder();
-  }, [orderId]);
+  }, [orderId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDownloadReceipt = () => {
     if (!order) return;

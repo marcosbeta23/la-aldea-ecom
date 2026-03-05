@@ -153,20 +153,7 @@ export function getShippingOptions(
   }
   
   // DAC (standard shipping)
-  // Local zone is free
-  if (zone === 'local') {
-    return {
-      canDeliver: true,
-      canPickup: true,
-      deliveryLabel: 'Envío local gratis',
-      deliveryNote: 'Entrega en zona Tala/San Ramón',
-      deliveryCost: 0,
-      requiresQuote: false,
-      showFreightConsult: false,
-    };
-  }
-  
-  // Rest of country - DAC with payment on delivery
+  // All zones pay DAC on delivery — no free shipping
   return {
     canDeliver: true,
     canPickup: true,

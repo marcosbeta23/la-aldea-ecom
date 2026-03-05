@@ -102,9 +102,10 @@ export const CheckoutFormSchema = z.object({
     if (!data.city?.trim()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La ciudad es requerida', path: ['city'] });
     }
-    if (!data.department?.trim()) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El departamento es requerido', path: ['department'] });
-    }
+  }
+  // Department is always required (for data gathering, even pickup orders)
+  if (!data.department?.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El departamento es requerido', path: ['department'] });
   }
   // RUT fields required when invoice_rut is selected
   if (data.invoiceType === 'invoice_rut') {

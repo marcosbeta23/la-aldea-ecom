@@ -122,16 +122,16 @@ export default function CheckoutPage() {
     }
   }, [mounted]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch exchange rate when cart has mixed currencies
+  // Fetch exchange rate — always needed since customer can pick USD or UYU
   useEffect(() => {
-    if (!mounted || !isMixed) return;
+    if (!mounted) return;
     fetch('/api/exchange-rate')
       .then(res => res.json())
       .then(data => {
         if (data.rate) setExchangeRate(data.rate);
       })
       .catch(() => {});
-  }, [mounted, isMixed]);
+  }, [mounted]);
 
   // Track checkout attempt for abandoned cart recovery
   const checkoutAttemptSent = useRef(false);
@@ -211,17 +211,21 @@ export default function CheckoutPage() {
     }
   }, [mounted, shippingOptions.canDeliver, cartShippingType, freightConfirmed, shippingMethod, setValue]);
 
-  // Calculate totals — convert to payment currency when mixed
+  // Calculate totals — convert to payment currency when needed
   const subtotal = useMemo(() => {
     if (!mounted) return 0;
-    if (!isMixed) return getSubtotal();
-    if (!exchangeRate) return getSubtotal(); // fallback until rate loads
     const byCur = getSubtotalByCurrency();
+    // If no exchange rate and currencies differ, show raw subtotal as fallback
+    if (!exchangeRate) {
+      if (paymentCurrency === 'USD') return byCur.USD + (byCur.UYU > 0 ? byCur.UYU : 0);
+      return byCur.UYU + (byCur.USD > 0 ? byCur.USD : 0);
+    }
+    // Convert everything to payment currency
     if (paymentCurrency === 'UYU') {
       return byCur.UYU + byCur.USD * exchangeRate;
     }
     return byCur.USD + byCur.UYU / exchangeRate;
-  }, [mounted, isMixed, exchangeRate, paymentCurrency, items]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mounted, exchangeRate, paymentCurrency, items]); // eslint-disable-line react-hooks/exhaustive-deps
   const discount = appliedCoupon?.discount_amount || 0;
   // Shipping cost: 0 for pickup, actual cost if known, or 0 if paid on delivery
   const shippingCost = shippingMethod === 'delivery' && shippingOptions.deliveryCost !== null
@@ -229,8 +233,8 @@ export default function CheckoutPage() {
     : 0;
   const shippingPaidOnDelivery = shippingMethod === 'delivery' && shippingOptions.deliveryCost === null;
   const total = subtotal - discount + shippingCost;
-  // Display currency for totals
-  const displayCurrency = isMixed ? paymentCurrency : cartCurrency;
+  // Display currency for totals — always the selected payment currency
+  const displayCurrency = paymentCurrency;
 
 
   // Apply coupon
@@ -289,7 +293,7 @@ export default function CheckoutPage() {
             phone: formData.phone,
             shipping_address: formData.shippingMethod === 'delivery' ? formData.address : undefined,
             shipping_city: formData.shippingMethod === 'delivery' ? formData.city : undefined,
-            shipping_department: formData.shippingMethod === 'delivery' ? formData.department : undefined,
+            shipping_department: formData.department,
             shipping_type: formData.shippingMethod,
             shipping_cost: shippingCost,
             notes: formData.notes || undefined,
@@ -318,7 +322,8 @@ export default function CheckoutPage() {
         clearCart();
         router.push(`/pendiente?order=${data.order_number}&method=transfer&currency=${formData.paymentCurrency}`);
       } else if (data.init_point) {
-        clearCart();
+        // Do NOT clear cart here — user may cancel payment and come back.
+        // Cart is cleared on the /gracias page after confirmed payment.
         const processingUrl = `/procesando?redirect=${encodeURIComponent(data.init_point)}&order=${data.order_number}&method=mercadopago`;
         router.push(processingUrl);
       } else {
@@ -660,58 +665,59 @@ export default function CheckoutPage() {
                           />
                           {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
                         </div>
-                        <div className="grid sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
-                              Ciudad *
-                            </label>
-                            <input
-                              type="text"
-                              {...register('city')}
-                              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                                errors.city ? 'border-red-500' : 'border-slate-300'
-                              }`}
-                              placeholder="Montevideo"
-                            />
-                            {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
-                              Departamento *
-                            </label>
-                            <select
-                              {...register('department')}
-                              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 ${
-                                errors.department ? 'border-red-500' : 'border-slate-300'
-                              }`}
-                            >
-                              <option value="">Seleccionar...</option>
-                              <option value="Montevideo">Montevideo</option>
-                              <option value="Canelones">Canelones</option>
-                              <option value="Maldonado">Maldonado</option>
-                              <option value="Colonia">Colonia</option>
-                              <option value="San José">San José</option>
-                              <option value="Florida">Florida</option>
-                              <option value="Lavalleja">Lavalleja</option>
-                              <option value="Rocha">Rocha</option>
-                              <option value="Treinta y Tres">Treinta y Tres</option>
-                              <option value="Cerro Largo">Cerro Largo</option>
-                              <option value="Rivera">Rivera</option>
-                              <option value="Tacuarembó">Tacuarembó</option>
-                              <option value="Durazno">Durazno</option>
-                              <option value="Flores">Flores</option>
-                              <option value="Soriano">Soriano</option>
-                              <option value="Río Negro">Río Negro</option>
-                              <option value="Paysandú">Paysandú</option>
-                              <option value="Salto">Salto</option>
-                              <option value="Artigas">Artigas</option>
-                            </select>
-                            {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department.message}</p>}
-                          </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
+                            Ciudad *
+                          </label>
+                          <input
+                            type="text"
+                            {...register('city')}
+                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
+                              errors.city ? 'border-red-500' : 'border-slate-300'
+                            }`}
+                            placeholder="Montevideo"
+                          />
+                          {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>}
                         </div>
                       </div>
                     </div>
                   )}
+
+                  {/* Department — always required for data gathering */}
+                  <div className={`${shippingMethod === 'delivery' ? 'mt-4' : 'mt-6 pt-6 border-t border-slate-200'}`}>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      <MapPin className="inline h-4 w-4 mr-1" />
+                      Departamento *
+                    </label>
+                    <select
+                      {...register('department')}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 ${
+                        errors.department ? 'border-red-500' : 'border-slate-300'
+                      }`}
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="Montevideo">Montevideo</option>
+                      <option value="Canelones">Canelones</option>
+                      <option value="Maldonado">Maldonado</option>
+                      <option value="Colonia">Colonia</option>
+                      <option value="San José">San José</option>
+                      <option value="Florida">Florida</option>
+                      <option value="Lavalleja">Lavalleja</option>
+                      <option value="Rocha">Rocha</option>
+                      <option value="Treinta y Tres">Treinta y Tres</option>
+                      <option value="Cerro Largo">Cerro Largo</option>
+                      <option value="Rivera">Rivera</option>
+                      <option value="Tacuarembó">Tacuarembó</option>
+                      <option value="Durazno">Durazno</option>
+                      <option value="Flores">Flores</option>
+                      <option value="Soriano">Soriano</option>
+                      <option value="Río Negro">Río Negro</option>
+                      <option value="Paysandú">Paysandú</option>
+                      <option value="Salto">Salto</option>
+                      <option value="Artigas">Artigas</option>
+                    </select>
+                    {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department.message}</p>}
+                  </div>
                 </div>
 
                 {/* Notes */}
@@ -1020,8 +1026,6 @@ export default function CheckoutPage() {
                           'Gratis (retiro)'
                         ) : shippingPaidOnDelivery ? (
                           <span className="text-amber-600">A pagar en destino</span>
-                        ) : shippingCost === 0 ? (
-                          'Gratis'
                         ) : (
                           formatPrice(shippingCost, displayCurrency)
                         )}
@@ -1034,39 +1038,42 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Currency Selector — compact, in sidebar */}
-                  {isMixed && (
-                    <div className="mb-6 p-4 bg-slate-50 rounded-xl">
-                      <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5">
-                        <ArrowRightLeft className="h-3.5 w-3.5" />
-                        Moneda de pago
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setValue('paymentCurrency', 'UYU')}
-                          className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
-                            paymentCurrency === 'UYU'
-                              ? 'border-blue-600 bg-blue-50 text-blue-700'
-                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                          }`}
-                        >
-                          $ UYU
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setValue('paymentCurrency', 'USD')}
-                          className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
-                            paymentCurrency === 'USD'
-                              ? 'border-blue-600 bg-blue-50 text-blue-700'
-                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                          }`}
-                        >
-                          US$ USD
-                        </button>
-                      </div>
+                  {/* Currency Selector — always available */}
+                  <div className="mb-6 p-4 bg-slate-50 rounded-xl">
+                    <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5">
+                      <ArrowRightLeft className="h-3.5 w-3.5" />
+                      Moneda de pago
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setValue('paymentCurrency', 'UYU')}
+                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
+                          paymentCurrency === 'UYU'
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                        }`}
+                      >
+                        $ UYU
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValue('paymentCurrency', 'USD')}
+                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
+                          paymentCurrency === 'USD'
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                        }`}
+                      >
+                        US$ USD
+                      </button>
                     </div>
-                  )}
+                    {paymentMethod === 'mercadopago' && paymentCurrency === 'USD' && (
+                      <p className="text-xs text-slate-500 mt-2">
+                        MercadoPago procesará el cobro en pesos (UYU) al tipo de cambio del día.
+                      </p>
+                    )}
+                  </div>
 
                   {/* Terms */}
                   <div className="mb-6">
