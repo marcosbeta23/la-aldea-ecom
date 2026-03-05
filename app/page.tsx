@@ -40,7 +40,7 @@ const localBusinessSchema = {
   "description": "Especialistas en bombas de agua, sistemas de riego, instalaciones hidráulicas e insumos agrícolas en Tala, Canelones, Uruguay. Más de 25 años de experiencia.",
   "url": "https://laaldeatala.com.uy",
   "telephone": "+59892744725",
-  "email": "contacto@laaldeatala.com.uy",
+  "email": "la.aldeamartinbetancor@gmail.com",
   "image": "https://laaldeatala.com.uy/assets/images/og-image.webp",
   "logo": "https://laaldeatala.com.uy/assets/images/logo.webp",
   "address": {
@@ -971,6 +971,16 @@ export default async function Home() {
                     </Link>
                   </li>
                   <li>
+                    <Link href="/blog" className="text-slate-600 hover:text-blue-600">
+                      Blog
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/nosotros" className="text-slate-600 hover:text-blue-600">
+                      Sobre Nosotros
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/contacto" className="text-slate-600 hover:text-blue-600">
                       Contacto
                     </Link>
@@ -1002,8 +1012,8 @@ export default async function Home() {
                   </li>
                   <li className="flex items-center gap-2 text-slate-600">
                     <Mail className="h-4 w-4" />
-                    <a href="mailto:contacto@laaldeatala.com.uy" className="hover:text-blue-600">
-                      contacto@laaldeatala.com.uy
+                    <a href="mailto:la.aldeamartinbetancor@gmail.com" className="hover:text-blue-600">
+                      la.aldeamartinbetancor@gmail.com
                     </a>
                   </li>
                 </ul>

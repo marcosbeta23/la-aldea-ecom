@@ -114,9 +114,9 @@ export default function Header() {
             Tienda
           </Link>
           <Link
-            href="/faq" 
+            href="/blog"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              pathname === '/faq'
+              pathname === '/blog' || pathname.startsWith('/guias')
                 ? (scrolled || !isHomepage || mobileMenuOpen
                     ? 'text-blue-600 bg-blue-50'
                     : 'text-white bg-white/10')
@@ -125,37 +125,22 @@ export default function Header() {
                     : 'text-white/90 hover:bg-white/10')
             }`}
           >
-            Preguntas Frecuentes
+            Blog
           </Link>
-          {isHomepage ? (
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById('contacto');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                (typeof window !== 'undefined' && window.location.hash === '#contacto')
-                  ? (scrolled || mobileMenuOpen
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-white bg-white/10')
-                  : (scrolled || mobileMenuOpen
-                      ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                      : 'text-white/90 hover:bg-white/10')
-              }`}
-            >
-              Contacto
-            </button>
-          ) : (
-            <Link
-              href="/#contacto"
-              className="px-4 py-2 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:text-blue-600 hover:bg-slate-50"
-            >
-              Contacto
-            </Link>
-          )}
+          <Link
+            href="/contacto"
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              pathname === '/contacto'
+                ? (scrolled || !isHomepage || mobileMenuOpen
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-white bg-white/10')
+                : (scrolled || !isHomepage || mobileMenuOpen
+                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                    : 'text-white/90 hover:bg-white/10')
+            }`}
+          >
+            Contacto
+          </Link>
         </nav>
 
         {/* Actions */}
@@ -266,22 +251,31 @@ export default function Header() {
           >
             Lista de Deseos
           </Link>
-          <Link 
-            href="/faq" 
+          <Link
+            href="/blog"
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
+              pathname === '/blog' || pathname.startsWith('/guias')
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            Blog
+          </Link>
+          <Link
+            href="/faq"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
               pathname === '/faq'
-                ? 'text-blue-600 bg-blue-50' 
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
             }`}
           >
             Preguntas Frecuentes
           </Link>
-          <Link 
-            href="/#contacto"
-            scroll={false}
+          <Link
+            href="/contacto"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              (pathname === '/' && typeof window !== 'undefined' && window.location.hash === '#contacto')
-                ? 'text-blue-600 bg-blue-50' 
+              pathname === '/contacto'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
             }`}
           >

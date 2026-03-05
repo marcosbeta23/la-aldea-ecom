@@ -2,16 +2,15 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import FAQAccordion from '@/components/faq/FAQAccordion';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
-import { HelpCircle, Phone, MessageCircle, BookOpen, ArrowRight } from 'lucide-react';
+import { HelpCircle, Phone, MessageCircle, BookOpen } from 'lucide-react';
 import Link from 'next/link';
-import { FAQ_ARTICLES } from '@/lib/faq-articles';
 
 export const metadata: Metadata = {
-  title: 'Preguntas Frecuentes y Guias',
-  description: 'Guias tecnicas y respuestas a preguntas frecuentes sobre bombas de agua, sistemas de riego, instalaciones hidraulicas, piscinas, filtros y mas. La Aldea - Tala, Uruguay.',
+  title: 'Preguntas Frecuentes',
+  description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas. La Aldea - Tala, Uruguay.',
   openGraph: {
-    title: 'Preguntas Frecuentes y Guias | La Aldea',
-    description: 'Guias tecnicas y respuestas a preguntas frecuentes sobre bombas de agua, sistemas de riego, instalaciones hidraulicas y mas.',
+    title: 'Preguntas Frecuentes | La Aldea',
+    description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas.',
     type: 'website',
   },
   alternates: {
@@ -305,46 +304,30 @@ export default function FAQPage() {
               <h1 className="text-3xl lg:text-4xl font-bold">Preguntas Frecuentes</h1>
             </div>
             <p className="text-blue-100 text-lg max-w-2xl">
-              Encontra respuestas a las dudas mas comunes y guias tecnicas sobre nuestros productos y servicios.
+              Respuestas rapidas a las dudas mas comunes sobre nuestros productos, envios, pagos y servicios.
             </p>
           </div>
         </section>
 
-        {/* Guides & Articles Section */}
+        {/* FAQ Section */}
         <section className="container mx-auto px-4 py-8 lg:py-12">
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-bold text-slate-900">Guias y Articulos</h2>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4 mb-12">
-              {FAQ_ARTICLES.map((article) => (
-                <Link
-                  key={article.slug}
-                  href={`/guias/${article.slug}`}
-                  className="group bg-white rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
-                >
-                  <span className="inline-block px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full mb-3">
-                    {article.category}
-                  </span>
-                  <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors mb-2 text-sm leading-snug">
-                    {article.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 line-clamp-2">
-                    {article.description}
-                  </p>
-                  <span className="inline-flex items-center gap-1 mt-3 text-xs font-medium text-blue-600 group-hover:gap-2 transition-all">
-                    Leer mas <ArrowRight className="h-3 w-3" />
-                  </span>
-                </Link>
-              ))}
-            </div>
+            {/* Blog/Guides banner */}
+            <Link
+              href="/blog"
+              className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 hover:bg-blue-100 transition-colors group"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600">
+                <BookOpen className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-blue-900 text-sm">¿Buscas guias tecnicas?</p>
+                <p className="text-xs text-blue-600">Visita nuestro blog con guias completas sobre riego, bombas, piscinas y agroquimicos.</p>
+              </div>
+              <span className="text-blue-600 font-medium text-sm shrink-0 group-hover:underline">Ver guias →</span>
+            </Link>
 
             {/* Category Navigation */}
-            <div className="flex items-center gap-3 mb-6">
-              <HelpCircle className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-bold text-slate-900">Preguntas Rapidas</h2>
-            </div>
             <nav className="flex flex-wrap gap-2 mb-8">
               {Object.entries(faqData).map(([key, category]) => (
                 <a

@@ -160,7 +160,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
             <Breadcrumbs
               items={[
                 { name: 'Inicio', url: '/' },
-                { name: 'Guias', url: '/faq' },
+                { name: 'Blog', url: '/blog' },
                 { name: article.breadcrumbLabel },
               ]}
               className="mb-6 text-blue-200"
@@ -192,7 +192,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
               {/* Back to guides */}
               <div className="mt-10 pt-6 border-t border-slate-200">
                 <Link
-                  href="/faq"
+                  href="/blog"
                   className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm"
                 >
                   <BookOpen className="h-4 w-4" />

@@ -47,7 +47,7 @@ export default function RelatedLinks({ article }: RelatedLinksProps) {
             {relatedArticles.map((related) => (
               <Link
                 key={related.slug}
-                href={`/faq/${related.slug}`}
+                href={`/guias/${related.slug}`}
                 className="block p-3 bg-slate-50 rounded-lg hover:bg-green-50 transition-colors group"
               >
                 <p className="text-sm font-medium text-slate-800 group-hover:text-green-700">
