@@ -1,4 +1,4 @@
-import { Section, Text, Link } from '@react-email/components';
+import { Section, Text, Link, Row, Column } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
 
@@ -15,36 +15,53 @@ function formatPrice(price: number): string {
   return `UYU ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 }
 
-const STATUS_CONFIG: Record<string, { title: string; emoji: string; message: string; color: string }> = {
+const STATUS_CONFIG: Record<string, {
+  title: string;
+  emoji: string;
+  message: string;
+  color: string;
+  bgColor: string;
+  nextStep: string;
+}> = {
   paid: {
     title: 'Pago Confirmado',
     emoji: '\u2705',
-    message: 'Tu pago ha sido confirmado y estamos preparando tu pedido.',
-    color: '#22c55e',
+    message: 'Tu pago ha sido confirmado exitosamente. Estamos preparando tu pedido.',
+    color: '#166534',
+    bgColor: '#f0fdf4',
+    nextStep: 'Vamos a preparar tu pedido y te avisaremos cuando este listo para envio.',
   },
   processing: {
     title: 'Preparando tu Pedido',
     emoji: '\uD83D\uDCE6',
-    message: 'Estamos preparando tu pedido para envio.',
-    color: '#3b82f6',
+    message: 'Tu pedido esta siendo preparado por nuestro equipo.',
+    color: '#1e40af',
+    bgColor: '#eff6ff',
+    nextStep: 'Te enviaremos un aviso cuando tu pedido haya sido despachado.',
   },
   shipped: {
-    title: 'Tu Pedido esta en Camino!',
+    title: 'Pedido en Camino',
     emoji: '\uD83D\uDE9A',
-    message: 'Tu pedido ha sido enviado y pronto llegara a destino.',
-    color: '#8b5cf6',
+    message: 'Tu pedido ha sido enviado y esta en camino a tu direccion.',
+    color: '#6d28d9',
+    bgColor: '#f5f3ff',
+    nextStep: 'Recibiras una notificacion cuando el pedido sea entregado.',
   },
   delivered: {
-    title: 'Pedido Entregado!',
+    title: 'Pedido Entregado',
     emoji: '\uD83C\uDF89',
     message: 'Tu pedido ha sido entregado! Esperamos que disfrutes tu compra.',
-    color: '#22c55e',
+    color: '#166534',
+    bgColor: '#f0fdf4',
+    nextStep: 'Si tenes alguna consulta sobre los productos, no dudes en escribirnos.',
   },
   refunded: {
     title: 'Reembolso Procesado',
     emoji: '\uD83D\uDCB8',
     message: 'Tu reembolso ha sido procesado. El monto se acreditara en tu cuenta en los proximos dias.',
-    color: '#f59e0b',
+    color: '#92400e',
+    bgColor: '#fffbeb',
+    nextStep: 'Si no ves el reembolso en 5-10 dias habiles, contactanos.',
   },
 };
 
@@ -67,22 +84,52 @@ export default function StatusUpdate({
 
   return (
     <Layout preview={`${config.emoji} ${config.title} - Pedido ${orderNumber}`}>
-      {/* Icon + Title */}
-      <Section style={{ textAlign: 'center' as const, padding: '20px' }}>
-        <Text style={{ fontSize: '48px', margin: '0 0 16px 0' }}>{config.emoji}</Text>
+      {/* Status Icon + Title */}
+      <Section style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
+        <Text style={{ fontSize: '48px', margin: '0 0 8px 0' }}>{config.emoji}</Text>
         <Text style={greeting}>Hola {customerName},</Text>
         <Text style={title}>{config.title}</Text>
-        <Text style={subtitle}>{message}</Text>
       </Section>
 
-      {/* Order Info */}
+      {/* Status Message Box */}
+      <Section style={{ ...statusBox, backgroundColor: config.bgColor, borderLeft: `4px solid ${config.color}` }}>
+        <Text style={{ ...statusMessage, color: config.color }}>{message}</Text>
+      </Section>
+
+      {/* Order Details */}
       <Section style={infoBox}>
-        <Text style={infoText}>
-          <strong>Pedido:</strong> {orderNumber}
-        </Text>
-        <Text style={infoText}>
-          <strong>Total:</strong> {formatPrice(total)}
-        </Text>
+        <Row>
+          <Column>
+            <Text style={infoLabel}>Pedido</Text>
+          </Column>
+          <Column align="right">
+            <Text style={infoValue}>{orderNumber}</Text>
+          </Column>
+        </Row>
+        <Row>
+          <Column>
+            <Text style={infoLabel}>Total</Text>
+          </Column>
+          <Column align="right">
+            <Text style={infoValue}>{formatPrice(total)}</Text>
+          </Column>
+        </Row>
+        {trackingNumber && (
+          <Row>
+            <Column>
+              <Text style={infoLabel}>N. de seguimiento</Text>
+            </Column>
+            <Column align="right">
+              <Text style={infoValue}>{trackingNumber}</Text>
+            </Column>
+          </Row>
+        )}
+      </Section>
+
+      {/* Next Step */}
+      <Section style={nextStepBox}>
+        <Text style={nextStepTitle}>Que sigue?</Text>
+        <Text style={nextStepText}>{config.nextStep}</Text>
       </Section>
 
       {/* Google Review CTA — only shown on delivery */}
@@ -98,13 +145,22 @@ export default function StatusUpdate({
         </Section>
       )}
 
-      {/* CTA */}
+      {/* Browse Store CTA for delivered orders */}
+      {isDelivered && (
+        <Section style={ctaSection}>
+          <Link href="https://laaldeatala.com.uy/productos" style={browseButton}>
+            Seguir Comprando
+          </Link>
+        </Section>
+      )}
+
+      {/* WhatsApp CTA */}
       <Section style={ctaSection}>
         <Link
           href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
           style={whatsappButton}
         >
-          Consultas? Escribinos
+          Consultas? Escribinos por WhatsApp
         </Link>
       </Section>
     </Layout>
@@ -114,16 +170,24 @@ export default function StatusUpdate({
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const greeting: React.CSSProperties = { color: '#475569', margin: '0 0 4px 0', fontSize: '16px' };
-const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' };
-const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0', fontSize: '16px' };
+const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' };
 
-const infoBox: React.CSSProperties = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '20px', textAlign: 'center' as const };
-const infoText: React.CSSProperties = { color: '#475569', margin: '4px 0', fontSize: '14px' };
+const statusBox: React.CSSProperties = { borderRadius: '12px', padding: '16px 20px', marginBottom: '24px' };
+const statusMessage: React.CSSProperties = { margin: '0', fontSize: '15px', lineHeight: '1.5' };
 
-const reviewSection: React.CSSProperties = { marginTop: '24px', backgroundColor: '#fffbeb', borderRadius: '12px', padding: '24px', textAlign: 'center' as const };
-const reviewTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' };
-const reviewText: React.CSSProperties = { color: '#64748b', margin: '0 0 16px 0', fontSize: '14px' };
+const infoBox: React.CSSProperties = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' };
+const infoLabel: React.CSSProperties = { color: '#64748b', margin: '6px 0', fontSize: '14px' };
+const infoValue: React.CSSProperties = { color: '#0f172a', fontWeight: '600', margin: '6px 0', fontSize: '14px', textAlign: 'right' as const };
+
+const nextStepBox: React.CSSProperties = { marginTop: '24px', padding: '16px 20px', backgroundColor: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' };
+const nextStepTitle: React.CSSProperties = { color: '#1e40af', margin: '0 0 8px 0', fontSize: '14px', fontWeight: '700' };
+const nextStepText: React.CSSProperties = { color: '#1e40af', margin: '0', fontSize: '14px', lineHeight: '1.5' };
+
+const reviewSection: React.CSSProperties = { marginTop: '24px', backgroundColor: '#fffbeb', borderRadius: '12px', padding: '24px', textAlign: 'center' as const, border: '1px solid #fde68a' };
+const reviewTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: '700' };
+const reviewText: React.CSSProperties = { color: '#64748b', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' };
 const reviewButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#4285f4', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
 
-const ctaSection: React.CSSProperties = { marginTop: '32px', textAlign: 'center' as const };
+const ctaSection: React.CSSProperties = { marginTop: '20px', textAlign: 'center' as const };
+const browseButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#2563eb', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
 const whatsappButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#25d366', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };

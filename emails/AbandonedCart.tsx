@@ -3,6 +3,8 @@ import {
   Section,
   Link,
   Hr,
+  Row,
+  Column,
 } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
@@ -35,6 +37,11 @@ export default function AbandonedCart({
 
   return (
     <Layout preview={`${customerName}, dejaste productos en tu carrito`}>
+      {/* Cart Icon */}
+      <Section style={{ textAlign: 'center' as const, marginBottom: '16px' }}>
+        <Text style={{ fontSize: '48px', margin: '0' }}>{'\uD83D\uDED2'}</Text>
+      </Section>
+
       <Text style={greeting}>
         Hola {customerName},
       </Text>
@@ -46,19 +53,46 @@ export default function AbandonedCart({
       {/* Items */}
       <Section style={itemsContainer}>
         <Text style={sectionTitle}>Tu carrito</Text>
+
+        {/* Table Header */}
+        <Row style={tableHeader}>
+          <Column style={{ width: '55%' }}>
+            <Text style={tableHeaderText}>Producto</Text>
+          </Column>
+          <Column style={{ width: '20%' }} align="center">
+            <Text style={tableHeaderText}>Cant.</Text>
+          </Column>
+          <Column style={{ width: '25%' }} align="right">
+            <Text style={tableHeaderText}>Precio</Text>
+          </Column>
+        </Row>
+
+        {/* Items */}
         {items.map((item, index) => (
-          <div key={index} style={itemRow}>
-            <Text style={itemName}>
-              {item.product_name} <span style={itemQty}>x{item.quantity}</span>
-            </Text>
-            <Text style={itemPrice}>{formatPrice(item.unit_price * item.quantity)}</Text>
-          </div>
+          <Row key={index} style={tableRow}>
+            <Column style={{ width: '55%' }}>
+              <Text style={cellText}>{item.product_name}</Text>
+            </Column>
+            <Column style={{ width: '20%' }} align="center">
+              <Text style={cellText}>{item.quantity}</Text>
+            </Column>
+            <Column style={{ width: '25%' }} align="right">
+              <Text style={cellPrice}>{formatPrice(item.unit_price * item.quantity)}</Text>
+            </Column>
+          </Row>
         ))}
+
         <Hr style={divider} />
-        <div style={totalRow}>
-          <Text style={totalLabel}>Subtotal</Text>
-          <Text style={totalValue}>{formatPrice(subtotal)}</Text>
-        </div>
+
+        {/* Total Row */}
+        <Row>
+          <Column>
+            <Text style={totalLabel}>Subtotal</Text>
+          </Column>
+          <Column align="right">
+            <Text style={totalValue}>{formatPrice(subtotal)}</Text>
+          </Column>
+        </Row>
       </Section>
 
       {/* CTA */}
@@ -66,15 +100,18 @@ export default function AbandonedCart({
         <Link href={checkoutUrl} style={ctaButton}>
           Completar tu compra
         </Link>
+        <Text style={urgencyText}>
+          Los productos de tu carrito tienen disponibilidad limitada.
+        </Text>
       </Section>
 
       <Text style={paragraph}>
-        Si tenés alguna duda sobre tu pedido, no dudes en contactarnos por WhatsApp al{' '}
+        Si tenes alguna duda sobre tu pedido, no dudes en contactarnos por WhatsApp al{' '}
         <Link href="https://wa.me/59892744725" style={link}>092 744 725</Link>.
       </Text>
 
       <Text style={footerNote}>
-        Si ya completaste tu compra, podés ignorar este email.
+        Si ya completaste tu compra, podes ignorar este email.
       </Text>
     </Layout>
   );
@@ -84,7 +121,7 @@ export default function AbandonedCart({
 
 const greeting: React.CSSProperties = {
   fontSize: '18px',
-  fontWeight: 'bold',
+  fontWeight: '700',
   color: '#1e293b',
   margin: '0 0 16px 0',
 };
@@ -101,35 +138,44 @@ const itemsContainer: React.CSSProperties = {
   borderRadius: '12px',
   padding: '20px',
   margin: '0 0 24px 0',
+  border: '1px solid #e2e8f0',
 };
 
 const sectionTitle: React.CSSProperties = {
-  fontSize: '14px',
-  fontWeight: 'bold',
+  fontSize: '15px',
+  fontWeight: '700',
   color: '#1e293b',
   margin: '0 0 16px 0',
 };
 
-const itemRow: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '8px 0',
+const tableHeader: React.CSSProperties = {
+  backgroundColor: '#e2e8f0',
+  borderRadius: '6px',
+};
+
+const tableHeaderText: React.CSSProperties = {
+  padding: '8px 10px',
+  color: '#475569',
+  fontSize: '11px',
+  fontWeight: '600',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+  margin: '0',
+};
+
+const tableRow: React.CSSProperties = {
   borderBottom: '1px solid #e2e8f0',
 };
 
-const itemName: React.CSSProperties = {
+const cellText: React.CSSProperties = {
+  padding: '10px',
   fontSize: '14px',
   color: '#334155',
   margin: '0',
 };
 
-const itemQty: React.CSSProperties = {
-  color: '#94a3b8',
-  fontSize: '12px',
-};
-
-const itemPrice: React.CSSProperties = {
+const cellPrice: React.CSSProperties = {
+  padding: '10px',
   fontSize: '14px',
   fontWeight: '600',
   color: '#1e293b',
@@ -141,22 +187,16 @@ const divider: React.CSSProperties = {
   margin: '12px 0',
 };
 
-const totalRow: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-};
-
 const totalLabel: React.CSSProperties = {
-  fontSize: '14px',
-  fontWeight: 'bold',
+  fontSize: '15px',
+  fontWeight: '700',
   color: '#1e293b',
   margin: '0',
 };
 
 const totalValue: React.CSSProperties = {
-  fontSize: '18px',
-  fontWeight: 'bold',
+  fontSize: '20px',
+  fontWeight: '700',
   color: '#16a34a',
   margin: '0',
 };
@@ -171,15 +211,23 @@ const ctaButton: React.CSSProperties = {
   backgroundColor: '#2563eb',
   color: '#ffffff',
   padding: '14px 32px',
-  borderRadius: '12px',
+  borderRadius: '9999px',
   textDecoration: 'none',
   fontSize: '16px',
-  fontWeight: 'bold',
+  fontWeight: '700',
+};
+
+const urgencyText: React.CSSProperties = {
+  color: '#ef4444',
+  fontSize: '12px',
+  margin: '12px 0 0 0',
+  fontWeight: '600',
 };
 
 const link: React.CSSProperties = {
   color: '#2563eb',
   textDecoration: 'none',
+  fontWeight: '600',
 };
 
 const footerNote: React.CSSProperties = {

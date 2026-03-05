@@ -1,4 +1,4 @@
-import { Section, Text, Link, Row, Column } from '@react-email/components';
+import { Section, Text, Link, Row, Column, Hr } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
 
@@ -37,30 +37,33 @@ export default function InvoiceEmail({
 
   return (
     <Layout preview={`Factura N\u00B0 ${invoiceNumber} - Pedido ${orderNumber}`}>
-      {/* Icon + Title */}
-      <Section style={{ textAlign: 'center' as const, padding: '20px' }}>
-        <Text style={{ fontSize: '48px', margin: '0 0 16px 0' }}>{'\uD83E\uDDFE'}</Text>
-        <Text style={title}>Tu Factura esta Lista</Text>
-        <Text style={subtitle}>Adjuntamos el comprobante de tu compra.</Text>
+      {/* Badge */}
+      <Section style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
+        <Text style={docBadge}>DOCUMENTO FISCAL</Text>
       </Section>
+
+      <Text style={greeting}>Hola {customerName},</Text>
+      <Text style={title}>Tu factura esta lista</Text>
+      <Text style={subtitle}>Adjuntamos el comprobante fiscal de tu compra.</Text>
 
       {/* Invoice Info */}
       <Section style={invoiceBox}>
         <Row>
-          <Column><Text style={invoiceLabel}>Tipo:</Text></Column>
+          <Column><Text style={invoiceLabel}>Tipo</Text></Column>
           <Column align="right"><Text style={invoiceValue}>{invoiceTypeName}</Text></Column>
         </Row>
         <Row>
-          <Column><Text style={invoiceLabel}>Numero:</Text></Column>
+          <Column><Text style={invoiceLabel}>Numero</Text></Column>
           <Column align="right"><Text style={invoiceValue}>{invoiceNumber}</Text></Column>
         </Row>
         <Row>
-          <Column><Text style={invoiceLabel}>Pedido:</Text></Column>
+          <Column><Text style={invoiceLabel}>Pedido</Text></Column>
           <Column align="right"><Text style={invoiceText}>{orderNumber}</Text></Column>
         </Row>
+        <Hr style={{ borderColor: '#86efac', margin: '8px 0' }} />
         <Row>
-          <Column><Text style={invoiceLabel}>Total:</Text></Column>
-          <Column align="right"><Text style={invoiceValue}>{formatPrice(total)}</Text></Column>
+          <Column><Text style={invoiceTotalLabel}>Total</Text></Column>
+          <Column align="right"><Text style={invoiceTotalValue}>{formatPrice(total)}</Text></Column>
         </Row>
       </Section>
 
@@ -88,7 +91,7 @@ export default function InvoiceEmail({
           </Column>
         </Row>
         {items.map((item, i) => (
-          <Row key={i} style={tableRow}>
+          <Row key={i} style={i % 2 === 0 ? tableRowEven : tableRowOdd}>
             <Column style={{ width: '55%' }}>
               <Text style={cellText}>{item.product_name}</Text>
             </Column>
@@ -125,22 +128,40 @@ export default function InvoiceEmail({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' };
-const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0', fontSize: '16px' };
-const sectionTitle: React.CSSProperties = { color: '#0f172a', margin: '24px 0 16px 0', fontSize: '16px', fontWeight: 'bold' };
+const docBadge: React.CSSProperties = {
+  display: 'inline-block',
+  backgroundColor: '#f0fdf4',
+  color: '#166534',
+  border: '2px solid #22c55e',
+  borderRadius: '8px',
+  padding: '8px 20px',
+  fontSize: '13px',
+  fontWeight: '700',
+  letterSpacing: '1.5px',
+  textTransform: 'uppercase' as const,
+  margin: '0',
+};
+
+const greeting: React.CSSProperties = { color: '#475569', margin: '0 0 4px 0', fontSize: '16px' };
+const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' };
+const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0', fontSize: '15px', lineHeight: '1.5' };
+const sectionTitle: React.CSSProperties = { color: '#0f172a', margin: '24px 0 12px 0', fontSize: '16px', fontWeight: '700' };
 
 const invoiceBox: React.CSSProperties = { backgroundColor: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '20px', marginBottom: '24px' };
-const invoiceLabel: React.CSSProperties = { color: '#166534', margin: '4px 0', fontSize: '14px' };
-const invoiceValue: React.CSSProperties = { color: '#166534', fontWeight: 'bold', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
-const invoiceText: React.CSSProperties = { color: '#166534', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
+const invoiceLabel: React.CSSProperties = { color: '#166534', margin: '6px 0', fontSize: '14px' };
+const invoiceValue: React.CSSProperties = { color: '#166534', fontWeight: '600', margin: '6px 0', fontSize: '14px', textAlign: 'right' as const };
+const invoiceText: React.CSSProperties = { color: '#166534', margin: '6px 0', fontSize: '14px', textAlign: 'right' as const };
+const invoiceTotalLabel: React.CSSProperties = { color: '#166534', fontWeight: '700', margin: '4px 0', fontSize: '16px' };
+const invoiceTotalValue: React.CSSProperties = { color: '#166534', fontWeight: '700', margin: '4px 0', fontSize: '20px', textAlign: 'right' as const };
 
-const tableHeader: React.CSSProperties = { backgroundColor: '#f1f5f9' };
-const tableHeaderText: React.CSSProperties = { padding: '8px', color: '#475569', fontSize: '12px', margin: '0' };
-const tableRow: React.CSSProperties = { borderBottom: '1px solid #e2e8f0' };
-const cellText: React.CSSProperties = { padding: '8px', margin: '0', fontSize: '14px', color: '#334155' };
+const tableHeader: React.CSSProperties = { backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0' };
+const tableHeaderText: React.CSSProperties = { padding: '10px 12px', color: '#475569', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0' };
+const tableRowEven: React.CSSProperties = { borderBottom: '1px solid #f1f5f9' };
+const tableRowOdd: React.CSSProperties = { borderBottom: '1px solid #f1f5f9', backgroundColor: '#fafbfc' };
+const cellText: React.CSSProperties = { padding: '10px 12px', margin: '0', fontSize: '14px', color: '#334155' };
 
-const noteBox: React.CSSProperties = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '16px', textAlign: 'center' as const, marginTop: '24px' };
-const noteText: React.CSSProperties = { color: '#64748b', margin: '0', fontSize: '14px' };
+const noteBox: React.CSSProperties = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '16px 20px', textAlign: 'center' as const, marginTop: '24px', border: '1px solid #e2e8f0' };
+const noteText: React.CSSProperties = { color: '#64748b', margin: '0', fontSize: '14px', lineHeight: '1.5' };
 
 const ctaSection: React.CSSProperties = { textAlign: 'center' as const, marginTop: '24px' };
 const downloadButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#2563eb', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };

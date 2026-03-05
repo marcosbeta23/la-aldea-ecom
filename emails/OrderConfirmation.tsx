@@ -1,4 +1,4 @@
-import { Section, Text, Link, Row, Column } from '@react-email/components';
+import { Section, Text, Link, Row, Column, Hr } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
 
@@ -60,6 +60,11 @@ export default function OrderConfirmation({
 
   return (
     <Layout preview={`Pedido ${orderNumber} confirmado - ${formatPrice(total)}`}>
+      {/* COMPROBANTE DE COMPRA Badge */}
+      <Section style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
+        <Text style={badge}>COMPROBANTE DE COMPRA</Text>
+      </Section>
+
       <Text style={greeting}>Hola {customerName},</Text>
       <Text style={title}>Gracias por tu compra!</Text>
       <Text style={subtitle}>Recibimos tu pedido y lo estamos preparando para vos.</Text>
@@ -68,7 +73,7 @@ export default function OrderConfirmation({
       <Section style={infoBox}>
         <Row>
           <Column>
-            <Text style={infoLabel}>Numero de pedido:</Text>
+            <Text style={infoLabel}>Numero de pedido</Text>
           </Column>
           <Column align="right">
             <Text style={infoValue}>{orderNumber}</Text>
@@ -76,7 +81,7 @@ export default function OrderConfirmation({
         </Row>
         <Row>
           <Column>
-            <Text style={infoLabel}>Fecha:</Text>
+            <Text style={infoLabel}>Fecha</Text>
           </Column>
           <Column align="right">
             <Text style={infoText}>{formatDate(createdAt)}</Text>
@@ -84,20 +89,19 @@ export default function OrderConfirmation({
         </Row>
         <Row>
           <Column>
-            <Text style={infoLabel}>Estado:</Text>
+            <Text style={infoLabel}>Estado</Text>
           </Column>
           <Column align="right">
             <Text style={isPaid ? statusPaid : statusPending}>
-              {isPaid ? 'Pago Recibido' : 'Pendiente'}
+              {isPaid ? 'Pago Confirmado' : 'Pendiente de Pago'}
             </Text>
           </Column>
         </Row>
       </Section>
 
       {/* Products */}
-      <Text style={sectionTitle}>Productos</Text>
+      <Text style={sectionTitle}>Detalle del pedido</Text>
       <Section>
-        {/* Header */}
         <Row style={tableHeader}>
           <Column style={{ width: '50%' }}>
             <Text style={tableHeaderText}>Producto</Text>
@@ -112,9 +116,8 @@ export default function OrderConfirmation({
             <Text style={tableHeaderText}>Subtotal</Text>
           </Column>
         </Row>
-        {/* Items */}
         {items.map((item, i) => (
-          <Row key={i} style={tableRow}>
+          <Row key={i} style={i % 2 === 0 ? tableRowEven : tableRowOdd}>
             <Column style={{ width: '50%' }}>
               <Text style={tableCellText}>{item.product_name}</Text>
             </Column>
@@ -151,6 +154,7 @@ export default function OrderConfirmation({
                 <Text style={discountValue}>-{formatPrice(discountAmount)}</Text>
               </Column>
             </Row>
+            <Hr style={{ borderColor: 'rgba(255,255,255,0.2)', margin: '8px 0' }} />
           </>
         )}
         <Row>
@@ -165,11 +169,19 @@ export default function OrderConfirmation({
 
       {/* Customer Info */}
       <Section style={customerBox}>
-        <Text style={customerTitle}>Datos del cliente</Text>
+        <Text style={customerTitle}>Tus datos</Text>
         <Text style={customerText}><strong>Nombre:</strong> {customerName}</Text>
         <Text style={customerText}><strong>Email:</strong> {customerEmail}</Text>
         {customerPhone && <Text style={customerText}><strong>Telefono:</strong> {customerPhone}</Text>}
         {shippingAddress && <Text style={customerText}><strong>Direccion:</strong> {shippingAddress}</Text>}
+      </Section>
+
+      {/* Next Steps */}
+      <Section style={nextStepsBox}>
+        <Text style={nextStepsTitle}>Proximos pasos</Text>
+        <Text style={nextStepsText}>1. Vamos a preparar tu pedido</Text>
+        <Text style={nextStepsText}>2. Te avisaremos cuando este listo para envio</Text>
+        <Text style={nextStepsText}>3. Recibiras actualizaciones por email</Text>
       </Section>
 
       {/* Google Review CTA */}
@@ -204,41 +216,60 @@ export default function OrderConfirmation({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const greeting: React.CSSProperties = { color: '#475569', margin: '0 0 4px 0', fontSize: '16px' };
-const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' };
-const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0' };
-const sectionTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 16px 0', fontSize: '18px', fontWeight: 'bold' };
+const badge: React.CSSProperties = {
+  display: 'inline-block',
+  backgroundColor: '#f0fdf4',
+  color: '#166534',
+  border: '2px solid #22c55e',
+  borderRadius: '8px',
+  padding: '8px 20px',
+  fontSize: '13px',
+  fontWeight: '700',
+  letterSpacing: '1.5px',
+  textTransform: 'uppercase' as const,
+  margin: '0',
+};
 
-const infoBox: React.CSSProperties = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '20px', marginBottom: '24px' };
+const greeting: React.CSSProperties = { color: '#475569', margin: '0 0 4px 0', fontSize: '16px' };
+const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' };
+const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0', fontSize: '15px', lineHeight: '1.5' };
+const sectionTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 12px 0', fontSize: '16px', fontWeight: '700' };
+
+const infoBox: React.CSSProperties = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '20px', marginBottom: '24px', border: '1px solid #e2e8f0' };
 const infoLabel: React.CSSProperties = { color: '#64748b', margin: '4px 0', fontSize: '14px' };
-const infoValue: React.CSSProperties = { color: '#0f172a', fontWeight: 'bold', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
-const infoText: React.CSSProperties = { color: '#0f172a', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
+const infoValue: React.CSSProperties = { color: '#0f172a', fontWeight: '700', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
+const infoText: React.CSSProperties = { color: '#334155', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
 const statusPaid: React.CSSProperties = { backgroundColor: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '600', display: 'inline', textAlign: 'right' as const };
 const statusPending: React.CSSProperties = { backgroundColor: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '600', display: 'inline', textAlign: 'right' as const };
 
-const tableHeader: React.CSSProperties = { backgroundColor: '#f1f5f9', marginBottom: '0' };
-const tableHeaderText: React.CSSProperties = { padding: '12px', color: '#475569', fontSize: '12px', textTransform: 'uppercase' as const, margin: '0' };
-const tableRow: React.CSSProperties = { borderBottom: '1px solid #e2e8f0' };
-const tableCellText: React.CSSProperties = { padding: '12px', margin: '0', fontSize: '14px', color: '#334155' };
+const tableHeader: React.CSSProperties = { backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0' };
+const tableHeaderText: React.CSSProperties = { padding: '10px 12px', color: '#475569', fontSize: '11px', textTransform: 'uppercase' as const, fontWeight: '600', letterSpacing: '0.5px', margin: '0' };
+const tableRowEven: React.CSSProperties = { borderBottom: '1px solid #f1f5f9' };
+const tableRowOdd: React.CSSProperties = { borderBottom: '1px solid #f1f5f9', backgroundColor: '#fafbfc' };
+const tableCellText: React.CSSProperties = { padding: '10px 12px', margin: '0', fontSize: '14px', color: '#334155' };
 
-const totalsBox: React.CSSProperties = { backgroundColor: '#0f172a', borderRadius: '12px', padding: '20px', color: '#ffffff', marginTop: '24px' };
+const totalsBox: React.CSSProperties = { backgroundColor: '#0f172a', borderRadius: '12px', padding: '20px', color: '#ffffff', marginTop: '16px' };
 const totalsLabel: React.CSSProperties = { color: '#94a3b8', margin: '4px 0', fontSize: '14px' };
 const totalsValue: React.CSSProperties = { color: '#ffffff', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
 const discountLabel: React.CSSProperties = { color: '#4ade80', margin: '4px 0', fontSize: '14px' };
 const discountValue: React.CSSProperties = { color: '#4ade80', margin: '4px 0', fontSize: '14px', textAlign: 'right' as const };
-const totalLabel: React.CSSProperties = { fontSize: '20px', fontWeight: 'bold', margin: '8px 0 0 0', color: '#ffffff' };
-const totalValue: React.CSSProperties = { fontSize: '20px', fontWeight: 'bold', margin: '8px 0 0 0', textAlign: 'right' as const, color: '#ffffff' };
+const totalLabel: React.CSSProperties = { fontSize: '20px', fontWeight: '700', margin: '4px 0', color: '#ffffff' };
+const totalValue: React.CSSProperties = { fontSize: '20px', fontWeight: '700', margin: '4px 0', textAlign: 'right' as const, color: '#ffffff' };
 
-const customerBox: React.CSSProperties = { marginTop: '24px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px' };
-const customerTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 12px 0', fontSize: '16px', fontWeight: 'bold' };
-const customerText: React.CSSProperties = { color: '#475569', margin: '4px 0', fontSize: '14px' };
+const customerBox: React.CSSProperties = { marginTop: '24px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' };
+const customerTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 12px 0', fontSize: '15px', fontWeight: '700' };
+const customerText: React.CSSProperties = { color: '#475569', margin: '4px 0', fontSize: '14px', lineHeight: '1.5' };
+
+const nextStepsBox: React.CSSProperties = { marginTop: '24px', padding: '20px', backgroundColor: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' };
+const nextStepsTitle: React.CSSProperties = { color: '#1e40af', margin: '0 0 12px 0', fontSize: '15px', fontWeight: '700' };
+const nextStepsText: React.CSSProperties = { color: '#1e40af', margin: '4px 0', fontSize: '14px', lineHeight: '1.5' };
 
 const ctaSection: React.CSSProperties = { marginTop: '32px', textAlign: 'center' as const };
-const ctaButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#3b82f6', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
+const ctaButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#2563eb', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
 const ctaText: React.CSSProperties = { color: '#64748b', margin: '16px 0', fontSize: '14px' };
 const whatsappButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#25d366', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
 
-const reviewSection: React.CSSProperties = { marginTop: '24px', backgroundColor: '#fffbeb', borderRadius: '12px', padding: '24px', textAlign: 'center' as const };
-const reviewTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' };
-const reviewText: React.CSSProperties = { color: '#64748b', margin: '0 0 16px 0', fontSize: '14px' };
+const reviewSection: React.CSSProperties = { marginTop: '24px', backgroundColor: '#fffbeb', borderRadius: '12px', padding: '24px', textAlign: 'center' as const, border: '1px solid #fde68a' };
+const reviewTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: '700' };
+const reviewText: React.CSSProperties = { color: '#64748b', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' };
 const reviewButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#4285f4', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
