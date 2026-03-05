@@ -2,9 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { FAQ_ARTICLES } from '@/lib/faq-articles';
+import type { FaqArticle } from '@/lib/faq-articles';
+import { supabase } from '@/lib/supabase';
 import { Calendar, ChevronRight, BookOpen, Tag } from 'lucide-react';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
+
+// Revalidate every 5 minutes so new admin-created guides appear
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Blog',
@@ -20,9 +25,57 @@ export const metadata: Metadata = {
   alternates: { canonical: `${siteUrl}/blog` },
 };
 
+/** Minimal shape needed for the blog listing */
+interface BlogArticle {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  datePublished?: string;
+  dateModified?: string;
+}
+
+/** Merge static FAQ_ARTICLES with published DB guides, deduplicating by slug */
+async function getAllArticles(): Promise<BlogArticle[]> {
+  const staticArticles: BlogArticle[] = FAQ_ARTICLES.map((a) => ({
+    slug: a.slug,
+    title: a.title,
+    description: a.description,
+    category: a.category,
+    datePublished: a.datePublished,
+    dateModified: a.dateModified,
+  }));
+
+  let dbArticles: BlogArticle[] = [];
+  try {
+    const { data, error } = await supabase
+      .from('guides')
+      .select('slug, title, description, category, date_published, date_modified')
+      .eq('is_published', true) as { data: any[] | null; error: any };
+
+    if (!error && data && Array.isArray(data)) {
+      const staticSlugs = new Set(FAQ_ARTICLES.map((a) => a.slug));
+      dbArticles = data
+        .filter((g: { slug: string }) => !staticSlugs.has(g.slug))
+        .map((g: { slug: string; title: string; description: string | null; category: string | null; date_published: string | null; date_modified: string | null }) => ({
+          slug: g.slug,
+          title: g.title,
+          description: g.description || '',
+          category: g.category || 'General',
+          datePublished: g.date_published || undefined,
+          dateModified: g.date_modified || undefined,
+        }));
+    }
+  } catch {
+    // If guides table doesn't exist yet, continue with static only
+  }
+
+  return [...staticArticles, ...dbArticles];
+}
+
 // Group articles by category for display
-function groupByCategory(articles: typeof FAQ_ARTICLES) {
-  const groups: Record<string, typeof FAQ_ARTICLES> = {};
+function groupByCategory(articles: BlogArticle[]) {
+  const groups: Record<string, BlogArticle[]> = {};
   for (const article of articles) {
     const cat = article.category || 'General';
     if (!groups[cat]) groups[cat] = [];
@@ -42,9 +95,11 @@ const categoryColors: Record<string, string> = {
   'Energia Solar': 'bg-yellow-100 text-yellow-700',
 };
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const allArticles = await getAllArticles();
+
   // Sort articles newest first
-  const articles = [...FAQ_ARTICLES].sort((a, b) => {
+  const articles = allArticles.sort((a, b) => {
     const da = a.dateModified || a.datePublished || '2025-01-01';
     const db = b.dateModified || b.datePublished || '2025-01-01';
     return db.localeCompare(da);

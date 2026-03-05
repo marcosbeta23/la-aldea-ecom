@@ -99,8 +99,8 @@ export default function Header() {
           >
             Inicio
           </Link>
-          <Link 
-            href="/productos" 
+          <Link
+            href="/productos"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               pathname.startsWith('/productos')
                 ? (scrolled || !isHomepage || mobileMenuOpen
@@ -112,6 +112,20 @@ export default function Header() {
             }`}
           >
             Tienda
+          </Link>
+          <Link
+            href="/faq"
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              pathname === '/faq'
+                ? (scrolled || !isHomepage || mobileMenuOpen
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-white bg-white/10')
+                : (scrolled || !isHomepage || mobileMenuOpen
+                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                    : 'text-white/90 hover:bg-white/10')
+            }`}
+          >
+            FAQ
           </Link>
           <Link
             href="/blog"
