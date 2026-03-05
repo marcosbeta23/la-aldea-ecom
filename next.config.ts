@@ -2,6 +2,21 @@ import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    const guideSlugs = [
+      'beneficios-riego', 'diseno-riego', 'tipos-bombas', 'seleccion-bombas',
+      'instalaciones-hidraulicas', 'sistemas-filtracion', 'mantenimiento-piscinas',
+      'seguridad-quimicos', 'seleccion-herramientas', 'energias-renovables',
+      'que-es-riego-agricola', 'cuanta-agua-por-hectarea', 'bomba-para-aspersores',
+      'que-es-una-drogueria', 'goteo-vs-aspersion',
+      'herbicidas-soja-uruguay', 'preparar-piscina-verano',
+    ];
+    return guideSlugs.map(slug => ({
+      source: `/faq/${slug}`,
+      destination: `/guias/${slug}`,
+      permanent: true,
+    }));
+  },
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
 import { CATEGORY_HIERARCHY } from "@/lib/categories";
+import { FAQ_ARTICLES } from "@/lib/faq-articles";
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || "https://laaldeatala.com.uy";
 
@@ -41,69 +42,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85,
   }));
 
-  // FAQ subpages
-  const faqPages: MetadataRoute.Sitemap = [
-    {
-      url: `${siteUrl}/faq/beneficios-riego`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/diseno-riego`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/seleccion-bombas`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/tipos-bombas`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/instalaciones-hidraulicas`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/sistemas-filtracion`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/mantenimiento-piscinas`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/seguridad-quimicos`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/seleccion-herramientas`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/faq/energias-renovables`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-  ];
+  // Guide pages — dynamically from FAQ_ARTICLES
+  const guidePages: MetadataRoute.Sitemap = FAQ_ARTICLES.map((article) => ({
+    url: `${siteUrl}/guias/${article.slug}`,
+    lastModified: article.dateModified ? new Date(article.dateModified) : new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
 
   // Dynamic product pages from Supabase
   let productPages: MetadataRoute.Sitemap = [];
@@ -130,5 +75,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching products for sitemap:", error);
   }
 
-  return [...staticPages, ...categoryPages, ...faqPages, ...productPages];
+  return [...staticPages, ...categoryPages, ...guidePages, ...productPages];
 }

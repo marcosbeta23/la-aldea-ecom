@@ -129,6 +129,96 @@ const faqData = {
       },
     ],
   },
+  riegoAgricola: {
+    title: 'Riego Agricola',
+    icon: '🌾',
+    faqs: [
+      {
+        question: '¿Cuanta agua necesita una hectarea de cultivo?',
+        answer: 'Depende del cultivo: una hectarea de soja necesita entre 3.000 y 5.000 m3 por temporada, mientras que la papa puede requerir 4.000 a 6.000 m3. Con riego por goteo se reduce el consumo un 30-40% frente a la aspersion. Consulta nuestra guia de calculo de agua por hectarea.',
+      },
+      {
+        question: '¿Cual es la diferencia entre riego por goteo y aspersion?',
+        answer: 'El goteo aplica agua directamente en la zona radicular con 90-95% de eficiencia, ideal para hortalizas, frutales y viñedos. La aspersion distribuye agua en area extensiva con 70-85% de eficiencia, ideal para praderas y cultivos extensivos. Lee nuestra comparativa completa de goteo vs aspersion.',
+      },
+      {
+        question: '¿Instalan sistemas de riego en todo Uruguay?',
+        answer: 'Si, instalamos en todo el territorio uruguayo. Atendemos especialmente Canelones, Montevideo, San Jose, Maldonado y Soriano. Para zonas del interior coordinamos con anticipacion. El asesoramiento inicial es sin costo.',
+      },
+    ],
+  },
+  drogueria: {
+    title: 'Drogueria',
+    icon: '🧴',
+    faqs: [
+      {
+        question: '¿Que productos de drogueria venden?',
+        answer: 'Vendemos productos de limpieza e higiene del hogar, cuidado personal y capilar, agroquimicos, productos para piscinas y tratamiento de agua, pinturas y solventes, equipos de proteccion personal (EPP) y productos quimicos industriales.',
+      },
+      {
+        question: '¿Cual es la diferencia entre una drogueria y una farmacia?',
+        answer: 'Una drogueria vende productos de limpieza, higiene, agroquimicos y quimicos industriales, pero no despacha medicamentos con receta medica. Las farmacias estan habilitadas por el MSP para dispensar medicamentos. En La Aldea somos una drogueria industrial y de consumo.',
+      },
+      {
+        question: '¿Los productos quimicos tienen ficha de seguridad?',
+        answer: 'Si, todos los productos quimicos que vendemos incluyen o tienen disponible su Ficha de Datos de Seguridad (SDS/FDS). Te la facilitamos al momento de la compra o por WhatsApp. Lee nuestra guia de seguridad para productos quimicos.',
+      },
+    ],
+  },
+  agroquimicos: {
+    title: 'Agroquimicos',
+    icon: '🌿',
+    faqs: [
+      {
+        question: '¿Que herbicidas venden para cultivos en Uruguay?',
+        answer: 'Tenemos herbicidas selectivos y totales para soja, maiz, papa, hortalizas y praderas, con stock permanente y envio a todo Uruguay. Consultanos por WhatsApp para asesoramiento tecnico segun tu cultivo.',
+      },
+      {
+        question: '¿Puedo comprar agroquimicos online con envio al interior?',
+        answer: 'Si, enviamos con embalaje adecuado para transporte seguro de productos quimicos. Montevideo y Canelones: 24-48hs. Interior: 3-5 dias habiles.',
+      },
+      {
+        question: '¿Ofrecen asesoramiento tecnico sobre dosis y aplicacion?',
+        answer: 'Si, el asesoramiento es sin costo. Te orientamos sobre dosis, momento de aplicacion y compatibilidad de productos segun tu cultivo especifico. Escribinos por WhatsApp.',
+      },
+    ],
+  },
+  piscinas: {
+    title: 'Piscinas',
+    icon: '🏊',
+    faqs: [
+      {
+        question: '¿Que productos para piscinas venden online?',
+        answer: 'Cloro granulado y en pastillas, algicidas, clarificantes, floculantes, reguladores de pH y kits de analisis. Todo disponible online con envio a todo Uruguay.',
+      },
+      {
+        question: '¿Cuanto cloro necesita una piscina de 50.000 litros?',
+        answer: 'Aproximadamente 250-500g de cloro granulado por aplicacion para alcanzar 1-3 ppm. La dosis exacta depende del pH actual y la temperatura del agua. Consulta nuestra guia completa de mantenimiento de piscinas.',
+      },
+      {
+        question: '¿Cada cuanto hay que tratar el agua de la piscina?',
+        answer: 'En verano con uso frecuente, chequea cloro y pH cada 2-3 dias. En invierno, una vez por semana es suficiente. Consulta nuestra guia de mantenimiento de piscinas para un calendario completo.',
+      },
+    ],
+  },
+  limpiezaIndustrial: {
+    title: 'Limpieza Industrial',
+    icon: '🧴',
+    faqs: [
+      {
+        question: '¿Venden productos de limpieza en cantidad industrial?',
+        answer: 'Si, manejamos desinfectantes, detergentes y desengrasantes en bidones de 5, 20 y 200 litros. Ideal para tambos, galpones, frigorificos y uso agropecuario intensivo. Consultanos por volumen y precio.',
+      },
+      {
+        question: '¿Los productos son aptos para uso agropecuario?',
+        answer: 'Si, contamos con productos especificos para la industria agropecuaria: desinfectantes para tambos, detergentes para maquinaria, hipoclorito de sodio a granel y mas. Todos con ficha tecnica disponible.',
+      },
+      {
+        question: '¿Realizan envios de productos industriales al interior?',
+        answer: 'Si, coordinamos envios especiales para productos a granel y bidones de gran volumen. El transporte cumple con normas de seguridad para quimicos. Consulta por logistica y costos.',
+      },
+    ],
+  },
   contacto: {
     title: 'Contacto y Horarios',
     icon: '📞',
@@ -211,7 +301,7 @@ export default function FAQPage() {
               {FAQ_ARTICLES.map((article) => (
                 <Link
                   key={article.slug}
-                  href={`/faq/${article.slug}`}
+                  href={`/guias/${article.slug}`}
                   className="group bg-white rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
                 >
                   <span className="inline-block px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full mb-3">
