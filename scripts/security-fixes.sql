@@ -14,6 +14,7 @@ ALTER TABLE public.checkout_attempts ENABLE ROW LEVEL SECURITY;
 
 -- Only the service_role (used by API routes) can access this table.
 -- No anon or authenticated user should touch it directly.
+DROP POLICY IF EXISTS "Service role full access on checkout_attempts" ON public.checkout_attempts;
 CREATE POLICY "Service role full access on checkout_attempts"
   ON public.checkout_attempts
   FOR ALL
@@ -37,6 +38,7 @@ END $$;
 ALTER TABLE public.inventory_locks ENABLE ROW LEVEL SECURITY;
 
 -- Only service_role should manage inventory locks
+DROP POLICY IF EXISTS "Service role full access on inventory_locks" ON public.inventory_locks;
 CREATE POLICY "Service role full access on inventory_locks"
   ON public.inventory_locks
   FOR ALL
@@ -58,6 +60,7 @@ END $$;
 ALTER TABLE public.order_logs ENABLE ROW LEVEL SECURITY;
 
 -- Only service_role should read/write audit logs
+DROP POLICY IF EXISTS "Service role full access on order_logs" ON public.order_logs;
 CREATE POLICY "Service role full access on order_logs"
   ON public.order_logs
   FOR ALL
