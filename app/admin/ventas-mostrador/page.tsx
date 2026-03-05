@@ -27,7 +27,7 @@ export default function VentasMostradorPage() {
   const [period, setPeriod] = useState('30d');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [stats, setStats] = useState({ todayTotal: 0, todayCount: 0 });
+  const [stats, setStats] = useState({ todayTotal: 0, todayTotalUSD: 0, todayCount: 0 });
 
   const fetchSales = useCallback(async () => {
     setLoading(true);
@@ -41,7 +41,7 @@ export default function VentasMostradorPage() {
       const data = await res.json();
       setOrders(data.orders || []);
       setTotalPages(data.totalPages || 1);
-      setStats(data.stats || { todayTotal: 0, todayCount: 0 });
+      setStats(data.stats || { todayTotal: 0, todayTotalUSD: 0, todayCount: 0 });
     } catch {
       console.error('Error fetching counter sales');
     } finally {
@@ -97,6 +97,11 @@ export default function VentasMostradorPage() {
               <p className="text-sm text-slate-500">Ventas hoy</p>
               <p className="text-xl font-bold text-slate-900">
                 {formatCurrency(stats.todayTotal)}
+                {stats.todayTotalUSD > 0 && (
+                  <span className="text-sm font-normal text-slate-500 ml-2">
+                    + US$ {stats.todayTotalUSD.toLocaleString('es-UY', { minimumFractionDigits: 2 })}
+                  </span>
+                )}
               </p>
             </div>
           </div>

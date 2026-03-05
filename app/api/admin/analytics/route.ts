@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getExchangeRate } from '@/lib/exchange-rate';
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -47,6 +48,15 @@ export async function GET(request: NextRequest) {
     const prevStartDate = new Date(startDate.getTime() - daysBack * 24 * 60 * 60 * 1000);
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
+
+    // Fetch exchange rate for combined totals
+    let exchangeRate = 0;
+    try {
+      const rateData = await getExchangeRate();
+      exchangeRate = rateData.rate;
+    } catch {
+      // If exchange rate is unavailable, we still show individual currencies
+    }
 
     // Fetch current period orders
     const { data: ordersData } = await supabaseAdmin
@@ -117,11 +127,15 @@ export async function GET(request: NextRequest) {
     // Unique customers
     const uniqueCustomers = new Set(orders.map(o => o.customer_email?.toLowerCase()).filter(Boolean)).size;
 
-    // Revenue by source (online vs mostrador)
+    // Revenue by source (online vs mostrador) — currency-aware
     const onlinePaidOrders = paidOrders.filter(o => (o.order_source || 'online') !== 'mostrador');
     const mostradorPaidOrders = paidOrders.filter(o => o.order_source === 'mostrador');
-    const onlineRevenue = onlinePaidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const mostradorRevenue = mostradorPaidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const onlineRevenueUYU = onlinePaidOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0);
+    const onlineRevenueUSD = onlinePaidOrders.filter(o => orderCurrency(o) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0);
+    const onlineRevenue = onlineRevenueUYU; // Legacy field — UYU only
+    const mostradorRevenueUYU = mostradorPaidOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0);
+    const mostradorRevenueUSD = mostradorPaidOrders.filter(o => orderCurrency(o) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0);
+    const mostradorRevenue = mostradorRevenueUYU; // Legacy field — UYU only
 
     // === Previous Period Comparison (per currency) ===
     const prevPaidOrders = prevOrders.filter(o => paidStatuses.includes(o.status));
@@ -253,8 +267,8 @@ export async function GET(request: NextRequest) {
         orders: dayOrders.length,
         revenueUYU: dayOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
         revenueUSD: dayOrders.filter(o => orderCurrency(o) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0),
-        onlineRevenue: dayOrders.filter(o => (o.order_source || 'online') !== 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
-        mostradorRevenue: dayOrders.filter(o => o.order_source === 'mostrador').reduce((sum, o) => sum + (o.total || 0), 0),
+        onlineRevenue: dayOrders.filter(o => (o.order_source || 'online') !== 'mostrador' && orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
+        mostradorRevenue: dayOrders.filter(o => o.order_source === 'mostrador' && orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
       });
     }
 
@@ -309,6 +323,14 @@ export async function GET(request: NextRequest) {
       ? ((completedOrders / orders.length) * 100).toFixed(1)
       : '0';
 
+    // Combined store total in UYU (USD converted at exchange rate)
+    const combinedRevenueUYU = exchangeRate > 0
+      ? totalRevenueUYU + totalRevenueUSD * exchangeRate
+      : totalRevenueUYU;
+    const todayCombinedRevenueUYU = exchangeRate > 0
+      ? todayRevenueUYU + todayRevenueUSD * exchangeRate
+      : todayRevenueUYU;
+
     return NextResponse.json({
       summary: {
         totalOrders: orders.length,
@@ -319,9 +341,11 @@ export async function GET(request: NextRequest) {
         totalRevenue,
         totalRevenueUYU,
         totalRevenueUSD,
+        combinedRevenueUYU,
         todayRevenue,
         todayRevenueUYU,
         todayRevenueUSD,
+        todayCombinedRevenueUYU,
         todayOrders: todayOrders.length,
         avgOrderValue,
         avgOrderValueUYU,
@@ -329,7 +353,11 @@ export async function GET(request: NextRequest) {
         uniqueCustomers,
         conversionRate: parseFloat(conversionRate),
         onlineRevenue,
+        onlineRevenueUYU,
+        onlineRevenueUSD,
         mostradorRevenue,
+        mostradorRevenueUYU,
+        mostradorRevenueUSD,
         onlineOrders: onlinePaidOrders.length,
         mostradorOrders: mostradorPaidOrders.length,
       },
@@ -345,6 +373,7 @@ export async function GET(request: NextRequest) {
         ordersChange: Math.round(ordersChange * 10) / 10,
         aovChange: Math.round(aovChange * 10) / 10,
       },
+      exchangeRate,
       paymentMethodDistribution,
       departmentDistribution,
       shippingTypeDistribution,

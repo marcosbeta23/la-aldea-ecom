@@ -1,4 +1,6 @@
-import { supabaseAdmin } from '@/lib/supabase';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import {
   Package,
   ShoppingCart,
@@ -14,8 +16,66 @@ import {
   BarChart3,
   ArrowRight,
   Plus,
+  RefreshCw,
+  Landmark,
 } from 'lucide-react';
 import Link from 'next/link';
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+interface DashboardData {
+  today: {
+    orders: number;
+    paidOrders: number;
+    revenueUYU: number;
+    revenueUSD: number;
+    combinedRevenueUYU: number;
+    pending: number;
+  };
+  period30d: {
+    totalOrders: number;
+    paidOrders: number;
+    revenueUYU: number;
+    revenueUSD: number;
+    combinedRevenueUYU: number;
+    paidOrdersUYU: number;
+    paidOrdersUSD: number;
+    avgTicketUYU: number;
+    avgTicketUSD: number;
+    pendingOrders: number;
+    toVerify: number;
+    toInvoice: number;
+  };
+  channels: {
+    onlineRevenueUYU: number;
+    onlineRevenueUSD: number;
+    onlineOrders: number;
+    mostradorRevenueUYU: number;
+    mostradorRevenueUSD: number;
+    mostradorOrders: number;
+  };
+  exchangeRate: number;
+  productsCount: number;
+  lowStock: Array<{ id: string; name: string; sku: string; stock: number }>;
+  recentOrders: Array<{
+    id: string;
+    order_number: string;
+    status: string;
+    total: number;
+    currency: string | null;
+    created_at: string;
+    customer_name: string;
+    customer_phone: string | null;
+    order_source: string | null;
+    payment_method: string | null;
+    shipping_department: string | null;
+  }>;
+  attention: {
+    pending: Array<{ id: string; order_number: string }>;
+    toVerify: Array<{ id: string; order_number: string }>;
+    toInvoice: Array<{ id: string; order_number: string }>;
+  };
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -30,15 +90,6 @@ const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
   refunded: { label: 'Reembolsado', classes: 'bg-red-100 text-red-700' },
   ready_to_invoice: { label: 'Por facturar', classes: 'bg-teal-100 text-teal-800' },
   invoiced: { label: 'Facturado', classes: 'bg-teal-100 text-teal-700' },
-};
-
-const PAYMENT_LABELS: Record<string, string> = {
-  mercadopago: 'MP',
-  transfer: 'Transfer.',
-  efectivo: 'Efectivo',
-  credito: 'Crédito',
-  pos_debito: 'POS Déb.',
-  pos_credito: 'POS Créd.',
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -65,86 +116,59 @@ function formatDate(dateStr: string) {
   });
 }
 
+function getCurrency(o: { currency: string | null }) {
+  return o.currency || 'UYU';
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-export default async function AdminDashboard() {
+export default function AdminDashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/dashboard');
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+        setLastUpdated(new Date());
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    // Auto-refresh every 30 seconds for real-time data
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  if (isLoading && !data) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-slate-500">Error al cargar el dashboard</p>
+        <button onClick={fetchData} className="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
   const now = new Date();
-  const startOfToday = new Date(now);
-  startOfToday.setHours(0, 0, 0, 0);
-  const startOf30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-  const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'paid_pending_verification', 'ready_to_invoice', 'invoiced'];
-
-  // Fetch last 30 days orders
-  const { data: ordersData } = await supabaseAdmin
-    .from('orders')
-    .select('id, order_number, status, total, currency, created_at, customer_name, customer_phone, order_source, payment_method, shipping_department')
-    .gte('created_at', startOf30d.toISOString())
-    .order('created_at', { ascending: false }) as {
-      data: Array<{
-        id: string;
-        order_number: string;
-        status: string;
-        total: number;
-        currency: string | null;
-        created_at: string;
-        customer_name: string;
-        customer_phone: string | null;
-        order_source: string | null;
-        payment_method: string | null;
-        shipping_department: string | null;
-      }> | null;
-    };
-
-  const orders = ordersData || [];
-
-  // Active products count
-  const { count: productsCount } = await supabaseAdmin
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_active', true) as { count: number | null };
-
-  // Low-stock products
-  const { data: lowStockData } = await supabaseAdmin
-    .from('products')
-    .select('id, name, sku, stock')
-    .eq('is_active', true)
-    .lte('stock', 5)
-    .gt('stock', 0)
-    .order('stock', { ascending: true })
-    .limit(6) as {
-      data: Array<{ id: string; name: string; sku: string; stock: number }> | null;
-    };
-
-  const lowStock = lowStockData || [];
-
-  // ── Calculate stats ──────────────────────────────────────────────────────────
-
-  const orderCurrency = (o: { currency: string | null }) => o.currency || 'UYU';
-
-  const paidOrders = orders.filter(o => paidStatuses.includes(o.status));
-  const todayOrders = orders.filter(o => new Date(o.created_at) >= startOfToday);
-  const todayPaid = paidOrders.filter(o => new Date(o.created_at) >= startOfToday);
-
-  const revenueUYU = paidOrders.filter(o => orderCurrency(o) === 'UYU').reduce((s, o) => s + (o.total || 0), 0);
-  const revenueUSD = paidOrders.filter(o => orderCurrency(o) === 'USD').reduce((s, o) => s + (o.total || 0), 0);
-
-  const todayRevenueUYU = todayPaid.filter(o => orderCurrency(o) === 'UYU').reduce((s, o) => s + (o.total || 0), 0);
-  const todayRevenueUSD = todayPaid.filter(o => orderCurrency(o) === 'USD').reduce((s, o) => s + (o.total || 0), 0);
-
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const toVerify = orders.filter(o => o.status === 'paid_pending_verification');
-  const toInvoice = orders.filter(o => o.status === 'ready_to_invoice');
-
-  const onlineRevenue = paidOrders.filter(o => (o.order_source || 'online') !== 'mostrador').reduce((s, o) => s + (o.total || 0), 0);
-  const mostradorRevenue = paidOrders.filter(o => o.order_source === 'mostrador').reduce((s, o) => s + (o.total || 0), 0);
-
-  const avgTicket = paidOrders.filter(o => orderCurrency(o) === 'UYU').length > 0
-    ? revenueUYU / paidOrders.filter(o => orderCurrency(o) === 'UYU').length
-    : 0;
-
-  // Recent orders (top 10)
-  const recentOrders = orders.slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -153,47 +177,67 @@ export default async function AdminDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-slate-500 text-sm">
-            Últimos 30 días ·{' '}
+            Ultimos 30 dias
+            {lastUpdated && (
+              <span className="ml-2 text-xs text-slate-400">
+                · {lastUpdated.toLocaleTimeString('es-UY')}
+              </span>
+            )}
+            {' · '}
             <span className="text-slate-400">
               {now.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}
             </span>
           </p>
         </div>
-        <Link
-          href="/admin/analytics"
-          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors"
-        >
-          <BarChart3 className="h-4 w-4" />
-          Analytics
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchData}
+            disabled={isLoading}
+            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+            title="Actualizar datos"
+          >
+            <RefreshCw className={`h-4 w-4 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <Link
+            href="/admin/analytics"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </Link>
+        </div>
       </div>
 
       {/* Today banner — only if there's activity */}
-      {(todayOrders.length > 0 || todayRevenueUYU > 0) && (
+      {(data.today.orders > 0 || data.today.revenueUYU > 0 || data.today.revenueUSD > 0) && (
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 text-white">
           <div className="flex items-center gap-2 mb-3">
             <Zap className="h-4 w-4 text-yellow-400" />
             <span className="text-sm font-semibold text-slate-300">Hoy</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             <div>
               <p className="text-slate-400 text-xs">Pedidos</p>
-              <p className="text-2xl font-bold">{todayOrders.length}</p>
+              <p className="text-2xl font-bold">{data.today.orders}</p>
             </div>
             <div>
               <p className="text-slate-400 text-xs">Ingresos UYU</p>
-              <p className="text-2xl font-bold">{formatUYU(todayRevenueUYU)}</p>
+              <p className="text-2xl font-bold">{formatUYU(data.today.revenueUYU)}</p>
             </div>
-            {todayRevenueUSD > 0 && (
-              <div>
-                <p className="text-slate-400 text-xs">Ingresos USD</p>
-                <p className="text-2xl font-bold">{formatUSD(todayRevenueUSD)}</p>
-              </div>
-            )}
-            {todayPaid.length > 0 && (
+            <div>
+              <p className="text-slate-400 text-xs">Ingresos USD</p>
+              <p className="text-2xl font-bold">{formatUSD(data.today.revenueUSD)}</p>
+            </div>
+            {data.today.paidOrders > 0 && (
               <div>
                 <p className="text-slate-400 text-xs">Confirmados</p>
-                <p className="text-2xl font-bold text-green-400">{todayPaid.length}</p>
+                <p className="text-2xl font-bold text-green-400">{data.today.paidOrders}</p>
+              </div>
+            )}
+            {data.today.pending > 0 && (
+              <div>
+                <p className="text-slate-400 text-xs">Pendientes</p>
+                <p className="text-2xl font-bold text-amber-400">{data.today.pending}</p>
               </div>
             )}
           </div>
@@ -201,9 +245,9 @@ export default async function AdminDashboard() {
       )}
 
       {/* Attention required */}
-      {(pendingOrders.length > 0 || toVerify.length > 0 || toInvoice.length > 0) && (
+      {(data.period30d.pendingOrders > 0 || data.period30d.toVerify > 0 || data.period30d.toInvoice > 0) && (
         <div className="grid sm:grid-cols-3 gap-3">
-          {pendingOrders.length > 0 && (
+          {data.period30d.pendingOrders > 0 && (
             <Link
               href="/admin/orders?status=pending"
               className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors group"
@@ -212,13 +256,13 @@ export default async function AdminDashboard() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div>
                   <p className="font-semibold text-amber-900 text-sm">Pendientes</p>
-                  <p className="text-xs text-amber-700">{pendingOrders.length} pedido{pendingOrders.length !== 1 ? 's' : ''} sin confirmar</p>
+                  <p className="text-xs text-amber-700">{data.period30d.pendingOrders} pedido{data.period30d.pendingOrders !== 1 ? 's' : ''} sin confirmar</p>
                 </div>
               </div>
               <ArrowRight className="h-4 w-4 text-amber-500 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           )}
-          {toVerify.length > 0 && (
+          {data.period30d.toVerify > 0 && (
             <Link
               href="/admin/orders?status=paid_pending_verification"
               className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors group"
@@ -227,13 +271,13 @@ export default async function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5 text-blue-600" />
                 <div>
                   <p className="font-semibold text-blue-900 text-sm">Por verificar</p>
-                  <p className="text-xs text-blue-700">{toVerify.length} transferencia{toVerify.length !== 1 ? 's' : ''} pendiente{toVerify.length !== 1 ? 's' : ''}</p>
+                  <p className="text-xs text-blue-700">{data.period30d.toVerify} transferencia{data.period30d.toVerify !== 1 ? 's' : ''} pendiente{data.period30d.toVerify !== 1 ? 's' : ''}</p>
                 </div>
               </div>
               <ArrowRight className="h-4 w-4 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           )}
-          {toInvoice.length > 0 && (
+          {data.period30d.toInvoice > 0 && (
             <Link
               href="/admin/orders?status=ready_to_invoice"
               className="flex items-center justify-between p-4 bg-teal-50 border border-teal-200 rounded-xl hover:bg-teal-100 transition-colors group"
@@ -242,7 +286,7 @@ export default async function AdminDashboard() {
                 <TrendingUp className="h-5 w-5 text-teal-600" />
                 <div>
                   <p className="font-semibold text-teal-900 text-sm">Por facturar</p>
-                  <p className="text-xs text-teal-700">{toInvoice.length} pedido{toInvoice.length !== 1 ? 's' : ''} listos</p>
+                  <p className="text-xs text-teal-700">{data.period30d.toInvoice} pedido{data.period30d.toInvoice !== 1 ? 's' : ''} listos</p>
                 </div>
               </div>
               <ArrowRight className="h-4 w-4 text-teal-500 group-hover:translate-x-0.5 transition-transform" />
@@ -251,14 +295,32 @@ export default async function AdminDashboard() {
         </div>
       )}
 
-      {/* KPI row */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI row — 5 cards including store total */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {/* Combined Store Total */}
+        {data.exchangeRate > 0 && (
+          <div className="bg-white rounded-xl border border-slate-200 p-5 sm:col-span-2 lg:col-span-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Total Tienda (30d)</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.period30d.combinedRevenueUYU)}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  USD+UYU · TC {data.exchangeRate.toFixed(2)}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                <Landmark className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Ingresos UYU (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(revenueUYU)}</p>
-              <p className="mt-1 text-xs text-slate-400">{paidOrders.filter(o => orderCurrency(o) === 'UYU').length} pedidos pagados</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.period30d.revenueUYU)}</p>
+              <p className="mt-1 text-xs text-slate-400">{data.period30d.paidOrdersUYU} pedidos pagados</p>
             </div>
             <div className="p-3 rounded-xl bg-green-50 text-green-600 border border-green-100">
               <DollarSign className="h-5 w-5" />
@@ -270,8 +332,8 @@ export default async function AdminDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Ingresos USD (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUSD(revenueUSD)}</p>
-              <p className="mt-1 text-xs text-slate-400">{paidOrders.filter(o => orderCurrency(o) === 'USD').length} pedidos USD</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUSD(data.period30d.revenueUSD)}</p>
+              <p className="mt-1 text-xs text-slate-400">{data.period30d.paidOrdersUSD} pedidos USD</p>
             </div>
             <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
               <Globe className="h-5 w-5" />
@@ -283,8 +345,8 @@ export default async function AdminDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Pedidos (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{orders.length}</p>
-              <p className="mt-1 text-xs text-slate-400">{paidOrders.length} confirmados · {pendingOrders.length} pendientes</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{data.period30d.totalOrders}</p>
+              <p className="mt-1 text-xs text-slate-400">{data.period30d.paidOrders} confirmados · {data.period30d.pendingOrders} pendientes</p>
             </div>
             <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
               <ShoppingCart className="h-5 w-5" />
@@ -296,8 +358,8 @@ export default async function AdminDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Ticket Prom. UYU</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(avgTicket)}</p>
-              <p className="mt-1 text-xs text-slate-400">{productsCount || 0} productos activos</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.period30d.avgTicketUYU)}</p>
+              <p className="mt-1 text-xs text-slate-400">{data.productsCount} productos activos</p>
             </div>
             <div className="p-3 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
               <TrendingUp className="h-5 w-5" />
@@ -306,15 +368,18 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* Revenue by channel */}
+      {/* Revenue by channel — currency-aware */}
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Online (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(onlineRevenue)}</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.channels.onlineRevenueUYU)}</p>
+              {data.channels.onlineRevenueUSD > 0 && (
+                <p className="mt-0.5 text-sm font-semibold text-blue-600">{formatUSD(data.channels.onlineRevenueUSD)}</p>
+              )}
               <p className="mt-1 text-xs text-slate-400">
-                {paidOrders.filter(o => (o.order_source || 'online') !== 'mostrador').length} pedidos online
+                {data.channels.onlineOrders} pedidos online
               </p>
             </div>
             <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
@@ -327,9 +392,12 @@ export default async function AdminDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Mostrador (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(mostradorRevenue)}</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.channels.mostradorRevenueUYU)}</p>
+              {data.channels.mostradorRevenueUSD > 0 && (
+                <p className="mt-0.5 text-sm font-semibold text-blue-600">{formatUSD(data.channels.mostradorRevenueUSD)}</p>
+              )}
               <p className="mt-1 text-xs text-slate-400">
-                {paidOrders.filter(o => o.order_source === 'mostrador').length} ventas en local
+                {data.channels.mostradorOrders} ventas en local
               </p>
             </div>
             <div className="p-3 rounded-xl bg-green-50 text-green-600 border border-green-100">
@@ -354,10 +422,10 @@ export default async function AdminDashboard() {
           </div>
 
           <div className="divide-y divide-slate-100">
-            {recentOrders.length === 0 ? (
-              <p className="px-5 py-10 text-center text-slate-400 text-sm">Sin pedidos en los últimos 30 días</p>
+            {data.recentOrders.length === 0 ? (
+              <p className="px-5 py-10 text-center text-slate-400 text-sm">Sin pedidos en los ultimos 30 dias</p>
             ) : (
-              recentOrders.map((order) => (
+              data.recentOrders.map((order) => (
                 <Link
                   key={order.id}
                   href={`/admin/orders/${order.id}`}
@@ -375,7 +443,7 @@ export default async function AdminDashboard() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-semibold text-slate-900">
-                      {orderCurrency(order) === 'USD' ? formatUSD(order.total) : formatUYU(order.total)}
+                      {getCurrency(order) === 'USD' ? formatUSD(order.total) : formatUYU(order.total)}
                     </p>
                     <p className="text-xs text-slate-400">{formatDate(order.created_at)}</p>
                   </div>
@@ -389,7 +457,7 @@ export default async function AdminDashboard() {
         <div className="space-y-4">
           {/* Quick actions */}
           <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-3">Acciones Rápidas</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Acciones Rapidas</h3>
             <div className="space-y-2">
               <Link
                 href="/admin/ventas-mostrador/nueva"
@@ -416,17 +484,17 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Low stock alert */}
-          {lowStock.length > 0 && (
+          {data.lowStock.length > 0 && (
             <div className="bg-white rounded-xl border border-slate-200 p-4">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                 <h3 className="text-sm font-semibold text-slate-700">Stock Bajo</h3>
                 <span className="ml-auto text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                  {lowStock.length}
+                  {data.lowStock.length}
                 </span>
               </div>
               <div className="space-y-2">
-                {lowStock.map((p) => (
+                {data.lowStock.map((p) => (
                   <Link
                     key={p.id}
                     href={`/admin/products/${p.id}`}
@@ -448,7 +516,7 @@ export default async function AdminDashboard() {
                 href="/admin/products"
                 className="block mt-3 text-xs text-blue-600 hover:text-blue-700 text-center font-medium"
               >
-                Ver todos los productos →
+                Ver todos los productos
               </Link>
             </div>
           )}

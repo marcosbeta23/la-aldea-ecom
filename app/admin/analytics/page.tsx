@@ -47,9 +47,11 @@ interface AnalyticsData {
     totalRevenue: number;
     totalRevenueUYU: number;
     totalRevenueUSD: number;
+    combinedRevenueUYU: number;
     todayRevenue: number;
     todayRevenueUYU: number;
     todayRevenueUSD: number;
+    todayCombinedRevenueUYU: number;
     todayOrders: number;
     avgOrderValue: number;
     avgOrderValueUYU: number;
@@ -57,7 +59,11 @@ interface AnalyticsData {
     uniqueCustomers: number;
     conversionRate: number;
     onlineRevenue: number;
+    onlineRevenueUYU: number;
+    onlineRevenueUSD: number;
     mostradorRevenue: number;
+    mostradorRevenueUYU: number;
+    mostradorRevenueUSD: number;
     onlineOrders: number;
     mostradorOrders: number;
   };
@@ -74,6 +80,7 @@ interface AnalyticsData {
     aovChange: number;
   };
   paymentMethodDistribution: Record<string, { count: number; revenue: number }>;
+  exchangeRate: number;
   departmentDistribution: Record<string, { orders: number; revenue: number }>;
   shippingTypeDistribution: Record<string, { orders: number; revenue: number }>;
   inventoryHealth: Array<{
@@ -743,13 +750,13 @@ export default function AnalyticsPage() {
       {data && (
         <>
           {/* Today banner — show only if there's activity today */}
-          {(data.summary.todayOrders > 0 || data.summary.todayRevenueUYU > 0) && (
+          {(data.summary.todayOrders > 0 || data.summary.todayRevenueUYU > 0 || data.summary.todayRevenueUSD > 0) && (
             <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 text-white">
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="h-4 w-4 text-yellow-400" />
                 <span className="text-sm font-semibold text-slate-300">Hoy</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 <div>
                   <p className="text-slate-400 text-xs">Pedidos</p>
                   <p className="text-2xl font-bold">{data.summary.todayOrders}</p>
@@ -758,12 +765,10 @@ export default function AnalyticsPage() {
                   <p className="text-slate-400 text-xs">Ingresos UYU</p>
                   <p className="text-2xl font-bold">{formatCurrency(data.summary.todayRevenueUYU)}</p>
                 </div>
-                {data.summary.todayRevenueUSD > 0 && (
-                  <div>
-                    <p className="text-slate-400 text-xs">Ingresos USD</p>
-                    <p className="text-2xl font-bold">{formatUSD(data.summary.todayRevenueUSD)}</p>
-                  </div>
-                )}
+                <div>
+                  <p className="text-slate-400 text-xs">Ingresos USD</p>
+                  <p className="text-2xl font-bold">{formatUSD(data.summary.todayRevenueUSD)}</p>
+                </div>
                 {data.summary.pendingOrders > 0 && (
                   <div>
                     <p className="text-slate-400 text-xs">Pendientes</p>
@@ -823,15 +828,19 @@ export default function AnalyticsPage() {
             />
             <StatCard
               title="Online"
-              value={formatCurrency(data.summary.onlineRevenue)}
-              subValue={`${data.summary.onlineOrders} pedidos online`}
+              value={formatCurrency(data.summary.onlineRevenueUYU)}
+              subValue={data.summary.onlineRevenueUSD > 0
+                ? `${formatUSD(data.summary.onlineRevenueUSD)} · ${data.summary.onlineOrders} pedidos`
+                : `${data.summary.onlineOrders} pedidos online`}
               icon={Globe}
               color="blue"
             />
             <StatCard
               title="Mostrador"
-              value={formatCurrency(data.summary.mostradorRevenue)}
-              subValue={`${data.summary.mostradorOrders} ventas en local`}
+              value={formatCurrency(data.summary.mostradorRevenueUYU)}
+              subValue={data.summary.mostradorRevenueUSD > 0
+                ? `${formatUSD(data.summary.mostradorRevenueUSD)} · ${data.summary.mostradorOrders} ventas`
+                : `${data.summary.mostradorOrders} ventas en local`}
               icon={Store}
               color="green"
             />

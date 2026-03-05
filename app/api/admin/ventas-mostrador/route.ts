@@ -51,12 +51,14 @@ export async function GET(request: NextRequest) {
 
   const { data: todayOrders } = await supabaseAdmin
     .from('orders')
-    .select('total')
+    .select('total, currency')
     .eq('order_source', 'mostrador')
     .gte('created_at', today.toISOString());
 
-  const todayTotal = (todayOrders || []).reduce((sum: number, o: any) => sum + (o.total || 0), 0);
-  const todayCount = (todayOrders || []).length;
+  const todayList = (todayOrders || []) as Array<{ total: number; currency: string | null }>;
+  const todayTotalUYU = todayList.filter(o => (o.currency || 'UYU') === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0);
+  const todayTotalUSD = todayList.filter(o => (o.currency || 'UYU') === 'USD').reduce((sum, o) => sum + (o.total || 0), 0);
+  const todayCount = todayList.length;
 
   return NextResponse.json({
     orders,
@@ -64,7 +66,8 @@ export async function GET(request: NextRequest) {
     page,
     totalPages: Math.ceil((count || 0) / limit),
     stats: {
-      todayTotal,
+      todayTotal: todayTotalUYU,
+      todayTotalUSD,
       todayCount,
     },
   });
