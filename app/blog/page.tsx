@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { FAQ_ARTICLES } from '@/lib/faq-articles';
-import type { FaqArticle } from '@/lib/faq-articles';
 import { supabase } from '@/lib/supabase';
 import { Calendar, ChevronRight, BookOpen, Tag } from 'lucide-react';
 

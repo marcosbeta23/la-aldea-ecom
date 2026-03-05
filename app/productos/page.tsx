@@ -553,15 +553,40 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </section>
 
         {/* Related guides — shown when a category filter is active */}
-        {params.categoria && (() => {
-          const guides = getArticlesForCategory(params.categoria);
-          if (guides.length === 0) return null;
+        {params.categoria && await (async () => {
+          // Get guides from static + DB
+          const categoria = params.categoria!;
+          const staticGuides = getArticlesForCategory(categoria);
+          const staticSlugs = new Set(staticGuides.map(g => g.slug));
+
+          let dbGuides: { slug: string; title: string; category: string }[] = [];
+          try {
+            const { data, error } = await (supabaseAdmin as any)
+              .from('guides')
+              .select('slug, title, category, related_categories')
+              .eq('is_published', true);
+
+            if (!error && data && Array.isArray(data)) {
+              dbGuides = data
+                .filter((g: any) =>
+                  !staticSlugs.has(g.slug) &&
+                  Array.isArray(g.related_categories) &&
+                  g.related_categories.some((rc: { value: string }) => rc.value === categoria)
+                );
+            }
+          } catch { /* continue */ }
+
+          const allGuides = [
+            ...staticGuides.map(g => ({ slug: g.slug, title: g.title, category: g.category })),
+            ...dbGuides,
+          ];
+          if (allGuides.length === 0) return null;
           return (
             <section className="container mx-auto px-4 pb-8">
               <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <h2 className="text-lg font-bold text-slate-900 mb-3">Guias relacionadas</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {guides.map((g) => (
+                  {allGuides.map((g) => (
                     <Link
                       key={g.slug}
                       href={`/guias/${g.slug}`}

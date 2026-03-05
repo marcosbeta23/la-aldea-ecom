@@ -19,9 +19,9 @@ interface GuiaPageProps {
   params: Promise<{ slug: string }>;
 }
 
-/** Try static first, then fall back to Supabase */
+/** Resolve article: check static first, then Supabase */
 async function resolveArticle(slug: string): Promise<FaqArticle | null> {
-  // 1. Check static articles
+  // 1. Check static articles (fallback for any that haven't been migrated yet)
   const staticArticle = getArticleBySlug(slug);
   if (staticArticle) return staticArticle;
 
@@ -35,7 +35,44 @@ async function resolveArticle(slug: string): Promise<FaqArticle | null> {
 
   if (error || !data) return null;
 
-  // Transform DB row to FaqArticle shape
+  return dbRowToArticle(data);
+}
+
+/** Resolve multiple articles by slug from DB */
+async function resolveArticlesBySlugs(slugs: string[]): Promise<FaqArticle[]> {
+  if (slugs.length === 0) return [];
+
+  const resolved: FaqArticle[] = [];
+
+  // Check static first
+  for (const slug of slugs) {
+    const staticArticle = getArticleBySlug(slug);
+    if (staticArticle) {
+      resolved.push(staticArticle);
+    }
+  }
+
+  const resolvedSlugs = new Set(resolved.map((a) => a.slug));
+  const remainingSlugs = slugs.filter((s) => !resolvedSlugs.has(s));
+
+  if (remainingSlugs.length > 0) {
+    const { data, error } = await (supabaseAdmin as any)
+      .from('guides')
+      .select('*')
+      .in('slug', remainingSlugs)
+      .eq('is_published', true);
+
+    if (!error && data && Array.isArray(data)) {
+      for (const row of data) {
+        resolved.push(dbRowToArticle(row));
+      }
+    }
+  }
+
+  return resolved;
+}
+
+function dbRowToArticle(data: any): FaqArticle {
   return {
     slug: data.slug,
     title: data.title,
@@ -52,8 +89,26 @@ async function resolveArticle(slug: string): Promise<FaqArticle | null> {
 }
 
 export async function generateStaticParams() {
-  // Static articles are known at build time
-  return getAllSlugs().map((slug) => ({ slug }));
+  // Include static slugs
+  const staticSlugs = getAllSlugs();
+
+  // Also include DB-published slugs for build-time pre-rendering
+  let dbSlugs: string[] = [];
+  try {
+    const { data, error } = await (supabaseAdmin as any)
+      .from('guides')
+      .select('slug')
+      .eq('is_published', true);
+
+    if (!error && data && Array.isArray(data)) {
+      dbSlugs = data.map((g: { slug: string }) => g.slug);
+    }
+  } catch {
+    // Continue with static only
+  }
+
+  const allSlugs = [...new Set([...staticSlugs, ...dbSlugs])];
+  return allSlugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: GuiaPageProps): Promise<Metadata> {
@@ -95,6 +150,9 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
   if (!article) {
     notFound();
   }
+
+  // Resolve related articles from DB for the sidebar
+  const relatedArticles = await resolveArticlesBySlugs(article.relatedArticles);
 
   // JSON-LD TechArticle schema
   const jsonLd = {
@@ -202,7 +260,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
             </article>
 
             {/* Sidebar */}
-            <RelatedLinks article={article} />
+            <RelatedLinks article={article} relatedArticles={relatedArticles} />
           </div>
         </section>
       </main>

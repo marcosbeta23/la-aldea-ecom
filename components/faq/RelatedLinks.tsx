@@ -1,17 +1,13 @@
 import Link from 'next/link';
 import { BookOpen, ShoppingBag, ArrowRight } from 'lucide-react';
 import type { FaqArticle } from '@/lib/faq-articles';
-import { getArticleBySlug } from '@/lib/faq-articles';
 
 interface RelatedLinksProps {
   article: FaqArticle;
+  relatedArticles?: FaqArticle[];
 }
 
-export default function RelatedLinks({ article }: RelatedLinksProps) {
-  const relatedArticles = article.relatedArticles
-    .map(slug => getArticleBySlug(slug))
-    .filter(Boolean) as FaqArticle[];
-
+export default function RelatedLinks({ article, relatedArticles = [] }: RelatedLinksProps) {
   return (
     <aside className="space-y-6">
       {/* Related product categories */}

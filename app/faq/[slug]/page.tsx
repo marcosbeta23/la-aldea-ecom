@@ -5,22 +5,107 @@ import Breadcrumbs from '@/components/common/Breadcrumbs';
 import ArticleSectionBlock from '@/components/faq/ArticleSection';
 import RelatedLinks from '@/components/faq/RelatedLinks';
 import { getArticleBySlug, getAllSlugs } from '@/lib/faq-articles';
+import type { FaqArticle } from '@/lib/faq-articles';
+import { supabaseAdmin } from '@/lib/supabase';
 import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+export const revalidate = 300;
+
 interface FaqArticlePageProps {
   params: Promise<{ slug: string }>;
 }
 
+async function resolveArticle(slug: string): Promise<FaqArticle | null> {
+  const staticArticle = getArticleBySlug(slug);
+  if (staticArticle) return staticArticle;
+
+  const { data, error } = await (supabaseAdmin as any)
+    .from('guides')
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    slug: data.slug,
+    title: data.title,
+    description: data.description || '',
+    breadcrumbLabel: data.breadcrumb_label || data.title,
+    category: data.category || '',
+    keywords: data.keywords || [],
+    relatedCategories: data.related_categories || [],
+    relatedArticles: data.related_articles || [],
+    sections: data.sections || [],
+    datePublished: data.date_published || undefined,
+    dateModified: data.date_modified || undefined,
+  };
+}
+
+async function resolveArticlesBySlugs(slugs: string[]): Promise<FaqArticle[]> {
+  if (slugs.length === 0) return [];
+
+  const resolved: FaqArticle[] = [];
+  for (const slug of slugs) {
+    const s = getArticleBySlug(slug);
+    if (s) resolved.push(s);
+  }
+
+  const resolvedSlugs = new Set(resolved.map((a) => a.slug));
+  const remaining = slugs.filter((s) => !resolvedSlugs.has(s));
+
+  if (remaining.length > 0) {
+    const { data, error } = await (supabaseAdmin as any)
+      .from('guides')
+      .select('*')
+      .in('slug', remaining)
+      .eq('is_published', true);
+
+    if (!error && data && Array.isArray(data)) {
+      for (const row of data) {
+        resolved.push({
+          slug: row.slug,
+          title: row.title,
+          description: row.description || '',
+          breadcrumbLabel: row.breadcrumb_label || row.title,
+          category: row.category || '',
+          keywords: row.keywords || [],
+          relatedCategories: row.related_categories || [],
+          relatedArticles: row.related_articles || [],
+          sections: row.sections || [],
+          datePublished: row.date_published || undefined,
+          dateModified: row.date_modified || undefined,
+        });
+      }
+    }
+  }
+
+  return resolved;
+}
+
 export async function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }));
+  const staticSlugs = getAllSlugs();
+  let dbSlugs: string[] = [];
+  try {
+    const { data, error } = await (supabaseAdmin as any)
+      .from('guides')
+      .select('slug')
+      .eq('is_published', true);
+    if (!error && data && Array.isArray(data)) {
+      dbSlugs = data.map((g: { slug: string }) => g.slug);
+    }
+  } catch { /* continue */ }
+
+  return [...new Set([...staticSlugs, ...dbSlugs])].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: FaqArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await resolveArticle(slug);
 
   if (!article) {
     return { title: 'Articulo no encontrado' };
@@ -52,11 +137,13 @@ export async function generateMetadata({ params }: FaqArticlePageProps): Promise
 
 export default async function FaqArticlePage({ params }: FaqArticlePageProps) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await resolveArticle(slug);
 
   if (!article) {
     notFound();
   }
+
+  const relatedArticles = await resolveArticlesBySlugs(article.relatedArticles);
 
   // JSON-LD Article schema
   const jsonLd = {
@@ -138,7 +225,7 @@ export default async function FaqArticlePage({ params }: FaqArticlePageProps) {
             </article>
 
             {/* Sidebar */}
-            <RelatedLinks article={article} />
+            <RelatedLinks article={article} relatedArticles={relatedArticles} />
           </div>
         </section>
       </main>
