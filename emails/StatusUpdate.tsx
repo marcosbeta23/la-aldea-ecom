@@ -8,6 +8,7 @@ interface StatusUpdateProps {
   newStatus: string;
   total: number;
   trackingNumber?: string;
+  reviewUrl?: string;
 }
 
 function formatPrice(price: number): string {
@@ -53,6 +54,7 @@ export default function StatusUpdate({
   newStatus,
   total,
   trackingNumber,
+  reviewUrl,
 }: StatusUpdateProps) {
   const config = STATUS_CONFIG[newStatus];
   if (!config) return null;
@@ -60,6 +62,8 @@ export default function StatusUpdate({
   const message = newStatus === 'shipped' && trackingNumber
     ? `Tu pedido ha sido enviado. Numero de seguimiento: ${trackingNumber}`
     : config.message;
+
+  const isDelivered = newStatus === 'delivered';
 
   return (
     <Layout preview={`${config.emoji} ${config.title} - Pedido ${orderNumber}`}>
@@ -80,10 +84,23 @@ export default function StatusUpdate({
         </Text>
       </Section>
 
+      {/* Google Review CTA — only shown on delivery */}
+      {isDelivered && reviewUrl && (
+        <Section style={reviewSection}>
+          <Text style={reviewTitle}>Te gusto tu compra?</Text>
+          <Text style={reviewText}>
+            Tu opinion nos ayuda a seguir mejorando. Dejanos una resena en Google, solo te toma 1 minuto!
+          </Text>
+          <Link href={reviewUrl} style={reviewButton}>
+            Dejar una Resena en Google
+          </Link>
+        </Section>
+      )}
+
       {/* CTA */}
       <Section style={ctaSection}>
         <Link
-          href={`https://wa.me/59899123456?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
+          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
           style={whatsappButton}
         >
           Consultas? Escribinos
@@ -100,6 +117,11 @@ const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0', 
 
 const infoBox: React.CSSProperties = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '20px', textAlign: 'center' as const };
 const infoText: React.CSSProperties = { color: '#475569', margin: '4px 0', fontSize: '14px' };
+
+const reviewSection: React.CSSProperties = { marginTop: '24px', backgroundColor: '#fffbeb', borderRadius: '12px', padding: '24px', textAlign: 'center' as const };
+const reviewTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' };
+const reviewText: React.CSSProperties = { color: '#64748b', margin: '0 0 16px 0', fontSize: '14px' };
+const reviewButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#4285f4', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
 
 const ctaSection: React.CSSProperties = { marginTop: '32px', textAlign: 'center' as const };
 const whatsappButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#25d366', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };

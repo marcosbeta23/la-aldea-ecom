@@ -23,6 +23,7 @@ interface OrderConfirmationProps {
   total: number;
   orderId: string;
   appUrl?: string;
+  reviewUrl?: string;
 }
 
 function formatPrice(price: number): string {
@@ -53,6 +54,7 @@ export default function OrderConfirmation({
   total,
   orderId,
   appUrl = 'https://laaldeatala.com.uy',
+  reviewUrl,
 }: OrderConfirmationProps) {
   const isPaid = status === 'paid' || status === 'invoiced' || status === 'paid_pending_verification';
 
@@ -169,6 +171,19 @@ export default function OrderConfirmation({
         {shippingAddress && <Text style={customerText}><strong>Direccion:</strong> {shippingAddress}</Text>}
       </Section>
 
+      {/* Google Review CTA */}
+      {reviewUrl && (
+        <Section style={reviewSection}>
+          <Text style={reviewTitle}>Te gusto tu compra?</Text>
+          <Text style={reviewText}>
+            Tu opinion nos ayuda a crecer. Dejanos una resena en Google, solo te toma 1 minuto!
+          </Text>
+          <Link href={reviewUrl} style={reviewButton}>
+            Dejar una Resena en Google
+          </Link>
+        </Section>
+      )}
+
       {/* CTAs */}
       <Section style={ctaSection}>
         <Link href={`${appUrl}/gracias?order_id=${orderId}`} style={ctaButton}>
@@ -176,7 +191,7 @@ export default function OrderConfirmation({
         </Link>
         <Text style={ctaText}>Tenes alguna consulta sobre tu pedido?</Text>
         <Link
-          href={`https://wa.me/59899123456?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
+          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
           style={whatsappButton}
         >
           Escribinos por WhatsApp
@@ -220,3 +235,8 @@ const ctaSection: React.CSSProperties = { marginTop: '32px', textAlign: 'center'
 const ctaButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#3b82f6', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
 const ctaText: React.CSSProperties = { color: '#64748b', margin: '16px 0', fontSize: '14px' };
 const whatsappButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#25d366', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
+
+const reviewSection: React.CSSProperties = { marginTop: '24px', backgroundColor: '#fffbeb', borderRadius: '12px', padding: '24px', textAlign: 'center' as const };
+const reviewTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' };
+const reviewText: React.CSSProperties = { color: '#64748b', margin: '0 0 16px 0', fontSize: '14px' };
+const reviewButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#4285f4', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };

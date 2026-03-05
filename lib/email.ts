@@ -103,6 +103,7 @@ export async function sendOrderConfirmation({ order, items }: SendOrderConfirmat
     total: order.total,
     orderId: order.id,
     appUrl: process.env.APP_URL || 'https://laaldeatala.com.uy',
+    reviewUrl: process.env.GOOGLE_REVIEW_URL || undefined,
   }));
 
   return sendEmail({
@@ -170,6 +171,7 @@ export async function sendOrderStatusUpdate(
     newStatus,
     total: order.total,
     trackingNumber,
+    reviewUrl: process.env.GOOGLE_REVIEW_URL || undefined,
   }));
 
   return sendEmail({

@@ -113,7 +113,7 @@ export default function InvoiceEmail({
       {/* WhatsApp CTA */}
       <Section style={ctaSection}>
         <Link
-          href={`https://wa.me/59899123456?text=${encodeURIComponent(`Hola! Consulto por mi factura del pedido ${orderNumber}`)}`}
+          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por mi factura del pedido ${orderNumber}`)}`}
           style={whatsappButton}
         >
           Consultas? Escribinos
