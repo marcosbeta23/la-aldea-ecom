@@ -8,23 +8,12 @@ import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, getSubtotalByCurrency, getCartCurrency, hasMultipleCurrencies } = useCartStore();
+  const { items, removeItem, updateQuantity, clearCart, getSubtotalByCurrency, getCartCurrency } = useCartStore();
   const [mounted, setMounted] = useState(false);
-  const [exchangeRate, setExchangeRate] = useState<{ rate: number; updatedAt: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Fetch exchange rate when cart has mixed currencies
-  useEffect(() => {
-    if (mounted && hasMultipleCurrencies()) {
-      fetch('/api/exchange-rate')
-        .then(r => r.json())
-        .then(data => { if (data.rate) setExchangeRate(data); })
-        .catch(() => {});
-    }
-  }, [mounted, items.length]);
 
   // Format price
   const formatPrice = (price: number, currency: string = 'UYU') => {
@@ -201,11 +190,6 @@ export default function CartPage() {
                           <span className="font-semibold">{formatPrice(subtotals.USD, 'USD')}</span>
                         </div>
                       )}
-                      {exchangeRate && (
-                        <div className="text-xs text-slate-400 bg-slate-50 rounded-lg px-3 py-2">
-                          Tipo de cambio: 1 USD = $ {exchangeRate.rate.toLocaleString('es-UY')} (BROU venta)
-                        </div>
-                      )}
                     </>
                   ) : (
                     <div className="flex justify-between text-slate-600">
@@ -222,14 +206,12 @@ export default function CartPage() {
                     <div className="space-y-1">
                       <div className="flex justify-between text-lg font-bold text-slate-900">
                         <span>Total UYU</span>
-                        <span>{formatPrice(subtotals.UYU + (exchangeRate ? subtotals.USD * exchangeRate.rate : 0), 'UYU')}</span>
+                        <span>{formatPrice(subtotals.UYU, 'UYU')}</span>
                       </div>
-                      {exchangeRate && (
-                        <div className="flex justify-between text-sm text-slate-500">
-                          <span>Total USD</span>
-                          <span>{formatPrice(subtotals.USD + subtotals.UYU / exchangeRate.rate, 'USD')}</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between text-lg font-bold text-slate-900">
+                        <span>Total USD</span>
+                        <span>{formatPrice(subtotals.USD, 'USD')}</span>
+                      </div>
                       <p className="text-xs text-slate-400 mt-1">Elegís la moneda de pago en el checkout</p>
                     </div>
                   ) : (

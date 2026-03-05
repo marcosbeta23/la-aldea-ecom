@@ -205,11 +205,11 @@ export default function CheckoutPage() {
 
   // Auto-reset shipping method when delivery isn't available
   useEffect(() => {
-    const canDeliver = shippingOptions.canDeliver || (shippingOptions.showFreightConsult && freightConfirmed);
+    const canDeliver = shippingOptions.canDeliver || (cartShippingType !== 'pickup_only' && freightConfirmed);
     if (mounted && !canDeliver && shippingMethod === 'delivery') {
       setValue('shippingMethod', 'pickup');
     }
-  }, [mounted, shippingOptions.canDeliver, shippingOptions.showFreightConsult, freightConfirmed, shippingMethod, setValue]);
+  }, [mounted, shippingOptions.canDeliver, cartShippingType, freightConfirmed, shippingMethod, setValue]);
 
   // Calculate totals — convert to payment currency when mixed
   const subtotal = useMemo(() => {
@@ -509,14 +509,16 @@ export default function CheckoutPage() {
                       </button>
                     )}
 
-                    {/* Freight delivery option — only visible after WhatsApp confirmation */}
-                    {shippingOptions.showFreightConsult && freightConfirmed && (
+                    {/* Freight delivery option — visible after WhatsApp confirmation */}
+                    {cartShippingType !== 'pickup_only' && freightConfirmed && (
                       <button
                         type="button"
                         onClick={() => setValue('shippingMethod', 'delivery')}
                         className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          shippingMethod === 'delivery'
+                          shippingMethod === 'delivery' && !shippingOptions.canDeliver
                             ? 'border-blue-600 bg-blue-50'
+                            : shippingMethod === 'delivery' && shippingOptions.canDeliver
+                            ? 'border-slate-200 hover:border-slate-300'
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
@@ -531,28 +533,32 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  {/* Freight consultation card — consult first, then confirm */}
-                  {shippingOptions.showFreightConsult && (
+                  {/* Freight consultation card — always shown (except pickup_only) */}
+                  {cartShippingType !== 'pickup_only' && (
                     <div className={`mt-4 p-4 border rounded-xl ${
                       freightConfirmed
                         ? 'bg-green-50 border-green-200'
-                        : 'bg-amber-50 border-amber-200'
+                        : 'bg-slate-50 border-slate-200'
                     }`}>
                       <div className="flex items-start gap-3">
                         <Truck className={`h-5 w-5 mt-0.5 shrink-0 ${
-                          freightConfirmed ? 'text-green-600' : 'text-amber-600'
+                          freightConfirmed ? 'text-green-600' : 'text-slate-500'
                         }`} />
                         <div className="flex-1">
                           {!freightConfirmed ? (
                             <>
-                              <p className="text-sm font-medium text-amber-800">
-                                Tu pedido incluye productos que requieren flete
+                              <p className="text-sm font-medium text-slate-700">
+                                {cartShippingType === 'freight'
+                                  ? 'Tu pedido incluye productos que requieren flete'
+                                  : '¿Necesitás coordinar un flete?'}
                               </p>
-                              <p className="text-sm text-amber-700 mt-1">
-                                Coordiná el envío y el costo por WhatsApp antes de comprar. Si preferís, podés retirarlo en nuestro local.
+                              <p className="text-sm text-slate-500 mt-1">
+                                {cartShippingType === 'freight'
+                                  ? 'Coordiná el envío y el costo por WhatsApp antes de comprar. Si preferís, podés retirarlo en nuestro local.'
+                                  : 'Si no podés retirar o DAC no llega a tu zona, coordiná un envío por flete vía WhatsApp.'}
                               </p>
                               <a
-                                href={`https://wa.me/59892744725?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido con productos grandes.')}`}
+                                href={`https://wa.me/59892744725?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
@@ -574,18 +580,18 @@ export default function CheckoutPage() {
                               checked={freightConfirmed}
                               onChange={(e) => {
                                 setFreightConfirmed(e.target.checked);
-                                if (!e.target.checked && shippingMethod === 'delivery') {
+                                if (!e.target.checked && shippingMethod === 'delivery' && !shippingOptions.canDeliver) {
                                   setValue('shippingMethod', 'pickup');
                                 }
                               }}
                               className={`h-4 w-4 rounded border-slate-300 focus:ring-2 ${
                                 freightConfirmed
                                   ? 'text-green-600 focus:ring-green-500'
-                                  : 'text-amber-600 focus:ring-amber-500'
+                                  : 'text-slate-400 focus:ring-slate-400'
                               }`}
                             />
                             <span className={`text-sm font-medium ${
-                              freightConfirmed ? 'text-green-700' : 'text-amber-700'
+                              freightConfirmed ? 'text-green-700' : 'text-slate-600'
                             }`}>
                               Ya coordiné el flete por WhatsApp
                             </span>
