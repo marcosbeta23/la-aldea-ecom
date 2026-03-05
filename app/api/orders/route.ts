@@ -248,16 +248,18 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // ✅ INCREMENT COUPON USAGE (before payment processing)
-    if (validatedCoupon) {
+    // NOTE: For MercadoPago orders, coupon usage (current_uses) is incremented
+    // in the webhook after payment is confirmed, to avoid counting abandoned payments.
+    // For bank transfer orders, we increment here since there's no webhook.
+    if (validatedCoupon && paymentMethod === 'transfer') {
       await (supabaseAdmin as any)
         .from('discount_coupons')
-        .update({ 
-          current_uses: (validatedCoupon.current_uses || 0) + 1 
+        .update({
+          current_uses: (validatedCoupon.current_uses || 0) + 1
         })
         .eq('id', validatedCoupon.id);
     }
-    
+
     // 9️⃣ HANDLE PAYMENT METHOD
     if (paymentMethod === 'transfer') {
       // Bank transfer: no MercadoPago, return order info only

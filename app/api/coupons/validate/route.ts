@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch coupon
     const { data, error } = await supabaseAdmin
-      .from('coupons')
+      .from('discount_coupons')
       .select('*')
       .eq('code', code.toUpperCase())
       .eq('is_active', true)
