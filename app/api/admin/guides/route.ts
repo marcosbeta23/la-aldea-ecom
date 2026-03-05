@@ -1,0 +1,99 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { supabaseAdmin } from '@/lib/supabase';
+
+async function verifyAdmin() {
+  const { userId } = await auth();
+  return !!userId;
+}
+
+// GET all guides (admin sees all, public would see published only)
+export async function GET(request: NextRequest) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const publishedOnly = searchParams.get('published') === 'true';
+
+  let query = (supabaseAdmin as any)
+    .from('guides')
+    .select('*')
+    .order('updated_at', { ascending: false });
+
+  if (publishedOnly) {
+    query = query.eq('is_published', true);
+  }
+
+  const { data: guides, error } = await query;
+
+  if (error) {
+    console.error('Error fetching guides:', error);
+    return NextResponse.json({ error: 'Failed to fetch guides' }, { status: 500 });
+  }
+
+  return NextResponse.json({ guides: guides || [] });
+}
+
+// POST create new guide
+export async function POST(request: NextRequest) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const {
+      slug,
+      title,
+      description,
+      breadcrumb_label,
+      category,
+      keywords,
+      related_categories,
+      related_articles,
+      sections,
+      is_published,
+    } = body;
+
+    if (!slug || !title) {
+      return NextResponse.json({ error: 'slug and title are required' }, { status: 400 });
+    }
+
+    // Validate slug format
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      return NextResponse.json({ error: 'slug must be lowercase with hyphens only' }, { status: 400 });
+    }
+
+    const { data: guide, error } = await (supabaseAdmin as any)
+      .from('guides')
+      .insert({
+        slug,
+        title,
+        description: description || '',
+        breadcrumb_label: breadcrumb_label || title,
+        category: category || '',
+        keywords: keywords || [],
+        related_categories: related_categories || [],
+        related_articles: related_articles || [],
+        sections: sections || [],
+        is_published: is_published || false,
+        date_published: new Date().toISOString().split('T')[0],
+        date_modified: new Date().toISOString().split('T')[0],
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating guide:', error);
+      if (error.code === '23505') {
+        return NextResponse.json({ error: 'A guide with this slug already exists' }, { status: 409 });
+      }
+      return NextResponse.json({ error: 'Failed to create guide' }, { status: 500 });
+    }
+
+    return NextResponse.json({ guide }, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+}

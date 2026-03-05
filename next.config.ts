@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
       'que-es-riego-agricola', 'cuanta-agua-por-hectarea', 'bomba-para-aspersores',
       'que-es-una-drogueria', 'goteo-vs-aspersion',
       'herbicidas-soja-uruguay', 'preparar-piscina-verano',
+      'instalar-riego-goteo', 'riego-huerta-jardin',
+      'agua-piscina-verde', 'cuanto-cloro-piscina', 'control-plagas-papa',
     ];
     return guideSlugs.map(slug => ({
       source: `/faq/${slug}`,

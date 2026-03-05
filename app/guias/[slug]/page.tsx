@@ -5,22 +5,60 @@ import Breadcrumbs from '@/components/common/Breadcrumbs';
 import ArticleSectionBlock from '@/components/faq/ArticleSection';
 import RelatedLinks from '@/components/faq/RelatedLinks';
 import { getArticleBySlug, getAllSlugs } from '@/lib/faq-articles';
+import type { FaqArticle } from '@/lib/faq-articles';
+import { supabaseAdmin } from '@/lib/supabase';
 import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+// Revalidate DB guides every 5 minutes
+export const revalidate = 300;
+
 interface GuiaPageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Try static first, then fall back to Supabase */
+async function resolveArticle(slug: string): Promise<FaqArticle | null> {
+  // 1. Check static articles
+  const staticArticle = getArticleBySlug(slug);
+  if (staticArticle) return staticArticle;
+
+  // 2. Check Supabase guides table
+  const { data, error } = await (supabaseAdmin as any)
+    .from('guides')
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .single();
+
+  if (error || !data) return null;
+
+  // Transform DB row to FaqArticle shape
+  return {
+    slug: data.slug,
+    title: data.title,
+    description: data.description || '',
+    breadcrumbLabel: data.breadcrumb_label || data.title,
+    category: data.category || '',
+    keywords: data.keywords || [],
+    relatedCategories: data.related_categories || [],
+    relatedArticles: data.related_articles || [],
+    sections: data.sections || [],
+    datePublished: data.date_published || undefined,
+    dateModified: data.date_modified || undefined,
+  };
+}
+
 export async function generateStaticParams() {
+  // Static articles are known at build time
   return getAllSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: GuiaPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await resolveArticle(slug);
 
   if (!article) {
     return { title: 'Guia no encontrada' };
@@ -52,7 +90,7 @@ export async function generateMetadata({ params }: GuiaPageProps): Promise<Metad
 
 export default async function GuiaPage({ params }: GuiaPageProps) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await resolveArticle(slug);
 
   if (!article) {
     notFound();

@@ -1460,6 +1460,420 @@ export const FAQ_ARTICLES: FaqArticle[] = [
       },
     ],
   },
+
+  // ── 18. Instalar Riego por Goteo ──────────────────────────────────────────
+  {
+    slug: 'instalar-riego-goteo',
+    title: 'Como Instalar Riego por Goteo Paso a Paso',
+    description: 'Guia completa para instalar riego por goteo en tu huerta, jardin o cultivo. Materiales, herramientas, diseño y paso a paso con consejos tecnicos de La Aldea.',
+    breadcrumbLabel: 'Instalar Riego por Goteo',
+    category: 'Sistemas de Riego',
+    keywords: ['instalar riego por goteo', 'riego goteo paso a paso', 'como instalar goteo', 'riego goteo Uruguay', 'instalacion goteo huerta', 'kit riego goteo'],
+    relatedCategories: [
+      { label: 'Sistemas de Riego', value: 'Riego' },
+      { label: 'Bombas de Agua', value: 'Bombas' },
+      { label: 'Accesorios', value: 'Accesorios' },
+    ],
+    relatedArticles: ['beneficios-riego', 'goteo-vs-aspersion', 'riego-huerta-jardin', 'diseno-riego'],
+    datePublished: '2026-03-05',
+    dateModified: '2026-03-05',
+    sections: [
+      {
+        title: '¿Como se instala un sistema de riego por goteo?',
+        type: 'text',
+        content: `El riego por goteo se instala conectando una red de mangueras con <strong>goteros integrados o insertables</strong> a una fuente de agua con presion (tanque elevado o <a href="/productos?categoria=Bombas">bomba de agua</a>). Es el metodo de riego mas eficiente (90-95% de aprovechamiento) y el mas sencillo de instalar sin experiencia previa. En esta guia te explicamos paso a paso como hacerlo para una huerta familiar, un jardin domestico o una parcela productiva en Uruguay.`,
+      },
+      {
+        title: 'Materiales y Herramientas Necesarias',
+        type: 'list',
+        content: `<ul>
+<li><strong>Manguera de goteo (16mm):</strong> con goteros integrados cada 20-30cm para huertas, o cada 40-50cm para cultivos extensivos. Disponible en nuestra seccion de <a href="/productos?categoria=Riego&sub=Goteo">riego por goteo</a>.</li>
+<li><strong>Manguera principal (25-32mm):</strong> para llevar agua desde la fuente hasta las lineas de goteo.</li>
+<li><strong>Conectores y derivaciones:</strong> tees, codos, uniones, llaves de paso y tapones finales. Encontralos en <a href="/productos?categoria=Accesorios&sub=Conexiones PVC">accesorios y conexiones</a>.</li>
+<li><strong>Filtro de malla o disco:</strong> esencial para evitar que particulas tapen los goteros. Ver <a href="/productos?categoria=Filtros">filtros disponibles</a>.</li>
+<li><strong>Regulador de presion:</strong> si la presion de agua supera 1.5 bar, necesitas regulador para no reventar la manguera de goteo.</li>
+<li><strong>Bomba de agua</strong> (si no tenes presion por gravedad): una <a href="/productos?categoria=Bombas&sub=Perifericas">bomba periferica de 0.5-1 HP</a> alcanza para la mayoria de instalaciones domesticas.</li>
+<li><strong>Herramientas:</strong> sacabocados, cutter, teflon, tijera para manguera.</li>
+</ul>`,
+      },
+      {
+        title: 'Paso a Paso de Instalacion',
+        type: 'steps',
+        content: `<ol>
+<li><strong>Diseña el plano:</strong> Medi tu terreno y dibuja la ubicacion de las plantas o surcos. Marca donde ira la fuente de agua y las lineas de goteo. Cada linea no debe superar los 50 metros para mantener presion uniforme.</li>
+<li><strong>Instala el filtro:</strong> Conecta el filtro a la salida de la bomba o tanque. Sin filtro, los goteros se tapan en pocas semanas. Si el agua viene de pozo o arroyo, usa filtro de disco de 120 mesh como minimo.</li>
+<li><strong>Coloca la manguera principal:</strong> Tiende la manguera de 25-32mm desde el filtro hasta el inicio de tu area de cultivo. Fijala con estacas o grapas.</li>
+<li><strong>Conecta las lineas de goteo:</strong> Usa el sacabocados para hacer perforaciones en la manguera principal e inserta las derivaciones hacia las lineas de goteo de 16mm. Cada linea va paralela a una fila de plantas.</li>
+<li><strong>Cierra los extremos:</strong> En el final de cada linea de goteo, dobla la manguera y asegurala con un anillo o usa un tapon de cierre. Esto permite purgar la linea cuando sea necesario.</li>
+<li><strong>Prueba y ajusta:</strong> Abre el agua y verifica que todos los goteros emitan agua de manera uniforme. Revisa que no haya fugas en las conexiones. Ajusta las llaves de paso si alguna zona recibe mas agua de la necesaria.</li>
+<li><strong>Fija las mangueras:</strong> Una vez confirmado que todo funciona, fija las lineas al suelo con estacas cada metro. Si queres, podes cubrir con mulch para reducir evaporacion.</li>
+</ol>
+<p>¿Necesitas ayuda con el diseño o los materiales? En <a href="/contacto">La Aldea</a> te asesoramos sin costo y te armamos el kit completo para tu proyecto.</p>`,
+      },
+      {
+        title: 'Dimensionamiento: ¿Cuanta Manguera Necesito?',
+        type: 'table',
+        content: `<table>
+<thead><tr><th>Superficie</th><th>Manguera de goteo (16mm)</th><th>Manguera principal</th><th>Goteros recomendados</th></tr></thead>
+<tbody>
+<tr><td>Huerta 5x5m</td><td>25-30 metros</td><td>5 metros</td><td>Cada 20cm (hortalizas)</td></tr>
+<tr><td>Jardin 50m²</td><td>60-80 metros</td><td>10 metros</td><td>Cada 30cm (flores/arbustos)</td></tr>
+<tr><td>Parcela 500m²</td><td>500-700 metros</td><td>30-50 metros</td><td>Cada 30-40cm (cultivos)</td></tr>
+<tr><td>Hectarea frutales</td><td>3.000-5.000 metros</td><td>200-300 metros</td><td>Cada 50cm (frutales/vid)</td></tr>
+</tbody>
+</table>
+<p>Todos los materiales estan disponibles en nuestra seccion de <a href="/productos?categoria=Riego">sistemas de riego</a>. Consulta por kits armados segun tu superficie.</p>`,
+      },
+      {
+        title: 'Errores Comunes al Instalar Riego por Goteo',
+        type: 'list',
+        content: `<ul>
+<li><strong>No poner filtro:</strong> El error mas frecuente. Los goteros se tapan rapido con sedimentos, especialmente con agua de pozo.</li>
+<li><strong>Lineas demasiado largas:</strong> Superar los 50m por linea causa perdida de presion y los ultimos goteros no emiten agua.</li>
+<li><strong>Goteros muy juntos para el cultivo equivocado:</strong> Cada 20cm para lechuga esta bien, pero para frutales necesitas cada 50cm o goteros de mayor caudal.</li>
+<li><strong>No purgar las lineas:</strong> Al instalar, deja correr agua sin los tapones finales para limpiar residuos de las mangueras.</li>
+<li><strong>Olvidar el regulador de presion:</strong> Si conectas directo a la red, la presion puede reventar la manguera de goteo. Usa regulador o llave de paso parcialmente cerrada.</li>
+</ul>
+<p>Si tenes dudas sobre tu instalacion, <a href="https://wa.me/59892744725">escribinos por WhatsApp</a> y te orientamos.</p>`,
+      },
+    ],
+  },
+
+  // ── 19. Riego para Huerta y Jardin ────────────────────────────────────────
+  {
+    slug: 'riego-huerta-jardin',
+    title: 'Riego para Huerta y Jardin: Guia Completa para el Hogar',
+    description: 'Aprende a elegir e instalar el mejor sistema de riego para tu huerta familiar o jardin domestico en Uruguay. Goteo, aspersion, frecuencias y consejos practicos.',
+    breadcrumbLabel: 'Riego Huerta y Jardin',
+    category: 'Sistemas de Riego',
+    keywords: ['riego huerta', 'riego jardin', 'riego domestico Uruguay', 'huerta familiar riego', 'como regar huerta', 'riego automatico jardin'],
+    relatedCategories: [
+      { label: 'Sistemas de Riego', value: 'Riego' },
+      { label: 'Bombas de Agua', value: 'Bombas' },
+    ],
+    relatedArticles: ['instalar-riego-goteo', 'goteo-vs-aspersion', 'beneficios-riego', 'seleccion-bombas'],
+    datePublished: '2026-03-05',
+    dateModified: '2026-03-05',
+    sections: [
+      {
+        title: '¿Como regar una huerta o jardin de forma eficiente?',
+        type: 'text',
+        content: `El riego eficiente de una huerta o jardin combina el <strong>sistema adecuado</strong> (goteo para hortalizas, aspersion para cesped), la <strong>frecuencia correcta</strong> segun el cultivo y la epoca, y la <strong>cantidad justa de agua</strong> para evitar desperdicios. En Uruguay, donde los veranos son calidos y las lluvias irregulares, un buen sistema de riego marca la diferencia entre una huerta productiva y una que sufre. En esta guia cubrimos todo lo que necesitas saber para regar tu hogar.`,
+      },
+      {
+        title: '¿Que Sistema de Riego Elegir?',
+        type: 'comparison',
+        content: `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+<div>
+<h4>Riego por Goteo</h4>
+<ul>
+<li><strong>Ideal para:</strong> hortalizas, frutales, plantas en maceta, canteros</li>
+<li><strong>Eficiencia:</strong> 90-95% del agua llega a la raiz</li>
+<li><strong>Ventaja:</strong> no moja las hojas (previene hongos)</li>
+<li><strong>Frecuencia:</strong> diario o cada 2 dias en verano</li>
+<li><strong>Costo:</strong> bajo, se arma con kit basico</li>
+</ul>
+<p><a href="/productos?categoria=Riego&sub=Goteo">Ver sistemas de goteo →</a></p>
+</div>
+<div>
+<h4>Riego por Aspersion</h4>
+<ul>
+<li><strong>Ideal para:</strong> cesped, praderas, areas grandes</li>
+<li><strong>Eficiencia:</strong> 70-85% (pierde por evaporacion)</li>
+<li><strong>Ventaja:</strong> cubre superficies amplias rapidamente</li>
+<li><strong>Frecuencia:</strong> cada 2-3 dias en verano</li>
+<li><strong>Costo:</strong> medio, requiere mas presion</li>
+</ul>
+<p><a href="/productos?categoria=Riego&sub=Aspersion">Ver aspersores →</a></p>
+</div>
+</div>
+<p>¿No sabes cual elegir? Lee nuestra <a href="/guias/goteo-vs-aspersion">comparativa completa de goteo vs aspersion</a>.</p>`,
+      },
+      {
+        title: 'Calendario de Riego por Cultivo',
+        type: 'table',
+        content: `<table>
+<thead><tr><th>Cultivo</th><th>Verano (dic-mar)</th><th>Otoño/Primavera</th><th>Invierno</th><th>Sistema recomendado</th></tr></thead>
+<tbody>
+<tr><td>Lechuga / Rucula</td><td>Diario, 15-20 min</td><td>Cada 2 dias</td><td>Cada 3-4 dias</td><td>Goteo</td></tr>
+<tr><td>Tomate / Morron</td><td>Diario, 20-30 min</td><td>Cada 2 dias</td><td>-</td><td>Goteo</td></tr>
+<tr><td>Zapallo / Calabaza</td><td>Cada 2 dias profundo</td><td>Cada 3-4 dias</td><td>-</td><td>Goteo</td></tr>
+<tr><td>Cesped</td><td>Cada 2 dias, 30 min</td><td>2 veces/semana</td><td>1 vez/semana</td><td>Aspersion</td></tr>
+<tr><td>Frutales</td><td>2-3 veces/semana profundo</td><td>1-2 veces/semana</td><td>Cada 10-15 dias</td><td>Goteo (anillo)</td></tr>
+<tr><td>Aromaticas</td><td>Cada 2-3 dias</td><td>2 veces/semana</td><td>1 vez/semana</td><td>Goteo</td></tr>
+</tbody>
+</table>
+<p><strong>Tip:</strong> Siempre rega temprano a la mañana (6-9h) o al atardecer (18-20h). Evita regar al mediodia: se pierde hasta un 40% por evaporacion.</p>`,
+      },
+      {
+        title: 'Como Armar un Sistema de Riego para tu Huerta',
+        type: 'steps',
+        content: `<ol>
+<li><strong>Define la fuente de agua:</strong> Puede ser tanque elevado (1-2 metros de altura dan presion suficiente para goteo), conexion directa a la red, o una <a href="/productos?categoria=Bombas&sub=Perifericas">bomba periferica</a> desde un pozo o cisterna.</li>
+<li><strong>Medi el area:</strong> Calcula los metros lineales de canteros o surcos para saber cuanta manguera de goteo necesitas. Para una huerta de 4x3m, con surcos cada 30cm, necesitas unos 40 metros de manguera de goteo.</li>
+<li><strong>Compra los materiales:</strong> Manguera de goteo 16mm, manguera principal 25mm, filtro, conectores, llaves y tapones. En <a href="/productos?categoria=Riego">nuestra tienda</a> encontras todo lo necesario.</li>
+<li><strong>Instala siguiendo nuestra guia:</strong> Segui los pasos detallados en nuestra <a href="/guias/instalar-riego-goteo">guia de instalacion de riego por goteo</a>.</li>
+<li><strong>Automatiza (opcional):</strong> Agrega un timer de riego en la llave de paso para programar horarios y duracion. Es la mejor inversion para no tener que acordarte de regar.</li>
+</ol>
+<p>Necesitas ayuda? <a href="https://wa.me/59892744725">Escribinos por WhatsApp</a> y te armamos el presupuesto.</p>`,
+      },
+      {
+        title: 'Consejos para Ahorrar Agua en la Huerta',
+        type: 'list',
+        content: `<ul>
+<li><strong>Usa mulch o acolchado:</strong> Paja, chips de madera o plastico negro sobre el suelo reduce la evaporacion un 50-70%.</li>
+<li><strong>Agrupa las plantas por necesidad de agua:</strong> No pongas lechuga (mucha agua) al lado de romero (poca agua). Facilita el riego diferenciado.</li>
+<li><strong>Revisa goteros regularmente:</strong> Un gotero tapado deja una planta sin agua y desperdicia en la siguiente. Limpia mensualmente.</li>
+<li><strong>Aprovecha el agua de lluvia:</strong> Un tanque de 500 litros conectado a la canaleta del techo puede cubrir varios riegos. Ver <a href="/productos?categoria=Tanques">tanques disponibles</a>.</li>
+<li><strong>No riegues por calendario, riega por necesidad:</strong> Mete el dedo en la tierra, si los primeros 3cm estan secos, es momento de regar.</li>
+</ul>`,
+      },
+    ],
+  },
+
+  // ── 20. Agua de Piscina Verde ─────────────────────────────────────────────
+  {
+    slug: 'agua-piscina-verde',
+    title: '¿Por Que el Agua de la Piscina se Pone Verde? Causas y Solucion',
+    description: 'Descubri por que el agua de tu piscina se puso verde y como solucionarlo paso a paso. Guia con tratamiento de choque, prevencion y productos recomendados.',
+    breadcrumbLabel: 'Agua Piscina Verde',
+    category: 'Piscinas',
+    keywords: ['piscina agua verde', 'piscina verde solucion', 'agua verde piscina Uruguay', 'algas piscina', 'tratamiento choque piscina', 'como limpiar piscina verde'],
+    relatedCategories: [
+      { label: 'Productos para Piscinas', value: 'Piscinas' },
+      { label: 'Quimicos', value: 'Quimicos' },
+    ],
+    relatedArticles: ['mantenimiento-piscinas', 'preparar-piscina-verano', 'cuanto-cloro-piscina'],
+    datePublished: '2026-03-05',
+    dateModified: '2026-03-05',
+    sections: [
+      {
+        title: '¿Por que el agua de la piscina se pone verde?',
+        type: 'text',
+        content: `El agua verde de una piscina se produce por una <strong>proliferacion de algas microscopicas</strong>, generalmente del tipo Chlorophyta (algas verdes). Esto ocurre cuando el cloro libre baja de <strong>1 ppm</strong> y el pH sube por encima de <strong>7.6</strong>, creando las condiciones ideales para que las algas se multipliquen. En Uruguay, especialmente entre diciembre y marzo con temperaturas del agua superiores a 25°C, una piscina puede ponerse verde en <strong>24-48 horas</strong> si no tiene el tratamiento adecuado.`,
+      },
+      {
+        title: 'Causas Principales del Agua Verde',
+        type: 'list',
+        content: `<ul>
+<li><strong>Cloro insuficiente:</strong> La causa #1. Si el cloro libre baja de 1 ppm, las algas crecen sin freno. En dias calurosos de verano, la radiacion UV degrada el cloro rapidamente.</li>
+<li><strong>pH desbalanceado:</strong> Con pH mayor a 7.6, el cloro pierde hasta el 75% de su poder desinfectante. Aunque agregues cloro, no mata las algas si el pH esta alto.</li>
+<li><strong>Filtro sucio o bomba apagada:</strong> Sin filtracion el agua se estanca. El filtro debe funcionar <strong>minimo 6-8 horas por dia</strong> en verano.</li>
+<li><strong>Lluvia o tormentas:</strong> El agua de lluvia arrastra esporas de algas, baja el cloro y altera el pH de golpe.</li>
+<li><strong>Mucha carga de bañistas:</strong> Cremas, transpiración y materia organica consumen el cloro rapido.</li>
+</ul>`,
+      },
+      {
+        title: 'Como Recuperar una Piscina Verde: Tratamiento de Choque',
+        type: 'steps',
+        content: `<ol>
+<li><strong>Retira residuos grandes:</strong> Con la red de mano, saca hojas, insectos y todo lo que puedas. Si hay mucho sedimento en el fondo, aspira directo al desagüe (posicion "waste" o "desagüe").</li>
+<li><strong>Medi el pH:</strong> Usa un kit de analisis o tiras reactivas. Si el pH esta por encima de 7.6, baja con pH- (acido muriatico diluido o bisulfato de sodio) hasta llevarlo a <strong>7.2</strong>. Este paso es clave: sin pH correcto, el cloro no funciona.</li>
+<li><strong>Aplica tratamiento de choque (supercloracion):</strong> Agrega <strong>3-5 veces la dosis normal</strong> de cloro granulado. Para una piscina de 50.000 litros con agua verde, aplica entre 750g y 1.5kg de cloro granulado. Distribui por toda la superficie.</li>
+<li><strong>Agrega algicida:</strong> Junto con el cloro, agrega algicida de choque segun la dosis del envase. El algicida mata las algas que el cloro suelto no alcanza. Ver <a href="/productos?categoria=Piscinas&sub=Cloro y Quimicos">productos para piscinas</a>.</li>
+<li><strong>Deja la bomba funcionando 24 horas:</strong> El filtro debe funcionar ininterrumpido durante al menos 24 horas despues del choque. Si el filtro es de arena, hace contra-lavado cada 4-6 horas.</li>
+<li><strong>Agrega clarificante:</strong> Al dia siguiente, si el agua paso de verde a turbia/blanquecina, agrega clarificante (floculante liquido). Espera 12 horas con la bomba encendida.</li>
+<li><strong>Aspira el fondo:</strong> Las algas muertas se depositan en el fondo como un sedimento marron/gris. Aspira todo al desagüe (no al filtro).</li>
+<li><strong>Medi nuevamente:</strong> Verifica que el cloro libre este entre 1-3 ppm y el pH entre 7.2-7.6. Ajusta si es necesario.</li>
+</ol>
+<p>Todos los productos necesarios estan disponibles en nuestra seccion de <a href="/productos?categoria=Piscinas">productos para piscinas</a>. Consultanos por <a href="https://wa.me/59892744725">WhatsApp</a> si necesitas orientacion con las dosis.</p>`,
+      },
+      {
+        title: 'Productos Necesarios para el Tratamiento',
+        type: 'table',
+        content: `<table>
+<thead><tr><th>Producto</th><th>Para que sirve</th><th>Dosis de choque (50.000 L)</th></tr></thead>
+<tbody>
+<tr><td>Cloro granulado (hipoclorito de calcio)</td><td>Desinfeccion, mata algas</td><td>750g - 1.5kg</td></tr>
+<tr><td>Regulador de pH (pH-)</td><td>Baja el pH para que el cloro funcione</td><td>Segun lectura actual</td></tr>
+<tr><td>Algicida de choque</td><td>Elimina algas resistentes</td><td>300-500ml</td></tr>
+<tr><td>Clarificante/Floculante</td><td>Agrupa particulas para filtrar mejor</td><td>200-300ml</td></tr>
+<tr><td>Kit de analisis (tiras o gotas)</td><td>Medir pH y cloro libre</td><td>-</td></tr>
+</tbody>
+</table>
+<p>Encontra todo esto en un solo lugar en <a href="/productos?categoria=Piscinas&sub=Cloro y Quimicos">nuestra tienda online</a> con envio a todo Uruguay.</p>`,
+      },
+      {
+        title: 'Como Prevenir que el Agua se Ponga Verde',
+        type: 'list',
+        content: `<ul>
+<li><strong>Medi cloro y pH cada 2-3 dias en verano:</strong> Es la mejor prevencion. Mantene cloro libre entre 1-3 ppm y pH entre 7.2-7.6.</li>
+<li><strong>Usa algicida preventivo semanal:</strong> Una dosis pequeña de algicida cada semana previene la aparicion de algas antes de que sea visible.</li>
+<li><strong>Filtro encendido 6-8 horas diarias minimo:</strong> En pleno verano, si es posible 10-12 horas. Sin circulacion, el cloro no se distribuye.</li>
+<li><strong>Despues de lluvias fuertes, agrega cloro extra:</strong> La lluvia diluye el cloro y arrastra nutrientes que alimentan las algas.</li>
+<li><strong>Limpia el filtro regularmente:</strong> Un filtro sucio no filtra. Contra-lavado semanal para arena, limpieza quincenal para cartucho.</li>
+</ul>
+<p>Lee nuestra <a href="/guias/mantenimiento-piscinas">guia completa de mantenimiento de piscinas</a> para un calendario detallado.</p>`,
+      },
+    ],
+  },
+
+  // ── 21. Cuanto Cloro para Piscina ─────────────────────────────────────────
+  {
+    slug: 'cuanto-cloro-piscina',
+    title: '¿Cuanto Cloro Necesita una Piscina? Tabla de Dosis por Volumen',
+    description: 'Calcula la cantidad exacta de cloro para tu piscina segun su volumen. Tabla de dosis, tipos de cloro, frecuencias y consejos para mantener el agua cristalina.',
+    breadcrumbLabel: 'Cloro para Piscina',
+    category: 'Piscinas',
+    keywords: ['cuanto cloro piscina', 'dosis cloro piscina', 'cloro piscina litros', 'cuanto cloro para 50000 litros', 'cloro piscina Uruguay', 'mantenimiento cloro piscina'],
+    relatedCategories: [
+      { label: 'Productos para Piscinas', value: 'Piscinas' },
+    ],
+    relatedArticles: ['mantenimiento-piscinas', 'agua-piscina-verde', 'preparar-piscina-verano'],
+    datePublished: '2026-03-05',
+    dateModified: '2026-03-05',
+    sections: [
+      {
+        title: '¿Cuanto cloro necesita una piscina?',
+        type: 'text',
+        content: `La dosis de cloro para una piscina depende de tres factores: el <strong>volumen de agua</strong>, el <strong>nivel actual de cloro libre</strong> y el <strong>tipo de cloro</strong> que uses. Como regla general, para mantener el cloro entre <strong>1-3 ppm</strong> (partes por millon), una piscina de 50.000 litros necesita entre <strong>150-300g de cloro granulado</strong> cada 2-3 dias en verano. Pero las dosis varian segun la temperatura, la cantidad de bañistas y la exposicion al sol. A continuacion te damos las tablas exactas.`,
+      },
+      {
+        title: 'Como Calcular el Volumen de tu Piscina',
+        type: 'table',
+        content: `<table>
+<thead><tr><th>Forma</th><th>Formula</th><th>Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Rectangular</td><td>Largo x Ancho x Profundidad media x 1.000</td><td>8m x 4m x 1.5m = 48.000 litros</td></tr>
+<tr><td>Circular</td><td>Diametro² x Profundidad x 785</td><td>5m² x 1.4m x 785 = 27.475 litros</td></tr>
+<tr><td>Ovalada</td><td>Largo x Ancho x Profundidad x 625</td><td>6m x 3m x 1.5m = 16.875 litros</td></tr>
+<tr><td>Irregular</td><td>Estimar como rectangular con medidas promedio</td><td>Medir la parte mas ancha y mas larga</td></tr>
+</tbody>
+</table>
+<p><strong>La profundidad media</strong> se calcula sumando la profundidad minima y maxima y dividiendo entre 2. Ejemplo: si la parte mas baja tiene 1m y la mas profunda 2m, la media es 1.5m.</p>`,
+      },
+      {
+        title: 'Tabla de Dosis de Cloro por Volumen',
+        type: 'table',
+        content: `<table>
+<thead><tr><th>Volumen piscina</th><th>Cloro granulado (mantenimiento)</th><th>Cloro granulado (choque)</th><th>Pastillas 200g (por semana)</th></tr></thead>
+<tbody>
+<tr><td>10.000 litros</td><td>30-60g cada 2-3 dias</td><td>150-300g</td><td>1 pastilla</td></tr>
+<tr><td>20.000 litros</td><td>60-120g cada 2-3 dias</td><td>300-600g</td><td>1-2 pastillas</td></tr>
+<tr><td>30.000 litros</td><td>90-180g cada 2-3 dias</td><td>450-900g</td><td>2 pastillas</td></tr>
+<tr><td>50.000 litros</td><td>150-300g cada 2-3 dias</td><td>750-1.500g</td><td>3 pastillas</td></tr>
+<tr><td>75.000 litros</td><td>225-450g cada 2-3 dias</td><td>1.100-2.250g</td><td>4-5 pastillas</td></tr>
+<tr><td>100.000 litros</td><td>300-600g cada 2-3 dias</td><td>1.500-3.000g</td><td>6-7 pastillas</td></tr>
+</tbody>
+</table>
+<p><strong>Importante:</strong> Estas dosis son orientativas para cloro granulado con 65-70% de concentracion (hipoclorito de calcio). Siempre medi el cloro libre antes de agregar mas. La meta es mantener <strong>1-3 ppm</strong>.</p>`,
+      },
+      {
+        title: 'Tipos de Cloro: ¿Cual Conviene Usar?',
+        type: 'comparison',
+        content: `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+<div>
+<h4>Cloro Granulado</h4>
+<ul>
+<li><strong>Concentracion:</strong> 65-70%</li>
+<li><strong>Ideal para:</strong> tratamiento de choque y ajustes rapidos</li>
+<li><strong>Disolucion:</strong> rapida (30-60 minutos)</li>
+<li><strong>Costo:</strong> mas economico por dosis</li>
+<li><strong>Consejo:</strong> disolver en balde con agua antes de echar a la piscina</li>
+</ul>
+</div>
+<div>
+<h4>Pastillas de Cloro (tricloroisocianurico)</h4>
+<ul>
+<li><strong>Concentracion:</strong> 90%</li>
+<li><strong>Ideal para:</strong> mantenimiento continuo y lento</li>
+<li><strong>Disolucion:</strong> lenta (3-7 dias)</li>
+<li><strong>Costo:</strong> mayor por unidad pero mas practico</li>
+<li><strong>Consejo:</strong> usar en flotante o skimmer, nunca en el fondo</li>
+</ul>
+</div>
+</div>
+<p>Encontra ambos tipos en nuestra seccion de <a href="/productos?categoria=Piscinas&sub=Cloro y Quimicos">cloro y quimicos para piscinas</a>.</p>`,
+      },
+      {
+        title: 'Factores que Afectan el Consumo de Cloro',
+        type: 'list',
+        content: `<ul>
+<li><strong>Temperatura del agua:</strong> A mas de 28°C, el cloro se degrada un 50% mas rapido. En pleno verano uruguayo necesitas agregar cloro con mas frecuencia.</li>
+<li><strong>Sol directo:</strong> La radiacion UV destruye el cloro libre. Una piscina sin cobertor y al sol puede perder hasta 5 ppm de cloro en un dia. Solucion: agregar estabilizador (acido cianurico) o usar pastillas que ya lo contienen.</li>
+<li><strong>Cantidad de bañistas:</strong> Cada persona aporta cremas, transpiración y materia organica que consume cloro. Despues de un dia de mucho uso, conviene agregar una dosis extra.</li>
+<li><strong>pH alto:</strong> Con pH superior a 7.6, solo el 30% del cloro es activo. Mantene el pH entre 7.2-7.6 para que el cloro sea efectivo. Usa <strong>pH-</strong> cuando sea necesario.</li>
+<li><strong>Lluvia:</strong> El agua de lluvia diluye el cloro y puede arrastrar esporas. Despues de una tormenta fuerte, medi y agrega cloro.</li>
+</ul>
+<p>¿Necesitas ayuda con el tratamiento de tu piscina? <a href="https://wa.me/59892744725">Escribinos por WhatsApp</a> o consulta nuestra <a href="/guias/mantenimiento-piscinas">guia completa de mantenimiento</a>.</p>`,
+      },
+    ],
+  },
+
+  // ── 22. Control de Plagas en Papa ──────────────────────────────────────────
+  {
+    slug: 'control-plagas-papa',
+    title: 'Control de Plagas y Enfermedades de la Papa en Uruguay',
+    description: 'Guia completa de plagas y enfermedades de la papa en Uruguay: tizon tardio, polilla, trips y mas. Productos, dosis y calendario de aplicacion para cada etapa.',
+    breadcrumbLabel: 'Plagas de la Papa',
+    category: 'Agroquimicos',
+    keywords: ['plagas papa Uruguay', 'tizon tardio papa', 'fungicida papa', 'control plagas papa', 'polilla papa', 'agroquimicos papa Uruguay'],
+    relatedCategories: [
+      { label: 'Agroquimicos', value: 'Quimicos' },
+      { label: 'Sistemas de Riego', value: 'Riego' },
+    ],
+    relatedArticles: ['herbicidas-soja-uruguay', 'seguridad-quimicos', 'beneficios-riego'],
+    datePublished: '2026-03-05',
+    dateModified: '2026-03-05',
+    sections: [
+      {
+        title: '¿Cuales son las principales plagas y enfermedades de la papa en Uruguay?',
+        type: 'text',
+        content: `El cultivo de papa en Uruguay enfrenta amenazas principales como el <strong>tizon tardio</strong> (<em>Phytophthora infestans</em>), la <strong>polilla de la papa</strong> (<em>Phthorimaea operculella</em>), los <strong>trips</strong> y la <strong>sarna comun</strong>. El tizon tardio es particularmente peligroso en temporadas humedas y puede destruir un cultivo completo en dias si no se controla a tiempo. En esta guia cubrimos las principales plagas y enfermedades, los productos recomendados y el calendario de aplicacion para proteger tu cultivo.`,
+      },
+      {
+        title: 'Principales Enfermedades Fungicas',
+        type: 'table',
+        content: `<table>
+<thead><tr><th>Enfermedad</th><th>Sintomas</th><th>Condiciones favorables</th><th>Producto recomendado</th></tr></thead>
+<tbody>
+<tr><td><strong>Tizon tardio</strong> (<em>P. infestans</em>)</td><td>Manchas oscuras acuosas en hojas, halo verde claro, pudricion humeda del tuberculo</td><td>Temp. 12-18°C, humedad >90%, lluvias frecuentes</td><td>Mancozeb + Metalaxil, Clorotalonil</td></tr>
+<tr><td><strong>Tizon temprano</strong> (<em>Alternaria solani</em>)</td><td>Manchas concentricas marrones en hojas viejas, anillos como "ojo de buey"</td><td>Temp. 20-30°C, stress hidrico, plantas debilitadas</td><td>Clorotalonil, Mancozeb, Azoxistrobin</td></tr>
+<tr><td><strong>Sarna comun</strong> (<em>Streptomyces scabies</em>)</td><td>Lesiones rugosas y corchosas en la piel del tuberculo</td><td>Suelo seco, pH > 5.5, poca materia organica</td><td>Prevencion: riego durante tuberizacion, rotacion</td></tr>
+<tr><td><strong>Rhizoctoniasis</strong> (<em>R. solani</em>)</td><td>Costra negra en tuberculos, cancros en tallos, plantas debilitadas</td><td>Suelos frios y humedos, siembra profunda</td><td>Tratamiento de semilla con Pencycuron</td></tr>
+</tbody>
+</table>
+<p>Todos los fungicidas estan disponibles en nuestra seccion de <a href="/productos?categoria=Quimicos&sub=Agroquimicos">agroquimicos</a>. Consultanos por <a href="https://wa.me/59892744725">WhatsApp</a> para asesoramiento de dosis.</p>`,
+      },
+      {
+        title: 'Principales Plagas Insectiles',
+        type: 'table',
+        content: `<table>
+<thead><tr><th>Plaga</th><th>Daño</th><th>Epoca critica</th><th>Control</th></tr></thead>
+<tbody>
+<tr><td><strong>Polilla de la papa</strong> (<em>P. operculella</em>)</td><td>Larvas perforan tuberculos y tallos, galerias en tubérculos almacenados</td><td>Verano (dic-mar)</td><td>Clorpirifos, Lambdacialotrina + monitoreo con trampas</td></tr>
+<tr><td><strong>Trips</strong> (<em>Frankliniella schultzei</em>)</td><td>Raspado de hojas, deformacion, transmision de virus</td><td>Primavera-verano con calor y sequedad</td><td>Imidacloprid, Spinosad</td></tr>
+<tr><td><strong>Pulgones</strong> (<em>Myzus persicae</em>)</td><td>Succion de savia, transmision de virus (PVY, PLRV)</td><td>Primavera</td><td>Acetamiprid, aceite mineral</td></tr>
+<tr><td><strong>Gusano alambre</strong> (<em>Conoderus sp.</em>)</td><td>Perforaciones en tuberculos debajo de tierra</td><td>Todo el ciclo</td><td>Tratamiento de suelo con Clorpirifos, rotacion de cultivos</td></tr>
+</tbody>
+</table>`,
+      },
+      {
+        title: 'Calendario de Aplicaciones por Etapa del Cultivo',
+        type: 'steps',
+        content: `<ol>
+<li><strong>Pre-siembra (15 dias antes):</strong> Tratar semilla con fungicida (Pencycuron o Fludioxonil) para prevenir Rhizoctonia y pudriciones. Si hay historial de gusano alambre, aplicar insecticida al suelo.</li>
+<li><strong>Emergencia a 4 hojas verdaderas:</strong> Primera aplicacion preventiva de fungicida (Mancozeb) si hay humedad. Monitorear presencia de pulgones y trips.</li>
+<li><strong>Pre-floracion (cierre de surco):</strong> Aplicacion de fungicida sistemico (Metalaxil + Mancozeb) si hay condiciones de tizon. Insecticida si se detectan trips o pulgones por encima del umbral (5 por hoja compuesta).</li>
+<li><strong>Floracion y tuberizacion:</strong> Periodo critico para tizon tardio. Aplicaciones cada 7-10 dias si hay lluvias. Riego regular para prevenir sarna comun. Monitorear polilla con trampas de feromona.</li>
+<li><strong>Maduracion (senescencia del follaje):</strong> Ultima aplicacion de fungicida 15-21 dias antes de cosecha (respetar carencia). Monitorear polilla activamente: si hay capturas altas, aplicar insecticida.</li>
+<li><strong>Post-cosecha:</strong> Curar tuberculos en lugar fresco y seco 10-15 dias. Si hubo problemas de polilla, almacenar con malla y monitorear temperatura (debajo de 10°C la polilla reduce actividad).</li>
+</ol>
+<p><strong>Importante:</strong> Siempre lee la etiqueta del producto y respeta los periodos de carencia. Para asesoramiento tecnico personalizado, <a href="https://wa.me/59892744725">contactanos por WhatsApp</a>.</p>`,
+      },
+      {
+        title: 'Buenas Practicas para Reducir Plagas',
+        type: 'list',
+        content: `<ul>
+<li><strong>Rotacion de cultivos:</strong> No repetir papa en el mismo lote por al menos 2-3 años. Rotar con cereales o leguminosas reduce drasticamente la presion de enfermedades del suelo.</li>
+<li><strong>Semilla certificada:</strong> Usar semilla de calidad sanitaria reduce la incidencia de virus y enfermedades como Rhizoctonia.</li>
+<li><strong>Riego controlado:</strong> El riego por goteo o aspersion programada mantiene humedad uniforme sin encharcamiento. Esto previene sarna y reduce condiciones de tizon. Ver <a href="/productos?categoria=Riego">nuestros sistemas de riego</a>.</li>
+<li><strong>Monitoreo semanal:</strong> Recorrer el cultivo al menos una vez por semana buscando los primeros sintomas. El control temprano es siempre mas economico que el curativo.</li>
+<li><strong>Equipo de proteccion:</strong> Para la aplicacion de agroquimicos, siempre usar guantes, mascara, lentes y ropa de proteccion. Lee nuestra <a href="/guias/seguridad-quimicos">guia de seguridad para productos quimicos</a>.</li>
+</ul>`,
+      },
+    ],
+  },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

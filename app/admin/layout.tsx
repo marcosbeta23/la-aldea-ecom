@@ -19,7 +19,8 @@ import {
   Search,
   Boxes,
   Users,
-  Building2
+  Building2,
+  BookOpen,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -35,6 +36,7 @@ const navItems = [
   { href: '/admin/coupons', label: 'Cupones', icon: Tag },
   { href: '/admin/reviews', label: 'Reseñas', icon: Star },
   { href: '/admin/partners', label: 'Marcas', icon: Building2 },
+  { href: '/admin/guides', label: 'Guias', icon: BookOpen },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
 ];
 

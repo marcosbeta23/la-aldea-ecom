@@ -53,7 +53,19 @@ const faqData = {
       },
       {
         question: '¿Que tipo de riego es mejor para mi terreno?',
-        answer: 'Depende del cultivo, tamaño del terreno y disponibilidad de agua. El riego por goteo es ideal para huertos y viñedos, mientras que la aspersion es mejor para praderas y cultivos extensivos. Te asesoramos sin costo.',
+        answer: 'Depende del cultivo, tamaño del terreno y disponibilidad de agua. El riego por goteo es ideal para huertos y viñedos, mientras que la aspersion es mejor para praderas y cultivos extensivos. Consulta nuestra comparativa de goteo vs aspersion. Te asesoramos sin costo.',
+      },
+      {
+        question: '¿Cuanto cuesta instalar un sistema de riego en Uruguay?',
+        answer: 'El costo varia segun el tipo de sistema (goteo, aspersion, automatico), la superficie a cubrir y el tipo de cultivo. Ofrecemos presupuesto sin cargo con visita tecnica incluida. Consulta nuestra guia de instalacion de riego por goteo para entender el proceso.',
+      },
+      {
+        question: '¿Es posible automatizar un sistema de riego existente?',
+        answer: 'Si, se puede agregar automatizacion a sistemas manuales con timers, electrovalvulas y controladores. Contamos con soluciones desde sistemas basicos hasta automatizacion completa con sensores de humedad. Visita nuestra seccion de sistemas de riego.',
+      },
+      {
+        question: '¿Cada cuanto hay que regar segun el cultivo?',
+        answer: 'Varia segun el tipo de cultivo y la epoca del año. Una huerta familiar en verano necesita riego diario o cada 2 dias, cultivos extensivos como soja cada 5-7 dias dependiendo de la lluvia. Nuestros tecnicos te asesoran segun tu caso. Lee nuestra guia de riego para huerta y jardin.',
       },
     ],
   },
@@ -72,6 +84,14 @@ const faqData = {
       {
         question: '¿Ofrecen servicio tecnico para bombas?',
         answer: 'Si, contamos con servicio tecnico especializado para reparacion y mantenimiento de bombas de todas las marcas que vendemos.',
+      },
+      {
+        question: '¿Que bomba necesito para alimentar aspersores de riego?',
+        answer: 'Depende de la cantidad de aspersores y la presion requerida. Para 2-4 aspersores una bomba de 1 HP suele ser suficiente. Para 5 o mas, necesitas 1.5-2 HP o mas. Lee nuestra guia completa de bombas para aspersores con tablas de seleccion por HP.',
+      },
+      {
+        question: '¿Las bombas solares sirven para riego agricola?',
+        answer: 'Si, las bombas solares son una excelente opcion para riego en zonas rurales sin acceso a red electrica. Funcionan con paneles solares y pueden mover entre 2.000 y 20.000 litros por hora segun el modelo. Consulta nuestro catalogo de bombas y sistemas solares.',
       },
     ],
   },

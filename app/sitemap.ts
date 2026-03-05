@@ -50,6 +50,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // DB-managed guide pages from Supabase
+  let dbGuidePages: MetadataRoute.Sitemap = [];
+  try {
+    const { data: dbGuides, error: dbGuidesError } = await supabase
+      .from("guides")
+      .select("slug, date_modified")
+      .eq("is_published", true) as { data: any[] | null; error: any };
+
+    if (!dbGuidesError && dbGuides && Array.isArray(dbGuides)) {
+      const staticSlugs = new Set(FAQ_ARTICLES.map(a => a.slug));
+      dbGuidePages = dbGuides
+        .filter((g: { slug: string }) => !staticSlugs.has(g.slug))
+        .map((g: { slug: string; date_modified: string | null }) => ({
+          url: `${siteUrl}/guias/${g.slug}`,
+          lastModified: g.date_modified ? new Date(g.date_modified) : new Date(),
+          changeFrequency: "monthly" as const,
+          priority: 0.7,
+        }));
+    }
+  } catch {
+    // If guides table doesn't exist yet, continue without DB guides
+  }
+
   // Dynamic product pages from Supabase
   let productPages: MetadataRoute.Sitemap = [];
 
@@ -75,5 +98,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching products for sitemap:", error);
   }
 
-  return [...staticPages, ...categoryPages, ...guidePages, ...productPages];
+  return [...staticPages, ...categoryPages, ...guidePages, ...dbGuidePages, ...productPages];
 }
