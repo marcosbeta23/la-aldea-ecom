@@ -60,8 +60,9 @@ export default function OrderConfirmation({
 
   return (
     <Layout preview={`Pedido ${orderNumber} confirmado - ${formatPrice(total)}`}>
+      <Text style={greeting}>Hola {customerName},</Text>
       <Text style={title}>Gracias por tu compra!</Text>
-      <Text style={subtitle}>Recibimos tu pedido y estamos procesandolo.</Text>
+      <Text style={subtitle}>Recibimos tu pedido y lo estamos preparando para vos.</Text>
 
       {/* Order Info Box */}
       <Section style={infoBox}>
@@ -203,6 +204,7 @@ export default function OrderConfirmation({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
+const greeting: React.CSSProperties = { color: '#475569', margin: '0 0 4px 0', fontSize: '16px' };
 const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' };
 const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0' };
 const sectionTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 16px 0', fontSize: '18px', fontWeight: 'bold' };

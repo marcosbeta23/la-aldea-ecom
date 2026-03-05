@@ -70,6 +70,7 @@ export default function StatusUpdate({
       {/* Icon + Title */}
       <Section style={{ textAlign: 'center' as const, padding: '20px' }}>
         <Text style={{ fontSize: '48px', margin: '0 0 16px 0' }}>{config.emoji}</Text>
+        <Text style={greeting}>Hola {customerName},</Text>
         <Text style={title}>{config.title}</Text>
         <Text style={subtitle}>{message}</Text>
       </Section>
@@ -112,6 +113,7 @@ export default function StatusUpdate({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
+const greeting: React.CSSProperties = { color: '#475569', margin: '0 0 4px 0', fontSize: '16px' };
 const title: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'bold' };
 const subtitle: React.CSSProperties = { color: '#64748b', margin: '0 0 24px 0', fontSize: '16px' };
 
