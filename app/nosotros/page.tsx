@@ -179,14 +179,14 @@ export default function NosotrosPage() {
         {/* Stats bar */}
         <section className="bg-white border-b border-slate-200">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200">
               {[
                 { value: '25+', label: 'Anos de Experiencia' },
                 { value: '500+', label: 'Proyectos Realizados' },
                 { value: '12', label: 'Marcas Asociadas' },
                 { value: '19', label: 'Departamentos Cubiertos' },
               ].map((stat, i) => (
-                <div key={i} className="py-6 text-center">
+                <div key={i} className="py-6 text-center bg-white">
                   <p className="text-2xl font-bold text-blue-600 md:text-3xl">{stat.value}</p>
                   <p className="mt-1 text-xs font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
                 </div>
@@ -200,7 +200,7 @@ export default function NosotrosPage() {
           <div className="container mx-auto px-4">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
               {/* Photo */}
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-slate-200 shadow-xl">
                   <Image
                     src="/assets/images/laaldeaedificio.webp"
@@ -210,7 +210,7 @@ export default function NosotrosPage() {
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="absolute -bottom-4 -right-2 flex h-24 w-24 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-xl sm:h-28 sm:w-28 lg:-right-4 lg:h-32 lg:w-32">
+                <div className="absolute -bottom-4 right-2 flex h-20 w-20 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-xl sm:h-28 sm:w-28 sm:right-0 lg:-right-4 lg:h-32 lg:w-32">
                   <span className="text-2xl font-bold sm:text-3xl lg:text-4xl">25+</span>
                   <span className="text-[10px] font-medium sm:text-xs lg:text-sm">Anos</span>
                 </div>
@@ -442,7 +442,7 @@ export default function NosotrosPage() {
         {/* CTA */}
         <section className="pb-16 lg:pb-20">
           <div className="container mx-auto px-4">
-            <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-8 text-center md:p-16">
+            <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-6 text-center sm:p-8 md:p-16">
               <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
               <div className="relative">
                 <h2 className="text-2xl font-bold text-white md:text-3xl">
@@ -457,14 +457,14 @@ export default function NosotrosPage() {
                     href="https://wa.me/59892744725?text=Hola,%20necesito%20asesoramiento%20sobre..."
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-3.5 font-semibold text-blue-700 shadow-lg hover:bg-blue-50 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 font-semibold text-blue-700 shadow-lg hover:bg-blue-50 transition-colors sm:px-8"
                   >
                     <MessageCircle className="h-5 w-5" />
                     Escribinos por WhatsApp
                   </a>
                   <Link
                     href="/productos"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-white/30 px-8 py-3.5 font-semibold text-white backdrop-blur hover:bg-white/10 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-white/30 px-6 py-3.5 font-semibold text-white backdrop-blur hover:bg-white/10 transition-colors sm:px-8"
                   >
                     Ver Productos
                     <ChevronRight className="h-4 w-4" />

@@ -301,9 +301,9 @@ export default function FAQPage() {
               <div className="p-3 bg-white/10 rounded-2xl">
                 <HelpCircle className="h-8 w-8" />
               </div>
-              <h1 className="text-3xl lg:text-4xl font-bold">Preguntas Frecuentes</h1>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Preguntas Frecuentes</h1>
             </div>
-            <p className="text-blue-100 text-lg max-w-2xl">
+            <p className="text-blue-100 text-base lg:text-lg max-w-2xl">
               Respuestas rapidas a las dudas mas comunes sobre nuestros productos, envios, pagos y servicios.
             </p>
           </div>
@@ -328,12 +328,12 @@ export default function FAQPage() {
             </Link>
 
             {/* Category Navigation */}
-            <nav className="flex flex-wrap gap-2 mb-8">
+            <nav className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide sm:flex-wrap sm:overflow-x-visible sm:pb-0">
               {Object.entries(faqData).map(([key, category]) => (
                 <a
                   key={key}
                   href={`#${key}`}
-                  className="px-4 py-2 bg-white rounded-full text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-slate-200"
+                  className="shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 bg-white rounded-full text-xs sm:text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-slate-200"
                 >
                   {category.icon} {category.title}
                 </a>
@@ -356,7 +356,7 @@ export default function FAQPage() {
             </div>
 
             {/* Still have questions? */}
-            <div className="mt-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-8 text-white text-center">
+            <div className="mt-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 md:p-8 text-white text-center">
               <h3 className="text-2xl font-bold mb-4">¿No encontraste lo que buscabas?</h3>
               <p className="text-green-100 mb-6 max-w-lg mx-auto">
                 Nuestro equipo esta listo para ayudarte. Contactanos por WhatsApp o telefono y te respondemos al instante.

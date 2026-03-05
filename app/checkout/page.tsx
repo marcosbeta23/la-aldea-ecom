@@ -870,7 +870,7 @@ export default function CheckoutPage() {
                         <CreditCard className={`h-5 w-5 ${paymentMethod === 'mercadopago' ? 'text-blue-600' : 'text-slate-400'}`} />
                         <div>
                           <p className="font-medium text-slate-900">MercadoPago</p>
-                          <p className="text-xs text-slate-500">Tarjeta, débito o billetera</p>
+                          <p className="text-xs text-slate-500">Tarjeta, débito o billetera (en UYU)</p>
                         </div>
                       </div>
                       {paymentMethod === 'mercadopago' && (
@@ -891,7 +891,7 @@ export default function CheckoutPage() {
                         <Building2 className={`h-5 w-5 ${paymentMethod === 'transfer' ? 'text-blue-600' : 'text-slate-400'}`} />
                         <div>
                           <p className="font-medium text-slate-900">Transferencia</p>
-                          <p className="text-xs text-slate-500">Transferencia bancaria</p>
+                          <p className="text-xs text-slate-500">Bancaria en UYU o USD</p>
                         </div>
                       </div>
                       {paymentMethod === 'transfer' && (
@@ -899,6 +899,25 @@ export default function CheckoutPage() {
                       )}
                     </button>
                   </div>
+
+                  {/* MercadoPago Info */}
+                  {paymentMethod === 'mercadopago' && (
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-blue-800 mb-1">Sobre MercadoPago</p>
+                          <p className="text-blue-700">
+                            MercadoPago procesa todos los pagos en <span className="font-semibold">pesos uruguayos (UYU)</span>.
+                            Si tu carrito incluye productos en USD, se convertirán a UYU usando el tipo de cambio de MercadoPago.
+                          </p>
+                          <p className="text-blue-700 mt-2">
+                            Si preferís pagar en dólares sin conversión, elegí <span className="font-semibold">transferencia bancaria</span>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Bank Transfer Info */}
                   {paymentMethod === 'transfer' && (
@@ -914,7 +933,10 @@ export default function CheckoutPage() {
                             <p><span className="font-medium">RUT:</span> 21 123456 0001 19</p>
                           </div>
                           <p className="mt-3 text-amber-800">
-                            <strong>Importante:</strong> Tu pedido quedará en estado pendiente hasta que confirmemos el pago. 
+                            Aceptamos transferencias en <span className="font-semibold">UYU o USD</span>. Al pagar por transferencia no hay comisiones ni conversión de moneda.
+                          </p>
+                          <p className="mt-2 text-amber-800">
+                            <strong>Importante:</strong> Tu pedido quedará en estado pendiente hasta que confirmemos el pago.
                             Enviá el comprobante por WhatsApp al <span className="font-medium">092 744 725</span>.
                           </p>
                         </div>

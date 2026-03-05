@@ -8,10 +8,16 @@ export default function FloatingWhatsApp() {
   const [visible, setVisible] = useState(false);
   const pathname = usePathname();
   const isHomepage = pathname === '/';
+  const isProductPage = pathname.startsWith('/productos/');
 
+  // Hide on product detail pages — they already have WhatsApp CTAs
   useEffect(() => {
+    if (isProductPage) {
+      setVisible(false);
+      return;
+    }
+
     if (!isHomepage) {
-      // On non-homepage pages, show after a small scroll (100px)
       const handleScroll = () => {
         setVisible(window.scrollY > 100);
       };
@@ -19,7 +25,6 @@ export default function FloatingWhatsApp() {
       handleScroll();
       return () => window.removeEventListener('scroll', handleScroll);
     } else {
-      // On homepage, show after scrolling past hero (~85vh)
       const handleScroll = () => {
         setVisible(window.scrollY > window.innerHeight * 0.85);
       };
@@ -27,7 +32,7 @@ export default function FloatingWhatsApp() {
       handleScroll();
       return () => window.removeEventListener('scroll', handleScroll);
     }
-  }, [isHomepage]);
+  }, [isHomepage, isProductPage]);
 
   return (
     <a

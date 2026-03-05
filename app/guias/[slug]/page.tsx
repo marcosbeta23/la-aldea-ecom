@@ -242,7 +242,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
         <section className="container mx-auto px-4 py-8 lg:py-12">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Article body */}
-            <article className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 lg:p-8">
+            <article className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 overflow-hidden">
               {article.sections.map((section, i) => (
                 <ArticleSectionBlock key={i} section={section} index={i} />
               ))}
@@ -271,9 +271,10 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
         .faq-content li { margin-bottom: 0.5rem; line-height: 1.6; }
         .faq-content p { margin-bottom: 0.75rem; }
         .faq-content code { background: #f1f5f9; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.9em; }
-        .faq-table table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        .faq-table th { background: #f1f5f9; text-align: left; padding: 0.75rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; }
-        .faq-table td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; color: #475569; }
+        .faq-table { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+        .faq-table table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 400px; }
+        .faq-table th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        .faq-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: #475569; }
         .faq-table tr:hover td { background: #f8fafc; }
         .faq-table p { margin-top: 1rem; font-size: 0.875rem; color: #64748b; }
         .faq-comparison > div { background: #f8fafc; border-radius: 0.75rem; padding: 1.25rem; }

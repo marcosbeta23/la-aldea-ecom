@@ -177,7 +177,7 @@ export default async function BlogPage() {
         <section className="container mx-auto px-4 py-10 lg:py-14">
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Sidebar */}
-            <aside className="lg:col-span-1">
+            <aside className="lg:col-span-1 order-last lg:order-first">
               <div className="bg-white rounded-xl border border-slate-200 p-5 sticky top-24">
                 <h2 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
                   <Tag className="h-4 w-4 text-blue-600" />

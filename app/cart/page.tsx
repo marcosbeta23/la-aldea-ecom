@@ -81,7 +81,7 @@ export default function CartPage() {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Tu Carrito</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Tu Carrito</h1>
             <button
               onClick={clearCart}
               className="text-sm text-red-600 hover:text-red-700 font-medium"
@@ -96,44 +96,46 @@ export default function CartPage() {
               {items.map((item) => (
                 <div
                   key={item.product.id}
-                  className="flex gap-4 bg-white rounded-2xl p-4 border border-slate-200"
+                  className="bg-white rounded-2xl p-4 border border-slate-200"
                 >
-                  {/* Image */}
-                  <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
-                    {item.product.images && item.product.images.length > 0 ? (
-                      <Image
-                        src={item.product.images[0]}
-                        alt={item.product.name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-slate-400 text-xs">
-                        Sin imagen
-                      </div>
-                    )}
+                  <div className="flex gap-3 sm:gap-4">
+                    {/* Image */}
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
+                      {item.product.images && item.product.images.length > 0 ? (
+                        <Image
+                          src={item.product.images[0]}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400 text-xs">
+                          Sin imagen
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <Link
+                        href={`/productos/${item.product.sku}`}
+                        className="font-semibold text-sm sm:text-base text-slate-900 hover:text-blue-600 transition-colors line-clamp-2"
+                      >
+                        {item.product.name}
+                      </Link>
+                      {item.product.brand && (
+                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{item.product.brand}</p>
+                      )}
+                      <p className="text-base sm:text-lg font-bold text-slate-900 mt-1">
+                        {formatPrice(item.product.price_numeric, item.product.currency)}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Details */}
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/productos/${item.product.sku}`}
-                      className="font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-2"
-                    >
-                      {item.product.name}
-                    </Link>
-                    {item.product.brand && (
-                      <p className="text-sm text-slate-500 mt-1">{item.product.brand}</p>
-                    )}
-                    <p className="text-lg font-bold text-slate-900 mt-2">
-                      {formatPrice(item.product.price_numeric, item.product.currency)}
-                    </p>
-                  </div>
-
-                  {/* Quantity & Actions */}
-                  <div className="flex flex-col items-end justify-between">
+                  {/* Quantity, Subtotal & Remove — stacks below on mobile */}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1">
+                    <div className="flex items-center gap-1.5 bg-slate-100 rounded-xl p-1">
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                         className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white transition-colors text-slate-700"
@@ -153,16 +155,16 @@ export default function CartPage() {
                     </div>
 
                     {/* Subtotal & Remove */}
-                    <div className="text-right">
-                      <p className="text-sm text-slate-500">
-                        Subtotal: {formatPrice(item.product.price_numeric * item.quantity, item.product.currency)}
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {formatPrice(item.product.price_numeric * item.quantity, item.product.currency)}
                       </p>
                       <button
                         onClick={() => removeItem(item.product.id)}
-                        className="text-red-500 hover:text-red-600 text-sm font-medium mt-1 flex items-center gap-1"
+                        className="text-red-500 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Eliminar producto"
                       >
                         <Trash2 className="h-4 w-4" />
-                        Eliminar
                       </button>
                     </div>
                   </div>

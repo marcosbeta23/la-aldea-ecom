@@ -33,7 +33,8 @@ body {
 /* Prevent mobile viewport resize jank on hero section */
 @supports (-webkit-touch-callout: none) {
   /* iOS Safari specific - prevents resize on scroll */
-  .min-h-screen {
+  .min-h-screen,
+  .min-h-svh {
     min-height: -webkit-fill-available;
   }
 }

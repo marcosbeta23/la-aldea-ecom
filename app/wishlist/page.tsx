@@ -115,22 +115,22 @@ export default function WishlistPage() {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 bg-red-50 rounded-2xl">
-              <Heart className="h-8 w-8 text-red-500" />
+            <div className="p-2.5 sm:p-3 bg-red-50 rounded-2xl">
+              <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Mis Favoritos</h1>
-              <p className="text-slate-500">{wishlistIds.length} productos guardados</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Mis Favoritos</h1>
+              <p className="text-sm sm:text-base text-slate-500">{wishlistIds.length} productos guardados</p>
             </div>
           </div>
 
           {/* Loading State */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {Array.from({ length: wishlistIds.length }).map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
                   <div className="aspect-square bg-slate-200" />
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 sm:p-4 space-y-3">
                     <div className="h-5 bg-slate-200 rounded w-3/4" />
                     <div className="h-4 bg-slate-200 rounded w-1/2" />
                     <div className="h-6 bg-slate-200 rounded w-1/3" />
@@ -139,7 +139,7 @@ export default function WishlistPage() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {products.map((product) => (
                 <div
                   key={product.id}
@@ -162,36 +162,37 @@ export default function WishlistPage() {
                   </Link>
 
                   {/* Content */}
-                  <div className="p-4">
+                  <div className="p-3 sm:p-4">
                     <Link
                       href={`/productos/${product.sku}`}
-                      className="font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-2"
+                      className="font-semibold text-xs sm:text-sm text-slate-900 hover:text-blue-600 transition-colors line-clamp-2"
                     >
                       {product.name}
                     </Link>
                     {product.brand && (
-                      <p className="text-sm text-slate-500 mt-1">{product.brand}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 sm:mt-1">{product.brand}</p>
                     )}
-                    <p className="text-xl font-bold text-slate-900 mt-2">
+                    <p className="text-base sm:text-xl font-bold text-slate-900 mt-1 sm:mt-2">
                       {formatPrice(product.price_numeric)}
                     </p>
 
                     {/* Actions */}
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex gap-1.5 sm:gap-2 mt-2 sm:mt-4">
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={product.stock === 0}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
+                        className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 bg-green-600 text-white text-xs sm:text-sm font-medium rounded-xl hover:bg-green-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
                       >
-                        <ShoppingCart className="h-4 w-4" />
-                        {product.stock > 0 ? 'Agregar al carrito' : 'Sin stock'}
+                        <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">{product.stock > 0 ? 'Agregar al carrito' : 'Sin stock'}</span>
+                        <span className="sm:hidden">{product.stock > 0 ? 'Agregar' : 'Sin stock'}</span>
                       </button>
                       <button
                         onClick={() => removeItem(product.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
                         aria-label="Eliminar de favoritos"
                       >
-                        <Trash2 className="h-5 w-5" />
+                        <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                     </div>
                   </div>

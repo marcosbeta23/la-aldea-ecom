@@ -52,6 +52,7 @@ export default function FeaturedCarousel({
   const [dragOffset, setDragOffset] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const snapBackRef = useRef(false);
 
   // Use refs for drag state to avoid stale closures in touch handlers
   const isDraggingRef = useRef(false);
@@ -82,23 +83,27 @@ export default function FeaturedCarousel({
   // Seamless loop: when reaching cloned region, snap back instantly
   const handleTransitionEnd = useCallback(() => {
     if (currentIndex >= total) {
+      snapBackRef.current = true;
       setIsTransitioning(false);
       setCurrentIndex(0);
     } else if (currentIndex < 0) {
+      snapBackRef.current = true;
       setIsTransitioning(false);
       setCurrentIndex(total - 1);
     }
   }, [currentIndex, total]);
 
-  // Re-enable transition after snap-back
+  // Re-enable transition after snap-back using a micro-delay for the DOM to paint
   useEffect(() => {
-    if (!isTransitioning) {
-      // Allow the DOM to paint at the snapped position, then re-enable transition
-      requestAnimationFrame(() => {
+    if (!isTransitioning && snapBackRef.current) {
+      // Use double rAF to ensure the browser has painted the snapped position
+      const id = requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          snapBackRef.current = false;
           setIsTransitioning(true);
         });
       });
+      return () => cancelAnimationFrame(id);
     }
   }, [isTransitioning]);
 
@@ -129,7 +134,7 @@ export default function FeaturedCarousel({
     setIsTransitioning(true);
     setCurrentIndex((prev) => prev - 1);
   }, []);
-  
+
   const next = useCallback(() => {
     setIsTransitioning(true);
     setCurrentIndex((prev) => prev + 1);
@@ -153,9 +158,8 @@ export default function FeaturedCarousel({
       dragStartXRef.current = e.touches[0].clientX;
       dragStartYRef.current = e.touches[0].clientY;
       dragOffsetRef.current = 0;
-      isHorizontalRef.current = null; // unknown direction yet
+      isHorizontalRef.current = null;
       setDragOffset(0);
-      // Pause auto-slide
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
 
@@ -165,13 +169,12 @@ export default function FeaturedCarousel({
       const dx = e.touches[0].clientX - dragStartXRef.current;
       const dy = e.touches[0].clientY - dragStartYRef.current;
 
-      // Determine direction once we have enough movement
       if (isHorizontalRef.current === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
         isHorizontalRef.current = Math.abs(dx) > Math.abs(dy);
       }
 
       if (isHorizontalRef.current) {
-        e.preventDefault(); // Lock page scroll
+        e.preventDefault();
         dragOffsetRef.current = dx;
         setDragOffset(dx);
       }
@@ -201,7 +204,7 @@ export default function FeaturedCarousel({
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
     };
-  }, []); // stable — everything uses refs
+  }, []);
 
   // Mouse drag (desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -233,7 +236,6 @@ export default function FeaturedCarousel({
 
   if (total === 0) return null;
 
-  // Build the visible items with infinite loop wrapping
   const cardWidthPercent = 100 / visibleCount;
 
   // Clone last visibleCount items at beginning + first visibleCount at end for seamless loop
@@ -250,7 +252,7 @@ export default function FeaturedCarousel({
   // Normalized index for progress indicator
   const normalizedIndex = ((currentIndex % total) + total) % total;
 
-  // Progress bar: how far through the carousel we are
+  // Progress bar
   const progressPercent = total <= visibleCount ? 100 : ((normalizedIndex + visibleCount) / total) * 100;
 
   return (
@@ -277,7 +279,7 @@ export default function FeaturedCarousel({
           {extendedProducts.map((product, i) => (
             <div
               key={`${product.id}-${i}`}
-              className="shrink-0 px-2"
+              className="shrink-0 px-1.5 sm:px-2"
               style={{ width: `${cardWidthPercent}%` }}
             >
               <Link
@@ -315,30 +317,30 @@ export default function FeaturedCarousel({
                 </div>
 
                 {/* Content */}
-                <div className="p-3">
+                <div className="p-2.5 sm:p-3">
                   <p className="text-[10px] font-medium text-blue-600">
                     {Array.isArray(product.category)
                       ? product.category.join(', ')
                       : product.category || 'Producto'}
                   </p>
-                  <h3 className="mt-0.5 text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                  <h3 className="mt-0.5 text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                     {product.name}
                   </h3>
                   {product.availability_type === 'on_request' ? (
-                    <p className="mt-1 text-sm font-semibold text-blue-600">Consultar</p>
+                    <p className="mt-1 text-xs sm:text-sm font-semibold text-blue-600">Consultar</p>
                   ) : (
-                    <div className="mt-1 flex items-baseline gap-2">
+                    <div className="mt-1 flex items-baseline gap-1 sm:gap-2">
                       {product.original_price_numeric && product.discount_percentage ? (
                         <>
-                          <span className="text-xs text-slate-400 line-through">
+                          <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                             {formatPrice(product.original_price_numeric, product.currency)}
                           </span>
-                          <span className="text-base font-bold text-green-700">
+                          <span className="text-sm sm:text-base font-bold text-green-700">
                             {formatPrice(product.price_numeric, product.currency)}
                           </span>
                         </>
                       ) : (
-                        <span className="text-base font-bold text-slate-900">
+                        <span className="text-sm sm:text-base font-bold text-slate-900">
                           {formatPrice(product.price_numeric, product.currency)}
                         </span>
                       )}
@@ -357,16 +359,16 @@ export default function FeaturedCarousel({
           <button
             onClick={prev}
             aria-label="Producto anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:-translate-x-3"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:-translate-x-3"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
           <button
             onClick={next}
             aria-label="Producto siguiente"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:translate-x-3"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:translate-x-3"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </>
       )}

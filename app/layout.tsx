@@ -9,6 +9,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieConsent from "@/components/common/CookieConsent";
 import CartDrawer from "@/components/cart/CartDrawer";
 import FloatingWhatsApp from "@/components/common/FloatingWhatsApp";
+import Footer from "@/components/Footer";
 import { PostHogProvider } from "@/components/PostHogProvider";
 
 const inter = Inter({
@@ -243,6 +244,7 @@ export default function RootLayout({
           />
           <PostHogProvider>
             {children}
+            <Footer />
             <CartDrawer />
           </PostHogProvider>
           <Analytics />
