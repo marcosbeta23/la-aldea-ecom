@@ -127,6 +127,18 @@ Tala, San Ramón, San Jacinto, Migues, San Bautista, Santa Rosa, Montes, Fray Ma
 - Guía de selección de herramientas
 - Guías de instalaciones hidráulicas
 
+## Guias y Articulos Tecnicos
+- Beneficios del Riego: https://laaldeatala.com.uy/faq/beneficios-riego
+- Diseño e Instalacion de Riego: https://laaldeatala.com.uy/faq/diseno-riego
+- Tipos de Bombas de Agua: https://laaldeatala.com.uy/faq/tipos-bombas
+- Como Elegir la Bomba Correcta: https://laaldeatala.com.uy/faq/seleccion-bombas
+- Instalaciones Hidraulicas: https://laaldeatala.com.uy/faq/instalaciones-hidraulicas
+- Sistemas de Filtracion: https://laaldeatala.com.uy/faq/sistemas-filtracion
+- Mantenimiento de Piscinas: https://laaldeatala.com.uy/faq/mantenimiento-piscinas
+- Seguridad con Productos Quimicos: https://laaldeatala.com.uy/faq/seguridad-quimicos
+- Seleccion de Herramientas: https://laaldeatala.com.uy/faq/seleccion-herramientas
+- Energia Solar para Riego: https://laaldeatala.com.uy/faq/energias-renovables
+
 ## Idioma
 Idioma principal: Español (Uruguay)
 Ubicación: Uruguay (es-UY)
@@ -135,7 +147,7 @@ Ubicación: Uruguay (es-UY)
 - Inicio: https://laaldeatala.com.uy/
 - Catálogo de Productos: https://laaldeatala.com.uy/productos
 - Preguntas Frecuentes: https://laaldeatala.com.uy/faq
-- Contacto: https://laaldeatala.com.uy/contacto
+- Guias Tecnicas: https://laaldeatala.com.uy/faq/[tema]
 - Política de Privacidad: https://laaldeatala.com.uy/privacidad
 - Términos y Condiciones: https://laaldeatala.com.uy/terminos
 

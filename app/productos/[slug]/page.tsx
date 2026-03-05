@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       url: productUrl,
       siteName: 'La Aldea Tala',
       locale: 'es_UY',
-      type: 'website',
+      type: 'article',
       images: [
         {
           url: productImage,
@@ -171,6 +171,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     description: product.description,
     image: product.images,
     sku: product.sku,
+    category: product.category?.[0] || undefined,
     brand: {
       '@type': 'Brand',
       name: product.brand || 'La Aldea',

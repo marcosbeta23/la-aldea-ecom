@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
 import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
+import { getArticlesForCategory } from '@/lib/faq-articles';
 import { Product } from '@/types/database';
 import ProductGrid from '@/components/products/ProductGrid';
 import ProductFilters from '@/components/products/ProductFilters';
@@ -498,6 +499,36 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             </div>
           </div>
         </section>
+
+        {/* Related guides — shown when a category filter is active */}
+        {params.categoria && (() => {
+          const guides = getArticlesForCategory(params.categoria);
+          if (guides.length === 0) return null;
+          return (
+            <section className="container mx-auto px-4 pb-8">
+              <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <h2 className="text-lg font-bold text-slate-900 mb-3">Guias relacionadas</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {guides.map((g) => (
+                    <Link
+                      key={g.slug}
+                      href={`/faq/${g.slug}`}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-blue-50 transition-colors group"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
+                          {g.title}
+                        </p>
+                        <p className="text-xs text-slate-400">{g.category}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 shrink-0 ml-2" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        })()}
       </main>
     </>
   );

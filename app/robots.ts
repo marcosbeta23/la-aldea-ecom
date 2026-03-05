@@ -10,6 +10,26 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: ['/admin/', '/api/', '/checkout', '/gracias', '/pendiente', '/procesando', '/error'],
       },
+      {
+        userAgent: 'GPTBot',
+        allow: ['/', '/llms.txt'],
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        allow: ['/', '/llms.txt'],
+      },
+      {
+        userAgent: 'Claude-Web',
+        allow: ['/', '/llms.txt'],
+      },
+      {
+        userAgent: 'PerplexityBot',
+        allow: ['/', '/llms.txt'],
+      },
+      {
+        userAgent: 'Anthropic-AI',
+        allow: ['/', '/llms.txt'],
+      },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
   };
