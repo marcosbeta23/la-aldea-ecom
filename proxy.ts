@@ -40,15 +40,8 @@ export default clerkMiddleware(async (auth, request) => {
     await auth.protect();
   }
 
-  // 3. Security headers
+  // 3. Security headers are defined in next.config.ts — no need to duplicate here.
   const response = NextResponse.next();
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set(
-    'Strict-Transport-Security',
-    'max-age=31536000; includeSubDomains'
-  );
 
   return response;
 });

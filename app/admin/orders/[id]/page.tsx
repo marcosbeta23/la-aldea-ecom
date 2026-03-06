@@ -163,8 +163,8 @@ export default async function OrderDetailPage({
 
   const shippingLabels: Record<string, string> = {
     pickup: 'Retiro en local',
-    standard: 'Envío estándar',
-    express: 'Envío express',
+    dac: 'Encomienda / DAC',
+    freight: 'Flete (entrega propia)',
   };
 
   const paymentLabels: Record<string, string> = {

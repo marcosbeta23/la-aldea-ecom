@@ -3,7 +3,7 @@
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
-  dsn: "https://4b4aa76cb525cd257eb3045b695719ce@o4510870980657152.ingest.us.sentry.io/4510870986031104",
+  dsn: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN,
   
   // Enable logs
   enableLogs: true,

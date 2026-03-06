@@ -63,7 +63,7 @@ export interface Order {
   shipping_address: string | null;
   shipping_city: string | null;
   shipping_department: string | null;
-  shipping_type: 'standard' | 'express' | 'pickup';
+  shipping_type: 'pickup' | 'dac' | 'freight';
   subtotal: number;
   discount_amount: number;
   shipping_cost: number;

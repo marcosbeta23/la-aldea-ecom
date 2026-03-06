@@ -13,20 +13,24 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // 🔐 VERIFY WEBHOOK SIGNATURE (only in production)
-    if (process.env.NODE_ENV === 'production') {
+    // 🔐 VERIFY WEBHOOK SIGNATURE
+    const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+    if (webhookSecret) {
       const signature = request.headers.get('x-signature');
       const requestId = request.headers.get('x-request-id');
-      
+
       if (!signature || !requestId) {
         console.error('Missing signature headers');
         return NextResponse.json({ received: false }, { status: 401 });
       }
-      
+
       if (!verifyMPSignature(signature, requestId, body)) {
         console.error('Invalid webhook signature');
         return NextResponse.json({ received: false }, { status: 401 });
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      console.error('CRITICAL: MP_WEBHOOK_SECRET not set in production');
+      return NextResponse.json({ received: false }, { status: 500 });
     }
     
     // 1️⃣ EXTRACT PAYMENT ID

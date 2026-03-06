@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
         shipping_address: customer.shipping_address || null,
         shipping_city: customer.shipping_city || null,
         shipping_department: customer.shipping_department || null,
-        shipping_type: customer.shipping_type || 'standard',
+        shipping_type: customer.shipping_type || 'dac',
         shipping_cost: customer.shipping_cost || 0,
         notes: customer.notes || null,
         subtotal: subtotal,

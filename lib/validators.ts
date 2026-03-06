@@ -17,7 +17,7 @@ export const CreateOrderSchema = z.object({
     shipping_address: z.string().max(200, 'Address too long').optional(),
     shipping_city: z.string().max(100, 'City name too long').optional(),
     shipping_department: z.string().max(50, 'Department name too long').optional(),
-    shipping_type: z.enum(['standard', 'express', 'pickup', 'delivery']).optional().default('standard'),
+    shipping_type: z.enum(['pickup', 'dac', 'freight']).optional().default('dac'),
     shipping_cost: z.number().min(0, 'Shipping cost cannot be negative').optional().default(0),
     notes: z.string().max(500, 'Notes too long').optional(),
     payment_method: z.enum(['mercadopago', 'transfer']).optional().default('mercadopago'),

@@ -305,7 +305,9 @@ export default function CheckoutPage() {
             shipping_address: formData.shippingMethod === 'delivery' ? formData.address : undefined,
             shipping_city: formData.shippingMethod === 'delivery' ? formData.city : undefined,
             shipping_department: formData.department,
-            shipping_type: formData.shippingMethod,
+            shipping_type: formData.shippingMethod === 'pickup'
+              ? 'pickup'
+              : cartShippingType,
             shipping_cost: shippingCost,
             notes: formData.notes || undefined,
             payment_method: formData.paymentMethod,

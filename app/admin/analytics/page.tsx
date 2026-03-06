@@ -154,15 +154,15 @@ const PAYMENT_HEX_COLORS: Record<string, string> = {
 
 const SHIPPING_LABELS: Record<string, string> = {
   pickup: 'Retiro en local',
-  standard: 'Envío estándar',
-  express: 'Envío express',
+  dac: 'Encomienda DAC',
+  freight: 'Flete propio',
   'Sin especificar': 'Sin especificar',
 };
 
 const SHIPPING_HEX_COLORS: Record<string, string> = {
   pickup: '#22c55e',
-  standard: '#3b82f6',
-  express: '#a855f7',
+  dac: '#3b82f6',
+  freight: '#f97316',
   'Sin especificar': '#94a3b8',
 };
 

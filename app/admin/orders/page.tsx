@@ -84,9 +84,9 @@ function ShippingBadge({ type }: { type: string | null }) {
   if (!type) return null;
 
   const config: Record<string, { label: string; classes: string; icon: 'truck' | 'store' }> = {
-    pickup: { label: 'Retiro', classes: 'bg-emerald-50 text-emerald-700', icon: 'store' },
-    standard: { label: 'Estándar', classes: 'bg-blue-50 text-blue-700', icon: 'truck' },
-    express: { label: 'Express', classes: 'bg-purple-50 text-purple-700', icon: 'truck' },
+    pickup: { label: 'Retiro en local', classes: 'bg-emerald-50 text-emerald-700', icon: 'store' },
+    dac: { label: 'Encomienda DAC', classes: 'bg-blue-50 text-blue-700', icon: 'truck' },
+    freight: { label: 'Flete propio', classes: 'bg-orange-50 text-orange-700', icon: 'truck' },
   };
 
   const cfg = config[type];
