@@ -210,6 +210,7 @@ export async function sendInvoiceEmail({ order, items, invoiceFileUrl }: SendInv
       subtotal: i.subtotal,
     })),
     invoiceFileUrl,
+    reviewUrl: process.env.GOOGLE_REVIEW_URL || undefined,
   }));
 
   return sendEmail({

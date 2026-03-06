@@ -16,6 +16,7 @@ interface InvoiceEmailProps {
   total: number;
   items: OrderItem[];
   invoiceFileUrl?: string;
+  reviewUrl?: string;
 }
 
 function formatPrice(price: number): string {
@@ -30,6 +31,7 @@ export default function InvoiceEmail({
   total,
   items,
   invoiceFileUrl,
+  reviewUrl,
 }: InvoiceEmailProps) {
   const invoiceTypeName = invoiceType === 'invoice_rut'
     ? 'Factura con RUT'
@@ -113,6 +115,19 @@ export default function InvoiceEmail({
         </Text>
       </Section>
 
+      {/* Google Review CTA */}
+      {reviewUrl && (
+        <Section style={reviewSection}>
+          <Text style={reviewTitle}>Te gusto tu compra?</Text>
+          <Text style={reviewText}>
+            Tu opinion nos ayuda a crecer. Dejanos una resena en Google, solo te toma 1 minuto!
+          </Text>
+          <Link href={reviewUrl} style={reviewButton}>
+            Dejar una Resena en Google
+          </Link>
+        </Section>
+      )}
+
       {/* WhatsApp CTA */}
       <Section style={ctaSection}>
         <Link
@@ -166,3 +181,8 @@ const noteText: React.CSSProperties = { color: '#64748b', margin: '0', fontSize:
 const ctaSection: React.CSSProperties = { textAlign: 'center' as const, marginTop: '24px' };
 const downloadButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#2563eb', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
 const whatsappButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#25d366', color: '#ffffff', padding: '12px 24px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };
+
+const reviewSection: React.CSSProperties = { marginTop: '24px', backgroundColor: '#fffbeb', borderRadius: '12px', padding: '24px', textAlign: 'center' as const, border: '1px solid #fde68a' };
+const reviewTitle: React.CSSProperties = { color: '#0f172a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: '700' };
+const reviewText: React.CSSProperties = { color: '#64748b', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' };
+const reviewButton: React.CSSProperties = { display: 'inline-block', backgroundColor: '#4285f4', color: '#ffffff', padding: '14px 28px', borderRadius: '9999px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' };

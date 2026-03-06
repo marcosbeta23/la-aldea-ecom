@@ -763,7 +763,7 @@ export default async function Home() {
             {/* Review CTA */}
             <div className="mt-12 text-center">
               <a
-                href="https://g.page/r/laaldeatala/review"
+                href="https://search.google.com/local/writereview?placeid=ChIJt2gecA1roJURY48Ef5fqxgU"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg transition-all hover:bg-slate-100 hover:shadow-xl"

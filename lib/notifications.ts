@@ -241,7 +241,7 @@ export function getPaymentReceivedEmailHtml(ctx: NotificationContext): string {
 
 export function getInvoiceEmailHtml(ctx: NotificationContext): string {
   const { order, invoiceNumber } = ctx;
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -254,6 +254,9 @@ export function getInvoiceEmailHtml(ctx: NotificationContext): string {
     .header h1 { color: #4f46e5; margin: 0; }
     .content { background: #f8fafc; border-radius: 8px; padding: 24px; }
     .invoice-number { font-size: 18px; font-weight: bold; color: #4f46e5; background: #eef2ff; padding: 12px; border-radius: 6px; text-align: center; }
+    .review-cta { margin-top: 24px; text-align: center; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; }
+    .review-cta p { margin: 0 0 12px; color: #92400e; font-size: 15px; }
+    .review-btn { display: inline-block; background: #ffffff; color: #1a1a1a; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 8px; border: 1px solid #e2e8f0; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 14px; }
   </style>
 </head>
@@ -266,9 +269,15 @@ export function getInvoiceEmailHtml(ctx: NotificationContext): string {
       <p>Hola <strong>${order.customer_name}</strong>,</p>
       <p>Tu factura para el pedido #${order.order_number} fue generada:</p>
       <p class="invoice-number">Factura N° ${invoiceNumber || order.invoice_number}</p>
-      <p>${order.shipping_type === 'pickup' 
+      <p>${order.shipping_type === 'pickup'
         ? 'Podés pasar a retirar tu pedido cuando quieras.'
         : 'Te avisamos cuando despachemos tu pedido.'}</p>
+    </div>
+    <div class="review-cta">
+      <p>⭐ ¿Cómo fue tu experiencia? Tu opinión nos ayuda a mejorar.</p>
+      <a href="https://search.google.com/local/writereview?placeid=ChIJt2gecA1roJURY48Ef5fqxgU" class="review-btn">
+        ⭐ Dejanos tu reseña en Google
+      </a>
     </div>
     <div class="footer">
       <p><strong>La Aldea</strong></p>
