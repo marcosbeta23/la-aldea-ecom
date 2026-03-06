@@ -41,7 +41,7 @@ export default function InvoiceEmail({
     <Layout preview={`Factura N\u00B0 ${invoiceNumber} - Pedido ${orderNumber}`}>
       {/* Badge */}
       <Section style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
-        <Text style={docBadge}>DOCUMENTO FISCAL</Text>
+        <Text style={docBadge}>FACTURA</Text>
       </Section>
 
       <Text style={greeting}>Hola {customerName},</Text>

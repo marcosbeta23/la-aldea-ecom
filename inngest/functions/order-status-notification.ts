@@ -6,7 +6,7 @@
 
 import { inngest } from '@/lib/inngest';
 import { supabaseAdmin } from '@/lib/supabase';
-import { sendOrderStatusUpdate } from '@/lib/email';
+import { sendOrderStatusUpdate, sendOrderConfirmation } from '@/lib/email';
 import { alertOrderStatusChanged } from '@/lib/telegram';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import {
@@ -67,7 +67,32 @@ export const orderStatusNotification = inngest.createFunction(
     // Step 1: Send customer status email
     if (customerEmail && EMAIL_STATUSES.includes(newStatus)) {
       results.email = await step.run('send-status-email', async () => {
-        const sent = await sendOrderStatusUpdate(order, newStatus);
+        let sent: boolean;
+
+        if (newStatus === 'paid') {
+          // For 'paid', send the full order confirmation email (same as payment webhook).
+          // Skip if already sent by the order/payment.approved event to avoid double-sending.
+          if (order.confirmation_email_sent_at) {
+            return { sent: false, reason: 'confirmation email already sent via payment webhook' };
+          }
+
+          const { data: orderItems } = await supabaseAdmin
+            .from('order_items')
+            .select('*')
+            .eq('order_id', order.id) as { data: any[] | null };
+
+          sent = await sendOrderConfirmation({ order, items: orderItems || [] });
+
+          if (sent) {
+            await (supabaseAdmin as any)
+              .from('orders')
+              .update({ confirmation_email_sent_at: new Date().toISOString() })
+              .eq('id', order.id);
+          }
+        } else {
+          sent = await sendOrderStatusUpdate(order, newStatus);
+        }
+
         if (!sent) {
           throw new Error(`Failed to send status email for ${newStatus}`);
         }
