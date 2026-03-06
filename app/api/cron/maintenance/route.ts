@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
 
 // Unified daily maintenance cron — single cron entry for Vercel Hobby plan.
 // Hobby plans only allow cron jobs that run once per day.
@@ -55,6 +56,30 @@ export async function GET(request: NextRequest) {
     }
   } else {
     results.weeklyReport = { skipped: true, reason: 'Not Monday' };
+  }
+
+  // 4. Cancel stale MercadoPago pending orders (older than 2 hours)
+  // Prevents ghost MP orders from polluting the dashboard when a customer
+  // starts checkout but abandons without paying.
+  try {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const { data: cancelledOrders, error: cancelError } = await (supabaseAdmin as any)
+      .from('orders')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('payment_method', 'mercadopago')
+      .eq('status', 'pending')
+      .lt('created_at', twoHoursAgo)
+      .select('id, order_number');
+
+    if (cancelError) {
+      results.cancelAbandonedMp = { success: false, error: cancelError.message };
+    } else {
+      const count = cancelledOrders?.length ?? 0;
+      console.log(`🧹 Cancelled ${count} stale MP pending orders`);
+      results.cancelAbandonedMp = { success: true, cancelled: count };
+    }
+  } catch (err: any) {
+    results.cancelAbandonedMp = { success: false, error: err.message };
   }
 
   console.log('🔧 Maintenance cron complete:', JSON.stringify(results));

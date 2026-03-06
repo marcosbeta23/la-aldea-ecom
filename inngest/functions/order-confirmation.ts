@@ -21,6 +21,11 @@ export const orderConfirmation = inngest.createFunction(
   async ({ event, step }) => {
     const { orderId, orderNumber, customerName, customerEmail, customerPhone, total, currency } = event.data;
 
+    // Brief pause before fetching to let the MP webhook status update propagate to the DB.
+    // Without this, a very fast Inngest execution might read the order while its status is
+    // still 'pending' (race condition between the webhook DB write and this job's read).
+    await step.sleep('wait-for-status-propagation', '5s');
+
     // Step 0: Fetch full order + items from DB (always use latest data)
     const { order, items } = await step.run('fetch-order-data', async () => {
       const { data: orderData } = await supabaseAdmin

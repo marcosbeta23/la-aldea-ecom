@@ -24,7 +24,7 @@ const WHATSAPP_STATUSES = ['paid', 'awaiting_stock', 'ready_to_invoice', 'invoic
 // Statuses that trigger admin Telegram alerts
 const TELEGRAM_STATUSES = ['shipped', 'delivered', 'cancelled', 'invoiced', 'processing', 'paid'];
 // Statuses that trigger customer email notifications
-const EMAIL_STATUSES = ['paid', 'processing', 'shipped', 'delivered', 'refunded'];
+const EMAIL_STATUSES = ['paid', 'processing', 'shipped', 'delivered', 'refunded', 'ready_to_invoice', 'awaiting_stock', 'paid_pending_verification'];
 
 function getWhatsAppMessageForStatus(ctx: NotificationContext, status: string): string | null {
   switch (status) {

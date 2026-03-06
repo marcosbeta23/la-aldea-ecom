@@ -30,9 +30,9 @@ export async function PATCH(
     // Fetch current order for old status comparison
     const { data: currentOrder } = await supabaseAdmin
       .from('orders')
-      .select('status, customer_name, order_number')
+      .select('status, customer_name, order_number, payment_method')
       .eq('id', id)
-      .single() as { data: { status: string; customer_name: string; order_number: string } | null };
+      .single() as { data: { status: string; customer_name: string; order_number: string; payment_method: string | null } | null };
 
     const oldStatus = currentOrder?.status;
 
@@ -108,22 +108,43 @@ export async function PATCH(
     
     // Fire Inngest event for background notifications
     if (body.status && updatedOrder && oldStatus !== body.status) {
-      inngest.send({
-        name: 'order/status.changed',
-        data: {
-          orderId: id,
-          orderNumber: updatedOrder.order_number || id,
-          oldStatus: oldStatus || '',
-          newStatus: body.status,
-          customerName: updatedOrder.customer_name || '',
-          customerEmail: updatedOrder.customer_email || null,
-          customerPhone: updatedOrder.customer_phone || null,
-          total: Number(updatedOrder.total || 0),
-          currency: updatedOrder.currency || 'UYU',
-        },
-      }).catch((err) => {
-        console.error('[Inngest] Failed to send order/status.changed:', err);
-      });
+      const isTransferPaid = body.status === 'paid' && currentOrder?.payment_method === 'transfer';
+
+      if (isTransferPaid) {
+        // For bank transfer orders marked paid, fire the same event as the MP webhook.
+        // This sends the full OrderConfirmation email with item list instead of the minimal StatusUpdate.
+        inngest.send({
+          name: 'order/payment.approved',
+          data: {
+            orderId: id,
+            orderNumber: updatedOrder.order_number || id,
+            customerName: updatedOrder.customer_name || '',
+            customerEmail: updatedOrder.customer_email || null,
+            customerPhone: updatedOrder.customer_phone || null,
+            total: Number(updatedOrder.total || 0),
+            currency: updatedOrder.currency || 'UYU',
+          },
+        }).catch((err) => {
+          console.error('[Inngest] Failed to send order/payment.approved for transfer:', err);
+        });
+      } else {
+        inngest.send({
+          name: 'order/status.changed',
+          data: {
+            orderId: id,
+            orderNumber: updatedOrder.order_number || id,
+            oldStatus: oldStatus || '',
+            newStatus: body.status,
+            customerName: updatedOrder.customer_name || '',
+            customerEmail: updatedOrder.customer_email || null,
+            customerPhone: updatedOrder.customer_phone || null,
+            total: Number(updatedOrder.total || 0),
+            currency: updatedOrder.currency || 'UYU',
+          },
+        }).catch((err) => {
+          console.error('[Inngest] Failed to send order/status.changed:', err);
+        });
+      }
     }
     
     return NextResponse.json({ success: true, order: updatedOrder });

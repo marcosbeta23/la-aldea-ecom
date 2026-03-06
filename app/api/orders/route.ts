@@ -5,6 +5,7 @@ import { ordersLimiter } from '@/lib/rate-limit';
 import { ordersRatelimit, getClientIp } from '@/lib/redis';
 import { alertNewOrder, alertNewTransferOrder } from '@/lib/telegram';
 import { getExchangeRate, convertPrice } from '@/lib/exchange-rate';
+import { sendTransferOrderConfirmation } from '@/lib/email';
 
 // 🔒 SECURE ORDER CREATION
 // This version NEVER trusts frontend prices
@@ -269,9 +270,23 @@ export async function POST(request: NextRequest) {
       console.log('🏦 Bank transfer order created:', (order as any).order_number);
 
       // Telegram alerts (fire-and-forget)
-      const currencyPrefix = paymentCurrency === 'USD' ? 'US$' : '$';
       alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
       alertNewTransferOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
+
+      // Send customer confirmation email with bank transfer details (fire-and-forget)
+      if (customer.email) {
+        sendTransferOrderConfirmation({
+          order: order as any,
+          items: orderItems.map((i: any) => ({
+            product_name: i.product_name,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            subtotal: i.subtotal,
+          })) as any,
+        }).catch((err) => {
+          console.error('[Email] Failed to send transfer confirmation:', err);
+        });
+      }
 
       return NextResponse.json({
         success: true,

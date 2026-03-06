@@ -5,6 +5,7 @@
 import type { Order, OrderItem } from '@/types/database';
 import { render } from '@react-email/components';
 import OrderConfirmation from '@/emails/OrderConfirmation';
+import TransferOrderConfirmation from '@/emails/TransferOrderConfirmation';
 import AdminNotification from '@/emails/AdminNotification';
 import StatusUpdate from '@/emails/StatusUpdate';
 import InvoiceEmail from '@/emails/InvoiceEmail';
@@ -115,6 +116,45 @@ export async function sendOrderConfirmation({ order, items }: SendOrderConfirmat
 }
 
 // =====================================================
+// TRANSFER ORDER CONFIRMATION EMAIL (TO CUSTOMER)
+// =====================================================
+
+export async function sendTransferOrderConfirmation({ order, items }: SendOrderConfirmationParams): Promise<boolean> {
+  if (!order.customer_email) {
+    console.warn('[Email] No customer email for transfer order', order.order_number);
+    return false;
+  }
+
+  const htmlContent = await render(TransferOrderConfirmation({
+    orderNumber: order.order_number,
+    createdAt: order.created_at,
+    customerName: order.customer_name,
+    customerEmail: order.customer_email,
+    customerPhone: order.customer_phone || undefined,
+    shippingAddress: order.shipping_address || undefined,
+    items: items.map(i => ({
+      product_name: i.product_name,
+      quantity: i.quantity,
+      unit_price: i.unit_price,
+      subtotal: i.subtotal,
+    })),
+    subtotal: order.subtotal,
+    discountAmount: order.discount_amount,
+    total: order.total,
+    currency: order.currency || 'UYU',
+    orderId: order.id,
+    appUrl: process.env.APP_URL || 'https://laaldeatala.com.uy',
+  }));
+
+  return sendEmail({
+    to: order.customer_email,
+    toName: order.customer_name,
+    subject: `Pedido ${order.order_number} registrado - datos para transferencia`,
+    htmlContent,
+  });
+}
+
+// =====================================================
 // ADMIN NOTIFICATION EMAIL
 // =====================================================
 
@@ -154,7 +194,7 @@ export async function sendOrderStatusUpdate(
 ): Promise<boolean> {
   if (!order.customer_email) return false;
 
-  const validStatuses = ['paid', 'processing', 'shipped', 'delivered', 'refunded'];
+  const validStatuses = ['paid', 'processing', 'shipped', 'delivered', 'refunded', 'ready_to_invoice', 'awaiting_stock', 'paid_pending_verification'];
   if (!validStatuses.includes(newStatus)) return false;
 
   const statusTitles: Record<string, string> = {
@@ -163,6 +203,9 @@ export async function sendOrderStatusUpdate(
     shipped: 'Tu Pedido esta en Camino!',
     delivered: 'Pedido Entregado!',
     refunded: 'Reembolso Procesado',
+    ready_to_invoice: 'Preparando tu Factura',
+    awaiting_stock: 'Pedido en Espera de Stock',
+    paid_pending_verification: 'Pago en Verificacion',
   };
 
   const htmlContent = await render(StatusUpdate({
