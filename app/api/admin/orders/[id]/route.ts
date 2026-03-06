@@ -123,6 +123,9 @@ export async function PATCH(
             customerPhone: updatedOrder.customer_phone || null,
             total: Number(updatedOrder.total || 0),
             currency: updatedOrder.currency || 'UYU',
+            paymentId: `transfer-${id}`,
+            status: 'paid',
+            stockReserved: updatedOrder.stock_reserved ?? false,
           },
         }).catch((err) => {
           console.error('[Inngest] Failed to send order/payment.approved for transfer:', err);
