@@ -83,8 +83,8 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1">
+        {/* Desktop Navigation - Centered */}
+        <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <Link 
             href="/" 
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
