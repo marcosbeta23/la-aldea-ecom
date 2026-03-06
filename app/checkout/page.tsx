@@ -205,7 +205,7 @@ export default function CheckoutPage() {
 
   // Auto-reset shipping method when delivery isn't available
   useEffect(() => {
-    const canDeliver = shippingOptions.canDeliver || (cartShippingType === 'freight' && freightConfirmed);
+    const canDeliver = shippingOptions.canDeliver || (cartShippingType !== 'pickup_only' && freightConfirmed);
     if (mounted && !canDeliver && shippingMethod === 'delivery') {
       setValue('shippingMethod', 'pickup');
     }
@@ -571,7 +571,7 @@ export default function CheckoutPage() {
                     )}
 
                     {/* Freight delivery option — visible after WhatsApp confirmation */}
-                    {cartShippingType === 'freight' && freightConfirmed && (
+                    {cartShippingType !== 'pickup_only' && freightConfirmed && (
                       <button
                         type="button"
                         onClick={() => setValue('shippingMethod', 'delivery')}
@@ -582,7 +582,7 @@ export default function CheckoutPage() {
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-slate-900">Flete (coordinado)</span>
+                          <span className="font-medium text-slate-900">Coordinar flete/envío</span>
                           <span className="text-amber-600 text-sm font-medium">Acordado por WhatsApp</span>
                         </div>
                         <p className="text-sm text-slate-500">
@@ -592,8 +592,8 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  {/* Freight consultation card — only for freight items */}
-                  {cartShippingType === 'freight' && (
+                  {/* Freight consultation card — always available (except pickup_only) */}
+                  {cartShippingType !== 'pickup_only' && (
                     <div className={`mt-4 p-4 border rounded-xl ${
                       freightConfirmed
                         ? 'bg-green-50 border-green-200'
@@ -609,12 +609,10 @@ export default function CheckoutPage() {
                               <p className="text-sm font-medium text-slate-700">
                                 {cartShippingType === 'freight'
                                   ? 'Tu pedido incluye productos que requieren flete'
-                                  : '¿Necesitás coordinar un flete?'}
+                                  : '¿Necesitás coordinar el envío?'}
                               </p>
                               <p className="text-sm text-slate-500 mt-1">
-                                {cartShippingType === 'freight'
-                                  ? 'Coordiná el envío y el costo por WhatsApp antes de comprar. Si preferís, podés retirarlo en nuestro local.'
-                                  : 'Si no podés retirar o DAC no llega a tu zona, coordiná un envío por flete vía WhatsApp.'}
+                                Coordiná el envío por WhatsApp
                               </p>
                               <a
                                 href={`https://wa.me/59892744725?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
@@ -623,12 +621,12 @@ export default function CheckoutPage() {
                                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
                               >
                                 <MessageCircle className="h-4 w-4" />
-                                Consultar por flete en WhatsApp
+                                Consultar por flete/envío en WhatsApp
                               </a>
                             </>
                           ) : (
                             <p className="text-sm font-medium text-green-800">
-                              Flete coordinado — ya podés seleccionar &quot;Flete (coordinado)&quot; como método de entrega.
+                              Envío coordinado — ya podés seleccionar &quot;Coordinar flete/envío&quot; como método de entrega.
                             </p>
                           )}
 
@@ -639,7 +637,7 @@ export default function CheckoutPage() {
                               checked={freightConfirmed}
                               onChange={(e) => {
                                 setFreightConfirmed(e.target.checked);
-                                if (!e.target.checked && shippingMethod === 'delivery' && cartShippingType === 'freight') {
+                                if (!e.target.checked && shippingMethod === 'delivery') {
                                   setValue('shippingMethod', 'pickup');
                                 }
                               }}
@@ -652,7 +650,7 @@ export default function CheckoutPage() {
                             <span className={`text-sm font-medium ${
                               freightConfirmed ? 'text-green-700' : 'text-slate-600'
                             }`}>
-                              Ya coordiné el flete por WhatsApp
+                              Ya coordiné el envío/flete por WhatsApp
                             </span>
                           </label>
                         </div>

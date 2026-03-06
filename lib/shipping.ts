@@ -70,7 +70,7 @@ export const SHIPPING_CONFIG = {
   freeShippingThreshold: 5000,
   
   // DAC info
-  dacDeliveryTime: '24-48 horas hábiles',
+  dacDeliveryTime: '24-72 horas hábiles',
   dacPaymentNote: 'Se paga al recibir el paquete',
   
   // Pickup location
