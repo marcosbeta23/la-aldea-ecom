@@ -10,6 +10,8 @@ import ProductInfo from '@/components/products/ProductInfo';
 import ProductReviews from '@/components/products/ProductReviews';
 import RelatedProducts from '@/components/products/RelatedProducts';
 
+export const dynamicParams = true; // explicitly allow on-demand slugs
+
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -18,86 +20,88 @@ const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
 // Generate metadata for SEO + Open Graph + Twitter Cards
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  
-  const { data } = await supabaseAdmin
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .single();
+  try {
+    const { slug } = await params;
+    
+    const { data } = await supabaseAdmin
+      .from('products')
+      .select('*')
+      .eq('slug', slug)
+      .single();
 
-  const product = data as Product | null;
+    const product = data as Product | null;
 
-  if (!product) {
+    if (!product) {
+      return { title: 'Producto no encontrado' };
+    }
+
+    const productUrl = `${siteUrl}/productos/${slug}`;
+    const productImage = product.images?.length > 0 
+      ? product.images[0].startsWith('http') 
+        ? product.images[0] 
+        : `${siteUrl}${product.images[0]}`
+      : `${siteUrl}/assets/images/og-image.webp`;
+    
+    // Create SEO-optimized description
+    const seoDescription = product.description 
+      ? product.description.slice(0, 155) + (product.description.length > 155 ? '...' : '')
+      : `Compra ${product.name} en La Aldea, Tala. ${product.brand ? `Marca ${product.brand}. ` : ''}Envíos a todo Uruguay. Precio: UYU ${product.price_numeric?.toLocaleString('es-UY')}`;
+
     return {
-      title: 'Producto no encontrado',
+      title: product.name,
+      description: seoDescription,
+      
+      // Open Graph (Facebook, LinkedIn, WhatsApp)
+      openGraph: {
+        title: `${product.name} | La Aldea`,
+        description: seoDescription,
+        url: productUrl,
+        siteName: 'La Aldea Tala',
+        locale: 'es_UY',
+        type: 'article',
+        images: [
+          {
+            url: productImage,
+            width: 1200,
+            height: 630,
+            alt: product.name,
+          },
+        ],
+      },
+      
+      // Twitter Cards
+      twitter: {
+        card: 'summary_large_image',
+        title: `${product.name} | La Aldea`,
+        description: seoDescription,
+        images: [productImage],
+      },
+      
+      // Canonical URL
+      alternates: {
+        canonical: productUrl,
+      },
+      
+      // Additional SEO
+      keywords: [
+        product.name,
+        product.brand || '',
+        ...(Array.isArray(product.category) ? product.category : [product.category || '']),
+        'La Aldea',
+        'Tala',
+        'Uruguay',
+        'comprar',
+        'precio',
+      ].filter(Boolean),
+      
+      robots: {
+        index: true,
+        follow: true,
+      },
     };
+  } catch {
+    return { title: 'Producto no encontrado' };
   }
-
-  const productUrl = `${siteUrl}/productos/${slug}`;
-  const productImage = product.images?.length > 0 
-    ? product.images[0].startsWith('http') 
-      ? product.images[0] 
-      : `${siteUrl}${product.images[0]}`
-    : `${siteUrl}/assets/images/og-image.webp`;
-  
-  // Create SEO-optimized description
-  const seoDescription = product.description 
-    ? product.description.slice(0, 155) + (product.description.length > 155 ? '...' : '')
-    : `Compra ${product.name} en La Aldea, Tala. ${product.brand ? `Marca ${product.brand}. ` : ''}Envíos a todo Uruguay. Precio: UYU ${product.price_numeric?.toLocaleString('es-UY')}`;
-
-  return {
-    title: product.name,
-    description: seoDescription,
-    
-    // Open Graph (Facebook, LinkedIn, WhatsApp)
-    openGraph: {
-      title: `${product.name} | La Aldea`,
-      description: seoDescription,
-      url: productUrl,
-      siteName: 'La Aldea Tala',
-      locale: 'es_UY',
-      type: 'article',
-      images: [
-        {
-          url: productImage,
-          width: 1200,
-          height: 630,
-          alt: product.name,
-        },
-      ],
-    },
-    
-    // Twitter Cards
-    twitter: {
-      card: 'summary_large_image',
-      title: `${product.name} | La Aldea`,
-      description: seoDescription,
-      images: [productImage],
-    },
-    
-    // Canonical URL
-    alternates: {
-      canonical: productUrl,
-    },
-    
-    // Additional SEO
-    keywords: [
-      product.name,
-      product.brand || '',
-      ...(Array.isArray(product.category) ? product.category : [product.category || '']),
-      'La Aldea',
-      'Tala',
-      'Uruguay',
-      'comprar',
-      'precio',
-    ].filter(Boolean),
-    
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
 }
 
 // Generate static paths for top products (ISR)
