@@ -84,7 +84,7 @@ export const CheckoutFormSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'Nombre muy largo'),
   email: z.string().email('Email inválido').or(z.literal('')),
   phone: z.string().min(1, 'El teléfono es requerido'),
-  shippingMethod: z.enum(['pickup', 'delivery']),
+  shippingMethod: z.enum(['pickup', 'delivery', 'freight']),
   address: z.string().max(200, 'Dirección muy larga').optional().or(z.literal('')),
   city: z.string().max(100, 'Ciudad muy larga').optional().or(z.literal('')),
   department: z.string().optional().or(z.literal('')),
@@ -96,8 +96,8 @@ export const CheckoutFormSchema = z.object({
   paymentCurrency: z.enum(['UYU', 'USD']),
   acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Debés aceptar los términos y condiciones' }) }),
 }).superRefine((data, ctx) => {
-  // Shipping address required when delivery is selected
-  if (data.shippingMethod === 'delivery') {
+  // Shipping address required when delivery or freight is selected
+  if (data.shippingMethod === 'delivery' || data.shippingMethod === 'freight') {
     if (!data.address?.trim()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La dirección es requerida para envío', path: ['address'] });
     }

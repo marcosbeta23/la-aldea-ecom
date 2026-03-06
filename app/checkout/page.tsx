@@ -206,7 +206,7 @@ export default function CheckoutPage() {
   // Auto-reset shipping method when delivery isn't available
   useEffect(() => {
     const canDeliver = shippingOptions.canDeliver || (cartShippingType !== 'pickup_only' && freightConfirmed);
-    if (mounted && !canDeliver && shippingMethod === 'delivery') {
+    if (mounted && !canDeliver && (shippingMethod === 'delivery' || shippingMethod === 'freight')) {
       setValue('shippingMethod', 'pickup');
     }
   }, [mounted, shippingOptions.canDeliver, cartShippingType, freightConfirmed, shippingMethod, setValue]);
@@ -302,12 +302,14 @@ export default function CheckoutPage() {
             name: formData.name,
             email: formData.email || undefined,
             phone: formData.phone.replace(/[\s\-().]/g, ''),
-            shipping_address: formData.shippingMethod === 'delivery' ? formData.address : undefined,
-            shipping_city: formData.shippingMethod === 'delivery' ? formData.city : undefined,
+            shipping_address: formData.shippingMethod !== 'pickup' ? formData.address : undefined,
+            shipping_city: formData.shippingMethod !== 'pickup' ? formData.city : undefined,
             shipping_department: formData.department,
             shipping_type: formData.shippingMethod === 'pickup'
               ? 'pickup'
-              : cartShippingType,
+              : formData.shippingMethod === 'freight'
+                ? 'freight'
+                : cartShippingType,
             shipping_cost: shippingCost,
             notes: formData.notes || undefined,
             payment_method: formData.paymentMethod,
@@ -574,9 +576,9 @@ export default function CheckoutPage() {
                     {cartShippingType !== 'pickup_only' && freightConfirmed && (
                       <button
                         type="button"
-                        onClick={() => setValue('shippingMethod', 'delivery')}
+                        onClick={() => setValue('shippingMethod', 'freight')}
                         className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          shippingMethod === 'delivery'
+                          shippingMethod === 'freight'
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
@@ -637,7 +639,7 @@ export default function CheckoutPage() {
                               checked={freightConfirmed}
                               onChange={(e) => {
                                 setFreightConfirmed(e.target.checked);
-                                if (!e.target.checked && shippingMethod === 'delivery') {
+                                if (!e.target.checked && shippingMethod === 'freight') {
                                   setValue('shippingMethod', 'pickup');
                                 }
                               }}
@@ -696,7 +698,7 @@ export default function CheckoutPage() {
                   )}
 
                   {/* Shipping Address */}
-                  {shippingMethod === 'delivery' && (
+                  {shippingMethod !== 'pickup' && (
                     <div className="mt-6 pt-6 border-t border-slate-200">
                       <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
@@ -1062,6 +1064,8 @@ export default function CheckoutPage() {
                       <span>
                         {shippingMethod === 'pickup' ? (
                           'Gratis (retiro)'
+                        ) : shippingMethod === 'freight' ? (
+                          <span className="text-amber-600">Según lo acordado</span>
                         ) : shippingPaidOnDelivery ? (
                           <span className="text-amber-600">A pagar en destino</span>
                         ) : (
