@@ -273,19 +273,26 @@ export async function POST(request: NextRequest) {
       alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
       alertNewTransferOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
 
-      // Send customer confirmation email with bank transfer details (fire-and-forget)
+      // Send customer confirmation email with bank transfer details
       if (customer.email) {
-        sendTransferOrderConfirmation({
-          order: order as any,
-          items: orderItems.map((i: any) => ({
-            product_name: i.product_name,
-            quantity: i.quantity,
-            unit_price: i.unit_price,
-            subtotal: i.subtotal,
-          })) as any,
-        }).catch((err) => {
-          console.error('[Email] Failed to send transfer confirmation:', err);
-        });
+        try {
+          const emailSent = await sendTransferOrderConfirmation({
+            order: order as any,
+            items: orderItems.map((i: any) => ({
+              product_name: i.product_name,
+              quantity: i.quantity,
+              unit_price: i.unit_price,
+              subtotal: i.subtotal,
+            })) as any,
+          });
+          if (!emailSent) {
+            console.warn('[Email] Transfer confirmation returned false for order', (order as any).order_number);
+          } else {
+            console.log('[Email] Transfer confirmation sent for order', (order as any).order_number);
+          }
+        } catch (err) {
+          console.error('[Email] Crash sending transfer confirmation:', err);
+        }
       }
 
       return NextResponse.json({
