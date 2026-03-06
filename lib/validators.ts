@@ -7,10 +7,12 @@ export const CreateOrderSchema = z.object({
   customer: z.object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
     email: z.string().email('Invalid email address').optional(),
-    phone: z.string().regex(
-      /^(\+598)?[0-9]{8,9}$/,
-      'Invalid Uruguay phone number (must be 8-9 digits)'
-    ),
+    phone: z.string()
+      .transform(val => val.replace(/[\s\-().]/g, ''))
+      .pipe(z.string().regex(
+        /^(\+598)?[0-9]{8,9}$/,
+        'Invalid Uruguay phone number (must be 8-9 digits)'
+      )),
     // Optional shipping fields (for future use)
     shipping_address: z.string().max(200, 'Address too long').optional(),
     shipping_city: z.string().max(100, 'City name too long').optional(),

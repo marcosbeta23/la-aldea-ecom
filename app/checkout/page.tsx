@@ -205,7 +205,7 @@ export default function CheckoutPage() {
 
   // Auto-reset shipping method when delivery isn't available
   useEffect(() => {
-    const canDeliver = shippingOptions.canDeliver || (cartShippingType !== 'pickup_only' && freightConfirmed);
+    const canDeliver = shippingOptions.canDeliver || (cartShippingType === 'freight' && freightConfirmed);
     if (mounted && !canDeliver && shippingMethod === 'delivery') {
       setValue('shippingMethod', 'pickup');
     }
@@ -276,6 +276,17 @@ export default function CheckoutPage() {
     setCouponError('');
   };
 
+  // Scroll to first error when RHF validation fails
+  const onError = useCallback(() => {
+    // Find the first visible error element and scroll to it
+    setTimeout(() => {
+      const firstError = document.querySelector('.text-red-500');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }, []);
+
   // Submit order — called by react-hook-form after Zod validation passes
   const onSubmit = async (formData: CheckoutFormData) => {
     setIsSubmitting(true);
@@ -290,7 +301,7 @@ export default function CheckoutPage() {
           customer: {
             name: formData.name,
             email: formData.email || undefined,
-            phone: formData.phone,
+            phone: formData.phone.replace(/[\s\-().]/g, ''),
             shipping_address: formData.shippingMethod === 'delivery' ? formData.address : undefined,
             shipping_city: formData.shippingMethod === 'delivery' ? formData.city : undefined,
             shipping_department: formData.department,
@@ -314,7 +325,15 @@ export default function CheckoutPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al crear el pedido');
+        // Build a detailed error message from server response
+        let errorMsg = data.error || 'Error al crear el pedido';
+        if (data.details) {
+          const fieldErrors = Object.entries(data.details)
+            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+            .join('. ');
+          if (fieldErrors) errorMsg += ` (${fieldErrors})`;
+        }
+        throw new Error(errorMsg);
       }
 
       // Handle redirect based on payment method
@@ -397,7 +416,7 @@ export default function CheckoutPage() {
             <h1 className="text-3xl font-bold text-slate-900">Finalizar compra</h1>
           </div>
 
-          <form onSubmit={rhfHandleSubmit(onSubmit)}>
+          <form onSubmit={rhfHandleSubmit(onSubmit, onError)}>
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Form Section */}
               <div className="lg:col-span-2 space-y-6">
@@ -454,6 +473,41 @@ export default function CheckoutPage() {
                         placeholder="099 123 456"
                       />
                       {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        <MapPin className="inline h-4 w-4 mr-1" />
+                        Departamento *
+                      </label>
+                      <select
+                        {...register('department')}
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 ${
+                          errors.department ? 'border-red-500' : 'border-slate-300'
+                        }`}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Montevideo">Montevideo</option>
+                        <option value="Canelones">Canelones</option>
+                        <option value="Maldonado">Maldonado</option>
+                        <option value="Colonia">Colonia</option>
+                        <option value="San José">San José</option>
+                        <option value="Florida">Florida</option>
+                        <option value="Lavalleja">Lavalleja</option>
+                        <option value="Rocha">Rocha</option>
+                        <option value="Treinta y Tres">Treinta y Tres</option>
+                        <option value="Cerro Largo">Cerro Largo</option>
+                        <option value="Rivera">Rivera</option>
+                        <option value="Tacuarembó">Tacuarembó</option>
+                        <option value="Durazno">Durazno</option>
+                        <option value="Flores">Flores</option>
+                        <option value="Soriano">Soriano</option>
+                        <option value="Río Negro">Río Negro</option>
+                        <option value="Paysandú">Paysandú</option>
+                        <option value="Salto">Salto</option>
+                        <option value="Artigas">Artigas</option>
+                      </select>
+                      {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department.message}</p>}
                     </div>
                   </div>
                 </div>
@@ -515,15 +569,13 @@ export default function CheckoutPage() {
                     )}
 
                     {/* Freight delivery option — visible after WhatsApp confirmation */}
-                    {cartShippingType !== 'pickup_only' && freightConfirmed && (
+                    {cartShippingType === 'freight' && freightConfirmed && (
                       <button
                         type="button"
                         onClick={() => setValue('shippingMethod', 'delivery')}
                         className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          shippingMethod === 'delivery' && !shippingOptions.canDeliver
+                          shippingMethod === 'delivery'
                             ? 'border-blue-600 bg-blue-50'
-                            : shippingMethod === 'delivery' && shippingOptions.canDeliver
-                            ? 'border-slate-200 hover:border-slate-300'
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
@@ -538,8 +590,8 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  {/* Freight consultation card — always shown (except pickup_only) */}
-                  {cartShippingType !== 'pickup_only' && (
+                  {/* Freight consultation card — only for freight items */}
+                  {cartShippingType === 'freight' && (
                     <div className={`mt-4 p-4 border rounded-xl ${
                       freightConfirmed
                         ? 'bg-green-50 border-green-200'
@@ -585,7 +637,7 @@ export default function CheckoutPage() {
                               checked={freightConfirmed}
                               onChange={(e) => {
                                 setFreightConfirmed(e.target.checked);
-                                if (!e.target.checked && shippingMethod === 'delivery' && !shippingOptions.canDeliver) {
+                                if (!e.target.checked && shippingMethod === 'delivery' && cartShippingType === 'freight') {
                                   setValue('shippingMethod', 'pickup');
                                 }
                               }}
@@ -682,42 +734,6 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
-
-                  {/* Department — always required for data gathering */}
-                  <div className={`${shippingMethod === 'delivery' ? 'mt-4' : 'mt-6 pt-6 border-t border-slate-200'}`}>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      <MapPin className="inline h-4 w-4 mr-1" />
-                      Departamento *
-                    </label>
-                    <select
-                      {...register('department')}
-                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 ${
-                        errors.department ? 'border-red-500' : 'border-slate-300'
-                      }`}
-                    >
-                      <option value="">Seleccionar...</option>
-                      <option value="Montevideo">Montevideo</option>
-                      <option value="Canelones">Canelones</option>
-                      <option value="Maldonado">Maldonado</option>
-                      <option value="Colonia">Colonia</option>
-                      <option value="San José">San José</option>
-                      <option value="Florida">Florida</option>
-                      <option value="Lavalleja">Lavalleja</option>
-                      <option value="Rocha">Rocha</option>
-                      <option value="Treinta y Tres">Treinta y Tres</option>
-                      <option value="Cerro Largo">Cerro Largo</option>
-                      <option value="Rivera">Rivera</option>
-                      <option value="Tacuarembó">Tacuarembó</option>
-                      <option value="Durazno">Durazno</option>
-                      <option value="Flores">Flores</option>
-                      <option value="Soriano">Soriano</option>
-                      <option value="Río Negro">Río Negro</option>
-                      <option value="Paysandú">Paysandú</option>
-                      <option value="Salto">Salto</option>
-                      <option value="Artigas">Artigas</option>
-                    </select>
-                    {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department.message}</p>}
-                  </div>
                 </div>
 
                 {/* Notes */}
