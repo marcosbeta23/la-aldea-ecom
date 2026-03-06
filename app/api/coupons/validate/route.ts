@@ -3,19 +3,30 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { DiscountCoupon } from '@/types/database';
 import { ValidateCouponSchema } from '@/lib/validators';
 import { couponsLimiter } from '@/lib/rate-limit';
+import { couponsRatelimit, getClientIp } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
   // ⚡ RATE LIMITING - Max 10 validations per minute per IP
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'anonymous';
-  
-  try {
-    await couponsLimiter.check(10, ip);
-  } catch {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again in a minute.' },
-      { status: 429 }
-    );
+  const ip = getClientIp(request);
+
+  // Prefer Upstash distributed rate limiter; fall back to in-memory LRU
+  if (couponsRatelimit) {
+    const { success } = await couponsRatelimit.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
+  } else {
+    try {
+      await couponsLimiter.check(10, ip);
+    } catch {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
   }
   
   try {

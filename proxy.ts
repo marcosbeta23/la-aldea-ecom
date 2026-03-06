@@ -7,6 +7,41 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)', '/api/admin(.*)']);
 // Admin login is public (Clerk renders its SignIn component there)
 const isAdminLogin = createRouteMatcher(['/admin/login']);
 
+// External script origins shared between dev and prod CSP
+const SCRIPT_ORIGINS = [
+  'https://www.googletagmanager.com',
+  'https://www.google-analytics.com',
+  'https://sdk.mercadopago.com',
+  'https://browser.sentry-cdn.com',
+  'https://*.sentry.io',
+  'https://*.clerk.accounts.dev',
+  'https://*.clerk.com',
+  'https://us.i.posthog.com',
+].join(' ');
+
+function buildCsp(nonce: string): string {
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  const scriptSrc = isDev
+    ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${SCRIPT_ORIGINS}`
+    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${SCRIPT_ORIGINS}`;
+
+  return [
+    "default-src 'self'",
+    scriptSrc,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://api.mercadopago.com https://*.supabase.co https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.sentry.io https://browser.sentry-cdn.com https://www.google-analytics.com https://www.googletagmanager.com https://*.clerk.accounts.dev https://*.clerk.com https://api.clerk.com https://us.i.posthog.com",
+    "worker-src 'self' blob:",
+    "frame-src 'self' https://www.google.com https://maps.google.com https://www.mercadopago.com https://*.clerk.accounts.dev https://*.clerk.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+  ].join('; ');
+}
+
 export default clerkMiddleware(async (auth, request) => {
   // 1. CSRF Protection for API routes
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
@@ -18,15 +53,15 @@ export default clerkMiddleware(async (auth, request) => {
     if (!isWebhook && !isSentryTunnel && !isCron && !isInngest) {
       const origin = request.headers.get('origin');
       const host = request.headers.get('host');
-      
+
       if (origin && !origin.includes(host!)) {
-        console.error('CSRF attempt detected:', { 
-          origin, 
+        console.error('CSRF attempt detected:', {
+          origin,
           host,
           path: request.nextUrl.pathname,
           method: request.method
         });
-        
+
         return NextResponse.json(
           { error: 'Forbidden - Invalid origin' },
           { status: 403 }
@@ -40,8 +75,16 @@ export default clerkMiddleware(async (auth, request) => {
     await auth.protect();
   }
 
-  // 3. Security headers are defined in next.config.ts — no need to duplicate here.
-  const response = NextResponse.next();
+  // 3. Generate a per-request nonce and set CSP header
+  // Edge Runtime: use Web Crypto API (no Buffer/Node.js APIs available)
+  const nonce = btoa(crypto.randomUUID());
+
+  // Forward nonce to Server Components via request header
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set('Content-Security-Policy', buildCsp(nonce));
 
   return response;
 });

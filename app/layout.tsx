@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import "./globals.css";
@@ -142,7 +143,7 @@ export const metadata: Metadata = {
     description: "Todo lo que necesitas para tu campo, hogar y piscina en un solo lugar.",
     images: [
       {
-        url: "/assets/images/og-image.webp",
+        url: `${siteUrl}/assets/images/og-image.webp`,
         width: 1200,
         height: 630,
         alt: "La Aldea - Tala, Uruguay",
@@ -155,7 +156,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "La Aldea - Insumos agrícolas y más en Tala",
     description: "Todo lo que necesitas para tu campo, hogar y piscina en un solo lugar.",
-    images: ["/assets/images/og-image.webp"],
+    images: [`${siteUrl}/assets/images/og-image.webp`],
   },
 
   // Verification codes
@@ -202,11 +203,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <ClerkProvider localization={esES}>
       <html lang="es">
@@ -225,6 +227,7 @@ export default function RootLayout({
           {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
           <script
             type="application/ld+json"
+            nonce={nonce}
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 "@context": "https://schema.org",
@@ -247,7 +250,7 @@ export default function RootLayout({
             <Footer />
             <CartDrawer />
           </PostHogProvider>
-          <Analytics />
+          <Analytics nonce={nonce} />
           <VercelAnalytics />
           <SpeedInsights />
           <CookieConsent />

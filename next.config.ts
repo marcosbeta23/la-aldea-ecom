@@ -72,24 +72,8 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          // Enhanced Content Security Policy
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://browser.sentry-cdn.com https://*.sentry.io https://*.clerk.accounts.dev https://*.clerk.com https://us.i.posthog.com",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https: blob:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://api.mercadopago.com https://*.supabase.co https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.sentry.io https://browser.sentry-cdn.com https://www.google-analytics.com https://www.googletagmanager.com https://*.clerk.accounts.dev https://*.clerk.com https://api.clerk.com https://us.i.posthog.com",
-              "worker-src 'self' blob:",
-              "frame-src 'self' https://www.google.com https://maps.google.com https://www.mercadopago.com https://*.clerk.accounts.dev https://*.clerk.com",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'self'",
-            ].join('; '),
-          },
+          // Content-Security-Policy is set per-request in proxy.ts (middleware)
+          // to support nonces in production. Do not add a static CSP here.
         ],
       },
     ];

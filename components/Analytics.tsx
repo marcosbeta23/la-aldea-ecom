@@ -4,7 +4,7 @@ import Script from "next/script";
 
 const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID || "G-K06VE6W4MY";
 
-export function Analytics() {
+export function Analytics({ nonce }: { nonce?: string }) {
   if (process.env.NODE_ENV !== "production") {
     return null;
   }
@@ -15,8 +15,9 @@ export function Analytics() {
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
         strategy="afterInteractive"
+        nonce={nonce}
       />
-      <Script id="google-analytics" strategy="afterInteractive">
+      <Script id="google-analytics" strategy="afterInteractive" nonce={nonce}>
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}

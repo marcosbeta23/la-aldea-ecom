@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { QuoteRequestSchema } from '@/lib/validators';
 import { supabaseAdmin } from '@/lib/supabase';
 import rateLimit from '@/lib/rate-limit';
+import { quoteRatelimit, getClientIp } from '@/lib/redis';
 
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
@@ -10,15 +11,27 @@ const limiter = rateLimit({
 });
 
 export async function POST(request: NextRequest) {
-  // Rate limiting
-  const ip = request.headers.get('x-forwarded-for') || 'anonymous';
-  try {
-    await limiter.check(3, ip); // 3 requests per minute
-  } catch {
-    return NextResponse.json(
-      { error: 'Demasiadas solicitudes. Esperá un momento.' },
-      { status: 429 }
-    );
+  // Rate limiting - 3 requests per minute per IP
+  const ip = getClientIp(request);
+
+  // Prefer Upstash distributed rate limiter; fall back to in-memory LRU
+  if (quoteRatelimit) {
+    const { success } = await quoteRatelimit.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Demasiadas solicitudes. Esperá un momento.' },
+        { status: 429 }
+      );
+    }
+  } else {
+    try {
+      await limiter.check(3, ip); // 3 requests per minute
+    } catch {
+      return NextResponse.json(
+        { error: 'Demasiadas solicitudes. Esperá un momento.' },
+        { status: 429 }
+      );
+    }
   }
 
   try {

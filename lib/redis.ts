@@ -89,6 +89,18 @@ export const contactRatelimit = createRatelimit({
   prefix: 'rl:contact',
 });
 
+export const couponsRatelimit = createRatelimit({
+  requests: 10,
+  window: '60 s',
+  prefix: 'rl:coupons',
+});
+
+export const quoteRatelimit = createRatelimit({
+  requests: 3,
+  window: '60 s',
+  prefix: 'rl:quote',
+});
+
 // ── Helper to get client IP ────────────────────────────────────────────
 
 export function getClientIp(request: Request): string {

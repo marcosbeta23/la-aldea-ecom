@@ -179,7 +179,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     offers: {
       '@type': 'Offer',
       price: product.price_numeric,
-      priceCurrency: 'UYU',
+      priceCurrency: product.currency || 'UYU',
       availability:
         product.stock > 0
           ? 'https://schema.org/InStock'
