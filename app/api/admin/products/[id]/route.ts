@@ -73,7 +73,7 @@ export async function PUT(
       requires_quote = false,
       // Featured & Discount fields
       is_featured = false,
-      original_price_numeric = null,d
+      original_price_numeric = null,
       discount_percentage = null,
       // Slug
       slug = null,
