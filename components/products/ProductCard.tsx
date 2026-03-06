@@ -51,7 +51,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   return (
     <Link 
-      href={`/productos/${product.sku}`}
+      href={`/productos/${product.slug ?? product.sku}`}
       className="group relative flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/50 hover:-translate-y-0.5"
     >
       {/* Image Container */}

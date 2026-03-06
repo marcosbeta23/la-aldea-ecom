@@ -54,16 +54,16 @@ export async function PUT(
   try {
     const body = await request.json();
     
-    const { 
-      sku, 
-      name, 
-      description, 
-      category, 
-      brand, 
-      price_numeric, 
-      currency = 'UYU', 
-      stock, 
-      images = [], 
+    const {
+      sku,
+      name,
+      description,
+      category,
+      brand,
+      price_numeric,
+      currency = 'UYU',
+      stock,
+      images = [],
       is_active = true,
       // Availability
       availability_type = 'regular',
@@ -73,8 +73,10 @@ export async function PUT(
       requires_quote = false,
       // Featured & Discount fields
       is_featured = false,
-      original_price_numeric = null,
+      original_price_numeric = null,d
       discount_percentage = null,
+      // Slug
+      slug = null,
     } = body;
 
     // Validate required fields
@@ -122,6 +124,7 @@ export async function PUT(
         original_price: original_price_numeric ? `$${original_price_numeric.toLocaleString()}` : null,
         original_price_numeric,
         discount_percentage,
+        slug: slug || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -142,7 +145,7 @@ export async function PUT(
     }
 
     // Bust ISR cache for this product's detail page, listings, and homepage
-    revalidatePath(`/productos/${product.sku}`);
+    revalidatePath(`/productos/${product.slug}`);
     revalidatePath('/productos');
     revalidatePath('/');
 
@@ -198,12 +201,12 @@ export async function DELETE(
       });
     }
 
-    // Get SKU before deletion for cache busting
+    // Get slug/SKU before deletion for cache busting
     const { data: productData } = await supabaseAdmin
       .from('products')
-      .select('sku')
+      .select('sku, slug')
       .eq('id', id)
-      .single() as { data: { sku: string } | null };
+      .single() as { data: { sku: string; slug: string | null } | null };
 
     // Delete product
     const { error } = await (supabaseAdmin as any)
@@ -214,8 +217,8 @@ export async function DELETE(
     if (error) throw error;
 
     // Bust ISR cache
-    if (productData?.sku) {
-      revalidatePath(`/productos/${productData.sku}`);
+    if (productData) {
+      revalidatePath(`/productos/${productData.slug ?? productData.sku}`);
     }
     revalidatePath('/productos');
 

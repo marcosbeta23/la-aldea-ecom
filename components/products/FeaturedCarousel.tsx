@@ -283,7 +283,7 @@ export default function FeaturedCarousel({
               style={{ width: `${cardWidthPercent}%` }}
             >
               <Link
-                href={`/productos/${product.sku}`}
+                href={`/productos/${product.slug ?? product.sku}`}
                 className="group block overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg"
                 draggable={false}
               >

@@ -146,7 +146,7 @@ export default function WishlistPage() {
                   className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
                 >
                   {/* Image */}
-                  <Link href={`/productos/${product.sku}`} className="block relative aspect-square bg-slate-100">
+                  <Link href={`/productos/${product.slug ?? product.sku}`} className="block relative aspect-square bg-slate-100">
                     {product.images && product.images.length > 0 ? (
                       <Image
                         src={product.images[0]}
@@ -164,7 +164,7 @@ export default function WishlistPage() {
                   {/* Content */}
                   <div className="p-3 sm:p-4">
                     <Link
-                      href={`/productos/${product.sku}`}
+                      href={`/productos/${product.slug ?? product.sku}`}
                       className="font-semibold text-xs sm:text-sm text-slate-900 hover:text-blue-600 transition-colors line-clamp-2"
                     >
                       {product.name}

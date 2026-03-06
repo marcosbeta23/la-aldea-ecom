@@ -9,6 +9,7 @@ interface Suggestion {
   type: 'product' | 'category' | 'brand';
   id?: string;
   sku?: string;
+  slug?: string;
   name: string;
   image?: string;
   price?: number;
@@ -122,7 +123,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
     setShowSuggestions(false);
     
     if (suggestion.type === 'product' && suggestion.sku) {
-      router.push(`/productos/${suggestion.sku}`);
+      router.push(`/productos/${suggestion.slug ?? suggestion.sku}`);
     } else if (suggestion.type === 'category') {
       router.push(`/productos?categoria=${encodeURIComponent(suggestion.name)}`);
     } else if (suggestion.type === 'brand') {

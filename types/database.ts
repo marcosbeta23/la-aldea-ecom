@@ -9,6 +9,7 @@ export type ProductAvailabilityType = 'regular' | 'on_request';
 export interface Product {
   id: string;
   sku: string;
+  slug: string | null;
   name: string;
   description: string | null;
   category: string[]; // Array of categories (multi-tag system)

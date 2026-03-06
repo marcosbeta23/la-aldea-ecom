@@ -33,7 +33,7 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
           {products.map((product) => (
             <Link
               key={product.id}
-              href={`/productos/${product.sku}`}
+              href={`/productos/${product.slug ?? product.sku}`}
               className="group"
             >
               <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-100 mb-3">

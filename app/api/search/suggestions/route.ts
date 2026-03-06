@@ -32,13 +32,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Try full-text search first, fall back to ILIKE
-    type ProductResult = { id: string; sku: string; name: string; category: string[]; brand: string | null; price_numeric: number; currency: string; images: string[] | null };
+    type ProductResult = { id: string; slug: string; sku: string; name: string; category: string[]; brand: string | null; price_numeric: number; currency: string; images: string[] | null };
     let products: ProductResult[] | null = null;
 
     // Attempt tsvector search
     const { data: ftsProducts, error: ftsError } = await supabaseAdmin
       .from('products')
-      .select('id, sku, name, category, brand, price_numeric, currency, images')
+      .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
       .eq('is_active', true)
       .textSearch('search_vector', query, { type: 'websearch', config: 'spanish' })
       .limit(8) as { data: ProductResult[] | null; error: any };
@@ -49,9 +49,9 @@ export async function GET(request: NextRequest) {
       // Fallback: try fuzzy matching with similarity
       const { data: fuzzyProducts } = await supabaseAdmin
         .from('products')
-        .select('id, sku, name, category, brand, price_numeric, currency, images')
+        .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
         .eq('is_active', true)
-        .or(`name.ilike.%${query}%,brand.ilike.%${query}%,sku.ilike.%${query}%`)
+        .or(`name.ilike.%${query}%,brand.ilike.%${query}%,sku.ilike.%${query}%,slug.ilike.%${query}%`)
         .limit(8) as { data: ProductResult[] | null };
 
       products = fuzzyProducts;
@@ -95,6 +95,7 @@ export async function GET(request: NextRequest) {
       type: 'product' | 'category' | 'brand';
       id?: string;
       sku?: string;
+      slug?: string;
       name: string;
       image?: string;
       price?: number;
@@ -124,6 +125,7 @@ export async function GET(request: NextRequest) {
         type: 'product',
         id: product.id,
         sku: product.sku,
+        slug: product.slug,
         name: product.name,
         image: product.images?.[0] || undefined,
         price: product.price_numeric,

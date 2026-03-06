@@ -59,6 +59,7 @@ const normalizeCategory = (cat: string): string => {
 interface Product {
   id: string;
   sku: string;
+  slug: string | null;
   name: string;
   description: string | null;
   category: string[];
@@ -1103,7 +1104,7 @@ export default function ProductsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <Link
-                          href={`/productos/${product.sku}`}
+                          href={`/productos/${product.slug ?? product.sku}`}
                           target="_blank"
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                           title="Ver en tienda"

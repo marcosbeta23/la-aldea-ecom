@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const { data } = await supabaseAdmin
     .from('products')
     .select('*')
-    .eq('sku', slug)
+    .eq('slug', slug)
     .single();
 
   const product = data as Product | null;
@@ -104,13 +104,14 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export async function generateStaticParams() {
   const { data: products } = await supabaseAdmin
     .from('products')
-    .select('sku')
+    .select('slug')
     .eq('is_active', true)
+    .not('slug', 'is', null)
     .limit(50);
 
   return (
-    (products as Pick<Product, 'sku'>[] | null)?.map((product) => ({
-      slug: product.sku,
+    (products as { slug: string }[] | null)?.map((product) => ({
+      slug: product.slug,
     })) || []
   );
 }
@@ -125,7 +126,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { data, error } = await supabaseAdmin
     .from('products')
     .select('*')
-    .eq('sku', slug)
+    .eq('slug', slug)
     .single();
 
   const product = data as Product | null;

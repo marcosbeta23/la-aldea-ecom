@@ -32,6 +32,19 @@ interface Product {
   is_featured: boolean;
   original_price_numeric: number | null;
   discount_percentage: number | null;
+  slug: string | null;
+}
+
+function generateSlug(name: string, sku: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove accents
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+  return `${base}-${sku.slice(0, 6).toLowerCase()}`;
 }
 
 const KNOWN_CATEGORIES = CATEGORY_HIERARCHY.map(c => c.value);
@@ -72,6 +85,7 @@ export default function ProductForm({ product }: { product?: any }) {
     is_featured: product?.is_featured ?? false,
     original_price_numeric: product?.original_price_numeric || null,
     discount_percentage: product?.discount_percentage || null,
+    slug: product?.slug || null,
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -168,6 +182,15 @@ export default function ProductForm({ product }: { product?: any }) {
     }
   };
   
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      name,
+      // Auto-generate slug only for new products (no existing slug in DB)
+      slug: !product?.slug ? generateSlug(name, prev.sku) : prev.slug,
+    }));
+  };
+
   const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData(prev => ({
@@ -324,13 +347,30 @@ export default function ProductForm({ product }: { product?: any }) {
                   type="text"
                   name="name"
                   value={formData.name}
-                  onChange={handleChange}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                   placeholder="Bomba Centrífuga 1HP"
                 />
               </div>
               
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Slug URL
+                </label>
+                <input
+                  type="text"
+                  name="slug"
+                  value={formData.slug || ''}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder="slug-del-producto-sku001"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Generado automáticamente al escribir el nombre. Editá solo si querés personalizar la URL.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Descripción

@@ -84,16 +84,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const { 
-      sku, 
-      name, 
-      description, 
-      category, 
-      brand, 
-      price_numeric, 
-      currency = 'UYU', 
-      stock, 
-      images = [], 
+    const {
+      sku,
+      name,
+      description,
+      category,
+      brand,
+      price_numeric,
+      currency = 'UYU',
+      stock,
+      images = [],
       is_active = true,
       // Availability
       availability_type = 'regular',
@@ -105,6 +105,8 @@ export async function POST(request: NextRequest) {
       is_featured = false,
       original_price_numeric = null,
       discount_percentage = null,
+      // Slug
+      slug = null,
     } = body;
 
     // Validate required fields
@@ -152,6 +154,7 @@ export async function POST(request: NextRequest) {
         original_price: original_price_numeric ? `$${original_price_numeric.toLocaleString()}` : null,
         original_price_numeric,
         discount_percentage,
+        slug: slug || null,
       })
       .select()
       .single();
