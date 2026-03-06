@@ -946,9 +946,9 @@ export default function CheckoutPage() {
                           <p className="font-medium text-amber-800 mb-2">Datos para transferencia:</p>
                           <div className="space-y-1 text-amber-700">
                             <p><span className="font-medium">Banco:</span> BROU</p>
-                            <p><span className="font-medium">Cuenta:</span> 001234567-00001</p>
-                            <p><span className="font-medium">Titular:</span> La Aldea</p>
-                            <p><span className="font-medium">RUT:</span> 21 123456 0001 19</p>
+                            <p><span className="font-medium">Cuenta Pesos:</span> 001532748-00001</p>
+                            <p><span className="font-medium">Cuenta Dolares:</span> 001532748-00002</p>
+                            <p><span className="font-medium">Titular:</span> Martin Betancor</p>
                           </div>
                           <p className="mt-3 text-amber-800">
                             Aceptamos transferencias en <span className="font-semibold">UYU o USD</span>. Al pagar por transferencia no hay comisiones ni conversión de moneda.
