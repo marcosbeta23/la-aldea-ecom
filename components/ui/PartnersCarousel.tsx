@@ -1,9 +1,8 @@
-
 'use client';
 import Image from "next/image";
 import { useRef, useEffect, useState } from "react";
 
-interface Partner {
+export interface Partner {
   name: string;
   logo: string;
 }
