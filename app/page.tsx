@@ -28,14 +28,7 @@ import {
   Award,
   Settings
 } from "lucide-react";
-import dynamic from "next/dynamic";
-const DynamicPartnersCarousel = dynamic(
-  () => import("@/components/ui/PartnersCarousel"),
-  {
-    ssr: false,
-    loading: () => <div className="h-24 animate-pulse bg-slate-100 rounded-xl" />,
-  }
-);
+import PartnersCarouselClient from "@/components/ui/PartnersCarouselClient";
 
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
@@ -504,7 +497,7 @@ export default async function Home() {
           </div>
           <div className="relative">
             {/* Seamless partners carousel */}
-            <DynamicPartnersCarousel partners={activePartners} speed={60} />
+            <PartnersCarouselClient partners={activePartners} speed={60} />
           </div>
         </section>
 

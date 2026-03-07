@@ -154,12 +154,14 @@ async function generateProductsReport() {
   const { data: orderItems } = await (supabaseAdmin as any)
     .from('order_items')
     .select('product_id, quantity, subtotal');
-
-  const salesByProduct = ((orderItems || []) as any[]).reduce((acc: Record<string, { quantity: number; revenue: number }>, item: any) => {
-    if (!acc[item.product_id]) {
-      acc[item.product_id] = { quantity: 0, revenue: 0 };
-    }
-    acc[item.product_id].quantity += item.quantity;
+      const type = searchParams.get('type') || 'sales';
+      const period = searchParams.get('period') || 'month';
+      const format = searchParams.get('format') || 'json';
+      const startDate = searchParams.get('start');
+      const endDate = searchParams.get('end');
+      const source = searchParams.get('source') || '';
+      const PAGE_SIZE = 50;
+      const page = parseInt(searchParams.get('page') ?? '1');
     acc[item.product_id].revenue += item.subtotal || 0;
     return acc;
   }, {});
@@ -167,7 +169,7 @@ async function generateProductsReport() {
   return {
     products: ((products || []) as any[]).map((product: any) => ({
       ...product,
-      totalSales: salesByProduct[product.id]?.quantity || 0,
+            data = await generateSalesReport(period, startDate, endDate, source, page, PAGE_SIZE);
       totalRevenue: salesByProduct[product.id]?.revenue || 0,
       stockValue: (product.price_numeric || 0) * (product.stock || 0),
     })),
