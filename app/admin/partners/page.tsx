@@ -32,6 +32,7 @@ const emptyForm: PartnerForm = {
   is_active: true,
 };
 
+
 export default function PartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);

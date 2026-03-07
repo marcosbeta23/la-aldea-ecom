@@ -1,21 +1,17 @@
 // app/api/admin/reviews/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
-async function checkAdminAuth(): Promise<boolean> {
-  const { userId } = await auth();
-  return !!userId;
-}
 
 // PATCH - Approve/reject review
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await checkAdminAuth())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   const { id } = await params;
 
@@ -58,9 +54,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await checkAdminAuth())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   const { id } = await params;
 

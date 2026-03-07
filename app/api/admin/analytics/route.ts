@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getExchangeRate } from '@/lib/exchange-rate';
 
-// Check admin auth via Clerk
-async function checkAdminAuth(): Promise<boolean> {
-  const { userId } = await auth();
-  return !!userId;
-}
 
 interface DailySales {
   date: string;
@@ -33,9 +28,9 @@ interface HourlyStat {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await checkAdminAuth())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   try {
     const { searchParams } = new URL(request.url);

@@ -22,6 +22,7 @@ interface PreviewData {
   customers?: any[];
 }
 
+
 export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);

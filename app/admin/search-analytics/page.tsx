@@ -17,6 +17,7 @@ interface SearchAnalyticsData {
   period: string;
 }
 
+
 export default function SearchAnalyticsPage() {
   const [data, setData] = useState<SearchAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);

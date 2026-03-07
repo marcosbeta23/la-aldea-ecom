@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
-async function verifyAdmin() {
-  const { userId } = await auth();
-  return !!userId;
-}
 
 // GET all partners (no auth — needed for homepage)
 export async function GET() {
@@ -24,9 +20,9 @@ export async function GET() {
 
 // POST create new partner (admin only)
 export async function POST(request: NextRequest) {
-  if (!(await verifyAdmin())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   try {
     const body = await request.json();

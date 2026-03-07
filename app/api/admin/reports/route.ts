@@ -1,18 +1,14 @@
 // app/api/admin/reports/route.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
-async function checkAdminAuth(): Promise<boolean> {
-  const { userId } = await auth();
-  return !!userId;
-}
 
 export async function GET(request: NextRequest) {
-  if (!(await checkAdminAuth())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'sales';

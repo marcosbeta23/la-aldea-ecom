@@ -73,6 +73,37 @@ export default clerkMiddleware(async (auth, request) => {
   // 2. Protect admin routes with Clerk (except login page)
   if (isAdminRoute(request) && !isAdminLogin(request)) {
     await auth.protect();
+
+    // 3. Role-based route protection for owner-only admin pages
+    const ownerOnlyRoutes = createRouteMatcher([
+      '/admin/analytics(.*)',
+      '/admin/search-analytics(.*)',
+      '/admin/reviews(.*)',
+      '/admin/partners(.*)',
+      '/admin/guides(.*)',
+      '/admin/reports(.*)',
+      '/api/admin/analytics(.*)',
+      '/api/admin/search-analytics(.*)',
+      '/api/admin/reviews(.*)',
+      '/api/admin/partners(.*)',
+      '/api/admin/guides(.*)',
+      '/api/admin/reports(.*)',
+    ]);
+
+    if (ownerOnlyRoutes(request)) {
+      const { sessionClaims } = await auth();
+      const role = (sessionClaims?.metadata as { role?: string })?.role;
+      if (role !== 'owner') {
+        // For API routes return 403, for page routes redirect to dashboard
+        if (request.nextUrl.pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            { error: 'Acceso restringido al propietario' },
+            { status: 403 }
+          );
+        }
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+    }
   }
 
   // 3. Generate a per-request nonce and set CSP header

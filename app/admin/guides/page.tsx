@@ -29,6 +29,7 @@ interface Guide {
   sections: Array<{ title: string; content: string; type: string }>;
 }
 
+
 export default function AdminGuidesPage() {
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);

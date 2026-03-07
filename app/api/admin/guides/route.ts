@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
-async function verifyAdmin() {
-  const { userId } = await auth();
-  return !!userId;
-}
 
 // GET all guides (admin sees all, public would see published only)
 export async function GET(request: NextRequest) {
-  if (!(await verifyAdmin())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   const { searchParams } = new URL(request.url);
   const publishedOnly = searchParams.get('published') === 'true';
@@ -37,9 +33,9 @@ export async function GET(request: NextRequest) {
 
 // POST create new guide
 export async function POST(request: NextRequest) {
-  if (!(await verifyAdmin())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   try {
     const body = await request.json();
