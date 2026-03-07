@@ -16,8 +16,8 @@ export async function getAdminRole(): Promise<AdminRole | null> {
   if (role === 'owner' || role === 'staff') return role;
   
   const user = await currentUser();
-  const role = user?.publicMetadata?.role as AdminRole | undefined;
-  if (role === 'owner' || role === 'staff') return role;
+  const metaRole = user?.publicMetadata?.role as AdminRole | undefined;
+  if (metaRole === 'owner' || metaRole === 'staff') return metaRole;
   
   return null;
 }
