@@ -12,7 +12,8 @@ import Link from 'next/link';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
-export const revalidate = 300;
+export const dynamic = 'force-static';
+export const dynamicParams = true;
 
 interface FaqArticlePageProps {
   params: Promise<{ slug: string }>;
