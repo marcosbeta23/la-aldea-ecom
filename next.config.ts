@@ -54,6 +54,11 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
+          // COOP - protect against cross-site leaks
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          }
           // HSTS - Force HTTPS for 2 years
           {
             key: 'Strict-Transport-Security',

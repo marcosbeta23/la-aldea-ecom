@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { Upload, X, Loader2, ImagePlus, GripVertical } from 'lucide-react';
+import Image from "next/image"
 
 interface ImageUploadProps {
   images: string[];
@@ -209,11 +210,13 @@ export default function ImageUpload({ images, onChange, maxImages = 10 }: ImageU
                 ${draggedIndex === index ? 'opacity-40' : ''}
               `}
             >
-              <img
+              <Image
                 src={url}
                 alt={`Producto ${index + 1}`}
-                className="w-full aspect-square object-cover"
-                loading="lazy"
+                fill
+                className="object-cover"
+                unoptimized
+                sizes="150px"
               />
 
               {/* Drag handle */}
