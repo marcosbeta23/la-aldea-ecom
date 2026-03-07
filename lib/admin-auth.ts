@@ -1,5 +1,5 @@
 // lib/admin-auth.ts
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
 export type AdminRole = 'owner' | 'staff';
@@ -11,8 +11,14 @@ export type AdminRole = 'owner' | 'staff';
 export async function getAdminRole(): Promise<AdminRole | null> {
   const { userId, sessionClaims } = await auth();
   if (!userId) return null;
+
   const role = (sessionClaims?.metadata as { role?: string })?.role;
   if (role === 'owner' || role === 'staff') return role;
+  
+  const user = await currentUser();
+  const role = user?.publicMetadata?.role as AdminRole | undefined;
+  if (role === 'owner' || role === 'staff') return role;
+  
   return null;
 }
 
