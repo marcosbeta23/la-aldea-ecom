@@ -102,7 +102,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Quick Add to Cart - appears on hover (not for on_request) */}
         {!isOnRequest && (
-        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-0 left-0 right-0 p-2 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
           {error && (
             <div className="mb-2 flex items-center gap-1 text-xs bg-red-500 text-white px-2 py-1 rounded-lg">
               <AlertCircle className="h-3 w-3" />
@@ -144,24 +144,28 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex flex-col flex-1 p-3">
-        {/* Category & Brand */}
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          {(Array.isArray(product.category) ? product.category : [product.category].filter(Boolean)).map((cat: string) => (
-            <span key={cat} className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-              {cat}
-            </span>
-          ))}
+
+      {/* Content (fixed min/max height for consistency) */}
+      <div className="flex flex-col flex-1 p-3 min-h-35 max-h-40">
+        {/* Category & Brand (show only first category) */}
+        <div className="flex items-center gap-2 mb-2 flex-nowrap min-h-6">
+          {(() => {
+            const cats = Array.isArray(product.category) ? product.category : [product.category].filter(Boolean);
+            return cats.length > 0 ? (
+              <span key={cats[0]} className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full max-w-22.5 truncate">
+                {cats[0]}
+              </span>
+            ) : null;
+          })()}
           {product.brand && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 max-w-17.5 truncate">
               {product.brand}
             </span>
           )}
         </div>
 
-        {/* Name */}
-        <h3 className="text-sm font-semibold text-slate-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">
+        {/* Name (clamp to 1 line) */}
+        <h3 className="text-sm font-semibold text-slate-900 mb-1 truncate group-hover:text-blue-600 transition-colors max-w-full">
           {product.name}
         </h3>
 
