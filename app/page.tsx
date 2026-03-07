@@ -499,6 +499,7 @@ export default async function Home() {
             <PartnersCarousel partners={activePartners} speed={60} />
           </div>
         </section>
+
 import dynamic from "next/dynamic";
 const PartnersCarousel = dynamic(() => import("@/components/ui/PartnersCarousel"), { ssr: false });
 
