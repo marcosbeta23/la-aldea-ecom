@@ -28,7 +28,14 @@ import {
   Award,
   Settings
 } from "lucide-react";
-import PartnersCarousel from "@/components/ui/PartnersCarousel";
+import dynamic from "next/dynamic";
+const DynamicPartnersCarousel = dynamic(
+  () => import("@/components/ui/PartnersCarousel"),
+  {
+    ssr: false,
+    loading: () => <div className="h-24 animate-pulse bg-slate-100 rounded-xl" />,
+  }
+);
 
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
@@ -392,7 +399,7 @@ export default async function Home() {
               alt="La Aldea - Local en Tala"
               fill
               className="object-cover object-[center_40%]"
-              priority
+              priority={true}
               sizes="100vw"
               quality={90}
             />
@@ -497,7 +504,7 @@ export default async function Home() {
           </div>
           <div className="relative">
             {/* Seamless partners carousel */}
-            <PartnersCarousel partners={activePartners} speed={60} />
+            <DynamicPartnersCarousel partners={activePartners} speed={60} />
           </div>
         </section>
 

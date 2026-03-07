@@ -7,6 +7,7 @@ import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Script from "next/script";
 import CookieConsent from "@/components/common/CookieConsent";
 import CartDrawer from "@/components/cart/CartDrawer";
 import FloatingWhatsApp from "@/components/common/FloatingWhatsApp";
@@ -222,6 +223,27 @@ export default async function RootLayout({
           <link rel="dns-prefetch" href="https://supabase.co" />
           <link rel="dns-prefetch" href="https://api.mercadopago.com" />
           <link rel="dns-prefetch" href="https://us.i.posthog.com" />
+
+          {/* Defer Google Analytics (GA4) */}
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-K06VE6W4MY"
+            strategy="lazyOnload"
+          />
+          <Script id="ga4-init" strategy="lazyOnload">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-K06VE6W4MY');
+            `}
+          </Script>
+
+          {/* Defer PostHog (if loaded via script) */}
+          <Script
+            id="posthog-init"
+            src="https://us.i.posthog.com/static/array.js"
+            strategy="lazyOnload"
+          />
         </head>
         <body className={`${inter.variable} font-sans antialiased`}>
           {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
