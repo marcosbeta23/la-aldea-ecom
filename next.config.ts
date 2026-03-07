@@ -2,6 +2,13 @@ import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      '@clerk/nextjs',
+    ],
+  },
   async redirects() {
     const guideSlugs = [
       'beneficios-riego', 'diseno-riego', 'tipos-bombas', 'seleccion-bombas',

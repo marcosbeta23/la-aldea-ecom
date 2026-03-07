@@ -242,13 +242,14 @@ export default function PartnersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="h-10 w-20 relative bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center">
+                    <div className="h-15 w-30 relative bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center">
                       <Image
                         src={partner.logo_url}
                         alt={partner.name}
-                        width={80}
-                        height={40}
-                        className="object-contain h-8 w-auto"
+                        width={120}
+                        height={60}
+                        className="object-contain grayscale hover:grayscale-0 transition"
+                        style={{ width: 120, height: 60 }}
                       />
                     </div>
                   </td>
