@@ -1,14 +1,10 @@
 // app/api/admin/reports/route.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
 
 export async function GET(request: NextRequest) {
-
-  const authResult = await verifyOwnerAuth();
-  if (!authResult.authorized) return authResult.response;
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'sales';
