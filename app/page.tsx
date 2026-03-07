@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -27,6 +28,7 @@ import {
   Award,
   Settings
 } from "lucide-react";
+import PartnersCarousel from "@/components/ui/PartnersCarousel";
 
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
@@ -495,13 +497,10 @@ export default async function Home() {
           </div>
           <div className="relative">
             {/* Seamless partners carousel */}
-            {/* @ts-expect-error Server Component import */}
             <PartnersCarousel partners={activePartners} speed={60} />
           </div>
         </section>
 
-import dynamic from "next/dynamic";
-const PartnersCarousel = dynamic(() => import("@/components/ui/PartnersCarousel"), { ssr: false });
 
         {/* Product Categories Section */}
         <section className="bg-slate-50 py-16 md:py-20">
