@@ -295,10 +295,10 @@ export default function FeaturedCarousel({
 
                   {/* Product Image or Gradient Fallback */}
                   <div
-                    className={`aspect-[4/3] overflow-hidden ${
+                    className={`aspect-4/3 overflow-hidden ${
                       product.images?.[0]
                         ? 'bg-white'
-                        : `bg-gradient-to-br ${getCategoryColor(product.category)}`
+                        : `bg-linear-to-br ${getCategoryColor(product.category)}`
                     } flex items-center justify-center`}
                   >
                     {product.images?.[0] ? (

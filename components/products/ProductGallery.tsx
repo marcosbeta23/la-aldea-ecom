@@ -69,6 +69,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
             fill
             className={`object-cover transition-transform duration-300 ${isZoomed ? 'scale-150' : 'scale-100'}`}
             priority={currentIndex === 0}
+            fetchPriority={currentIndex === 0 ? 'high' : undefined}
             sizes="(max-width: 768px) 100vw, 50vw"
             onLoad={() => setIsLoading(false)}
             onError={() => handleImageError(currentIndex)}
@@ -132,6 +133,8 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
                   fill
                   className="object-cover"
                   sizes="64px"
+                  priority={index === 0}
+                  fetchPriority={index === 0 ? 'high' : undefined}
                   onError={() => handleImageError(index)}
                 />
               )}

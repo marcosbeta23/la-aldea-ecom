@@ -64,16 +64,17 @@ export default function PartnersCarousel({ partners, speed = 60 }: PartnersCarou
             <Image
               src={partner.logo}
               alt={partner.name}
-              width={100}
-              height={50}
+              width={32}
+              height={32}
+              sizes="32px"
               className="h-10 w-auto object-contain"
             />
           </div>
         ))}
       </div>
       {/* Gradients */}
-      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-white to-transparent" />
-      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-white to-transparent" />
+      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-linear-to-r from-white to-transparent" />
+      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-linear-to-l from-white to-transparent" />
     </div>
   );
 }

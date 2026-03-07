@@ -61,7 +61,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             src={product.images[0]}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             priority={priority}
           />

@@ -394,7 +394,7 @@ export default async function Home() {
               className="object-cover object-[center_40%]"
               priority={true}
               sizes="100vw"
-              quality={90}
+              quality={75}
             />
             {/* Overlay with gradient for text readability */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />

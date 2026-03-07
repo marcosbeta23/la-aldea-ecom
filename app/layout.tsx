@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { headers } from "next/headers";
-import { ClerkProvider } from "@clerk/nextjs";
-import { esES } from "@clerk/localizations";
+import dynamic from "next/dynamic";
+// ...existing code...
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
@@ -204,81 +204,75 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
-    <ClerkProvider localization={esES}>
-      <html lang="es">
-        <head>
-          {/* Preconnect to external origins */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link rel="preconnect" href="https://www.googletagmanager.com" />
-          
-          {/* DNS prefetch for performance */}
-          <link rel="dns-prefetch" href="https://supabase.co" />
-          <link rel="dns-prefetch" href="https://api.mercadopago.com" />
-          <link rel="dns-prefetch" href="https://us.i.posthog.com" />
+    <html lang="es">
+      <head>
+        {/* Preconnect to external origins */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
 
-          {/* Defer Google Analytics (GA4) */}
-          <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-K06VE6W4MY"
-            strategy="lazyOnload"
-          />
-          <Script id="ga4-init" strategy="lazyOnload">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-K06VE6W4MY');
-            `}
-          </Script>
+        {/* DNS prefetch for performance */}
+        <link rel="dns-prefetch" href="https://supabase.co" />
+        <link rel="dns-prefetch" href="https://api.mercadopago.com" />
+        <link rel="dns-prefetch" href="https://us.i.posthog.com" />
 
-          {/* Defer PostHog (if loaded via script) */}
-          <Script
-            id="posthog-init"
-            src="https://us.i.posthog.com/static/array.js"
-            strategy="lazyOnload"
-          />
-        </head>
-        <body className={`${inter.variable} font-sans antialiased`}>
-          {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
-          <script
-            type="application/ld+json"
-            nonce={nonce}
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "WebSite",
-                "name": "La Aldea",
-                "url": siteUrl,
-                "potentialAction": {
-                  "@type": "SearchAction",
-                  "target": {
-                    "@type": "EntryPoint",
-                    "urlTemplate": `${siteUrl}/productos?q={search_term_string}`,
-                  },
-                  "query-input": "required name=search_term_string",
+        {/* Defer Google Analytics (GA4) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-K06VE6W4MY"
+          strategy="lazyOnload"
+        />
+        <Script id="ga4-init" strategy="lazyOnload">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-K06VE6W4MY');
+          `}
+        </Script>
+
+        {/* Defer PostHog (if loaded via script) */}
+        <Script
+          id="posthog-init"
+          src="https://us.i.posthog.com/static/array.js"
+          strategy="lazyOnload"
+        />
+      </head>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
+        <script
+          type="application/ld+json"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "La Aldea",
+              "url": siteUrl,
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": `${siteUrl}/productos?q={search_term_string}`,
                 },
-              }),
-            }}
-          />
-          <PostHogProvider>
-            {children}
-            <Footer />
-            <CartDrawer />
-          </PostHogProvider>
-          <Analytics nonce={nonce} />
-          <VercelAnalytics />
-          <SpeedInsights />
-          <CookieConsent />
-          <FloatingWhatsApp />
-        </body>
-      </html>
-    </ClerkProvider>
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
+        <PostHogProvider>
+          {children}
+          <Footer />
+          <CartDrawer />
+        </PostHogProvider>
+        <Analytics nonce={nonce} />
+        <VercelAnalytics />
+        <SpeedInsights />
+        <CookieConsent />
+        <FloatingWhatsApp />
+      </body>
+    </html>
   );
 }

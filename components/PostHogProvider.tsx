@@ -9,26 +9,28 @@ const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
 
-// Initialize PostHog once (production only — avoids remote config fetch errors in dev)
+// Defer PostHog initialization until after window load + 2s
 if (typeof window !== 'undefined' && POSTHOG_KEY && process.env.NODE_ENV === 'production') {
-  // Check cookie consent before initializing
-  let persistence: 'localStorage+cookie' | 'memory' = 'memory';
-  try {
-    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (consent) {
-      const parsed = JSON.parse(consent);
-      if (parsed.analytics) {
-        persistence = 'localStorage+cookie';
-      }
-    }
-  } catch {}
-
-  posthog.init(POSTHOG_KEY, {
-    api_host: POSTHOG_HOST,
-    person_profiles: 'identified_only',
-    capture_pageview: false, // We capture manually for SPA navigation
-    capture_pageleave: true,
-    persistence,
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      let persistence: 'localStorage+cookie' | 'memory' = 'memory';
+      try {
+        const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
+        if (consent) {
+          const parsed = JSON.parse(consent);
+          if (parsed.analytics) {
+            persistence = 'localStorage+cookie';
+          }
+        }
+      } catch {}
+      posthog.init(POSTHOG_KEY, {
+        api_host: POSTHOG_HOST,
+        person_profiles: 'identified_only',
+        capture_pageview: false, // We capture manually for SPA navigation
+        capture_pageleave: true,
+        persistence,
+      });
+    }, 2000);
   });
 }
 
