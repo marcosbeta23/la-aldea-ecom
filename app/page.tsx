@@ -463,7 +463,7 @@ export default async function Home() {
 
         {/* Featured Products Carousel */}
         {featuredProducts.length > 0 && (
-          <section className="relative z-10 bg-white py-16 md:py-24">
+          <section className="relative z-10 bg-white py-12 md:py-14">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -486,55 +486,21 @@ export default async function Home() {
           </section>
         )}
 
-        {/* Partners Carousel - Infinite smooth scroll */}
+        {/* Partners Carousel - Seamless loop */}
         <section className="border-b border-slate-100 bg-white py-6 overflow-hidden">
           <div className="container mx-auto px-4 mb-4">
             <p className="text-center text-sm font-medium text-slate-500 uppercase tracking-wider">
               Marcas que nos respaldan
             </p>
           </div>
-
-          {/* Infinite carousel */}
           <div className="relative">
-            <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-white to-transparent" />
-            <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-white to-transparent" />
-
-            <div className="flex animate-scroll">
-              <div className="flex shrink-0 items-center gap-12 px-6">
-                {activePartners.map((partner, i) => (
-                  <div
-                    key={`a-${i}`}
-                    className="grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100"
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      width={100}
-                      height={50}
-                      className="h-10 w-auto object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="flex shrink-0 items-center gap-12 px-6">
-                {activePartners.map((partner, i) => (
-                  <div
-                    key={`b-${i}`}
-                    className="grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100"
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      width={100}
-                      height={50}
-                      className="h-10 w-auto object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Seamless partners carousel */}
+            {/* @ts-expect-error Server Component import */}
+            <PartnersCarousel partners={activePartners} speed={60} />
           </div>
         </section>
+import dynamic from "next/dynamic";
+const PartnersCarousel = dynamic(() => import("@/components/ui/PartnersCarousel"), { ssr: false });
 
         {/* Product Categories Section */}
         <section className="bg-slate-50 py-16 md:py-20">
