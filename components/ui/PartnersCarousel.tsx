@@ -64,9 +64,9 @@ export default function PartnersCarousel({ partners, speed = 60 }: PartnersCarou
             <Image
               src={partner.logo}
               alt={partner.name}
-              width={32}
+              width={75}
               height={32}
-              sizes="32px"
+              sizes="75px"
               className="h-10 w-auto object-contain"
             />
           </div>
