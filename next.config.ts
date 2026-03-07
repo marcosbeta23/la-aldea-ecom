@@ -58,7 +58,7 @@ const nextConfig: NextConfig = {
           {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin',
-          }
+          },
           // HSTS - Force HTTPS for 2 years
           {
             key: 'Strict-Transport-Security',
