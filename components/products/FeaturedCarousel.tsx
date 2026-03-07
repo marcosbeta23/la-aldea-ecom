@@ -262,7 +262,7 @@ export default function FeaturedCarousel({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Carousel Track */}
-      <div className="overflow-hidden rounded-xl">
+      <div className="overflow-visible rounded-xl">
         <div
           ref={trackRef}
           className={`flex select-none ${isDraggingVisual ? '' : isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
@@ -317,7 +317,7 @@ export default function FeaturedCarousel({
                 </div>
 
                 {/* Content */}
-                <div className="p-2.5 sm:p-3">
+                <div className="py-2 px-2.5 sm:py-2 sm:px-3">
                   <p className="text-[10px] font-medium text-blue-600">
                     {Array.isArray(product.category)
                       ? product.category.join(', ')
