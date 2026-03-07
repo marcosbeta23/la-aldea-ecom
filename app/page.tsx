@@ -463,7 +463,7 @@ export default async function Home() {
 
         {/* Featured Products Carousel */}
         {featuredProducts.length > 0 && (
-          <section className="relative z-10 bg-white py-12 md:py-16">
+          <section className="relative z-10 bg-white py-16 md:py-24">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
