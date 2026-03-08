@@ -10,21 +10,13 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
-    const guideSlugs = [
-      'beneficios-riego', 'diseno-riego', 'tipos-bombas', 'seleccion-bombas',
-      'instalaciones-hidraulicas', 'sistemas-filtracion', 'mantenimiento-piscinas',
-      'seguridad-quimicos', 'seleccion-herramientas', 'energias-renovables',
-      'que-es-riego-agricola', 'cuanta-agua-por-hectarea', 'bomba-para-aspersores',
-      'que-es-una-drogueria', 'goteo-vs-aspersion',
-      'herbicidas-soja-uruguay', 'preparar-piscina-verano',
-      'instalar-riego-goteo', 'riego-huerta-jardin',
-      'agua-piscina-verde', 'cuanto-cloro-piscina', 'control-plagas-papa',
+    return [
+      {
+        source: '/faq/:slug',
+        destination: '/guias/:slug',
+        permanent: true,
+      },
     ];
-    return guideSlugs.map(slug => ({
-      source: `/faq/${slug}`,
-      destination: `/guias/${slug}`,
-      permanent: true,
-    }));
   },
   images: {
     dangerouslyAllowSVG: true,
