@@ -107,23 +107,43 @@ async function getProducts(searchParams: {
     query = query.gt('stock', 0);
   }
 
-  // Search query - try full-text search first, fall back to ILIKE
+  // Search query — accent-insensitive + fuzzy typo tolerance
   if (searchParams.q) {
-    const searchQuery = searchParams.q;
-    // Try tsvector search (requires migration: add_fulltext_search.sql)
-    const ftsQuery = supabaseAdmin
+    const rawQuery = searchParams.q;
+    const normalizedQuery = stripAccents(rawQuery);
+
+    // Step 1: Full-text search on the unaccented search_vector
+    const { data: ftsIds, error: ftsError } = await supabaseAdmin
       .from('products')
       .select('id')
       .eq('is_active', true)
-      .textSearch('search_vector', searchQuery, { type: 'websearch', config: 'spanish' })
+      .textSearch('search_vector', normalizedQuery, { type: 'websearch', config: 'simple' })
       .limit(1);
 
-    const { error: ftsError } = await ftsQuery;
-    if (!ftsError) {
-      query = query.textSearch('search_vector', searchQuery, { type: 'websearch', config: 'spanish' });
+    if (!ftsError && ftsIds && ftsIds.length > 0) {
+      query = query.textSearch('search_vector', normalizedQuery, { type: 'websearch', config: 'simple' });
     } else {
-      // Fallback to ILIKE if tsvector column doesn't exist yet
-      query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      // Step 2: Fuzzy trigram via RPC (handles typos like "pisinas" → "piscinas")
+      // Cast to `any` first to bypass Supabase's generated types which don't
+      // know about our custom search_products_fuzzy() function.
+      const { data: fuzzyIds, error: fuzzyError } = await (supabaseAdmin as any)
+        .rpc('search_products_fuzzy', {
+          search_query: normalizedQuery,
+          similarity_threshold: 0.2,
+          result_limit: 100,
+        }) as { data: Array<{ id: string }> | null; error: any };
+
+      if (!fuzzyError && fuzzyIds && fuzzyIds.length > 0) {
+        const ids = fuzzyIds.map((r: { id: string }) => r.id);
+        query = query.in('id', ids);
+      } else {
+        // Step 3: Last resort — unaccented ILIKE substring match
+        query = query.or(
+          `name.ilike.%${normalizedQuery}%,` +
+          `description.ilike.%${normalizedQuery}%,` +
+          `sku.ilike.%${normalizedQuery}%`
+        );
+      }
     }
   }
 
@@ -191,6 +211,15 @@ async function getProducts(searchParams: {
     page,
     perPage,
   };
+}
+
+/**
+ * Strip diacritics/accents from a string.
+ * "piscína" → "piscina", "Bomba centrífuga" → "Bomba centrifuga"
+ * Mirrors what immutable_unaccent() does on the Postgres side.
+ */
+function stripAccents(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 async function getFilterOptions(currentCategory?: string) {
