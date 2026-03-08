@@ -2,13 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cacheGet, cacheSet, searchRatelimit, getClientIp } from '@/lib/redis';
 
+// ── Synonym resolver ──────────────────────────────────────────────────────────
+async function resolveQuery(query: string): Promise<string> {
+  const normalized = stripAccents(query.toLowerCase().trim());
+  // .maybeSingle() returns null (not an error) when no row matches
+  const { data } = await (supabaseAdmin as any)
+    .from('search_synonyms')
+    .select('maps_to')
+    .eq('is_active', true)
+    .ilike('term', normalized)
+    .limit(1)
+    .maybeSingle() as { data: { maps_to: string } | null };
+  return data?.maps_to ?? query;
+}
+
 // GET - Search suggestions for autocomplete
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q')?.trim();
+    const rawQuery = searchParams.get('q')?.trim();
 
-    if (!query || query.length < 2) {
+    if (!rawQuery || rawQuery.length < 2) {
       return NextResponse.json({ suggestions: [] });
     }
 
@@ -24,11 +38,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Check cache first (60s TTL)
-    const cacheKey = `search:${query.toLowerCase()}`;
+    // Cache keyed on raw query — synonym resolution is inside the cache miss
+    const cacheKey = `search:${rawQuery.toLowerCase()}`;
     const cached = await cacheGet<{ suggestions: unknown[]; query: string }>(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
+    }
+
+    // Only hit the DB for synonym + search on cache miss
+    const resolvedQuery = await resolveQuery(rawQuery);
+    const normalizedQuery = stripAccents(resolvedQuery.trim());
+
+    if (normalizedQuery.length < 2) {
+      return NextResponse.json({ suggestions: [] });
     }
 
     type ProductResult = {
@@ -42,10 +64,6 @@ export async function GET(request: NextRequest) {
       currency: string;
       images: string[] | null;
     };
-
-    // Normalize query: strip accents so "piscina" matches "piscína" and vice versa
-    // This mirrors what immutable_unaccent() does in Postgres
-    const normalizedQuery = stripAccents(query);
 
     let products: ProductResult[] | null = null;
 
@@ -170,7 +188,7 @@ export async function GET(request: NextRequest) {
 
     const result = {
       suggestions: suggestions.slice(0, 10),
-      query,
+      query: resolvedQuery,
     };
 
     // Cache for 60 seconds
@@ -181,7 +199,7 @@ export async function GET(request: NextRequest) {
     (supabaseAdmin as any)
       .from('search_analytics')
       .insert({
-        query: query.toLowerCase(),
+        query: resolvedQuery.toLowerCase(),
         results_count: productCount,
         source: 'suggestions',
       })
