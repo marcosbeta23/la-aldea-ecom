@@ -381,8 +381,8 @@ export default function FeaturedCarousel({
           </span>
           <div className="w-24 sm:w-32 h-1 rounded-full bg-slate-200 overflow-hidden">
             <div
-              className="h-full rounded-full bg-blue-600 transition-all duration-500 ease-in-out"
-              style={{ width: `${Math.min(progressPercent, 100)}%` }}
+              className="h-full rounded-full bg-blue-600 transition-transform duration-500 ease-in-out origin-left"
+              style={{ transform: `scaleX(${Math.min(progressPercent, 100) / 100})` }}
             />
           </div>
         </div>

@@ -44,9 +44,10 @@
     "typescript": "^5"
   },
   "browserslist": [
-    "> 0.5% in UY",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
+    "Chrome >= 109",
+    "Firefox >= 109",
+    "Safari >= 15.4",
+    "Edge >= 109",
+    "not dead"
   ]
 }

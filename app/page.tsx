@@ -393,7 +393,7 @@ export default async function Home() {
               fill
               className="object-cover object-[center_40%]"
               priority={true}
-              sizes="100vw"
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               quality={75}
             />
             {/* Overlay with gradient for text readability */}

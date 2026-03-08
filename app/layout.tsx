@@ -210,15 +210,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="es">
       <head>
         {/* Preconnect to external origins */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
 
         {/* DNS prefetch for performance */}
         <link rel="dns-prefetch" href="https://supabase.co" />
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
-
+        <link rel="preconnect" href="https://us.i.posthog.com" />
+        
         {/* Defer Google Analytics (GA4) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-K06VE6W4MY"
@@ -232,13 +231,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             gtag('config', 'G-K06VE6W4MY');
           `}
         </Script>
-
-        {/* Defer PostHog (if loaded via script) */}
-        <Script
-          id="posthog-init"
-          src="https://us.i.posthog.com/static/array.js"
-          strategy="lazyOnload"
-        />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
