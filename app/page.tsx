@@ -374,7 +374,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
 
-      <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      <div className="overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50">
         {/* Skip to content — Accessibility */}
         <a href="#main-content" className="skip-to-content">
           Ir al contenido principal
