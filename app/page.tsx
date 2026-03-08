@@ -384,7 +384,7 @@ export default async function Home() {
         <Header />
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden flex items-center touch-pan-y"
+        <section className="relative overflow-hidden min-h-svh flex items-center touch-pan-y"
         style={{ minHeight: '100svh' }}>
           {/* Background Image */}
           <div className="absolute inset-0 will-change-transform">
