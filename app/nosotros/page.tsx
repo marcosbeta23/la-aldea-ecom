@@ -209,39 +209,6 @@ export default function NosotrosPage() {
           </div>
         </section>
 
-        {/* Timeline */}
-        <section className="bg-white py-16 lg:py-20">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <span className="inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
-                Trayectoria
-              </span>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                25 años de crecimiento
-              </h2>
-            </div>
-
-            <div className="mx-auto max-w-3xl">
-              <div className="relative border-l-2 border-blue-200 pl-8 space-y-10">
-                {timeline.map((item, i) => (
-                  <div key={i} className="relative">
-                    <div className="absolute -left-[2.55rem] flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold shadow-lg">
-                      {item.year.slice(2)}
-                    </div>
-                    <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-sm font-bold text-blue-600">{item.year}</span>
-                        <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
-                      </div>
-                      <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Values */}
         <section className="py-16 lg:py-20">
           <div className="container mx-auto px-4">
