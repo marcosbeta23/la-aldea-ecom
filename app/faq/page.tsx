@@ -190,7 +190,7 @@ const faqData = {
     faqs: [
       {
         question: '¿Que herbicidas venden para cultivos en Uruguay?',
-        answer: 'Tenemos herbicidas selectivos y totales para soja, maiz, papa, hortalizas y praderas, con stock permanente y envio a todo Uruguay. Consultanos por WhatsApp para asesoramiento tecnico segun tu cultivo.',
+        answer: 'Tenemos herbicidas selectivos y totales, con stock permanente y envio a todo Uruguay. Consultanos por WhatsApp para asesoramiento tecnico segun tu cultivo.',
       },
       {
         question: '¿Puedo comprar agroquimicos online con envio al interior?',
@@ -221,20 +221,20 @@ const faqData = {
     ],
   },
   limpiezaIndustrial: {
-    title: 'Limpieza Industrial',
+    title: 'Limpieza',
     icon: '🧴',
     faqs: [
       {
-        question: '¿Venden productos de limpieza en cantidad industrial?',
-        answer: 'Si, manejamos desinfectantes, detergentes y desengrasantes en bidones de 5, 20 y 200 litros. Ideal para tambos, galpones, frigorificos y uso agropecuario intensivo. Consultanos por volumen y precio.',
+        question: '¿Venden productos de limpieza ?',
+        answer: 'Si, manejamos desinfectantes, detergentes y desengrasantes en bidones de 1, 5, 10 litros.  Consultanos por volumen y precio.',
       },
       {
         question: '¿Los productos son aptos para uso agropecuario?',
-        answer: 'Si, contamos con productos especificos para la industria agropecuaria: desinfectantes para tambos, detergentes para maquinaria, hipoclorito de sodio a granel y mas. Todos con ficha tecnica disponible.',
+        answer: 'Si, contamos con productos especificos para la industria agropecuaria: desinfectantes, detergentes, hipoclorito de y mas. Todos con ficha tecnica disponible.',
       },
       {
-        question: '¿Realizan envios de productos industriales al interior?',
-        answer: 'Si, coordinamos envios especiales para productos a granel y bidones de gran volumen. El transporte cumple con normas de seguridad para quimicos. Consulta por logistica y costos.',
+        question: '¿Realizan envios de productos  al interior?',
+        answer: 'Si, coordinamos envios especiales para productos. El transporte cumple con normas de seguridad para quimicos. Consulta por logistica y costos.',
       },
     ],
   },

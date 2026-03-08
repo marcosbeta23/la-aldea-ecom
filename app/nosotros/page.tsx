@@ -23,55 +23,22 @@ const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 export const metadata: Metadata = {
   title: 'Sobre Nosotros',
   description:
-    'Conoce La Aldea: mas de 25 anos en Tala, Canelones, especializados en sistemas de riego, bombas de agua, agroquimicos y soluciones hidricas para Uruguay.',
+    'Conoce La Aldea: mas de 25 años en Tala, Canelones, especializados en sistemas de riego, bombas de agua, agroquimicos y soluciones hidricas para Uruguay.',
   openGraph: {
     title: 'Sobre Nosotros | La Aldea',
     description:
-      'Conoce La Aldea: mas de 25 anos en Tala, Canelones, especializados en sistemas de riego, bombas de agua, agroquimicos y soluciones hidricas para Uruguay.',
+      'Conoce La Aldea: mas de 25 años en Tala, Canelones, especializados en sistemas de riego, bombas de agua, agroquimicos y soluciones hidricas para Uruguay.',
     type: 'website',
     url: `${siteUrl}/nosotros`,
   },
   alternates: { canonical: `${siteUrl}/nosotros` },
 };
 
-const timeline = [
-  {
-    year: '1999',
-    title: 'Fundacion',
-    description:
-      'Martin Betancor Peregalli funda La Aldea en Tala, Canelones, como barraca de insumos agricolas y soluciones hidricas para productores de la zona.',
-  },
-  {
-    year: '2005',
-    title: 'Expansion en Riego',
-    description:
-      'Incorporamos sistemas de riego profesional y comenzamos a ofrecer diseño e instalacion de riego por goteo y aspersion para productores y chacras.',
-  },
-  {
-    year: '2012',
-    title: 'Drogueria Industrial',
-    description:
-      'Agregamos la linea de drogueria industrial y productos de limpieza para tambos, frigorificos y uso agropecuario intensivo.',
-  },
-  {
-    year: '2018',
-    title: 'Piscinas y Energia Solar',
-    description:
-      'Ampliamos el catalogo con productos para piscinas y bombas solares, sumando soluciones para el hogar y zonas rurales sin red electrica.',
-  },
-  {
-    year: '2025',
-    title: 'Tienda Online',
-    description:
-      'Lanzamos laaldeatala.com.uy para atender a clientes de todo Uruguay con envio, asesoramiento tecnico online y catalogo completo.',
-  },
-];
-
 const values = [
   {
     icon: Sparkles,
     title: 'Experiencia Tecnica',
-    description: 'Mas de 25 anos asesorando sobre bombas, riego e instalaciones hidricas nos respaldan.',
+    description: 'Mas de 25 años asesorando sobre bombas, riego e instalaciones hidricas nos respaldan.',
   },
   {
     icon: Shield,
@@ -163,13 +130,13 @@ export default function NosotrosPage() {
           <div className="container relative mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <span className="inline-block rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
-                Desde 1999 en Tala, Canelones
+                Desde el 2000 en Tala, Canelones
               </span>
               <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-5xl">
                 Conoce La Aldea
               </h1>
               <p className="mt-4 text-lg text-blue-100 md:text-xl">
-                Mas de 25 anos ofreciendo soluciones en riego, bombas de agua, agroquimicos y
+                Mas de 25 años ofreciendo soluciones en riego, bombas de agua, agroquimicos y
                 productos hidricos para productores, hogares y empresas de todo Uruguay.
               </p>
             </div>
@@ -181,7 +148,7 @@ export default function NosotrosPage() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200">
               {[
-                { value: '25+', label: 'Anos de Experiencia' },
+                { value: '25+', label: 'Años de Experiencia' },
                 { value: '500+', label: 'Proyectos Realizados' },
                 { value: '12', label: 'Marcas Asociadas' },
                 { value: '19', label: 'Departamentos Cubiertos' },
@@ -212,7 +179,7 @@ export default function NosotrosPage() {
                 </div>
                 <div className="absolute -bottom-4 right-2 flex h-20 w-20 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-xl sm:h-28 sm:w-28 sm:right-0 lg:-right-4 lg:h-32 lg:w-32">
                   <span className="text-2xl font-bold sm:text-3xl lg:text-4xl">25+</span>
-                  <span className="text-[10px] font-medium sm:text-xs lg:text-sm">Anos</span>
+                  <span className="text-[10px] font-medium sm:text-xs lg:text-sm">Años</span>
                 </div>
               </div>
 
@@ -222,24 +189,20 @@ export default function NosotrosPage() {
                   Nuestra Historia
                 </span>
                 <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                  Desde una barraca de campo hasta tu puerta
+                  La Aldea
                 </h2>
                 <p className="mt-6 text-slate-600 leading-relaxed">
-                  La Aldea nacio en 1999 de la mano de <strong>Martin Betancor Peregalli</strong>, con
+                  La Aldea nacio en el 2000 de la mano de <strong>Martin Betancor Peregalli</strong>, con
                   la idea de ofrecer soluciones hidricas de calidad a los productores de Tala y
                   alrededores. Lo que empezo como una barraca de insumos agricolas fue creciendo con
                   el compromiso de dar asesoramiento tecnico real, no solo vender productos.
                 </p>
                 <p className="mt-4 text-slate-600 leading-relaxed">
-                  Con el tiempo, sumamos lineas completas de riego, bombas de agua, agroquimicos,
-                  productos para piscinas y drogueria industrial. Hoy atendemos desde Tala a todo el
+                  Con el tiempo, sumamos lineas completas de riego, bombas de agua, herramientas, agroquimicos,
+                  productos para piscinas y drogueria. Hoy atendemos desde Tala a todo el
                   pais, con la misma filosofia de trabajo: escuchar la necesidad del cliente y
                   recomendar la solucion que realmente va a funcionar.
-                </p>
-                <p className="mt-4 text-slate-600 leading-relaxed">
-                  No vendemos por vender. Si una bomba de 0.5 HP alcanza, no te recomendamos una de
-                  2 HP. Si el goteo es mejor que la aspersion para tu cultivo, te lo decimos. Ese es
-                  nuestro diferencial: <strong>honestidad tecnica</strong>.
+                  Ese es nuestro diferencial: <strong>honestidad tecnica</strong>.
                 </p>
               </div>
             </div>
@@ -254,7 +217,7 @@ export default function NosotrosPage() {
                 Trayectoria
               </span>
               <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                25 anos de crecimiento
+                25 años de crecimiento
               </h2>
             </div>
 
