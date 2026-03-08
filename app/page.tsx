@@ -29,6 +29,7 @@ import {
   Settings
 } from "lucide-react";
 import PartnersCarouselClient from "@/components/ui/PartnersCarouselClient";
+import HeroSection from "@/components/HeroSection";
 
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
@@ -384,8 +385,7 @@ export default async function Home() {
         <Header />
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden min-h-svh flex items-center touch-pan-y"
-        style={{ minHeight: '100svh' }}>
+        <HeroSection>
           {/* Background Image */}
           <div className="absolute inset-0 will-change-transform">
             <Image
@@ -443,7 +443,7 @@ export default async function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </HeroSection>
 
         {/* Trust / Benefits Bar */}
         <section id="main-content" className="relative z-10 border-b border-slate-100 bg-white py-4">
