@@ -318,9 +318,9 @@ export default function FeaturedCarousel({
 
                 {/* Content */}
                 <div className="py-2 px-2.5 sm:py-2 sm:px-3">
-                  <p className="text-[10px] font-medium text-blue-600">
+                  <p className="text-[10px] font-medium text-blue-600 truncate">
                     {Array.isArray(product.category)
-                      ? product.category.join(', ')
+                      ? product.category[0] || 'Producto'
                       : product.category || 'Producto'}
                   </p>
                   <h3 className="mt-0.5 text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
