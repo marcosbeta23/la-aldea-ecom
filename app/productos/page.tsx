@@ -71,6 +71,19 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
 // Revalidate every 5 minutes
 export const revalidate = 300;
 
+
+async function resolveQuery(query: string): Promise<string> {
+  const normalized = stripAccents(query.toLowerCase().trim());
+  const { data } = await (supabaseAdmin as any)
+    .from('search_synonyms')
+    .select('maps_to')
+    .eq('is_active', true)
+    .ilike('term', normalized)
+    .limit(1)
+    .maybeSingle() as { data: { maps_to: string } | null };
+  return data?.maps_to ?? query;
+}
+
 async function getProducts(searchParams: {
   categoria?: string;
   sub?: string;
@@ -110,7 +123,8 @@ async function getProducts(searchParams: {
   // Search query — accent-insensitive + fuzzy typo tolerance
   if (searchParams.q) {
     const rawQuery = searchParams.q;
-    const normalizedQuery = stripAccents(rawQuery);
+    const resolvedQuery = await resolveQuery(rawQuery);
+    const normalizedQuery = stripAccents(resolvedQuery.trim());
 
     // Step 1: Full-text search on the unaccented search_vector
     const { data: ftsIds, error: ftsError } = await supabaseAdmin
@@ -124,8 +138,6 @@ async function getProducts(searchParams: {
       query = query.textSearch('search_vector', normalizedQuery, { type: 'websearch', config: 'simple' });
     } else {
       // Step 2: Fuzzy trigram via RPC (handles typos like "pisinas" → "piscinas")
-      // Cast to `any` first to bypass Supabase's generated types which don't
-      // know about our custom search_products_fuzzy() function.
       const { data: fuzzyIds, error: fuzzyError } = await (supabaseAdmin as any)
         .rpc('search_products_fuzzy', {
           search_query: normalizedQuery,
