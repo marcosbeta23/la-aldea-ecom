@@ -2,14 +2,16 @@ import { supabaseAdmin } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
+  Boxes,
   Package,
   AlertTriangle,
-  CheckCircle2,
   XCircle,
-  ArrowUpDown,
-  ExternalLink,
+  CheckCircle2,
   TrendingDown,
-  Boxes,
+  ArrowUpDown,
+  Pencil,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -29,31 +31,21 @@ interface ProductInventory {
   totalSold30d: number;
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-function getStockStatus(product: ProductInventory): {
-  label: string;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-} {
-  if (product.stock === 0) {
-    return { label: 'Agotado', color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
-  }
-  if (product.daysRemaining <= 7) {
-    return { label: 'Critico', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
-  }
-  if (product.daysRemaining <= 14) {
-    return { label: 'Bajo', color: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' };
-  }
-  if (product.daysRemaining <= 30) {
-    return { label: 'Moderado', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' };
-  }
-  if (product.avgDailySales === 0) {
-    return { label: 'Sin ventas', color: 'text-slate-500', bgColor: 'bg-slate-50', borderColor: 'border-slate-200' };
-  }
-  return { label: 'Saludable', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
+const PER_PAGE = 25;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getStockStatus(p: ProductInventory) {
+  if (p.stock === 0) return 'out';
+  if (p.daysRemaining <= 7) return 'critical';
+  if (p.daysRemaining <= 14) return 'low';
+  if (p.avgDailySales === 0) return 'no_sales';
+  return 'healthy';
 }
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function StatCard({
   title,
@@ -92,7 +84,7 @@ function StatCard({
   );
 }
 
-// ── Main Page ────────────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default async function InventoryPage({
   searchParams,
@@ -102,6 +94,7 @@ export default async function InventoryPage({
   const params = await searchParams;
   const sortBy = typeof params.sort === 'string' ? params.sort : 'days';
   const filterStatus = typeof params.status === 'string' ? params.status : '';
+  const currentPage = Math.max(1, parseInt(typeof params.page === 'string' ? params.page : '1'));
 
   // Fetch all active products
   const { data: productsData } = await (supabaseAdmin as any)
@@ -116,10 +109,9 @@ export default async function InventoryPage({
     price_numeric: number; category: string[];
   }>;
 
-  // Fetch recent order items for avg daily sales calculation (last 30 days)
+  // Fetch recent order items for avg daily sales (last 30 days)
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
   const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'paid_pending_verification', 'ready_to_invoice', 'invoiced'];
 
   const { data: recentOrdersData } = await supabaseAdmin
@@ -170,7 +162,6 @@ export default async function InventoryPage({
       case 'name': return a.name.localeCompare(b.name);
       case 'days':
       default:
-        // Out of stock first, then by days remaining ascending
         if (a.stock === 0 && b.stock > 0) return -1;
         if (a.stock > 0 && b.stock === 0) return 1;
         return a.daysRemaining - b.daysRemaining;
@@ -180,7 +171,6 @@ export default async function InventoryPage({
   // Filter by status
   const filteredProducts = filterStatus
     ? sortedProducts.filter(p => {
-        const status = getStockStatus(p);
         switch (filterStatus) {
           case 'out': return p.stock === 0;
           case 'critical': return p.stock > 0 && p.daysRemaining <= 7;
@@ -192,7 +182,13 @@ export default async function InventoryPage({
       })
     : sortedProducts;
 
-  // Stats
+  // Pagination
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedProducts = filteredProducts.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+
+  // Stats (always over all products, not filtered)
   const outOfStock = products.filter(p => p.stock === 0).length;
   const critical = products.filter(p => p.stock > 0 && p.daysRemaining <= 7).length;
   const low = products.filter(p => p.stock > 0 && p.daysRemaining > 7 && p.daysRemaining <= 14).length;
@@ -200,7 +196,6 @@ export default async function InventoryPage({
   const noSales = products.filter(p => p.stock > 0 && p.avgDailySales === 0).length;
   const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
 
-  // Sort options
   const sortOptions = [
     { value: 'days', label: 'Dias restantes' },
     { value: 'stock_asc', label: 'Stock (menor)' },
@@ -218,15 +213,20 @@ export default async function InventoryPage({
     { value: 'no_sales', label: 'Sin ventas', count: noSales },
   ];
 
-  const buildUrl = (newSort?: string, newStatus?: string) => {
+  // URL builder — resets page when filter or sort changes
+  const buildUrl = (newSort?: string, newStatus?: string, newPage?: number) => {
     const p = new URLSearchParams();
     const s = newSort ?? sortBy;
-    const st = newStatus ?? filterStatus;
+    const st = newStatus !== undefined ? newStatus : filterStatus;
+    const pg = newPage ?? 1; // default to page 1 on filter/sort change
     if (s && s !== 'days') p.set('sort', s);
     if (st) p.set('status', st);
+    if (pg > 1) p.set('page', String(pg));
     const qs = p.toString();
     return `/admin/inventory${qs ? `?${qs}` : ''}`;
   };
+
+  const buildPageUrl = (pg: number) => buildUrl(sortBy, filterStatus, pg);
 
   return (
     <div className="space-y-6">
@@ -240,46 +240,15 @@ export default async function InventoryPage({
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard
-          title="Total Productos"
-          value={products.length}
-          subtitle={`${totalStock} unidades`}
-          icon={Boxes}
-          color="blue"
-        />
-        <StatCard
-          title="Agotados"
-          value={outOfStock}
-          subtitle="Stock = 0"
-          icon={XCircle}
-          color="red"
-        />
-        <StatCard
-          title="Stock Critico"
-          value={critical}
-          subtitle="< 7 dias"
-          icon={AlertTriangle}
-          color="amber"
-        />
-        <StatCard
-          title="Stock Bajo"
-          value={low}
-          subtitle="7-14 dias"
-          icon={TrendingDown}
-          color="amber"
-        />
-        <StatCard
-          title="Saludable"
-          value={healthy}
-          subtitle="> 14 dias"
-          icon={CheckCircle2}
-          color="green"
-        />
+        <StatCard title="Total Productos" value={products.length} subtitle={`${totalStock} unidades`} icon={Boxes} color="blue" />
+        <StatCard title="Agotados" value={outOfStock} subtitle="Stock = 0" icon={XCircle} color="red" />
+        <StatCard title="Stock Critico" value={critical} subtitle="< 7 dias" icon={AlertTriangle} color="amber" />
+        <StatCard title="Stock Bajo" value={low} subtitle="7-14 dias" icon={TrendingDown} color="amber" />
+        <StatCard title="Saludable" value={healthy} subtitle="> 14 dias" icon={CheckCircle2} color="green" />
       </div>
 
       {/* Filters & Sort */}
       <div className="flex flex-col sm:flex-row gap-4">
-        {/* Status Filter */}
         <div className="flex flex-wrap gap-2 flex-1">
           {filterOptions.map(opt => {
             const isActive = filterStatus === opt.value;
@@ -310,7 +279,6 @@ export default async function InventoryPage({
           })}
         </div>
 
-        {/* Sort */}
         <div className="flex items-center gap-2">
           <ArrowUpDown className="h-4 w-4 text-slate-400" />
           <div className="flex gap-1">
@@ -333,6 +301,18 @@ export default async function InventoryPage({
 
       {/* Products Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {/* Table header with count */}
+        <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <p className="text-xs text-slate-500 font-medium">
+            {totalProducts === 0
+              ? 'Sin productos'
+              : `Mostrando ${(safePage - 1) * PER_PAGE + 1}–${Math.min(safePage * PER_PAGE, totalProducts)} de ${totalProducts} productos`}
+          </p>
+          {totalPages > 1 && (
+            <p className="text-xs text-slate-400">Página {safePage} de {totalPages}</p>
+          )}
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
@@ -348,114 +328,180 @@ export default async function InventoryPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {filteredProducts.map(product => {
-                const status = getStockStatus(product);
-                const rowBg =
-                  product.stock === 0 ? 'bg-red-50/40' :
-                  product.daysRemaining <= 7 ? 'bg-red-50/20' :
-                  product.daysRemaining <= 14 ? 'bg-amber-50/20' :
-                  '';
-
-                return (
-                  <tr key={product.id} className={`hover:bg-slate-50 transition-colors ${rowBg}`}>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {product.images?.[0] ? (
-                          <Image
-                            src={product.images[0]}
-                            alt={product.name}
-                            width={36}
-                            height={36}
-                            className="w-9 h-9 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                            <Package className="h-4 w-4 text-slate-400" />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate max-w-[200px]">
-                            {product.name}
-                          </p>
-                          {product.category.length > 0 && (
-                            <p className="text-xs text-slate-400 truncate max-w-[200px]">
-                              {product.category.join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-mono text-slate-600">{product.sku}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`text-sm font-bold ${
-                        product.stock === 0 ? 'text-red-600' :
-                        product.stock <= 5 ? 'text-amber-600' :
-                        'text-slate-900'
-                      }`}>
-                        {product.stock}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="text-sm text-slate-600">
-                        {product.avgDailySales > 0 ? product.avgDailySales.toFixed(1) : '-'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="text-sm text-slate-600">
-                        {product.totalSold30d > 0 ? product.totalSold30d : '-'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`text-sm font-bold ${
-                        product.stock === 0 ? 'text-red-600' :
-                        product.daysRemaining <= 7 ? 'text-red-600' :
-                        product.daysRemaining <= 14 ? 'text-amber-600' :
-                        product.daysRemaining >= 999 ? 'text-slate-400' :
-                        'text-green-600'
-                      }`}>
-                        {product.stock === 0 ? '0' :
-                         product.daysRemaining >= 999 ? '-' :
-                         `${product.daysRemaining}d`}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${status.bgColor} ${status.color} ${status.borderColor}`}>
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Editar
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-
-              {filteredProducts.length === 0 && (
+              {paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
-                    No hay productos con este filtro
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm">
+                    No hay productos en esta categoría
                   </td>
                 </tr>
+              ) : (
+                paginatedProducts.map(product => {
+                  const status = getStockStatus(product);
+                  const rowBg =
+                    product.stock === 0 ? 'bg-red-50/40' :
+                    product.daysRemaining <= 7 ? 'bg-red-50/20' :
+                    product.daysRemaining <= 14 ? 'bg-amber-50/20' : '';
+
+                  return (
+                    <tr key={product.id} className={`hover:bg-slate-50 transition-colors ${rowBg}`}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {product.images?.[0] ? (
+                            <Image
+                              src={product.images[0]}
+                              alt={product.name}
+                              width={36}
+                              height={36}
+                              className="w-9 h-9 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                              <Package className="h-4 w-4 text-slate-400" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-slate-900 truncate max-w-[200px]">{product.name}</p>
+                            {product.category.length > 0 && (
+                              <p className="text-xs text-slate-400 truncate max-w-[200px]">{product.category.join(', ')}</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-mono text-slate-600">{product.sku}</span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`text-sm font-bold ${
+                          product.stock === 0 ? 'text-red-600' :
+                          product.stock <= 5 ? 'text-amber-600' : 'text-slate-900'
+                        }`}>
+                          {product.stock}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-sm text-slate-600">
+                          {product.avgDailySales > 0 ? product.avgDailySales.toFixed(1) : '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-sm text-slate-600">
+                          {product.totalSold30d > 0 ? product.totalSold30d : '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`text-sm font-bold ${
+                          product.stock === 0 ? 'text-red-600' :
+                          product.daysRemaining <= 7 ? 'text-red-600' :
+                          product.daysRemaining <= 14 ? 'text-amber-600' :
+                          product.daysRemaining === 999 ? 'text-slate-400' :
+                          'text-green-600'
+                        }`}>
+                          {product.stock === 0 ? '—' :
+                           product.daysRemaining === 999 ? 'N/A' :
+                           `${product.daysRemaining}d`}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          status === 'out' ? 'bg-red-100 text-red-700' :
+                          status === 'critical' ? 'bg-red-50 text-red-600' :
+                          status === 'low' ? 'bg-amber-100 text-amber-700' :
+                          status === 'no_sales' ? 'bg-slate-100 text-slate-500' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {status === 'out' ? 'Agotado' :
+                           status === 'critical' ? 'Crítico' :
+                           status === 'low' ? 'Bajo' :
+                           status === 'no_sales' ? 'Sin ventas' :
+                           'Saludable'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href={`/admin/products/${product.id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Editar
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50">
-          <p className="text-xs text-slate-500">
-            Mostrando {filteredProducts.length} de {products.length} productos &middot;
-            Ventas calculadas sobre los ultimos 30 dias
-          </p>
-        </div>
+        {/* Pagination footer */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
+            <p className="text-sm text-slate-500">
+              {totalProducts} productos · página {safePage} de {totalPages}
+            </p>
+            <div className="flex items-center gap-1">
+              {/* Prev */}
+              {safePage > 1 ? (
+                <Link
+                  href={buildPageUrl(safePage - 1)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-300 bg-white border border-slate-100 rounded-lg cursor-not-allowed">
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </span>
+              )}
+
+              {/* Page numbers */}
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+                  .reduce<(number | '...')[]>((acc, p, i, arr) => {
+                    if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) acc.push('...');
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    p === '...' ? (
+                      <span key={`ellipsis-${i}`} className="px-3 py-1.5 text-sm text-slate-400">…</span>
+                    ) : (
+                      <Link
+                        key={p}
+                        href={buildPageUrl(p as number)}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                          safePage === p
+                            ? 'bg-blue-600 text-white'
+                            : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {p}
+                      </Link>
+                    )
+                  )}
+              </div>
+
+              {/* Next */}
+              {safePage < totalPages ? (
+                <Link
+                  href={buildPageUrl(safePage + 1)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-300 bg-white border border-slate-100 rounded-lg cursor-not-allowed">
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, AlertCircle, TrendingUp, RefreshCw, BarChart3 } from 'lucide-react';
+import { Search, AlertCircle, TrendingUp, RefreshCw, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface SearchAnalyticsData {
   summary: {
@@ -17,11 +17,16 @@ interface SearchAnalyticsData {
   period: string;
 }
 
+const TABLE_INITIAL = 10;
 
 export default function SearchAnalyticsPage() {
   const [data, setData] = useState<SearchAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState('7d');
+
+  // Pagination state for each table
+  const [topSearchesVisible, setTopSearchesVisible] = useState(TABLE_INITIAL);
+  const [zeroResultsVisible, setZeroResultsVisible] = useState(TABLE_INITIAL);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -29,6 +34,9 @@ export default function SearchAnalyticsPage() {
       const res = await fetch(`/api/admin/search-analytics?period=${period}`);
       if (res.ok) {
         setData(await res.json());
+        // Reset limits on new fetch
+        setTopSearchesVisible(TABLE_INITIAL);
+        setZeroResultsVisible(TABLE_INITIAL);
       }
     } catch (error) {
       console.error('Error fetching search analytics:', error);
@@ -124,8 +132,13 @@ export default function SearchAnalyticsPage() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Top Searches */}
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200">
+              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900">Top Búsquedas</h3>
+                {data.topSearches.length > 0 && (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                    {Math.min(topSearchesVisible, data.topSearches.length)} de {data.topSearches.length}
+                  </span>
+                )}
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -137,7 +150,7 @@ export default function SearchAnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {data.topSearches.map((search) => (
+                    {data.topSearches.slice(0, topSearchesVisible).map((search) => (
                       <tr key={search.query} className="hover:bg-slate-50">
                         <td className="px-6 py-3 text-sm text-slate-900 font-medium">{search.query}</td>
                         <td className="px-6 py-3 text-sm text-slate-600 text-right">{search.count}</td>
@@ -158,13 +171,42 @@ export default function SearchAnalyticsPage() {
                   </tbody>
                 </table>
               </div>
+              {/* Show more / less for top searches */}
+              {data.topSearches.length > TABLE_INITIAL && (
+                <div className="px-6 py-3 border-t border-slate-100 flex justify-center">
+                  {topSearchesVisible < data.topSearches.length ? (
+                    <button
+                      onClick={() => setTopSearchesVisible(v => Math.min(v + 10, data.topSearches.length))}
+                      className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium py-1 px-3 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                      Mostrar más ({data.topSearches.length - topSearchesVisible} más)
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setTopSearchesVisible(TABLE_INITIAL)}
+                      className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 font-medium py-1 px-3 rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                      Mostrar menos
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Zero Results */}
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900">Búsquedas Sin Resultados</h3>
-                <p className="text-xs text-slate-500 mt-1">Considera agregar estos productos o sinónimos</p>
+              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Búsquedas Sin Resultados</h3>
+                  <p className="text-xs text-slate-500 mt-1">Considera agregar estos productos o sinónimos</p>
+                </div>
+                {data.topZeroResults.length > 0 && (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
+                    {Math.min(zeroResultsVisible, data.topZeroResults.length)} de {data.topZeroResults.length}
+                  </span>
+                )}
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -175,7 +217,7 @@ export default function SearchAnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {data.topZeroResults.map((search) => (
+                    {data.topZeroResults.slice(0, zeroResultsVisible).map((search) => (
                       <tr key={search.query} className="hover:bg-red-50">
                         <td className="px-6 py-3 text-sm text-red-700 font-medium">{search.query}</td>
                         <td className="px-6 py-3 text-sm text-red-600 text-right font-medium">{search.count}</td>
@@ -191,6 +233,28 @@ export default function SearchAnalyticsPage() {
                   </tbody>
                 </table>
               </div>
+              {/* Show more / less for zero results */}
+              {data.topZeroResults.length > TABLE_INITIAL && (
+                <div className="px-6 py-3 border-t border-slate-100 flex justify-center">
+                  {zeroResultsVisible < data.topZeroResults.length ? (
+                    <button
+                      onClick={() => setZeroResultsVisible(v => Math.min(v + 10, data.topZeroResults.length))}
+                      className="flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 font-medium py-1 px-3 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                      Mostrar más ({data.topZeroResults.length - zeroResultsVisible} más)
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setZeroResultsVisible(TABLE_INITIAL)}
+                      className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 font-medium py-1 px-3 rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                      Mostrar menos
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </>

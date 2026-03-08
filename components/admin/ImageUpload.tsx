@@ -205,7 +205,7 @@ export default function ImageUpload({ images, onChange, maxImages = 10 }: ImageU
               onDrop={(e) => handleItemDrop(e, index)}
               onDragEnd={handleItemDragEnd}
               className={`
-                relative group rounded-lg overflow-hidden border-2 transition-all
+                relative group rounded-lg overflow-hidden border-2 transition-all aspect-square
                 ${dragOverIndex === index ? 'border-blue-500 scale-105' : 'border-slate-200'}
                 ${draggedIndex === index ? 'opacity-40' : ''}
               `}

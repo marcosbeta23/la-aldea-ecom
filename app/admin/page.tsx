@@ -17,6 +17,8 @@ import {
   ArrowRight,
   Plus,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -106,8 +108,20 @@ function formatUYU(v: number) {
 function formatUSD(v: number) {
   return `US$ ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+
+function getCurrency(order: { currency: string | null }) {
+  return order.currency || 'UYU';
+}
+
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('es-UY', {
+  const date = new Date(dateStr);
+  const todayStr = new Date().toLocaleDateString('es-UY', { timeZone: 'America/Montevideo', day: '2-digit', month: '2-digit', year: 'numeric' });
+  const orderDayStr = date.toLocaleDateString('es-UY', { timeZone: 'America/Montevideo', day: '2-digit', month: '2-digit', year: 'numeric' });
+  if (todayStr === orderDayStr) {
+    return date.toLocaleTimeString('es-UY', { timeZone: 'America/Montevideo', hour: '2-digit', minute: '2-digit' });
+  }
+  return date.toLocaleDateString('es-UY', {
+    timeZone: 'America/Montevideo',
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -115,39 +129,36 @@ function formatDate(dateStr: string) {
   });
 }
 
-function getCurrency(o: { currency: string | null }) {
-  return o.currency || 'UYU';
-}
+// ── Constants ─────────────────────────────────────────────────────────────────
+const RECENT_ORDERS_INITIAL = 5;
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [onlineCurrency, setOnlineCurrency] = useState<'UYU' | 'USD'>('UYU');
 
+  // Pagination state for recent orders
+  const [ordersVisible, setOrdersVisible] = useState(RECENT_ORDERS_INITIAL);
+
   const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
       const res = await fetch('/api/admin/dashboard');
       if (res.ok) {
-        const json = await res.json();
-        setData(json);
-        setLastUpdated(new Date());
+        setData(await res.json());
+        // Reset visible count on refresh
+        setOrdersVisible(RECENT_ORDERS_INITIAL);
       }
     } catch (error) {
-      console.error('Error fetching dashboard:', error);
+      console.error('Dashboard error:', error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-    // Auto-refresh every 30 seconds for real-time data
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   if (isLoading && !data) {
     return (
@@ -157,18 +168,10 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!data) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-slate-500">Error al cargar el dashboard</p>
-        <button onClick={fetchData} className="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">
-          Reintentar
-        </button>
-      </div>
-    );
-  }
+  if (!data) return null;
 
-  const now = new Date();
+  const visibleOrders = data.recentOrders.slice(0, ordersVisible);
+  const hasMoreOrders = ordersVisible < data.recentOrders.length;
 
   return (
     <div className="space-y-6">
@@ -176,27 +179,16 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500 text-sm">
-            Ultimos 30 dias
-            {lastUpdated && (
-              <span className="ml-2 text-xs text-slate-400">
-                · {lastUpdated.toLocaleTimeString('es-UY')}
-              </span>
-            )}
-            {' · '}
-            <span className="text-slate-400">
-              {now.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </span>
-          </p>
+          <p className="text-slate-500 text-sm">Últimos 30 días</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={fetchData}
             disabled={isLoading}
             className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-            title="Actualizar datos"
+            aria-label="Actualizar"
           >
-            <RefreshCw className={`h-4 w-4 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-5 w-5 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           <Link
             href="/admin/analytics"
@@ -256,10 +248,10 @@ export default function AdminDashboard() {
                 <Clock className="h-5 w-5 text-amber-600" />
                 <div>
                   <p className="font-semibold text-amber-900 text-sm">Pendientes</p>
-                  <p className="text-xs text-amber-700">{data.period30d.pendingOrders} pedido{data.period30d.pendingOrders !== 1 ? 's' : ''} sin confirmar</p>
+                  <p className="text-xs text-amber-700">{data.period30d.pendingOrders} pedido{data.period30d.pendingOrders !== 1 ? 's' : ''}</p>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-amber-500 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="h-4 w-4 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           )}
           {data.period30d.toVerify > 0 && (
@@ -271,10 +263,10 @@ export default function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5 text-blue-600" />
                 <div>
                   <p className="font-semibold text-blue-900 text-sm">Por verificar</p>
-                  <p className="text-xs text-blue-700">{data.period30d.toVerify} transferencia{data.period30d.toVerify !== 1 ? 's' : ''} pendiente{data.period30d.toVerify !== 1 ? 's' : ''}</p>
+                  <p className="text-xs text-blue-700">{data.period30d.toVerify} pedido{data.period30d.toVerify !== 1 ? 's' : ''}</p>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="h-4 w-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           )}
           {data.period30d.toInvoice > 0 && (
@@ -286,49 +278,23 @@ export default function AdminDashboard() {
                 <TrendingUp className="h-5 w-5 text-teal-600" />
                 <div>
                   <p className="font-semibold text-teal-900 text-sm">Por facturar</p>
-                  <p className="text-xs text-teal-700">{data.period30d.toInvoice} pedido{data.period30d.toInvoice !== 1 ? 's' : ''} listos</p>
+                  <p className="text-xs text-teal-700">{data.period30d.toInvoice} pedido{data.period30d.toInvoice !== 1 ? 's' : ''}</p>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-teal-500 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="h-4 w-4 text-teal-600 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           )}
         </div>
       )}
 
-      {/* KPI row — 4 cards */}
+      {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Ingresos UYU (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.period30d.revenueUYU)}</p>
-              <p className="mt-1 text-xs text-slate-400">{data.period30d.paidOrdersUYU} pedidos pagados</p>
-            </div>
-            <div className="p-3 rounded-xl bg-green-50 text-green-600 border border-green-100">
-              <DollarSign className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Ingresos USD (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUSD(data.period30d.revenueUSD)}</p>
-              <p className="mt-1 text-xs text-slate-400">{data.period30d.paidOrdersUSD} pedidos USD</p>
-            </div>
-            <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-              <Globe className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Pedidos (30d)</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">{data.period30d.totalOrders}</p>
-              <p className="mt-1 text-xs text-slate-400">{data.period30d.paidOrders} confirmados · {data.period30d.pendingOrders} pendientes</p>
+              <p className="mt-1 text-xs text-slate-400">{data.period30d.paidOrders} confirmados</p>
             </div>
             <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
               <ShoppingCart className="h-5 w-5" />
@@ -339,35 +305,59 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Ticket Prom. UYU</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.period30d.avgTicketUYU)}</p>
-              <p className="mt-1 text-xs text-slate-400">{data.productsCount} productos activos</p>
+              <p className="text-sm font-medium text-slate-500">Ingresos UYU (30d)</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.period30d.revenueUYU)}</p>
+              <p className="mt-1 text-xs text-slate-400">Ticket prom: {formatUYU(data.period30d.avgTicketUYU)}</p>
             </div>
-            <div className="p-3 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+              <DollarSign className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Ingresos USD (30d)</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUSD(data.period30d.revenueUSD)}</p>
+              <p className="mt-1 text-xs text-slate-400">Ticket prom: {formatUSD(data.period30d.avgTicketUSD)}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-violet-50 text-violet-600 border border-violet-100">
               <TrendingUp className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Productos activos</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{data.productsCount}</p>
+              {data.lowStock.length > 0 && (
+                <p className="mt-1 text-xs text-amber-600">{data.lowStock.length} con stock bajo</p>
+              )}
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 text-slate-600 border border-slate-200">
+              <Package className="h-5 w-5" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Revenue by channel — currency-aware */}
+      {/* Channel breakdown */}
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-slate-500">Online (30d)</p>
+              <p className="text-sm font-medium text-slate-500">Online (30d)</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-slate-400">Moneda:</span>
                 <button
-                  onClick={() => setOnlineCurrency(onlineCurrency === 'UYU' ? 'USD' : 'UYU')}
-                  className="relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none"
-                  style={{ backgroundColor: onlineCurrency === 'USD' ? '#3b82f6' : '#94a3b8' }}
-                  title={`Mostrar en ${onlineCurrency === 'UYU' ? 'USD' : 'UYU'}`}
+                  onClick={() => setOnlineCurrency(c => c === 'UYU' ? 'USD' : 'UYU')}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${onlineCurrency === 'USD' ? 'bg-blue-600' : 'bg-slate-300'}`}
+                  aria-label={`Cambiar a ${onlineCurrency === 'USD' ? 'UYU' : 'USD'}`}
                 >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                      onlineCurrency === 'USD' ? 'translate-x-5' : 'translate-x-1'
-                    }`}
-                  />
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${onlineCurrency === 'USD' ? 'translate-x-5' : 'translate-x-1'}`} />
                 </button>
                 <span className="text-xs font-medium text-slate-400">{onlineCurrency}</span>
               </div>
@@ -410,7 +400,14 @@ export default function AdminDashboard() {
         {/* Recent Orders */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Pedidos Recientes</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold text-slate-900">Pedidos Recientes</h2>
+              {data.recentOrders.length > 0 && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                  {Math.min(ordersVisible, data.recentOrders.length)} de {data.recentOrders.length}
+                </span>
+              )}
+            </div>
             <Link
               href="/admin/orders"
               className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
@@ -421,32 +418,57 @@ export default function AdminDashboard() {
 
           <div className="divide-y divide-slate-100">
             {data.recentOrders.length === 0 ? (
-              <p className="px-5 py-10 text-center text-slate-400 text-sm">Sin pedidos en los ultimos 30 dias</p>
+              <p className="px-5 py-10 text-center text-slate-400 text-sm">Sin pedidos en los últimos 30 días</p>
             ) : (
-              data.recentOrders.map((order) => (
-                <Link
-                  key={order.id}
-                  href={`/admin/orders/${order.id}`}
-                  className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-mono text-sm font-medium text-blue-600">#{order.order_number}</span>
-                      <StatusBadge status={order.status} />
-                      {order.order_source === 'mostrador' && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">mostrador</span>
-                      )}
+              <>
+                {visibleOrders.map((order) => (
+                  <Link
+                    key={order.id}
+                    href={`/admin/orders/${order.id}`}
+                    className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-mono text-sm font-medium text-blue-600">#{order.order_number}</span>
+                        <StatusBadge status={order.status} />
+                        {order.order_source === 'mostrador' && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">mostrador</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-700 truncate">{order.customer_name}</p>
                     </div>
-                    <p className="text-sm text-slate-700 truncate">{order.customer_name}</p>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {getCurrency(order) === 'USD' ? formatUSD(order.total) : formatUYU(order.total)}
+                      </p>
+                      <p className="text-xs text-slate-400">{formatDate(order.created_at)}</p>
+                    </div>
+                  </Link>
+                ))}
+
+                {/* Show more / show less */}
+                {data.recentOrders.length > RECENT_ORDERS_INITIAL && (
+                  <div className="px-5 py-3 flex items-center justify-center border-t border-slate-100">
+                    {hasMoreOrders ? (
+                      <button
+                        onClick={() => setOrdersVisible(v => Math.min(v + 5, data.recentOrders.length))}
+                        className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium py-1 px-3 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                        Mostrar más ({data.recentOrders.length - ordersVisible} más)
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setOrdersVisible(RECENT_ORDERS_INITIAL)}
+                        className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 font-medium py-1 px-3 rounded-lg hover:bg-slate-100 transition-colors"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                        Mostrar menos
+                      </button>
+                    )}
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {getCurrency(order) === 'USD' ? formatUSD(order.total) : formatUYU(order.total)}
-                    </p>
-                    <p className="text-xs text-slate-400">{formatDate(order.created_at)}</p>
-                  </div>
-                </Link>
-              ))
+                )}
+              </>
             )}
           </div>
         </div>
@@ -455,7 +477,7 @@ export default function AdminDashboard() {
         <div className="space-y-4">
           {/* Quick actions */}
           <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-3">Acciones Rapidas</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Acciones Rápidas</h3>
             <div className="space-y-2">
               <Link
                 href="/admin/ventas-mostrador/nueva"
@@ -511,10 +533,10 @@ export default function AdminDashboard() {
                 ))}
               </div>
               <Link
-                href="/admin/products"
+                href="/admin/inventory"
                 className="block mt-3 text-xs text-blue-600 hover:text-blue-700 text-center font-medium"
               >
-                Ver todos los productos
+                Ver inventario completo
               </Link>
             </div>
           )}
