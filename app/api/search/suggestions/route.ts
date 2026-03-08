@@ -64,9 +64,9 @@ export async function GET(request: NextRequest) {
       products = ftsProducts;
     }
 
-    // ── Step 2: Fuzzy trigram fallback (handles typos like "pisinas" → "piscinas") ──
+    // Fuzzy trigram fallback (handles typos like "pisinas" → "piscinas")
     if (!products || products.length === 0) {
-      const { data: fuzzyProducts, error: fuzzyError } = await supabaseAdmin
+      const { data: fuzzyProducts, error: fuzzyError } = await (supabaseAdmin as any)
         .rpc('search_products_fuzzy', {
           search_query: normalizedQuery,
           similarity_threshold: 0.2,
