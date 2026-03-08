@@ -31,8 +31,14 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Hero / full-viewport sections: use svh to lock to smallest viewport */
+/* (toolbars visible = no jump when they hide) */
+.min-h-svh {
+  min-height: 100svh;
+}
+
 .min-h-screen {
-  min-height: 100svh; /* ✅ Use svh instead of vh */
+  min-height: 100svh; 
 }
 
 /* Prevent mobile viewport resize jank on hero section */
