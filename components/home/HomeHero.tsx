@@ -27,12 +27,12 @@ export default function HomeHero() {
   ];
 
   return (
-  <HeroSection className="relative w-full flex flex-col pt-10 sm:pt-14 lg:pt-16 overflow-hidden touch-pan-y">
+  <HeroSection className="relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-hidden touch-pan-y">
       
       {/* BACKGROUND IMAGE - Full Width */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/assets/images/laaldeaedificio.webp"
+          src="/assets/images/laaldeaedificio.avif"
           alt="La Aldea - Local en Tala"
           fill
           className="object-cover object-[center_40%]"
@@ -54,7 +54,6 @@ export default function HomeHero() {
             </div>
 
             <h1 className="font-barlow font-black leading-[0.85] uppercase tracking-tight mb-2 md:mb-5 mt-2 sm:mt-4">
-              <span className={`block text-[clamp(3.4rem,9vw,5rem)] md:text-[clamp(2.8rem,7vw,5rem)] text-white/90 transition-all duration-700 ease-out delay-[150ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>La Aldea.</span>
               <span className={`block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-white transition-all duration-700 ease-out delay-[200ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>Riego.</span>
               <span className={`block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)] transition-all duration-700 ease-out delay-[280ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>Agua.</span>
               <span className={`block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-transparent transition-all duration-700 ease-out delay-[380ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ WebkitTextStroke: '2px rgba(255, 255, 255, 0.5)' }}>Campo.</span>
@@ -65,7 +64,7 @@ export default function HomeHero() {
               Si tenés un proyecto, te asesoramos sin costo.
             </p>
 
-            <div className={`flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-4 mb-8 md:mb-8 transition-all duration-600 ease-out delay-[560ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-6 mb-12 md:mb-8 transition-all duration-600 ease-out delay-[560ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <a href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación" target="_blank" rel="noopener noreferrer" className="flex-1 flex flex-col gap-0.5 px-5 py-3.5 bg-blue-600 text-white rounded-xl no-underline cursor-pointer transition-all duration-300 relative overflow-hidden group hover:bg-blue-500 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(37,99,235,0.4)]">
                 <span className="font-dm-mono text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-white/70">Para tu proyecto</span>
                 <span className="font-epilogue text-[15px] md:text-[16px] font-bold tracking-tight flex items-center gap-2">

@@ -76,9 +76,9 @@ export default function Header() {
             src="/logo.svg"
             alt="La Aldea"
             height={52}
-            className={`h-12 w-auto transition-all ${
+            className={`h-12 w-auto transition-all${
               scrolled || !isHomepage || mobileMenuOpen
-                ? 'brightness-0'
+                ? ' drop-shadow-[0_2px_8px_rgba(0,0,0,0.20)]'
                 : ''
             }`}
             style={{ maxWidth: '180px' }}

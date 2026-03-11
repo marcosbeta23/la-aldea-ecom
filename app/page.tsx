@@ -693,7 +693,7 @@ export default async function Home() {
               <div className="relative mx-4 lg:mx-0 order-2 lg:order-1">
                 <div className="aspect-[4/3] overflow-hidden rounded-3xl bg-slate-200 shadow-2xl">
                   <Image
-                    src="/assets/images/laaldeaedificio.webp"
+                    src="/assets/images/laaldeaedificiodia.avif"
                     alt="La Aldea - Local en Tala, Uruguay"
                     width={800}
                     height={600}
