@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { UserButton, useUser } from '@clerk/nextjs';
 import {
   LayoutDashboard, Package, ShoppingCart, Store, Tag, Star,
@@ -51,8 +52,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
       <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-slate-900 text-white transform transition-transform duration-200 ease-in-out flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <div className="shrink-0 flex items-center justify-between h-16 px-6 border-b border-slate-700">
-          <Link href="/admin" className="text-xl font-bold text-white">La Aldea</Link>
+        <div className="shrink-0 flex items-center justify-between h-20 px-6 border-b border-slate-700">
+          <Link href="/admin" className="transition-opacity hover:opacity-80">
+            <Image
+              src="/logo.svg"
+              alt="La Aldea Admin"
+              width={200}
+              height={65}
+              className="object-contain h-[45px] w-auto brightness-0 invert"
+            />
+          </Link>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 hover:bg-slate-800 rounded" aria-label="Cerrar menú">
             <X className="h-5 w-5" />
           </button>

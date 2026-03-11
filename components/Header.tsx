@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Droplets, MessageCircle, Menu, X } from 'lucide-react';
+import Image from 'next/image';
+import { MessageCircle, Menu, X } from 'lucide-react';
 import CartWidget from '@/components/cart/CartWidget';
 import WishlistWidget from '@/components/cart/WishlistWidget';
 
@@ -69,18 +70,19 @@ export default function Header() {
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80" aria-label="La Aldea - Ir a página de inicio">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/25">
-            <Droplets className="h-6 w-6 text-white" />
-          </div>
-          <div className="hidden sm:block">
-            <span className={`text-xl font-bold transition-colors ${scrolled || !isHomepage || mobileMenuOpen ? 'text-slate-900' : 'text-white'}`}>
-              La Aldea
-            </span>
-            <p className={`text-xs transition-colors ${scrolled || !isHomepage || mobileMenuOpen ? 'text-slate-500' : 'text-white/80'}`}>
-              Tala, Uruguay
-            </p>
-          </div>
+        <Link href="/" className="flex items-center transition-opacity hover:opacity-80" aria-label="La Aldea - Ir a página de inicio">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.svg"
+            alt="La Aldea"
+            height={52}
+            className={`h-12 w-auto transition-all ${
+              scrolled || !isHomepage || mobileMenuOpen
+                ? 'brightness-0'
+                : ''
+            }`}
+            style={{ maxWidth: '180px' }}
+          />
         </Link>
 
         {/* Desktop Navigation - Centered */}
@@ -158,7 +160,7 @@ export default function Header() {
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 sm:gap-6">
           {/* Wishlist Icon */}
           <WishlistWidget 
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${

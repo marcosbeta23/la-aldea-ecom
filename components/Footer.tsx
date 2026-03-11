@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Droplets, Phone, Mail, Instagram, Facebook } from 'lucide-react';
+import Image from 'next/image';
+import { Phone, Mail, Instagram, Facebook } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -8,11 +9,14 @@ export default function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           {/* Brand */}
           <div className="sm:col-span-2">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
-                <Droplets className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-slate-900">La Aldea</span>
+            <Link href="/" className="inline-block transition-opacity hover:opacity-80">
+               <Image 
+                src="/logo.svg" 
+                alt="La Aldea Logo"
+                width={260}
+                height={80}
+                className="object-contain h-[60px] w-auto lg:h-[80px]"
+               />
             </Link>
             <p className="mt-4 max-w-sm text-sm text-slate-600">
               Especialistas en bombas de agua, sistemas de riego e instalaciones hidráulicas
