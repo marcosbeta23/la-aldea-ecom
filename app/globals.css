@@ -9,8 +9,14 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), sans-serif;
+  --font-epilogue: var(--font-epilogue), sans-serif;
+  --font-barlow: var(--font-barlow-condensed), sans-serif;
+  --font-fraunces: var(--font-fraunces), serif;
+  --font-dm-mono: var(--font-dm-mono), monospace;
+  --color-navy: #0d1b2e;
+  --color-navy-mid: #12233a;
+  --color-sky-pale: #e0f2fe;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -83,11 +89,13 @@ select option {
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
 input[type="number"] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Hide scrollbar for horizontal scroll */

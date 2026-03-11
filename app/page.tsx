@@ -29,7 +29,7 @@ import {
   Settings
 } from "lucide-react";
 import PartnersCarouselClient from "@/components/ui/PartnersCarouselClient";
-import HeroSection from "@/components/HeroSection";
+import HomeHero from "@/components/home/HomeHero";
 
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
@@ -385,65 +385,7 @@ export default async function Home() {
         <Header />
 
         {/* Hero Section */}
-        <HeroSection>
-          {/* Background Image */}
-          <div className="absolute inset-0 will-change-transform">
-            <Image
-              src="/assets/images/laaldeaedificio.webp"
-              alt="La Aldea - Local en Tala"
-              fill
-              className="object-cover object-[center_40%]"
-              priority={true}
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              quality={75}
-            />
-            {/* Overlay with gradient for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
-          </div>
-          {/* Subtle pattern overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
-          
-          <div className="container relative mx-auto px-4 pt-32">
-            <div className="mx-auto max-w-4xl text-center">
-              <p className="mb-4 text-sm font-medium uppercase tracking-wider text-blue-200">
-                Más de 25 años en Tala, Canelones
-              </p>
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-                La Aldea
-              </h1>
-              <p className="mt-2 text-xl font-medium text-blue-100 md:text-2xl">
-                Sistemas de Riego e Instalaciones Hidráulicas
-              </p>
-              <p className="mt-4 text-base text-blue-200/80 italic">
-                Martín Betancor Peregalli
-              </p>
-              <p className="mx-auto mt-6 max-w-2xl text-lg text-blue-100/90 md:text-xl">
-                Bombas de agua, riego por goteo, tanques, droguería industrial y herramientas. 
-                Todo lo que necesitas para tu campo, hogar y piscina.
-              </p>
-              
-              {/* CTA Buttons - Services First Strategy */}
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-                <a
-                  href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20más%20información"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-blue-600 shadow-xl shadow-blue-900/20 transition-all hover:bg-blue-50 hover:shadow-2xl"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  Contactar por WhatsApp
-                </a>
-                <Link
-                  href="/productos"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-white/20 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/30"
-                >
-                  Ver Tienda
-                  <ChevronRight className="h-5 w-5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </HeroSection>
+        <HomeHero />
 
         {/* Trust / Benefits Bar */}
         <section id="main-content" className="relative z-10 border-b border-slate-100 bg-white py-4">

@@ -74,10 +74,10 @@ export default function Header() {
             <Droplets className="h-6 w-6 text-white" />
           </div>
           <div className="hidden sm:block">
-            <span className={`text-xl font-bold transition-colors ${scrolled || !isHomepage ? 'text-slate-900' : 'text-white'}`}>
+            <span className={`text-xl font-bold transition-colors ${scrolled || !isHomepage || mobileMenuOpen ? 'text-slate-900' : 'text-white'}`}>
               La Aldea
             </span>
-            <p className={`text-xs transition-colors ${scrolled || !isHomepage ? 'text-slate-500' : 'text-white/80'}`}>
+            <p className={`text-xs transition-colors ${scrolled || !isHomepage || mobileMenuOpen ? 'text-slate-500' : 'text-white/80'}`}>
               Tala, Uruguay
             </p>
           </div>

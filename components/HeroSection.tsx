@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 
-export default function HeroSection({ children }: { children: React.ReactNode }) {
+export default function HeroSection({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function HeroSection({ children }: { children: React.ReactNode })
   return (
     <section
       ref={ref}
-      className="relative overflow-hidden flex items-center touch-pan-y"
+      className={className || "relative overflow-hidden flex items-center touch-pan-y"}
       style={{ minHeight: '100svh' }} // fallback before JS runs
     >
       {children}

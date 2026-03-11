@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Barlow_Condensed, Fraunces, Epilogue, DM_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import dynamic from "next/dynamic";
 // ...existing code...
@@ -17,6 +17,35 @@ import { PostHogProvider } from "@/components/PostHogProvider";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow-condensed",
+  subsets: ["latin"],
+  weight: ["700", "900"],
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["300", "400"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const epilogue = Epilogue({
+  variable: "--font-epilogue",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -232,7 +261,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           `}
         </Script>
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
         <script
           type="application/ld+json"
