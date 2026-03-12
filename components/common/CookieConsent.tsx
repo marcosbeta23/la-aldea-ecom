@@ -72,7 +72,7 @@ export default function CookieConsent() {
             Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis 
             para entender cómo lo usás y mejorar tu experiencia.{' '}
             <Link href="/privacidad" className="text-blue-400 hover:text-blue-300 underline">
-              Más información
+              Ver política de privacidad
             </Link>
           </p>
         </div>
