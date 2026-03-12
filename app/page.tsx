@@ -30,6 +30,9 @@ import {
 } from "lucide-react";
 import PartnersCarouselClient from "@/components/ui/PartnersCarouselClient";
 import HomeHero from "@/components/home/HomeHero";
+import LazyMap from "@/components/ui/LazyMap";
+
+export const revalidate = 300; // Cache homepage for 5 minutes at the edge
 
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
@@ -341,26 +344,26 @@ const stats = [
 ];
 
 export default async function Home() {
-  // Fetch featured products from database — only products marked as featured
-  // Order by featured_order (nulls last), then by sold_count as fallback
-  const { data } = await supabaseAdmin
-    .from('products')
-    .select('*')
-    .eq('is_active', true)
-    .eq('is_featured', true)
-    .gt('stock', 0)
-    .order('featured_order', { ascending: true, nullsFirst: false })
-    .order('sold_count', { ascending: false })
-    .limit(20) as { data: any[] | null };
+  // Fetch featured products and partners in parallel to avoid waterfalls
+  const [productsRes, partnersRes] = await Promise.all([
+    supabaseAdmin
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .eq('is_featured', true)
+      .gt('stock', 0)
+      .order('featured_order', { ascending: true, nullsFirst: false })
+      .order('sold_count', { ascending: false })
+      .limit(20),
+    supabaseAdmin
+      .from('partners')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+  ]);
   
-  const featuredProducts = (data || []) as Product[];
-
-  // Fetch partners/brands from database
-  const { data: dbPartners } = await supabaseAdmin
-    .from('partners')
-    .select('*')
-    .eq('is_active', true)
-    .order('display_order', { ascending: true }) as { data: any[] | null };
+  const featuredProducts = (productsRes.data || []) as Product[];
+  const dbPartners = partnersRes.data;
 
   // Use DB partners with fallback to hardcoded array
   const activePartners = (dbPartners && dbPartners.length > 0)
@@ -807,20 +810,8 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Embedded Google Map */}
-            <div className="mt-8 overflow-hidden rounded-3xl bg-white shadow-lg">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3294.1314809828673!2d-55.76369469999999!3d-34.3471317!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95a06b0d701e68b7%3A0x5c6ea977f048f63!2sLa%20Aldea%20-%20Mart%C3%ADn%20Betancor!5e0!3m2!1ses-419!2suy!4v1768700144456!5m2!1ses-419!2suy"
-                width="100%"
-                height="400"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Ubicación de La Aldea en Google Maps"
-                className="w-full"
-              />
-            </div>
+            {/* Lazy Loaded Google Map */}
+            <LazyMap />
           </div>
         </section>
 

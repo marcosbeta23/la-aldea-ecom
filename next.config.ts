@@ -9,15 +9,6 @@ const nextConfig: NextConfig = {
       '@clerk/nextjs',
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: '/faq/:slug',
-        destination: '/guias/:slug',
-        permanent: true,
-      },
-    ];
-  },
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
