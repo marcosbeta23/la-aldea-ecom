@@ -12,6 +12,7 @@
     "@clerk/localizations": "^3.35.3",
     "@clerk/nextjs": "^6.37.3",
     "@hookform/resolvers": "^5.2.2",
+    "@marsidev/react-turnstile": "^1.4.2",
     "@next/bundle-analyzer": "^16.1.4",
     "@react-email/components": "^1.0.8",
     "@sentry/nextjs": "^10.38.0",
@@ -30,6 +31,7 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",
     "recharts": "^3.7.0",
+    "sanitize-html": "^2.17.1",
     "zod": "^3.23.8",
     "zustand": "^5.0.10"
   },
@@ -38,6 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.2",
     "tailwindcss": "^4",

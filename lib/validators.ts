@@ -34,6 +34,8 @@ export const CreateOrderSchema = z.object({
     })
   ).min(1, 'Cart cannot be empty'),
   couponCode: z.string().max(50).optional(),
+  // Fix #3: Cloudflare Turnstile token — optional so graceful degradation when key not configured
+  turnstile_token: z.string().optional(),
 }).refine((data) => {
   // If invoice_rut is selected, invoice_tax_id and invoice_business_name are required
   if (data.customer.invoice_type === 'invoice_rut') {
@@ -52,6 +54,8 @@ export const CreateReviewSchema = z.object({
   customer_email: z.string().email('Invalid email address').optional(),
   rating: z.number().int().min(1, 'Rating must be between 1 and 5').max(5, 'Rating must be between 1 and 5'),
   comment: z.string().max(1000, 'Comment too long (max 1000 characters)').optional(),
+  // Fix #2: honeypot field — bots fill this, real users never do
+  website: z.string().optional(),
 });
 
 // Schema for validating coupons

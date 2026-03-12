@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { inngest } from '@/lib/inngest';
+import { withMinDelay } from '@/lib/utils';
 
 // POST /api/checkout-attempt
 // Saves a checkout attempt for abandoned cart recovery.
-// Upserts by email — if same email within 2 hours, updates instead of creating.
+// Fix #7: Always returns same response shape regardless of whether email is known.
+// withMinDelay normalises response timing to prevent email enumeration via timing attacks.
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,19 +28,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for an existing attempt from this email within the last 2 hours
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-
-    const { data: existing } = await (supabaseAdmin as any)
-      .from('checkout_attempts')
-      .select('id')
-      .eq('email', email.toLowerCase().trim())
-      .gte('created_at', twoHoursAgo)
-      .eq('recovered', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
     const attemptData = {
       email: email.toLowerCase().trim(),
       phone: phone || null,
@@ -48,27 +37,45 @@ export async function POST(request: NextRequest) {
       currency: currency || 'UYU',
     };
 
+    // Fix #7: Always upsert — never reveal whether email exists via different code paths.
+    // withMinDelay normalises wall-clock time regardless of DB hit/miss speed.
     let attemptId: string | undefined;
 
-    if (existing) {
-      // Update existing attempt
-      await (supabaseAdmin as any)
-        .from('checkout_attempts')
-        .update({
-          ...attemptData,
-          created_at: new Date().toISOString(),
-        })
-        .eq('id', existing.id);
-      attemptId = existing.id;
-    } else {
-      // Insert new attempt — capture the ID for Inngest
-      const { data: inserted } = await (supabaseAdmin as any)
-        .from('checkout_attempts')
-        .insert(attemptData)
-        .select('id')
-        .single();
-      attemptId = inserted?.id;
-    }
+    await withMinDelay(
+      (async () => {
+        // Check for an existing attempt from this email within the last 2 hours
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+
+        const { data: existing } = await (supabaseAdmin as any)
+          .from('checkout_attempts')
+          .select('id')
+          .eq('email', attemptData.email)
+          .gte('created_at', twoHoursAgo)
+          .eq('recovered', false)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (existing) {
+          await (supabaseAdmin as any)
+            .from('checkout_attempts')
+            .update({
+              ...attemptData,
+              created_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id);
+          attemptId = existing.id;
+        } else {
+          const { data: inserted } = await (supabaseAdmin as any)
+            .from('checkout_attempts')
+            .insert(attemptData)
+            .select('id')
+            .single();
+          attemptId = inserted?.id;
+        }
+      })(),
+      300 // minimum 300ms response time
+    );
 
     // Fire Inngest event for abandoned cart recovery (non-blocking)
     if (attemptId) {
@@ -92,6 +99,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Fix #7: Always return success — same shape regardless of whether email existed
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Checkout attempt error:', error);

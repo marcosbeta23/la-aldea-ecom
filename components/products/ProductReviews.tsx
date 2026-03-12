@@ -19,6 +19,7 @@ export default function ProductReviews({ productId, reviews, avgRating }: Produc
     email: '',
     rating: 5,
     comment: '',
+    website: '', // honeypot — always empty for real users; bots fill this
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,12 +36,13 @@ export default function ProductReviews({ productId, reviews, avgRating }: Produc
           customer_email: formData.email,
           rating: formData.rating,
           comment: formData.comment,
+          website: formData.website, // honeypot — empty for real users
         }),
       });
 
       if (response.ok) {
         setSubmitted(true);
-        setFormData({ name: '', email: '', rating: 5, comment: '' });
+        setFormData({ name: '', email: '', rating: 5, comment: '', website: '' });
       }
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -179,6 +181,18 @@ export default function ProductReviews({ productId, reviews, avgRating }: Produc
         {showForm && !submitted && (
           <form onSubmit={handleSubmit} className="space-y-4 mt-6 p-6 bg-slate-50 rounded-xl">
             <h3 className="text-lg font-semibold text-slate-900">Escribí tu reseña</h3>
+
+            {/* Fix #2 — Honeypot field: hidden from real users, bots fill it */}
+            <input
+              type="text"
+              name="website"
+              autoComplete="off"
+              tabIndex={-1}
+              aria-hidden="true"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              style={{ display: 'none' }}
+            />
             
             <div className="grid sm:grid-cols-2 gap-4">
               <div>

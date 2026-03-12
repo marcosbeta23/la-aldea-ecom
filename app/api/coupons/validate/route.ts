@@ -3,13 +3,21 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { DiscountCoupon } from '@/types/database';
 import { ValidateCouponSchema } from '@/lib/validators';
 import { couponsLimiter } from '@/lib/rate-limit';
-import { couponsRatelimit, getClientIp } from '@/lib/redis';
+import { couponsRatelimit, couponsGlobalRatelimit, getClientIp } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
-  // ⚡ RATE LIMITING - Max 10 validations per minute per IP
+  // ⚡ RATE LIMITING — global check first (prevents enumeration via rotating IPs)
   const ip = getClientIp(request);
 
-  // Prefer Upstash distributed rate limiter; fall back to in-memory LRU
+  // Fix #4 — Global rate limit: 100 total coupon checks/min across ALL IPs
+  if (couponsGlobalRatelimit) {
+    const { success } = await couponsGlobalRatelimit.limit('global');
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests.' }, { status: 429 });
+    }
+  }
+
+  // Per-IP rate limit (existing: 10/min per IP)
   if (couponsRatelimit) {
     const { success } = await couponsRatelimit.limit(ip);
     if (!success) {
@@ -56,9 +64,10 @@ export async function POST(request: NextRequest) {
       .single() as { data: any; error: any };
 
     if (error || !data) {
+      // Fix #4 — Always return same message for invalid/non-existent codes (prevents enumeration)
       return NextResponse.json(
-        { error: 'Cupón no válido' },
-        { status: 404 }
+        { valid: false, error: 'Código no válido o expirado.' },
+        { status: 200 }
       );
     }
 
@@ -66,17 +75,19 @@ export async function POST(request: NextRequest) {
 
     // Check expiration
     if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
+      // Fix #4 — Uniform error message (don't reveal whether code exists vs expired)
       return NextResponse.json(
-        { error: 'Este cupón ha expirado' },
-        { status: 400 }
+        { valid: false, error: 'Código no válido o expirado.' },
+        { status: 200 }
       );
     }
 
     // Check usage limit
     if (coupon.max_uses && coupon.current_uses >= coupon.max_uses) {
+      // Fix #4 — Uniform error message
       return NextResponse.json(
-        { error: 'Este cupón ya alcanzó su límite de uso' },
-        { status: 400 }
+        { valid: false, error: 'Código no válido o expirado.' },
+        { status: 200 }
       );
     }
 

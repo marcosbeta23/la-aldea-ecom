@@ -8,6 +8,8 @@ import { abandonedCartRecovery } from '@/inngest/functions/abandoned-cart-recove
 import { orderConfirmation } from '@/inngest/functions/order-confirmation';
 import { stockReservationExpiry } from '@/inngest/functions/stock-reservation-expiry';
 import { orderStatusNotification } from '@/inngest/functions/order-status-notification';
+// Fix #5: Maintenance cron via Inngest (cryptographically signed, no CRON_SECRET header needed)
+import { maintenanceCron } from '@/inngest/functions/maintenance';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -16,5 +18,7 @@ export const { GET, POST, PUT } = serve({
     orderConfirmation,
     stockReservationExpiry,
     orderStatusNotification,
+    maintenanceCron,
   ],
 });
+

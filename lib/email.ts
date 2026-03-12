@@ -9,6 +9,7 @@ import TransferOrderConfirmation from '@/emails/TransferOrderConfirmation';
 import AdminNotification from '@/emails/AdminNotification';
 import StatusUpdate from '@/emails/StatusUpdate';
 import InvoiceEmail from '@/emails/InvoiceEmail';
+import { generateOrderToken } from '@/lib/order-token';
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'no-reply@laaldeatala.com.uy';
@@ -85,6 +86,17 @@ export async function sendOrderConfirmation({ order, items }: SendOrderConfirmat
     return false;
   }
 
+  // Fix #1: Build authenticated tracking URL with signed HMAC token
+  // This prevents IDOR — only the email recipient can access order details.
+  const appUrl = process.env.APP_URL || 'https://laaldeatala.com.uy';
+  let trackingUrl = `${appUrl}/pedido/${order.id}`;
+  try {
+    const token = generateOrderToken(order.id, order.customer_email);
+    trackingUrl = `${appUrl}/pedido/${order.id}?email=${encodeURIComponent(order.customer_email)}&token=${token}`;
+  } catch (err) {
+    console.warn('[Email] Could not generate order token (ORDER_TOKEN_SECRET not set?):', err);
+  }
+
   const htmlContent = await render(OrderConfirmation({
     orderNumber: order.order_number,
     createdAt: order.created_at,
@@ -103,7 +115,7 @@ export async function sendOrderConfirmation({ order, items }: SendOrderConfirmat
     discountAmount: order.discount_amount,
     total: order.total,
     orderId: order.id,
-    appUrl: process.env.APP_URL || 'https://laaldeatala.com.uy',
+    appUrl: trackingUrl, // Use authenticated URL
     reviewUrl: process.env.GOOGLE_REVIEW_URL || undefined,
   }));
 
@@ -125,6 +137,16 @@ export async function sendTransferOrderConfirmation({ order, items }: SendOrderC
     return false;
   }
 
+  // Fix #1: Build authenticated tracking URL with signed HMAC token
+  const appUrl = process.env.APP_URL || 'https://laaldeatala.com.uy';
+  let trackingUrl = `${appUrl}/pedido/${order.id}`;
+  try {
+    const token = generateOrderToken(order.id, order.customer_email);
+    trackingUrl = `${appUrl}/pedido/${order.id}?email=${encodeURIComponent(order.customer_email)}&token=${token}`;
+  } catch (err) {
+    console.warn('[Email] Could not generate order token:', err);
+  }
+
   const htmlContent = await render(TransferOrderConfirmation({
     orderNumber: order.order_number,
     createdAt: order.created_at,
@@ -143,7 +165,7 @@ export async function sendTransferOrderConfirmation({ order, items }: SendOrderC
     total: order.total,
     currency: order.currency || 'UYU',
     orderId: order.id,
-    appUrl: process.env.APP_URL || 'https://laaldeatala.com.uy',
+    appUrl: trackingUrl, // Use authenticated URL
   }));
 
   return sendEmail({

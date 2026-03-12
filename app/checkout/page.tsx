@@ -12,6 +12,8 @@ import Header from '@/components/Header';
 import { trackBeginCheckout } from '@/components/Analytics';
 import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONFIG, DAC_RATES } from '@/lib/shipping';
 import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
+// Fix #3 — Cloudflare Turnstile (Managed mode: invisible for ~99% of users)
+import { Turnstile } from '@marsidev/react-turnstile';
 
 interface CouponData {
   code: string;
@@ -32,6 +34,9 @@ export default function CheckoutPage() {
   const [submitError, setSubmitError] = useState('');
   const [freightConfirmed, setFreightConfirmed] = useState(false);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  // Fix #3 — Turnstile token (undefined if key not configured)
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   // React Hook Form with Zod validation
   const {
@@ -323,6 +328,8 @@ export default function CheckoutPage() {
             quantity: item.quantity,
           })),
           couponCode: appliedCoupon?.code,
+          // Fix #3 — include Turnstile token when available
+          ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
         }),
       });
 
@@ -1143,6 +1150,20 @@ export default function CheckoutPage() {
                   {submitError && (
                     <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
                       {submitError}
+                    </div>
+                  )}
+
+                  {/* Fix #3 — Turnstile CAPTCHA (Managed mode: invisible for ~99% of real users) */}
+                  {turnstileSiteKey && (
+                    <div className="mb-4">
+                      <Turnstile
+                        siteKey={turnstileSiteKey}
+                        options={{
+                          theme: 'light',
+                          appearance: 'interaction-only', // only shows challenge for suspicious traffic
+                        }}
+                        onSuccess={(token) => setTurnstileToken(token)}
+                      />
                     </div>
                   )}
 

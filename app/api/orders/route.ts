@@ -6,6 +6,25 @@ import { ordersRatelimit, getClientIp } from '@/lib/redis';
 import { alertNewOrder, alertNewTransferOrder } from '@/lib/telegram';
 import { getExchangeRate, convertPrice } from '@/lib/exchange-rate';
 import { sendTransferOrderConfirmation } from '@/lib/email';
+import { verifyOrderToken } from '@/lib/order-token';
+
+// Fix #3 — Cloudflare Turnstile verification (skipped when env var not configured)
+async function verifyTurnstile(token: string): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true; // graceful degradation if not configured
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, response: token }),
+    });
+    const data = await res.json();
+    return data.success === true;
+  } catch {
+    // If Turnstile API is unreachable, allow through to avoid blocking real users
+    return true;
+  }
+}
 
 // 🔒 SECURE ORDER CREATION
 // This version NEVER trusts frontend prices
@@ -51,7 +70,50 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { items, couponCode, customer } = validation.data;
+    const { items, couponCode, customer, turnstile_token } = validation.data;
+
+    // Fix #3 — Turnstile CAPTCHA (only enforced when TURNSTILE_SECRET_KEY is set)
+    if (process.env.TURNSTILE_SECRET_KEY && turnstile_token) {
+      const isHuman = await verifyTurnstile(turnstile_token);
+      if (!isHuman) {
+        return NextResponse.json(
+          { success: false, error: 'Verificación de seguridad fallida. Recargá la página e intentá de nuevo.' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Fix #3 — Email-based rate limit (in addition to IP-based limit above)
+    const emailKey = `order:email:${(customer.email || customer.phone).toLowerCase()}`;
+    if (ordersRatelimit) {
+      const { success } = await ordersRatelimit.limit(emailKey);
+      if (!success) {
+        return NextResponse.json(
+          { success: false, error: 'Demasiados pedidos. Por favor esperá un momento antes de intentar nuevamente.' },
+          { status: 429 }
+        );
+      }
+    }
+
+    // Fix #3 — Pending order cap: max 5 pending orders per email in the last hour
+    if (customer.email) {
+      const { count } = await (supabaseAdmin as any)
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('customer_email', customer.email.toLowerCase())
+        .eq('status', 'pending')
+        .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString());
+
+      if ((count ?? 0) >= 5) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Tenés pedidos pendientes de pago. Completá uno o esperá unos minutos antes de crear otro.',
+          },
+          { status: 429 }
+        );
+      }
+    }
     const paymentCurrency = customer.payment_currency || 'UYU';
     
     // 2️⃣ FETCH PRODUCTS FROM DATABASE (source of truth)
@@ -193,6 +255,15 @@ export async function POST(request: NextRequest) {
     
     // Determine payment method
     const paymentMethod = customer.payment_method || 'mercadopago';
+
+    // Fix #3 — Reservation window split by payment method
+    // Transfer customers in Uruguay often pay hours later — keep their 24h window.
+    // MercadoPago redirects complete in minutes — reduce to 30min to free up stock faster.
+    const RESERVATION_MINUTES =
+      paymentMethod === 'transfer'    ? 1440 :  // 24h
+      paymentMethod === 'mercadopago' ? 30   :  // 30 min
+      60;                                       // fallback
+    const reservedUntil = new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000).toISOString();
     
     // 7️⃣ CREATE ORDER IN DATABASE
     const { data: order, error: orderError } = await supabaseAdmin
@@ -480,12 +551,16 @@ async function validateCoupon(code: string, subtotal: number) {
   };
 }
 
-// GET order by order_number or order_id
+// GET order — Fix #1: Require signed HMAC token to prevent IDOR
+// Public (unauthenticated) access requires ?email=&token= query params.
+// Admin-only routes (/api/admin/orders) bypass this and use Clerk auth.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const orderNumber = searchParams.get('order_number');
     const orderId = searchParams.get('order_id');
+    const token = searchParams.get('token');
+    const email = searchParams.get('email');
 
     if (!orderNumber && !orderId) {
       return NextResponse.json(
@@ -494,13 +569,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Require signed token + email for public order lookups
+    if (!token || !email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch order first to get the orderId for token validation
     let query = (supabaseAdmin as any)
       .from('orders')
-      .select(`
-        *,
-        order_items (*)
-      `);
-    
+      .select('id, order_number, status, customer_name, shipping_address, total, created_at, customer_email')
+      .eq('customer_email', email.toLowerCase().trim()); // DB-level ownership check
+
     if (orderId) {
       query = query.eq('id', orderId);
     } else {
@@ -510,13 +589,18 @@ export async function GET(request: NextRequest) {
     const { data: order, error } = await query.single();
 
     if (error || !order) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
+      // Return 401 not 404 to avoid confirming/denying existence
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    return NextResponse.json({ order });
+    // Verify HMAC token against the found order ID
+    if (!verifyOrderToken(order.id, email.toLowerCase().trim(), token)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Return limited fields (never return full PII unnecessarily)
+    const { customer_email: _omit, ...safeOrder } = order;
+    return NextResponse.json({ order: safeOrder });
   } catch (error) {
     console.error('Get order error:', error);
     return NextResponse.json(

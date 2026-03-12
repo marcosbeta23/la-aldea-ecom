@@ -95,6 +95,14 @@ export const couponsRatelimit = createRatelimit({
   prefix: 'rl:coupons',
 });
 
+// Global coupon rate limit (across ALL IPs) — limits total enumeration attempts
+// even when attackers rotate IP addresses.
+export const couponsGlobalRatelimit = createRatelimit({
+  requests: 100,
+  window: '1 m',
+  prefix: 'rl:coupons:global',
+});
+
 export const quoteRatelimit = createRatelimit({
   requests: 3,
   window: '60 s',

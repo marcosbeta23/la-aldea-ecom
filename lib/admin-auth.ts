@@ -1,5 +1,6 @@
 // lib/admin-auth.ts
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { supabaseAdmin } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
 export type AdminRole = 'owner' | 'staff';
@@ -23,20 +24,55 @@ export async function getAdminRole(): Promise<AdminRole | null> {
 }
 
 /**
+ * Check that no is_active=false override exists in admin_users for this email.
+ * Returns true if the user is allowed (active or not found in table).
+ * Returns false if explicitly deactivated.
+ */
+async function checkIsActive(email: string): Promise<boolean> {
+  if (!email) return true; // no email = let Clerk handle it
+  try {
+    const { data } = await (supabaseAdmin as any)
+      .from('admin_users')
+      .select('is_active')
+      .eq('email', email.toLowerCase().trim())
+      .single();
+    // If row not found (data is null) allow through — not all admins are in the table
+    if (data === null) return true;
+    return (data as any).is_active === true;
+  } catch {
+    // On DB error, allow through to avoid locking out admins on transient failures
+    return true;
+  }
+}
+
+/**
  * Verify that the current request is from any authenticated admin.
- * Use this in staff-accessible admin API routes.
+ * Also cross-checks is_active in admin_users table (fix for admin deactivation gap).
  */
 export async function verifyAdminAuth(): Promise<
   { authorized: true; userId: string; role: AdminRole } |
   { authorized: false; response: NextResponse }
 > {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
   if (!userId) {
     return {
       authorized: false,
       response: NextResponse.json({ error: 'No autorizado' }, { status: 401 }),
     };
   }
+
+  // Fix #6: check is_active in DB — deactivated employees get 403 even if their Clerk session is still valid
+  const email = (sessionClaims?.email as string) ?? '';
+  if (email) {
+    const active = await checkIsActive(email);
+    if (!active) {
+      return {
+        authorized: false,
+        response: NextResponse.json({ error: 'Cuenta desactivada' }, { status: 403 }),
+      };
+    }
+  }
+
   const role = await getAdminRole();
   if (!role) {
     return {
@@ -49,12 +85,26 @@ export async function verifyAdminAuth(): Promise<
 
 /**
  * Verify that the current request is from an owner.
- * Use this in owner-only admin API routes.
+ * Also cross-checks is_active in admin_users table.
  */
 export async function verifyOwnerAuth(): Promise<
   { authorized: true; userId: string } |
   { authorized: false; response: NextResponse }
 > {
+  const { userId, sessionClaims } = await auth();
+
+  // Fix #6: check is_active before role
+  const email = (sessionClaims?.email as string) ?? '';
+  if (email) {
+    const active = await checkIsActive(email);
+    if (!active) {
+      return {
+        authorized: false,
+        response: NextResponse.json({ error: 'Cuenta desactivada' }, { status: 403 }),
+      };
+    }
+  }
+
   const role = await getAdminRole();
   if (role !== 'owner') {
     return {
@@ -62,6 +112,5 @@ export async function verifyOwnerAuth(): Promise<
       response: NextResponse.json({ error: 'Acceso restringido al propietario' }, { status: 403 }),
     };
   }
-  const { userId } = await auth();
   return { authorized: true, userId: userId! };
 }
