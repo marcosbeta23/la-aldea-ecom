@@ -45,13 +45,7 @@ const FeaturedCarousel = dynamic(
   }
 );
 
-const PartnersCarouselClient = dynamic(
-  () => import('@/components/ui/PartnersCarouselClient'),
-  {
-    ssr: false,
-    loading: () => <div className="h-20 animate-pulse bg-slate-100 rounded-xl" />,
-  }
-);
+import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
 
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
 
@@ -464,7 +458,7 @@ export default async function Home() {
           </div>
           <div className="relative">
             {/* Seamless partners carousel */}
-            <PartnersCarouselClient partners={activePartners} speed={60} />
+            <PartnersCarouselWrapper partners={activePartners} speed={60} />
           </div>
         </section>
 
