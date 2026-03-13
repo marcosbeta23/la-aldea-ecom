@@ -4,7 +4,7 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Product } from "@/types/database";
-import FeaturedCarousel from "@/components/products/FeaturedCarousel";
+// import FeaturedCarousel from "@/components/products/FeaturedCarousel";
 import {
   Droplets,
   Wrench,
@@ -28,9 +28,30 @@ import {
   Award,
   Settings
 } from "lucide-react";
-import PartnersCarouselClient from "@/components/ui/PartnersCarouselClient";
 import HomeHero from "@/components/home/HomeHero";
 import LazyMap from "@/components/ui/LazyMap";
+import dynamic from 'next/dynamic';
+
+const FeaturedCarousel = dynamic(
+  () => import('@/components/products/FeaturedCarousel'),
+  {
+    loading: () => (
+      <div className="flex gap-4 overflow-hidden">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="min-w-[220px] h-[280px] bg-slate-100 rounded-2xl animate-pulse shrink-0" />
+        ))}
+      </div>
+    ),
+  }
+);
+
+const PartnersCarouselClient = dynamic(
+  () => import('@/components/ui/PartnersCarouselClient'),
+  {
+    ssr: false,
+    loading: () => <div className="h-20 animate-pulse bg-slate-100 rounded-xl" />,
+  }
+);
 
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
 

@@ -10,25 +10,29 @@ Sentry.init({
   // Use tunnel to avoid ad blockers
   tunnel: "/api/sentry-tunnel",
 
-  // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
-
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
   // Define how likely Replay events are sampled.
-  // This sets the sample rate to be 10%. You may want this to be 100% while
-  // in development and sample at a lower rate in production
   replaysSessionSampleRate: 0.1,
 
   // Define how likely Replay events are sampled when an error occurs.
   replaysOnErrorSampleRate: 1.0,
 
   // Enable sending user PII (Personally Identifiable Information)
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
   sendDefaultPii: false,
 });
+
+// Lazy-load Replay only after page is interactive
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    setTimeout(async () => {
+      const { replayIntegration } = await import('@sentry/nextjs');
+      Sentry.addIntegration(replayIntegration());
+    }, 5000); // 5s after load
+  });
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

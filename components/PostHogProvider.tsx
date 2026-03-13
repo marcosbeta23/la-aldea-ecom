@@ -30,6 +30,7 @@ if (typeof window !== 'undefined' && POSTHOG_KEY && process.env.NODE_ENV === 'pr
         capture_pageleave: true,
         persistence,
         disable_session_recording: true, // Don't load recorder on init
+        disable_surveys: true, // Prevents loading surveys.js
         loaded: (ph) => {
           // Enable recording only after the page is fully loaded and idle
           if (typeof window !== 'undefined') {

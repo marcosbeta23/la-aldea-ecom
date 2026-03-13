@@ -13,7 +13,7 @@ interface PartnersCarouselProps {
 export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
   // Multiply the partners array to ensure enough width for seamless scrolling
   // We need enough content to fill the screen twice at least so the loop is invisible
-  const displayPartners = [...partners, ...partners, ...partners, ...partners, ...partners, ...partners];
+  const displayPartners = [...partners, ...partners, ...partners];
 
   return (
     <div className="relative overflow-hidden w-full flex items-center">

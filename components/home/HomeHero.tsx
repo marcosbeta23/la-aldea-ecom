@@ -48,7 +48,7 @@ export default function HomeHero() {
 
             <h1 className="font-barlow font-black leading-[0.85] uppercase tracking-tight mb-2 md:mb-5 mt-2 sm:mt-4">
               <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-white hero-fade-up hero-delay-2">Riego.</span>
-              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)] hero-fade-up hero-delay-3">Agua.</span>
+              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)]">Agua.</span>
               <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-transparent hero-fade-up hero-delay-4" style={{ WebkitTextStroke: '2px rgba(255, 255, 255, 0.5)' }}>Campo.</span>
             </h1>
 

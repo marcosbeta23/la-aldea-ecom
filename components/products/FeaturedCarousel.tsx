@@ -307,6 +307,7 @@ export default function FeaturedCarousel({
                         alt={product.name}
                         width={300}
                         height={225}
+                        sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 220px"
                         className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
                         draggable={false}
                       />
