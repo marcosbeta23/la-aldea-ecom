@@ -75,6 +75,7 @@ export default function Header() {
           <img
             src="/logo.svg"
             alt="La Aldea"
+            width={180}
             height={52}
             className={`h-12 w-auto transition-all${
               scrolled || !isHomepage || mobileMenuOpen

@@ -125,6 +125,30 @@ input[type="number"] {
   animation-play-state: paused;
 }
 
+/* Performance optimizations: Hero animations */
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(2rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes heroSlideIn {
+  from { opacity: 0; transform: translateX(-1rem); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.hero-fade-up   { animation: heroFadeUp  0.7s ease-out forwards; }
+.hero-fade-in   { animation: heroFadeIn  0.55s ease-out forwards; }
+.hero-slide-in  { animation: heroSlideIn 0.55s ease-out forwards; }
+
+.hero-delay-1 { animation-delay: 100ms; }
+.hero-delay-2 { animation-delay: 200ms; }
+.hero-delay-3 { animation-delay: 280ms; }
+.hero-delay-4 { animation-delay: 360ms; }
+.hero-delay-5 { animation-delay: 440ms; }
+
 /* Skip to content — Accessibility */
 .skip-to-content {
   position: absolute;

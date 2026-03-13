@@ -29,6 +29,17 @@ if (typeof window !== 'undefined' && POSTHOG_KEY && process.env.NODE_ENV === 'pr
         capture_pageview: false, // We capture manually for SPA navigation
         capture_pageleave: true,
         persistence,
+        disable_session_recording: true, // Don't load recorder on init
+        loaded: (ph) => {
+          // Enable recording only after the page is fully loaded and idle
+          if (typeof window !== 'undefined') {
+            window.addEventListener('load', () => {
+              setTimeout(() => {
+                ph.startSessionRecording();
+              }, 3000); // 3 seconds after load event
+            });
+          }
+        },
       });
     }, 2000);
   });

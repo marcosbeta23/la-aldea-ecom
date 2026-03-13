@@ -476,6 +476,7 @@ export default async function Home() {
                       src={category.image}
                       alt={category.title}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     {/* Gradient overlay */}
@@ -569,6 +570,7 @@ export default async function Home() {
                     alt="Sistema de riego profesional - La Aldea"
                     width={800}
                     height={500}
+                    sizes="(max-width: 768px) 100vw, 600px"
                     className="h-full w-full object-cover"
                   />
                 </div>
