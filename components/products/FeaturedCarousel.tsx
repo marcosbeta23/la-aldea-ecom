@@ -361,7 +361,7 @@ export default function FeaturedCarousel({
 
       {/* Progress bar indicator */}
       <div className="mt-4 flex items-center justify-center gap-3">
-        <span className="text-xs text-slate-400 tabular-nums">
+        <span className="text-xs text-slate-600 tabular-nums">
           {normalizedIndex + 1}/{total}
         </span>
         <div className="w-24 sm:w-32 h-1 rounded-full bg-slate-200 overflow-hidden">

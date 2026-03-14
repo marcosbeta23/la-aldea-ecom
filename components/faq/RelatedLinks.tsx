@@ -66,6 +66,7 @@ export default function RelatedLinks({ article, relatedArticles = [] }: RelatedL
           href="https://wa.me/59892744725"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Contactar por WhatsApp"
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-green-800 font-semibold rounded-xl hover:bg-green-50 transition-colors text-sm"
         >
           WhatsApp

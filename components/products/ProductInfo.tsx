@@ -218,6 +218,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por la disponibilidad de: ${product.name} (SKU: ${product.sku})`)}`}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Consultar disponibilidad por WhatsApp"
           className="inline-flex items-center gap-2 mt-2 text-xs sm:text-sm text-green-600 hover:text-green-700 transition-colors"
         >
           <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -278,6 +279,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Estoy interesado en: ${product.name} (SKU: ${product.sku}). ¿Lo pueden conseguir?`)}`}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Consultar por WhatsApp"
             className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base bg-green-600 text-white hover:bg-green-700 transition-colors w-full"
           >
             <MessageCircle className="h-5 w-5" />
@@ -349,6 +351,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Me interesa comprar: ${product.name} (SKU: ${product.sku}) - ${formatPrice(product.price_numeric, product.currency)}`)}`}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Comprar por WhatsApp"
           className="flex items-center justify-center gap-2 mb-4 sm:mb-6 py-2.5 sm:py-3 rounded-xl font-medium text-xs sm:text-sm bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition-colors w-full"
         >
           <MessageCircle className="h-4 w-4" />

@@ -189,6 +189,7 @@ export default function Header() {
             href="https://wa.me/59892744725"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Contactar por WhatsApp"
             className="hidden sm:flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-green-700/25 transition-all hover:bg-green-800 hover:shadow-xl hover:shadow-green-700/30"
           >
             <MessageCircle className="h-4 w-4" />
@@ -304,6 +305,7 @@ export default function Header() {
               href="https://wa.me/59892744725"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Contactar por WhatsApp"
               className="flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 text-base font-medium text-white shadow-lg transition-all hover:bg-green-600"
             >
               <MessageCircle className="h-5 w-5" />

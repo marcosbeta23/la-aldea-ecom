@@ -5,15 +5,9 @@ import Image from 'next/image';
 
 export default function HeroSection({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLElement>(null);
-
   useEffect(() => {
-    // Capture height ONCE on mount, before any scroll happens
-    // Never update on scroll — this is what Safari does natively
-    if (ref.current) {
-      ref.current.style.minHeight = `${window.innerHeight}px`;
-    }
-
-    // Only update on orientation change (rotating phone), not scroll
+    // Only update on orientation change (rotating phone), not on mount
+    // CSS 100svh handles the initial sizing without forcing a layout read
     const handleOrientationChange = () => {
       setTimeout(() => {
         if (ref.current) {
@@ -25,6 +19,7 @@ export default function HeroSection({ children, className }: { children: React.R
     window.addEventListener('orientationchange', handleOrientationChange);
     return () => window.removeEventListener('orientationchange', handleOrientationChange);
   }, []);
+
 
   return (
     <section

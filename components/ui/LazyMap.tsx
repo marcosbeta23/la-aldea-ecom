@@ -41,7 +41,7 @@ export default function LazyMap() {
         <div className="w-full h-full bg-slate-100 flex items-center justify-center">
           <div className="text-center">
             <MapPin className="h-6 w-6 text-slate-300 mx-auto mb-2" />
-            <span className="text-xs text-slate-400">Cargando mapa...</span>
+            <span className="text-xs text-slate-600">Cargando mapa...</span>
           </div>
         </div>
       )}

@@ -58,15 +58,21 @@ export default function HomeHero() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
-              <a href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación" target="_blank" rel="noopener noreferrer" className="flex-1 flex flex-col gap-0.5 px-5 py-3.5 bg-blue-600 text-white rounded-xl no-underline cursor-pointer transition-all duration-300 relative overflow-hidden group hover:bg-blue-500 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(37,99,235,0.4)]">
-                <span className="font-dm-mono text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-white/70">Para tu proyecto</span>
+              <a 
+                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                aria-label="Consultar por WhatsApp — La Aldea"
+                className="flex-1 flex flex-col gap-0.5 px-5 py-3.5 bg-blue-600 text-white rounded-xl no-underline cursor-pointer transition-all duration-300 relative overflow-hidden group hover:bg-blue-500 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(37,99,235,0.4)]"
+              >
+                <span className="font-dm-mono text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-white/90">Para tu proyecto</span>
                 <span className="font-epilogue text-[15px] md:text-[16px] font-bold tracking-tight flex items-center gap-2">
                   Consultar instalación
                   <span className="transition-transform duration-300 group-hover:translate-x-1.5">→</span>
                 </span>
               </a>
               <a href="/productos" className="flex-1 flex flex-col gap-0.5 px-5 py-3.5 bg-white/10 text-white rounded-xl no-underline border border-white/20 cursor-pointer transition-all duration-300 group hover:border-white/40 hover:bg-white/15 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-md">
-                <span className="font-dm-mono text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-white/50">Compra online</span>
+                <span className="font-dm-mono text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-white/80">Compra online</span>
                 <span className="font-epilogue text-[15px] md:text-[16px] font-bold tracking-tight flex items-center gap-2">
                   Ver tienda
                   <span className="transition-transform duration-300 group-hover:translate-x-1.5">→</span>
@@ -135,7 +141,13 @@ export default function HomeHero() {
               </div>
 
               {/* Bottom CTA */}
-              <a href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20agendar%20una%20visita%20técnica" target="_blank" rel="noopener noreferrer" className="relative z-10 flex items-center justify-between px-4 py-3 bg-white text-[#050b14] rounded-2xl font-epilogue text-[13px] md:text-[14px] font-bold no-underline cursor-pointer transition-all duration-300 tracking-tight mt-1 hover:bg-blue-50 hover:scale-[1.02] hover:shadow-[0_10px_25px_rgba(255,255,255,0.2)]">
+              <a 
+                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20agendar%20una%20visita%20técnica" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                aria-label="Agendar visita técnica por WhatsApp"
+                className="relative z-10 flex items-center justify-between px-4 py-3 bg-white text-[#050b14] rounded-2xl font-epilogue text-[13px] md:text-[14px] font-bold no-underline cursor-pointer transition-all duration-300 tracking-tight mt-1 hover:bg-blue-50 hover:scale-[1.02] hover:shadow-[0_10px_25px_rgba(255,255,255,0.2)]"
+              >
                 <span className="flex items-center gap-2.5">
                   <Phone className="w-4 h-4 text-blue-600" />
                   Agendar visita técnica
