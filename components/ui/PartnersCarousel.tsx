@@ -28,6 +28,7 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
               alt={partner.name}
               width={140}
               height={60}
+              quality={55}
               className="h-10 md:h-12 w-auto object-contain"
             />
           </div>
