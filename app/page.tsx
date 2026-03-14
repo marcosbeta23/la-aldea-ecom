@@ -29,22 +29,7 @@ import {
   Settings
 } from "lucide-react";
 import HomeHero from "@/components/home/HomeHero";
-import LazyMap from "@/components/ui/LazyMap";
-import dynamic from 'next/dynamic';
-
-const FeaturedCarousel = dynamic(
-  () => import('@/components/products/FeaturedCarousel'),
-  {
-    loading: () => (
-      <div className="flex gap-4 overflow-hidden">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="min-w-[220px] h-[280px] bg-slate-100 rounded-2xl animate-pulse shrink-0" />
-        ))}
-      </div>
-    ),
-  }
-);
-
+import ClientHomePageElements from "@/components/home/ClientHomePageElements";
 import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
 
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
@@ -424,30 +409,8 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Featured Products Carousel */}
-        {featuredProducts.length > 0 && (
-          <section className="relative z-10 bg-white py-12 md:py-14">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-5 w-5 text-blue-600" />
-                  <h2 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
-                    Productos Destacados
-                  </h2>
-                </div>
-                <Link
-                  href="/productos"
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
-                >
-                  Ver todos
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              <FeaturedCarousel products={featuredProducts} />
-            </div>
-          </section>
-        )}
+        {/* Client elements (Carousel & Map) */}
+        <ClientHomePageElements featuredProducts={featuredProducts} />
 
         {/* Partners Carousel - Seamless loop */}
         <section className="border-b border-slate-100 bg-white py-6 overflow-hidden">
@@ -795,44 +758,6 @@ export default async function Home() {
                 
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Hours & Location Section */}
-        <section className="border-t border-slate-200 bg-slate-50 py-16">
-          <div className="container mx-auto px-4">
-            <div className="grid gap-4 sm:gap-6 md:grid-cols-3 md:gap-8">
-              <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100">
-                  <Clock className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">Lunes a Viernes</p>
-                  <p className="text-sm text-slate-600 sm:text-base">08:00 - 12:00 | 14:00 - 18:00</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100">
-                  <Clock className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">Sábados</p>
-                  <p className="text-sm text-slate-600 sm:text-base">08:30 - 12:00</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100">
-                  <MapPin className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">Ubicación</p>
-                  <p className="text-sm text-slate-600 sm:text-base">José Alonso y Trelles y Av Artigas, Tala</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Lazy Loaded Google Map */}
-            <LazyMap />
           </div>
         </section>
 

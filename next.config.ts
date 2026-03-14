@@ -13,11 +13,14 @@ const nextConfig: NextConfig = {
       'recharts',
       '@clerk/nextjs',
     ],
+    nextScriptWorkers: true,
   },
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    formats: ['image/avif', 'image/webp'],
+    qualities: [55, 75],
     remotePatterns: [
       {
         protocol: 'https',
@@ -82,15 +85,11 @@ const nextConfig: NextConfig = {
 
 export default withBundleAnalyzer(
   withSentryConfig(nextConfig, {
-    // For all available options, see:
-    // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
     org: "la-aldea-hn",
     project: "javascript-nextjs",
     silent: !process.env.CI,
     widenClientFileUpload: true,
     tunnelRoute: "/monitoring",
-
     webpack: {
       automaticVercelMonitors: true,
       treeshake: {

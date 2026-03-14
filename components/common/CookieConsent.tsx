@@ -27,6 +27,19 @@ export default function CookieConsent() {
       timestamp: new Date().toISOString(),
     }));
     setShowBanner(false);
+    
+    // Enable GTM Analytics with Partytown delay guard
+    const fireConsent = () => {
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('consent', 'update', {
+          analytics_storage: 'granted',
+        });
+      } else if (typeof window !== 'undefined') {
+        setTimeout(fireConsent, 500);
+      }
+    };
+    fireConsent();
+
     // Enable PostHog persistent storage
     import('posthog-js').then(({ default: ph }) => {
       ph.set_config({ persistence: 'localStorage+cookie' });
@@ -40,14 +53,19 @@ export default function CookieConsent() {
       timestamp: new Date().toISOString(),
     }));
     setShowBanner(false);
-    // Disable Google Analytics if it was loaded
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).gtag('consent', 'update', {
-        analytics_storage: 'denied',
-      });
-    }
+    
+    // Disable Google Analytics with Partytown delay guard
+    const fireConsent = () => {
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('consent', 'update', {
+          analytics_storage: 'denied',
+        });
+      } else if (typeof window !== 'undefined') {
+        setTimeout(fireConsent, 500);
+      }
+    };
+    fireConsent();
+
     // Opt out of PostHog tracking
     import('posthog-js').then(({ default: ph }) => {
       ph.opt_out_capturing();

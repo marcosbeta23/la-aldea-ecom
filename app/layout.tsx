@@ -12,6 +12,7 @@ import CookieConsent from "@/components/common/CookieConsent";
 import Footer from "@/components/Footer";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
+import { Partytown } from '@builder.io/partytown/react';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -246,19 +247,17 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
         <link rel="preconnect" href="https://us.i.posthog.com" />
         
-        {/* Defer Google Analytics (GA4) */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-K06VE6W4MY"
-          strategy="lazyOnload"
+        
+        {/* Preload critical LCP font */}
+        <link
+          rel="preload"
+          href="/_next/static/media/653a876f5263769a-s.p.woff2" 
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
-        <Script id="ga4-init" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-K06VE6W4MY');
-          `}
-        </Script>
+
+        <Partytown forward={['dataLayer.push', 'gtag']} />
       </head>
       <body className={`${inter.variable} ${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}

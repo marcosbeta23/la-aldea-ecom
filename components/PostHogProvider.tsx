@@ -73,10 +73,14 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
           disable_session_recording: true,
           disable_surveys: true,
           loaded: (ph) => {
-            // Further defer recording
-            setTimeout(() => {
+            // Only start recording on user interaction to save bandwidth/CPU
+            const startRecording = () => {
               ph.startSessionRecording();
-            }, 3000);
+              window.removeEventListener('pointerdown', startRecording);
+              window.removeEventListener('keydown', startRecording);
+            };
+            window.addEventListener('pointerdown', startRecording, { once: true });
+            window.addEventListener('keydown', startRecording, { once: true });
           },
         });
 

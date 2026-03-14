@@ -11,21 +11,17 @@ export function Analytics({ nonce }: { nonce?: string }) {
 
   return (
     <>
-      {/* Google Analytics 4 */}
+      {/* Google Analytics 4 via Partytown */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
-        strategy="afterInteractive"
-        nonce={nonce}
+        strategy="worker"
       />
-      <Script id="google-analytics" strategy="afterInteractive" nonce={nonce}>
+      <Script id="google-analytics" strategy="worker">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${GA_TRACKING_ID}', {
-            page_title: document.title,
-            page_location: window.location.href,
-          });
+          gtag('config', '${GA_TRACKING_ID}');
         `}
       </Script>
     </>

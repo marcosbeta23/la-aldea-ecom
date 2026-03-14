@@ -30,8 +30,9 @@ export default function HomeHero() {
           fill
           className="object-cover object-[center_40%]"
           priority={true}
+          fetchPriority="high"
           sizes="100vw"
-          quality={60}
+          quality={55}
         />
         {/* Dark overlay: lighter gradient to reveal the store image clearly */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#050b14]/90 via-[#050b14]/70 to-[#050b14]/20" />
