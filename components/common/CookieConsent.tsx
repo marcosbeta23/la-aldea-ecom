@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { X, Cookie } from 'lucide-react';
-import { posthog } from '@/components/PostHogProvider';
+// posthog is imported dynamically in handlers to avoid bundle leak
 
 const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
 
@@ -28,7 +28,9 @@ export default function CookieConsent() {
     }));
     setShowBanner(false);
     // Enable PostHog persistent storage
-    posthog.set_config({ persistence: 'localStorage+cookie' });
+    import('posthog-js').then(({ default: ph }) => {
+      ph.set_config({ persistence: 'localStorage+cookie' });
+    });
   };
 
   const acceptEssential = () => {
@@ -47,7 +49,9 @@ export default function CookieConsent() {
       });
     }
     // Opt out of PostHog tracking
-    posthog.opt_out_capturing();
+    import('posthog-js').then(({ default: ph }) => {
+      ph.opt_out_capturing();
+    });
   };
 
   if (!showBanner) return null;

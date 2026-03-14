@@ -9,10 +9,9 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import CookieConsent from "@/components/common/CookieConsent";
-import CartDrawer from "@/components/cart/CartDrawer";
-import FloatingWhatsApp from "@/components/common/FloatingWhatsApp";
 import Footer from "@/components/Footer";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -286,13 +285,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <PostHogProvider>
           {children}
           <Footer />
-          <CartDrawer />
+          <ClientLayoutElements />
         </PostHogProvider>
         <Analytics nonce={nonce} />
         <VercelAnalytics />
         <SpeedInsights />
         <CookieConsent />
-        <FloatingWhatsApp />
       </body>
     </html>
   );

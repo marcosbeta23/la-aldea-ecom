@@ -63,22 +63,8 @@ export default function FeaturedCarousel({
   const [isDraggingVisual, setIsDraggingVisual] = useState(false);
 
   const total = products.length;
-
-  // How many cards visible at once based on viewport
-  const [visibleCount, setVisibleCount] = useState(4);
-
-  useEffect(() => {
-    const updateVisible = () => {
-      const w = window.innerWidth;
-      if (w < 640) setVisibleCount(2);
-      else if (w < 768) setVisibleCount(2);
-      else if (w < 1024) setVisibleCount(3);
-      else setVisibleCount(4);
-    };
-    updateVisible();
-    window.addEventListener('resize', updateVisible);
-    return () => window.removeEventListener('resize', updateVisible);
-  }, []);
+  // Use a constant for clones to ensure the loop works regardless of viewport
+  const CLONE_COUNT = 4;
 
   // Seamless loop: when reaching cloned region, snap back instantly
   const handleTransitionEnd = useCallback(() => {
@@ -115,9 +101,9 @@ export default function FeaturedCarousel({
 
   const startAutoSlide = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    if (total <= visibleCount) return;
+    if (total <= 1) return; // Basic safety, though we show 2+ cards
     intervalRef.current = setInterval(slideNext, autoSlideInterval);
-  }, [total, visibleCount, autoSlideInterval, slideNext]);
+  }, [total, autoSlideInterval, slideNext]);
 
   useEffect(() => {
     if (!isHovered) {
@@ -236,24 +222,21 @@ export default function FeaturedCarousel({
 
   if (total === 0) return null;
 
-  const cardWidthPercent = 100 / visibleCount;
-
-  // Clone last visibleCount items at beginning + first visibleCount at end for seamless loop
+  // Clone CLONE_COUNT items at beginning + end for seamless loop
   const extendedProducts = [
-    ...products.slice(-visibleCount),
+    ...products.slice(-CLONE_COUNT),
     ...products,
-    ...products.slice(0, visibleCount),
+    ...products.slice(0, CLONE_COUNT),
   ];
 
-  // Offset by visibleCount (because of prepended clones)
-  const translateIndex = currentIndex + visibleCount;
-  const baseTranslate = -(translateIndex * cardWidthPercent);
+  // Offset by CLONE_COUNT (because of prepended clones)
+  const translateIndex = currentIndex + CLONE_COUNT;
 
   // Normalized index for progress indicator
   const normalizedIndex = ((currentIndex % total) + total) % total;
 
-  // Progress bar
-  const progressPercent = total <= visibleCount ? 100 : ((normalizedIndex + visibleCount) / total) * 100;
+  // Progress bar - approximate
+  const progressPercent = ((normalizedIndex + 1) / total) * 100;
 
   return (
     <div
@@ -261,13 +244,18 @@ export default function FeaturedCarousel({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Carousel Track */}
-      <div className="overflow-visible rounded-xl">
+      <div 
+        className="overflow-visible rounded-xl"
+        style={{
+          ['--visible-count' as any]: 2,
+          ['--translate-index' as any]: translateIndex,
+        } as React.CSSProperties}
+      >
         <div
           ref={trackRef}
-          className={`flex select-none ${isDraggingVisual ? '' : isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
+          className={`flex select-none md:[--visible-count:2] lg:[--visible-count:3] xl:[--visible-count:4] ${isDraggingVisual ? '' : isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
           style={{
-            transform: `translateX(calc(${baseTranslate}% + ${dragOffset}px))`,
+            transform: `translateX(calc(-100% / var(--visible-count) * var(--translate-index) + ${dragOffset}px))`,
             touchAction: 'pan-y',
           }}
           onTransitionEnd={handleTransitionEnd}
@@ -279,8 +267,7 @@ export default function FeaturedCarousel({
           {extendedProducts.map((product, i) => (
             <div
               key={`${product.id}-${i}`}
-              className="shrink-0 px-1.5 sm:px-2"
-              style={{ width: `${cardWidthPercent}%` }}
+              className="shrink-0 px-1.5 sm:px-2 w-[50%] md:w-[50%] lg:w-[33.33%] xl:w-[25%]"
             >
               <Link
                 href={`/productos/${product.slug ?? product.sku}`}
@@ -354,40 +341,36 @@ export default function FeaturedCarousel({
         </div>
       </div>
 
-      {/* Arrow Buttons — only if there are more products than visible */}
-      {total > visibleCount && (
-        <>
-          <button
-            onClick={prev}
-            aria-label="Producto anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:-translate-x-3"
-          >
-            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
-          <button
-            onClick={next}
-            aria-label="Producto siguiente"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:translate-x-3"
-          >
-            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
-        </>
-      )}
+      {/* Arrow Buttons */}
+      <>
+        <button
+          onClick={prev}
+          aria-label="Producto anterior"
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:-translate-x-3"
+        >
+          <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+        </button>
+        <button
+          onClick={next}
+          aria-label="Producto siguiente"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 sm:translate-x-3"
+        >
+          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+        </button>
+      </>
 
       {/* Progress bar indicator */}
-      {total > visibleCount && (
-        <div className="mt-4 flex items-center justify-center gap-3">
-          <span className="text-xs text-slate-400 tabular-nums">
-            {normalizedIndex + 1}/{total}
-          </span>
-          <div className="w-24 sm:w-32 h-1 rounded-full bg-slate-200 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-600 transition-transform duration-500 ease-in-out origin-left"
-              style={{ transform: `scaleX(${Math.min(progressPercent, 100) / 100})` }}
-            />
-          </div>
+      <div className="mt-4 flex items-center justify-center gap-3">
+        <span className="text-xs text-slate-400 tabular-nums">
+          {normalizedIndex + 1}/{total}
+        </span>
+        <div className="w-24 sm:w-32 h-1 rounded-full bg-slate-200 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-blue-600 transition-transform duration-500 ease-in-out origin-left"
+            style={{ transform: `scaleX(${Math.min(progressPercent, 100) / 100})` }}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 }

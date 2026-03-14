@@ -41,15 +41,15 @@ export default function HomeHero() {
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_420px] items-center max-w-[1300px] w-full mx-auto gap-2 md:gap-4 lg:gap-12 xl:gap-20">
           {/* LEFT PANEL */}
           <div className="relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-12 lg:pr-0 xl:pl-0">
-            <div className="hidden md:flex items-center gap-3 mb-5 hero-slide-in hero-delay-1"> 
+            <div className="hidden md:flex items-center gap-3 mb-5"> 
               <div className="w-8 h-0.5 bg-blue-500 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
               <span className="font-dm-mono text-[10px] md:text-[11px] text-blue-300 tracking-[0.2em] uppercase font-medium">Más de 25 años en Tala, Canelones</span>
             </div>
 
             <h1 className="font-barlow font-black leading-[0.85] uppercase tracking-tight mb-2 md:mb-5 mt-2 sm:mt-4">
-              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-white hero-fade-up hero-delay-2">Riego.</span>
+              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-white">Riego.</span>
               <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)]">Agua.</span>
-              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-transparent hero-fade-up hero-delay-4" style={{ WebkitTextStroke: '2px rgba(255, 255, 255, 0.5)' }}>Campo.</span>
+              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-transparent" style={{ WebkitTextStroke: '2px rgba(255, 255, 255, 0.5)' }}>Campo.</span>
             </h1>
 
             <p className="text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] mb-6 md:mb-8 hero-fade-in hero-delay-5">

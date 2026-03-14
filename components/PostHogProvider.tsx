@@ -1,83 +1,105 @@
 'use client';
 
-import posthog from 'posthog-js';
-import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useState, ReactNode } from 'react';
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
 
-// Defer PostHog initialization until after window load + 2s
-if (typeof window !== 'undefined' && POSTHOG_KEY && process.env.NODE_ENV === 'production') {
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      let persistence: 'localStorage+cookie' | 'memory' = 'memory';
-      try {
-        const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-        if (consent) {
-          const parsed = JSON.parse(consent);
-          if (parsed.analytics) {
-            persistence = 'localStorage+cookie';
-          }
-        }
-      } catch {}
-      posthog.init(POSTHOG_KEY, {
-        api_host: POSTHOG_HOST,
-        person_profiles: 'identified_only',
-        capture_pageview: false, // We capture manually for SPA navigation
-        capture_pageleave: true,
-        persistence,
-        disable_session_recording: true, // Don't load recorder on init
-        disable_surveys: true, // Prevents loading surveys.js
-        loaded: (ph) => {
-          // Enable recording only after the page is fully loaded and idle
-          if (typeof window !== 'undefined') {
-            window.addEventListener('load', () => {
-              setTimeout(() => {
-                ph.startSessionRecording();
-              }, 3000); // 3 seconds after load event
-            });
-          }
-        },
-      });
-    }, 2000);
-  });
-}
-
-function PostHogPageview() {
+function PostHogPageview({ client }: { client: any }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (pathname && POSTHOG_KEY && process.env.NODE_ENV === 'production') {
+    if (pathname && client) {
       let url = window.origin + pathname;
       const search = searchParams.toString();
       if (search) {
         url += '?' + search;
       }
-      posthog.capture('$pageview', { $current_url: url });
+      client.capture('$pageview', { $current_url: url });
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, client]);
 
   return null;
 }
 
-export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  if (!POSTHOG_KEY) {
+export function PostHogProvider({ children }: { children: ReactNode }) {
+  const [PHProvider, setPHProvider] = useState<any>(null);
+  const [client, setClient] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !POSTHOG_KEY) return;
+
+    // We only load PostHog in production to keep dev bundles light
+    if (process.env.NODE_ENV !== 'production') return;
+
+    const initPostHog = async () => {
+      // Defer loading until after window load to avoid blocking LCP
+      if (document.readyState !== 'complete') {
+        await new Promise(resolve => window.addEventListener('load', resolve, { once: true }));
+      }
+      
+      // Wait another 3s for main thread to settle
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      try {
+        const [
+          { default: posthogInstance },
+          { PostHogProvider: Provider }
+        ] = await Promise.all([
+          import('posthog-js'),
+          import('posthog-js/react')
+        ]);
+
+        let persistence: 'localStorage+cookie' | 'memory' = 'memory';
+        try {
+          const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
+          if (consent) {
+            const parsed = JSON.parse(consent);
+            if (parsed.analytics) {
+              persistence = 'localStorage+cookie';
+            }
+          }
+        } catch {}
+
+        posthogInstance.init(POSTHOG_KEY, {
+          api_host: POSTHOG_HOST,
+          person_profiles: 'identified_only',
+          capture_pageview: false, 
+          capture_pageleave: true,
+          persistence,
+          disable_session_recording: true,
+          disable_surveys: true,
+          loaded: (ph) => {
+            // Further defer recording
+            setTimeout(() => {
+              ph.startSessionRecording();
+            }, 3000);
+          },
+        });
+
+        setClient(posthogInstance);
+        setPHProvider(() => Provider);
+      } catch (err) {
+        console.error('Failed to load PostHog async:', err);
+      }
+    };
+
+    initPostHog();
+  }, []);
+
+  if (!PHProvider || !client) {
     return <>{children}</>;
   }
 
   return (
-    <PHProvider client={posthog}>
+    <PHProvider client={client}>
       <Suspense fallback={null}>
-        <PostHogPageview />
+        <PostHogPageview client={client} />
       </Suspense>
       {children}
     </PHProvider>
   );
 }
-
-// Export posthog instance for direct use in event tracking
-export { posthog };
