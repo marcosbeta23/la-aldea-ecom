@@ -248,16 +248,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preconnect" href="https://us.i.posthog.com" />
         
         
-        {/* Preload critical LCP font */}
-        <link
-          rel="preload"
-          href="/_next/static/media/653a876f5263769a-s.p.woff2" 
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
 
-        <Partytown forward={['dataLayer.push', 'gtag']} />
+        <Partytown forward={['dataLayer.push', 'gtag']} nonce={nonce} />
       </head>
       <body className={`${inter.variable} ${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
