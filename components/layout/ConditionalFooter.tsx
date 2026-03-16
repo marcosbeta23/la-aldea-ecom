@@ -1,11 +1,19 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { Suspense } from 'react';
 import Footer from '@/components/Footer';
 
-export default function ConditionalFooter() {
+function ConditionalFooterInner() {
   const pathname = usePathname();
-  // Hide footer on all admin routes
-  if (pathname?.startsWith('/admin')) return null;
+  if (!pathname || pathname.startsWith('/admin')) return null;
   return <Footer />;
+}
+
+export default function ConditionalFooter() {
+  return (
+    <Suspense fallback={null}>
+      <ConditionalFooterInner />
+    </Suspense>
+  );
 }

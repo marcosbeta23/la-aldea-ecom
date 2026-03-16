@@ -9,7 +9,6 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import CookieConsent from "@/components/common/CookieConsent";
-import Footer from "@/components/Footer";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
@@ -68,7 +67,7 @@ export const metadata: Metadata = {
   },
   description:
     "Bombas de agua y sistemas de riego en Tala y Canelones. Instalaciones hidráulicas, insumos agrícolas, droguería y herramientas. Envíos e instalaciones en todo Uruguay.",
-  
+
   // Keywords (60+ terms)
   keywords: [
     // Primary keywords
@@ -223,7 +222,7 @@ export const metadata: Metadata = {
     ICBM: "-34.346943768995686, -55.76359424741334",
     "DC.coverage": "Uruguay",
     distribution: "global",
-    
+
     // Business contact data (Facebook)
     "business:contact_data:street_address": "José Alonso y Trelles y Av Artigas",
     "business:contact_data:locality": "Tala",
@@ -247,8 +246,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
         <link rel="preconnect" href="https://us.i.posthog.com" />
-        
-        
+
+
 
         <Partytown forward={['dataLayer.push', 'gtag']} nonce={nonce} />
       </head>

@@ -1,4 +1,3 @@
-// app/admin/reports/pdf/page.tsx
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -6,18 +5,14 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import {
   Printer, ArrowLeft, RefreshCw, TrendingUp, TrendingDown,
-  Minus, ShoppingCart, Users, DollarSign, Globe, Store,
+  Minus, ShoppingCart, Users, DollarSign, Globe,
   Package, AlertTriangle, Calendar, Sparkles, Zap, Target,
   ArrowUpRight, ChevronRight, BarChart2, Tag, UserCheck, Truck,
 } from 'lucide-react';
-
-// ── Dynamic import recharts — cuts ~300KB from initial bundle, critical for LCP
-const RechartsModule = (await import('recharts').catch(() => ({}))) as any;
-const {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
+import {
+  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-// @ts-ignore
-} = RechartsModule.LineChart ? RechartsModule : (RechartsModule.default || {});
+} from 'recharts';
 
 // Fallback if recharts hasn't loaded yet (SSR / first paint)
 const ChartPlaceholder = ({ height = 200 }: { height?: number }) => (
@@ -44,9 +39,7 @@ interface AnalyticsData {
     uniqueCustomers: number;
     conversionRate: number;
     onlineRevenueUYU: number;
-    mostradorRevenueUYU: number;
     onlineOrders: number;
-    mostradorOrders: number;
     couponUsageRate: number;
     avgFulfillmentDays: number;
     cartAbandonmentRate: number;
@@ -66,7 +59,6 @@ interface AnalyticsData {
     revenueUYU: number;
     revenueUSD: number;
     onlineRevenue: number;
-    mostradorRevenue: number;
   }>;
   topProducts: Array<{
     id: string;
@@ -102,8 +94,8 @@ const fmtCompact = (v: number) =>
   v >= 1_000_000
     ? `$${(v / 1_000_000).toFixed(1)}M`
     : v >= 1000
-    ? `$${(v / 1000).toFixed(0)}k`
-    : `$${v}`;
+      ? `$${(v / 1000).toFixed(0)}k`
+      : `$${v}`;
 
 const periodLabel: Record<string, string> = {
   week: 'Última semana',
@@ -144,17 +136,16 @@ function KpiCard({ label, value, sub, change, icon: Icon, color }: {
           <Icon className="h-4 w-4" style={{ color }} />
         </div>
         {trend !== null && (
-          <span className={`text-xs font-semibold flex items-center gap-0.5 ${
-            trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-500' : 'text-slate-400'
-          }`}>
+          <span className={`text-xs font-semibold flex items-center gap-0.5 ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-500' : 'text-slate-400'
+            }`}>
             {trend === 'up' ? <TrendingUp className="h-3 w-3" /> :
-             trend === 'down' ? <TrendingDown className="h-3 w-3" /> :
-             <Minus className="h-3 w-3" />}
+              trend === 'down' ? <TrendingDown className="h-3 w-3" /> :
+                <Minus className="h-3 w-3" />}
             {change !== undefined ? `${change > 0 ? '+' : ''}${change}%` : ''}
           </span>
         )}
       </div>
-      <p className="text-xs text-slate-500 mt-1}>{label}</p>
+      <p className="text-xs text-slate-500 mt-1">{label}</p>
       <p className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">{value}</p>
       {sub && <p className="text-xs text-slate-400">{sub}</p>}
     </div>
@@ -191,7 +182,7 @@ export default function PdfReportPage() {
 
   // ── Check recharts loaded ──────────────────────────────────────────────────
   useEffect(() => {
-    import('recharts').then(() => setChartsReady(true)).catch(() => {});
+    import('recharts').then(() => setChartsReady(true)).catch(() => { });
   }, []);
 
   // ── Check provider status ──────────────────────────────────────────────────
@@ -292,15 +283,15 @@ export default function PdfReportPage() {
 
   const paymentData = useMemo(() => data
     ? Object.entries(data.paymentMethodDistribution)
-        .map(([method, v]) => ({ name: method, count: v.count, revenue: v.revenue }))
-        .sort((a, b) => b.revenue - a.revenue)
+      .map(([method, v]) => ({ name: method, count: v.count, revenue: v.revenue }))
+      .sort((a, b) => b.revenue - a.revenue)
     : [], [data]);
 
   const deptData = useMemo(() => data
     ? Object.entries(data.departmentDistribution)
-        .map(([dept, v]) => ({ name: dept || 'Sin datos', orders: v.orders, revenue: v.revenue }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 8)
+      .map(([dept, v]) => ({ name: dept || 'Sin datos', orders: v.orders, revenue: v.revenue }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 8)
     : [], [data]);
 
   const topProductsChart = useMemo(() => data?.topProducts.slice(0, 6).map(p => ({
@@ -308,11 +299,6 @@ export default function PdfReportPage() {
     vendidos: p.sold,
     ingresos: Math.round(p.revenue),
   })) || [], [data]);
-
-  const channelData = useMemo(() => data ? [
-    { name: 'Online', value: data.summary.onlineRevenueUYU, orders: data.summary.onlineOrders },
-    { name: 'Mostrador', value: data.summary.mostradorRevenueUYU, orders: data.summary.mostradorOrders },
-  ] : [], [data]);
 
   const dailyChartData = useMemo(() => data?.dailySales.map(d => ({
     date: fmtDate(d.date),
@@ -419,13 +405,12 @@ export default function PdfReportPage() {
                 onClick={() => setProvider('groq')}
                 disabled={providerStatus?.groq === false}
                 title={providerStatus?.groq === false ? 'GROQ_API_KEY no configurada' : 'Gratis · Llama 3.3 70B'}
-                className={`text-[11px] px-1.5 py-1 rounded transition-colors ${
-                  provider === 'groq'
-                    ? 'bg-green-600 text-white font-semibold'
-                    : providerStatus?.groq === false
+                className={`text-[11px] px-1.5 py-1 rounded transition-colors ${provider === 'groq'
+                  ? 'bg-green-600 text-white font-semibold'
+                  : providerStatus?.groq === false
                     ? 'text-slate-300 cursor-not-allowed'
                     : 'text-slate-600 hover:bg-slate-100'
-                }`}
+                  }`}
               >
                 Groq{providerStatus?.groq ? ' ✓' : ' ✗'}
               </button>
@@ -433,13 +418,12 @@ export default function PdfReportPage() {
                 onClick={() => setProvider('claude')}
                 disabled={providerStatus?.claude === false}
                 title={providerStatus?.claude === false ? 'ANTHROPIC_API_KEY no configurada' : '~$0.004/análisis · Claude Haiku'}
-                className={`text-[11px] px-1.5 py-1 rounded transition-colors ${
-                  provider === 'claude'
-                    ? 'bg-blue-700 text-white font-semibold'
-                    : providerStatus?.claude === false
+                className={`text-[11px] px-1.5 py-1 rounded transition-colors ${provider === 'claude'
+                  ? 'bg-blue-700 text-white font-semibold'
+                  : providerStatus?.claude === false
                     ? 'text-slate-300 cursor-not-allowed'
                     : 'text-slate-600 hover:bg-slate-100'
-                }`}
+                  }`}
               >
                 Claude{providerStatus?.claude ? ' ✓' : ' ✗'}
               </button>
@@ -511,7 +495,7 @@ export default function PdfReportPage() {
                 sub={`${data.summary.paidOrdersUSD} pedidos en USD`}
                 change={data.previousPeriod.revenueChangeUSD} icon={Globe} color="#2563eb" />
               <KpiCard label="Ingreso Combinado (UYU)" value={fmt(data.summary.combinedRevenueUYU)}
-                sub="USD convertido a tipo de cambio BCU" icon={Store} color="#1e3a8a" />
+                sub="USD convertido a tipo de cambio BCU" icon={DollarSign} color="#1e3a8a" />
             </div>
 
             {/* Operations row: 2 col on xs, 4 on lg */}
@@ -570,9 +554,8 @@ export default function PdfReportPage() {
                   </h2>
                 </div>
                 {aiAnalysis && !aiLoading && (
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full hidden sm:inline ${
-                    provider === 'groq' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                  }`} style={{ fontFamily: 'system-ui' }}>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full hidden sm:inline ${provider === 'groq' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                    }`} style={{ fontFamily: 'system-ui' }}>
                     {provider === 'groq' ? '⚡ Groq · Llama 3.3 70B · Gratis' : '✦ Claude Haiku · ~$0.004'}
                   </span>
                 )}
@@ -725,7 +708,7 @@ export default function PdfReportPage() {
                 {currencyData.map((item, i) => (
                   <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length]} } />
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
                       <span className="text-sm font-bold text-slate-700">{item.name}</span>
                     </div>
                     <div className="text-right">
