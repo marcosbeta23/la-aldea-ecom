@@ -20,8 +20,8 @@ export default function HomeHero() {
   ];
 
   return (
-  <HeroSection className="relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-hidden touch-pan-y">
-      
+    <HeroSection className="relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-hidden touch-pan-y">
+
       {/* BACKGROUND IMAGE - Full Width */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -39,10 +39,10 @@ export default function HomeHero() {
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col">
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_420px] items-center max-w-[1300px] w-full mx-auto gap-2 md:gap-4 lg:gap-12 xl:gap-20">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] items-center max-w-[1300px] w-full mx-auto gap-2 md:gap-4 lg:gap-8 xl:gap-16 px-0 lg:px-8 xl:px-6 2xl:px-0">
           {/* LEFT PANEL */}
-          <div className="relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-12 lg:pr-0 xl:pl-0">
-            <div className="hidden md:flex items-center gap-3 mb-5"> 
+          <div className="relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-4 lg:pr-0 xl:pl-0">
+            <div className="hidden md:flex items-center gap-3 mb-5">
               <div className="w-8 h-0.5 bg-blue-500 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
               <span className="font-dm-mono text-[10px] md:text-[11px] text-blue-300 tracking-[0.2em] uppercase font-medium">Más de 25 años en Tala, Canelones</span>
             </div>
@@ -59,10 +59,10 @@ export default function HomeHero() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
-              <a 
-                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Consultar por WhatsApp — La Aldea"
                 className="flex-1 flex flex-col gap-0.5 px-5 py-3.5 bg-blue-600 text-white rounded-xl no-underline cursor-pointer transition-all duration-300 relative overflow-hidden group hover:bg-blue-500 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(37,99,235,0.4)]"
               >
@@ -95,7 +95,7 @@ export default function HomeHero() {
           </div>
 
           {/* RIGHT PANEL - Floating Glassmorphism (Hidden on Mobile) */}
-          <div className="hidden lg:flex flex-col justify-center px-6 py-4 md:px-12 lg:px-0 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
+          <div className="hidden lg:flex flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
             <div className="relative bg-[#050b14]/50 backdrop-blur-2xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-hidden">
               {/* Glow effects inside the panel */}
               <div className="absolute -top-20 -right-20 w-56 h-56 bg-blue-500/20 blur-[80px] rounded-full pointer-events-none" />
@@ -142,10 +142,10 @@ export default function HomeHero() {
               </div>
 
               {/* Bottom CTA */}
-              <a 
-                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20agendar%20una%20visita%20técnica" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20agendar%20una%20visita%20técnica"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Agendar visita técnica por WhatsApp"
                 className="relative z-10 flex items-center justify-between px-4 py-3 bg-white text-[#050b14] rounded-2xl font-epilogue text-[13px] md:text-[14px] font-bold no-underline cursor-pointer transition-all duration-300 tracking-tight mt-1 hover:bg-blue-50 hover:scale-[1.02] hover:shadow-[0_10px_25px_rgba(255,255,255,0.2)]"
               >
@@ -170,7 +170,7 @@ export default function HomeHero() {
       <div className="relative z-10 mt-auto h-[32px] md:h-[40px] border-t border-white/5 bg-black/40 backdrop-blur-md flex items-center overflow-hidden animate-in fade-in duration-700 delay-[850ms] fill-mode-backwards">
         <div className="absolute top-0 bottom-0 left-0 w-24 md:w-32 z-10 bg-gradient-to-r from-[#050b14]/90 to-transparent pointer-events-none" />
         <div className="absolute top-0 bottom-0 right-0 w-24 md:w-32 z-10 bg-gradient-to-l from-[#050b14]/90 to-transparent pointer-events-none" />
-        
+
         <div className="flex w-max animate-scroll hover:[animation-play-state:paused]">
           {[...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems].map((item, i) => (
             <div key={i} className="flex items-center gap-6 px-8 font-dm-mono text-[11px] tracking-[0.16em] text-white/60 uppercase whitespace-nowrap font-medium">
