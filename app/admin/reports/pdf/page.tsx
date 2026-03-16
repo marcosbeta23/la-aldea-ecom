@@ -324,7 +324,53 @@ export default function ReporteAnalisisPage() {
           .salto-pagina { page-break-before: always; break-before: page; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           @page { size: A4; margin: 12mm 14mm; }
+
+          /* ── Prevent sections from splitting across pages ── */
+          section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+
+          /* ── Keep entire two-column layout blocks together ── */
+          .columnas-dos {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+
+          /* ── Recharts: keep the full chart on one page ── */
+          .recharts-wrapper,
+          .recharts-responsive-container {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+
+          /* ── KPI grids stay together ── */
+          .kpi-grid {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+
+          /* ── Individual cards/boxes never split ── */
+          .rounded-xl {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+
+          /* ── Tables: avoid mid-row splits ── */
+          table { page-break-inside: avoid; break-inside: avoid; }
+          tr    { page-break-inside: avoid; break-inside: avoid; }
+
+          /* ── Portada + velocity banner ── */
+          .portada     { page-break-inside: avoid; break-inside: avoid; }
+          .velocidad   { page-break-inside: avoid; break-inside: avoid; }
+
+          /* ── AI analysis cards ── */
+          .ia-tarjeta  { page-break-inside: avoid; break-inside: avoid; }
+
+          /* ── Widow/orphan control ── */
+          p { orphans: 3; widows: 3; }
         }
+
         @media screen { .solo-impresion { display: none; } }
       `}</style>
 
@@ -442,7 +488,7 @@ export default function ReporteAnalisisPage() {
         >
 
           {/* ── PORTADA ─────────────────────────────────────────────────── */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6" style={{ borderBottom: '3px solid #1e3a8a' }}>
+          <div className="portada flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6" style={{ borderBottom: '3px solid #1e3a8a' }}>
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-9 h-9 rounded-xl bg-blue-800 flex items-center justify-center shadow-md flex-shrink-0">
@@ -469,7 +515,7 @@ export default function ReporteAnalisisPage() {
             <TituloSeccion icon={Target}>Resumen Ejecutivo</TituloSeccion>
 
             {/* Ingresos */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            <div className="kpi-grid grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <TarjetaKpi label="Ingresos UYU" value={fmt(data.summary.totalRevenueUYU)}
                 sub={`${data.previousPeriod.revenueChangeUYU > 0 ? '+' : ''}${data.previousPeriod.revenueChangeUYU}% vs período anterior`}
                 change={data.previousPeriod.revenueChangeUYU} icon={DollarSign} color="#16a34a" />
@@ -481,7 +527,7 @@ export default function ReporteAnalisisPage() {
             </div>
 
             {/* Operaciones */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+            <div className="kpi-grid grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
               <TarjetaKpi label="Pedidos pagados" value={String(data.summary.paidOrders)}
                 sub={`${data.previousPeriod.ordersChange > 0 ? '+' : ''}${data.previousPeriod.ordersChange}% vs período anterior`}
                 change={data.previousPeriod.ordersChange} icon={ShoppingCart} color="#9333ea" />
@@ -495,7 +541,7 @@ export default function ReporteAnalisisPage() {
             </div>
 
             {/* Métricas avanzadas */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="kpi-grid grid grid-cols-2 lg:grid-cols-4 gap-3">
               <TarjetaKpi label="Uso de cupones" value={`${data.summary.couponUsageRate}%`}
                 sub={`${data.summary.topCoupons?.[0]?.code || 'N/A'} más usado`} icon={Tag} color="#ec4899" />
               <TarjetaKpi label="Clientes recurrentes" value={String(data.summary.returningCustomers)}
@@ -508,7 +554,7 @@ export default function ReporteAnalisisPage() {
 
             {/* Velocidad de ingresos */}
             {velocidadIngresos && (
-              <div className="mt-3 flex items-start gap-3 px-4 py-3 rounded-xl"
+              <div className="velocidad mt-3 flex items-start gap-3 px-4 py-3 rounded-xl"
                 style={{
                   background: velocidadIngresos.cambio >= 0 ? '#f0fdf4' : '#fef2f2',
                   border: `1px solid ${velocidadIngresos.cambio >= 0 ? '#bbf7d0' : '#fecaca'}`,
@@ -618,7 +664,7 @@ export default function ReporteAnalisisPage() {
                 {seccionesIA.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {seccionesIA.map((seccion, i) => (
-                      <div key={i} className="bg-white rounded-xl p-5" style={{ border: '1px solid #e2e8f0' }}>
+                      <div key={i} className="ia-tarjeta bg-white rounded-xl p-5" style={{ border: '1px solid #e2e8f0' }}>
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-1.5 h-5 rounded-full flex-shrink-0" style={{ backgroundColor: COLORES[i % COLORES.length] }} />
                           <h3 className="text-xs font-bold uppercase tracking-wide text-slate-600">{seccion.titulo}</h3>
@@ -661,7 +707,7 @@ export default function ReporteAnalisisPage() {
           <div className="salto-pagina" />
 
           {/* ── EMBUDO + MONEDA ───────────────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="columnas-dos grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Embudo */}
             <section>
               <TituloSeccion icon={Target}>Embudo de Conversión</TituloSeccion>
@@ -733,7 +779,7 @@ export default function ReporteAnalisisPage() {
           </div>
 
           {/* ── DÍA DE SEMANA + MEDIOS DE PAGO ───────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="columnas-dos grid grid-cols-1 lg:grid-cols-2 gap-6">
             {dataDiaSemana.some(d => d.promedioIngresos > 0) && (
               <section>
                 <TituloSeccion icon={Calendar}>Rendimiento por Día de la Semana</TituloSeccion>
@@ -882,7 +928,7 @@ export default function ReporteAnalisisPage() {
           )}
 
           {/* ── ESTADO DE PEDIDOS + INVENTARIO ───────────────────────── */}
-          <div className={`grid grid-cols-1 ${data.inventoryHealth.length > 0 ? 'lg:grid-cols-2' : ''} gap-6`}>
+          <div className={`columnas-dos grid grid-cols-1 ${data.inventoryHealth.length > 0 ? 'lg:grid-cols-2' : ''} gap-6`}>
             <section>
               <TituloSeccion icon={ShoppingCart}>Estado de Pedidos del Período</TituloSeccion>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
