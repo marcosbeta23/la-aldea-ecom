@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import {
   Printer, ArrowLeft, RefreshCw, TrendingUp, TrendingDown,
   Minus, ShoppingCart, Users, DollarSign, Globe,
@@ -689,11 +688,11 @@ export default function PdfReportPage() {
                           ))}
                         </Pie>
                         <Tooltip
-                          formatter={(value: number | undefined, name: string, props: any) => {
+                          formatter={(value: number | undefined, _name: string | undefined, props: any) => {
                             const item = props.payload;
                             const v = value ?? 0;
-                            if (item.name === 'USD') {
-                              return [`${fmtUSD(item.originalValue)} (${fmt(v)})`, 'Ingresos'];
+                            if (item?.name === 'USD') {
+                              return [`${fmtUSD(item.originalValue ?? 0)} (${fmt(v)})`, 'Ingresos'];
                             }
                             return [fmt(v), 'Ingresos'];
                           }}
@@ -735,7 +734,7 @@ export default function PdfReportPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fontFamily: 'system-ui' }} tickLine={false} />
                       <YAxis tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} axisLine={false} tickFormatter={fmtCompact} />
-                      <Tooltip formatter={(v: number | undefined, name: string) => [name === 'avgRevenue' ? fmt(v ?? 0) : (v ?? 0), name === 'avgRevenue' ? 'Ingreso promedio' : 'Pedidos']}
+                      <Tooltip formatter={(v: number | undefined, name: string | undefined) => [name === 'avgRevenue' ? fmt(v ?? 0) : (v ?? 0), name === 'avgRevenue' ? 'Ingreso promedio' : 'Pedidos']}
                         contentStyle={{ fontSize: 11, fontFamily: 'system-ui', borderRadius: 8 }} />
                       <Bar dataKey="avgRevenue" radius={[4, 4, 0, 0]} name="avgRevenue">
                         {dayOfWeekData.map((entry, i) => {
@@ -814,7 +813,7 @@ export default function PdfReportPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                       <XAxis dataKey="name" tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} />
                       <YAxis tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} axisLine={false} tickFormatter={fmtCompact} />
-                      <Tooltip formatter={(v: number | undefined, name: string) => [name === 'revenue' ? fmt(v ?? 0) : String(v ?? 0), name === 'revenue' ? 'Ingresos UYU' : 'Pedidos']}
+                      <Tooltip formatter={(v: number | undefined, name: string | undefined) => [name === 'revenue' ? fmt(v ?? 0) : String(v ?? 0), name === 'revenue' ? 'Ingresos UYU' : 'Pedidos']}
                         contentStyle={{ fontSize: 11, fontFamily: 'system-ui', borderRadius: 8 }} />
                       <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} name="revenue" />
                       <Bar dataKey="orders" fill="#bfdbfe" radius={[4, 4, 0, 0]} name="orders" />
