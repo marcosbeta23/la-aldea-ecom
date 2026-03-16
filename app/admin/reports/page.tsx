@@ -66,9 +66,10 @@ export default function ReportsPage() {
       if (format === 'csv') {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
+        const today = new Date().toISOString().split('T')[0];
         const a = document.createElement('a');
         a.href = url;
-        a.download = `reporte-${reportType}-${period}${source ? `-${source}` : ''}.csv`;
+        a.download = `reporte-${reportType}-${period}-${today}${source ? `-${source}` : ''}.csv`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -77,9 +78,10 @@ export default function ReportsPage() {
         const data = await response.json();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
+        const today = new Date().toISOString().split('T')[0];
         const a = document.createElement('a');
         a.href = url;
-        a.download = `reporte-${reportType}-${period}${source ? `-${source}` : ''}.json`;
+        a.download = `reporte-${reportType}-${period}-${today}${source ? `-${source}` : ''}.json`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

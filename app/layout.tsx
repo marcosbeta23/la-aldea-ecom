@@ -12,6 +12,7 @@ import CookieConsent from "@/components/common/CookieConsent";
 import Footer from "@/components/Footer";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
+import ConditionalFooter from "@/components/layout/ConditionalFooter";
 import { Partytown } from '@builder.io/partytown/react';
 
 const inter = Inter({
@@ -275,7 +276,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         />
         <PostHogProvider>
           {children}
-          <Footer />
+          <ConditionalFooter />
           <ClientLayoutElements />
         </PostHogProvider>
         <Analytics nonce={nonce} />

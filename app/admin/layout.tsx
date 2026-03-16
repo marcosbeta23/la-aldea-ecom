@@ -36,7 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   
   const roleBadge = (
     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${role === 'owner' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-600 text-slate-300'}`}>
-      {role === 'owner' ? '👑 Propietario' : '👤 Empleado'}
+      {role === 'owner' ? '👑 Admin' : '👤 Staff'}
     </span>
   );
 

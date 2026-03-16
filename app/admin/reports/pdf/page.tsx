@@ -1,14 +1,14 @@
 // app/admin/reports/pdf/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import {
   Printer, ArrowLeft, RefreshCw, TrendingUp, TrendingDown,
   Minus, ShoppingCart, Users, DollarSign, Globe, Store,
   Package, AlertTriangle, Calendar, Sparkles, Zap, Target,
-  ArrowUpRight, ChevronRight, BarChart2,
+  ArrowUpRight, ChevronRight, BarChart2, Tag, UserCheck, Truck,
 } from 'lucide-react';
 
 // ── Dynamic import recharts — cuts ~300KB from initial bundle, critical for LCP
@@ -47,6 +47,12 @@ interface AnalyticsData {
     mostradorRevenueUYU: number;
     onlineOrders: number;
     mostradorOrders: number;
+    couponUsageRate: number;
+    avgFulfillmentDays: number;
+    cartAbandonmentRate: number;
+    newCustomers: number;
+    returningCustomers: number;
+    topCoupons: Array<{ code: string; current_uses: number }>;
   };
   previousPeriod: {
     revenueChangeUYU: number;
@@ -148,7 +154,7 @@ function KpiCard({ label, value, sub, change, icon: Icon, color }: {
           </span>
         )}
       </div>
-      <p className="text-xs text-slate-500 mt-1">{label}</p>
+      <p className="text-xs text-slate-500 mt-1}>{label}</p>
       <p className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">{value}</p>
       {sub && <p className="text-xs text-slate-400">{sub}</p>}
     </div>
@@ -279,9 +285,9 @@ export default function PdfReportPage() {
     ];
   }, [data]);
 
-  const channelData = useMemo(() => data ? [
-    { name: 'Online', value: data.summary.onlineRevenueUYU, orders: data.summary.onlineOrders },
-    { name: 'Mostrador', value: data.summary.mostradorRevenueUYU, orders: data.summary.mostradorOrders },
+  const currencyData = useMemo(() => data ? [
+    { name: 'UYU', value: data.summary.totalRevenueUYU, orders: data.summary.paidOrdersUYU },
+    { name: 'USD', value: data.summary.totalRevenueUSD * data.exchangeRate, orders: data.summary.paidOrdersUSD, originalValue: data.summary.totalRevenueUSD },
   ] : [], [data]);
 
   const paymentData = useMemo(() => data
@@ -303,11 +309,15 @@ export default function PdfReportPage() {
     ingresos: Math.round(p.revenue),
   })) || [], [data]);
 
+  const channelData = useMemo(() => data ? [
+    { name: 'Online', value: data.summary.onlineRevenueUYU, orders: data.summary.onlineOrders },
+    { name: 'Mostrador', value: data.summary.mostradorRevenueUYU, orders: data.summary.mostradorOrders },
+  ] : [], [data]);
+
   const dailyChartData = useMemo(() => data?.dailySales.map(d => ({
     date: fmtDate(d.date),
     UYU: d.revenueUYU,
-    Online: d.onlineRevenue,
-    Mostrador: d.mostradorRevenue,
+    USD: d.revenueUSD * (data.exchangeRate || 40),
     Pedidos: d.orders,
   })) || [], [data]);
 
@@ -518,6 +528,18 @@ export default function PdfReportPage() {
                 sub={`${data.summary.conversionRate}% tasa de conversión`} icon={Users} color="#dc2626" />
             </div>
 
+            {/* NEW: Insights row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+              <KpiCard label="Uso de Cupones" value={`${data.summary.couponUsageRate}%`}
+                sub={`${data.summary.topCoupons?.[0]?.code || 'N/A'} más usado`} icon={Tag} color="#ec4899" />
+              <KpiCard label="Retención" value={`${data.summary.returningCustomers}`}
+                sub={`${data.summary.newCustomers} clientes nuevos`} icon={UserCheck} color="#8b5cf6" />
+              <KpiCard label="Fulfillment" value={`${data.summary.avgFulfillmentDays} días`}
+                sub="Promedio pago → entrega" icon={Truck} color="#f59e0b" />
+              <KpiCard label="Abandono" value={`${data.summary.cartAbandonmentRate}%`}
+                sub="Checkouts no finalizados" icon={ShoppingCart} color="#ef4444" />
+            </div>
+
             {/* Velocity */}
             {revenueVelocity && (
               <div className="mt-3 flex items-start gap-3 px-4 py-3 rounded-xl"
@@ -660,67 +682,60 @@ export default function PdfReportPage() {
             </div>
           </section>
 
-          {/* ── CANAL DE VENTAS ── */}
+          {/* ── DISTRIBUCIÓN POR MONEDA ── */}
           <section>
-            <SectionTitle icon={Store}>Canal de Ventas — Online vs Mostrador</SectionTitle>
-            {/* 1 col on mobile, 2 on md+ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #e2e8f0' }}>
-                <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
-                  Ingresos por Canal (últimos 14 días)
-                </p>
-                {chartsReady ? (
-                  <ResponsiveContainer width="100%" height={180}>
-                    <BarChart data={dailyChartData.slice(-14)} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 9, fontFamily: 'system-ui' }} tickLine={false} />
-                      <YAxis tick={{ fontSize: 9, fontFamily: 'system-ui' }} tickLine={false} axisLine={false} tickFormatter={fmtCompact} />
-                      <Tooltip contentStyle={{ fontSize: 11, fontFamily: 'system-ui', borderRadius: 8 }} formatter={(v: number) => [fmt(v)]} />
-                      <Bar dataKey="Online" stackId="a" fill="#2563eb" />
-                      <Bar dataKey="Mostrador" stackId="a" fill="#16a34a" radius={[3, 3, 0, 0]} />
-                      <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'system-ui' }} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : <ChartPlaceholder height={180} />}
+            <SectionTitle icon={DollarSign}>Distribución por Moneda (UYU vs USD)</SectionTitle>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-xl p-6" style={{ border: '1px solid #e2e8f0' }}>
+              <div>
+                <div className="h-64">
+                  {!chartsReady ? <ChartPlaceholder height={256} /> : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={currencyData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                          label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {currencyData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: number, name: string, props: any) => {
+                            const item = props.payload;
+                            if (item.name === 'USD') {
+                              return [`${fmtUSD(item.originalValue)} (${fmt(value)})`, 'Ingresos'];
+                            }
+                            return [fmt(value), 'Ingresos'];
+                          }}
+                          contentStyle={{ fontSize: 11, fontFamily: 'system-ui', borderRadius: 8 }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'system-ui' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
               </div>
-
-              <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #e2e8f0' }}>
-                <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
-                  Distribución de Ingresos
-                </p>
-                {chartsReady ? (
-                  <div className="flex items-center gap-4">
-                    <div className="w-[45%] flex-shrink-0">
-                      <ResponsiveContainer width="100%" height={140}>
-                        <PieChart>
-                          <Pie data={channelData} cx="50%" cy="50%" outerRadius={62} innerRadius={28} dataKey="value">
-                            {channelData.map((_, i) => <Cell key={i} fill={['#2563eb', '#16a34a'][i]} />)}
-                          </Pie>
-                          <Tooltip formatter={(v: number) => [fmt(v)]} contentStyle={{ fontSize: 11, fontFamily: 'system-ui' }} />
-                        </PieChart>
-                      </ResponsiveContainer>
+              <div className="flex flex-col justify-center space-y-4">
+                {currencyData.map((item, i) => (
+                  <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length]} } />
+                      <span className="text-sm font-bold text-slate-700">{item.name}</span>
                     </div>
-                    <div className="flex-1 min-w-0 space-y-3">
-                      {channelData.map((ch, i) => {
-                        const total = channelData.reduce((s, c) => s + c.value, 0);
-                        const pct = total > 0 ? Math.round((ch.value / total) * 100) : 0;
-                        return (
-                          <div key={ch.name}>
-                            <div className="flex items-center gap-1.5 mb-1">
-                              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: ['#2563eb', '#16a34a'][i] }} />
-                              <span className="text-xs font-semibold text-slate-700 flex-1 truncate" style={{ fontFamily: 'system-ui' }}>{ch.name}</span>
-                              <span className="text-xs font-bold text-slate-900 flex-shrink-0" style={{ fontFamily: 'system-ui' }}>{pct}%</span>
-                            </div>
-                            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                              <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: ['#2563eb', '#16a34a'][i] }} />
-                            </div>
-                            <p className="text-xs text-slate-400 mt-0.5" style={{ fontFamily: 'system-ui' }}>{fmt(ch.value)} · {ch.orders} pedidos</p>
-                          </div>
-                        );
-                      })}
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-900">
+                        {item.name === 'USD' ? fmtUSD(item.originalValue || 0) : fmt(item.value)}
+                      </p>
+                      <p className="text-xs text-slate-500">{item.orders} pedidos</p>
                     </div>
                   </div>
-                ) : <ChartPlaceholder height={140} />}
+                ))}
               </div>
             </div>
           </section>

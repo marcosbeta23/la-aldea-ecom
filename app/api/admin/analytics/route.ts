@@ -53,21 +53,31 @@ export async function GET(request: NextRequest) {
     }
 
     // Parallelize independent queries
-    const [ordersResult, prevOrdersResult] = await Promise.all([
+    const [ordersResult, prevOrdersResult, checkoutAttemptsResult, allCouponsResult] = await Promise.all([
       supabaseAdmin
         .from('orders')
-        .select('id, status, total, created_at, customer_email, order_source, payment_method, shipping_department, shipping_type, currency')
+        .select('id, status, total, created_at, updated_at, customer_email, order_source, payment_method, shipping_department, shipping_type, currency, coupon_code')
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false }),
       supabaseAdmin
         .from('orders')
         .select('id, status, total, currency')
         .gte('created_at', prevStartDate.toISOString())
-        .lt('created_at', startDate.toISOString())
+        .lt('created_at', startDate.toISOString()),
+      supabaseAdmin
+        .from('checkout_attempts')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', startDate.toISOString())
+        .eq('recovered', false),
+      supabaseAdmin
+        .from('discount_coupons')
+        .select('code, current_uses')
     ]);
 
-    const orders = (ordersResult.data || []) as Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null; order_source: string | null; payment_method: string | null; shipping_department: string | null; shipping_type: string | null; currency: string | null }>;
-    const prevOrders = (prevOrdersResult.data || []) as Array<{ id: string; status: string; total: number; currency: string | null }>;
+    const orders = (ordersResult.data || []) as any[];
+    const prevOrders = (prevOrdersResult.data || []) as any[];
+    const abandonedCount = checkoutAttemptsResult.count || 0;
+    const allCoupons = (allCouponsResult.data || []) as any[];
 
     const orderIds = orders.map(o => o.id);
 
@@ -299,8 +309,37 @@ export async function GET(request: NextRequest) {
     const pendingOrders = orders.filter(o => o.status === 'pending').length;
     const completedOrders = paidOrders.length;
     const conversionRate = orders.length > 0 
-      ? ((completedOrders / orders.length) * 100).toFixed(1)
+      ? ((completedOrders / (orders.length + abandonedCount)) * 100).toFixed(1)
       : '0';
+
+    // Coupon Impact
+    const couponOrders = paidOrders.filter(o => o.coupon_code);
+    const couponUsageRate = paidOrders.length > 0
+      ? ((couponOrders.length / paidOrders.length) * 100).toFixed(1)
+      : '0';
+
+    // Fulfillment (proxy using updated_at of delivered orders)
+    const fulfilledOrders = orders.filter(o => o.status === 'delivered' && (o.paid_at || o.created_at));
+    const avgFulfillmentDays = fulfilledOrders.length > 0
+      ? (fulfilledOrders.reduce((acc, o) => {
+          const start = new Date(o.paid_at || o.created_at).getTime();
+          const end = new Date(o.updated_at).getTime();
+          return acc + (end - start);
+        }, 0) / fulfilledOrders.length / (1000 * 60 * 60 * 24)).toFixed(1)
+      : '0';
+
+    // Customer Retention
+    const emails = orders.map(o => o.customer_email).filter(Boolean);
+    const { data: pastOrdersCount } = await supabaseAdmin
+      .from('orders')
+      .select('customer_email')
+      .in('customer_email', emails.length > 0 ? [...new Set(emails)] : ['none'])
+      .lt('created_at', startDate.toISOString());
+    
+    const returningEmails = new Set(((pastOrdersCount || []) as any[]).map(o => o.customer_email));
+    const uniqueEmailsInPeriod = [...new Set(emails)];
+    const returningCustomers = uniqueEmailsInPeriod.filter(email => returningEmails.has(email)).length;
+    const newCustomers = uniqueEmailsInPeriod.length - returningCustomers;
 
     // Combined store total in UYU (USD converted at exchange rate)
     const combinedRevenueUYU = exchangeRate > 0
@@ -331,12 +370,18 @@ export async function GET(request: NextRequest) {
         avgOrderValueUSD,
         uniqueCustomers,
         conversionRate: parseFloat(conversionRate),
+        cartAbandonmentRate: abandonedCount > 0 ? parseFloat(((abandonedCount / (abandonedCount + orders.length)) * 100).toFixed(1)) : 0,
         onlineRevenue,
         onlineRevenueUYU,
         onlineRevenueUSD,
         onlineOrders: paidOrders.length,
-        mostradorRevenueUYU: 0,
-        mostradorOrders: 0,
+        couponUsageRate: parseFloat(couponUsageRate),
+        avgFulfillmentDays: parseFloat(avgFulfillmentDays),
+        newCustomers,
+        returningCustomers,
+        topCoupons: allCoupons
+          .sort((a, b) => (b.current_uses || 0) - (a.current_uses || 0))
+          .slice(0, 5)
       },
       previousPeriod: {
         totalRevenue: prevTotalRevenue,

@@ -25,26 +25,32 @@ export default function ReportsTable({
 }: ReportsTableProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <Eye className="h-5 w-5 text-slate-400" />
-          Preview
+          Previsualización
         </h3>
         {preview.summary && (
-          <div className="flex items-center gap-4 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-3">
             {preview.summary.totalOrders !== undefined && (
-              <span>{preview.summary.totalOrders} pedidos</span>
+              <div className="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-medium text-slate-600 border border-slate-200">
+                {preview.summary.totalOrders} <span className="text-slate-400 ml-1">Pedidos</span>
+              </div>
             )}
             {preview.summary.paidOrders !== undefined && (
-              <span>{preview.summary.paidOrders} pagados</span>
+              <div className="px-3 py-1.5 bg-green-50 rounded-lg text-xs font-medium text-green-700 border border-green-100">
+                {preview.summary.paidOrders} <span className="text-green-600/50 ml-1">Pagados</span>
+              </div>
             )}
             {preview.summary.totalRevenue !== undefined && (
-              <span className="font-semibold text-slate-900">
-                {formatCurrency(preview.summary.totalRevenue)}
-              </span>
+              <div className="px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-bold text-blue-700 border border-blue-100">
+                {formatCurrency(preview.summary.totalRevenue)} <span className="text-blue-600/50 font-normal ml-1">Ingresos</span>
+              </div>
             )}
             {preview.summary.totalCustomers !== undefined && (
-              <span>{preview.summary.totalCustomers} clientes</span>
+              <div className="px-3 py-1.5 bg-indigo-50 rounded-lg text-xs font-medium text-indigo-700 border border-indigo-100">
+                {preview.summary.totalCustomers} <span className="text-indigo-600/50 ml-1">Clientes</span>
+              </div>
             )}
           </div>
         )}

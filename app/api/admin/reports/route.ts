@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const format = searchParams.get('format') || 'json';
   const startDate = searchParams.get('start');
   const endDate = searchParams.get('end');
-  const source = searchParams.get('source') || ''; // 'online' | 'mostrador' | '' (all)
+  const source = searchParams.get('source') || ''; // 'online' | '' (all)
 
   try {
     let data;
@@ -235,7 +235,7 @@ function convertToCSV(data: any, type: string): string {
       order.currency || 'UYU',
       order.status,
       order.payment_method || '',
-      order.order_source === 'mostrador' ? 'Local' : 'Online',
+      order.order_source === 'online' ? 'Online' : 'Venta',
       order.shipping_department || '',
     ]);
     return [headers.join(','), ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(','))].join('\n');
