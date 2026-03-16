@@ -8,7 +8,6 @@ import { Analytics } from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
-import CookieConsent from "@/components/common/CookieConsent";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
@@ -281,7 +280,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <Analytics nonce={nonce} />
         <VercelAnalytics />
         <SpeedInsights />
-        <CookieConsent />
       </body>
     </html>
   );
