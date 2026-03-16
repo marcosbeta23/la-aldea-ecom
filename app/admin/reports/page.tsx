@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 // Lazy-load the heavy data table
 const ReportsTable = dynamic(() => import('@/components/admin/ReportsTable'), {
@@ -13,7 +14,7 @@ const ReportsTable = dynamic(() => import('@/components/admin/ReportsTable'), {
     </div>
   ),
 });
-import { Download, FileText, TrendingUp, Users, Package, Eye, Globe, Filter } from 'lucide-react';
+import { Download, FileText, TrendingUp, Users, Package, Eye, Globe, Filter, BarChart2 } from 'lucide-react';
 
 interface PreviewData {
   summary?: Record<string, any>;
@@ -24,6 +25,7 @@ interface PreviewData {
 
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [reportType, setReportType] = useState('sales');
@@ -108,9 +110,18 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Reportes</h1>
-        <p className="text-slate-500">Generá y descargá reportes de ventas, productos y clientes</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Reportes</h1>
+          <p className="text-slate-500">Generá y descargá reportes de ventas, productos y clientes</p>
+        </div>
+        <button
+          onClick={() => router.push('/admin/reports/pdf')}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-700 text-white rounded-xl hover:bg-blue-800 transition-all font-semibold shadow-sm overflow-hidden"
+        >
+          <BarChart2 className="h-5 w-5" />
+          Generar Reporte Análisis
+        </button>
       </div>
 
       {/* Report Configuration */}

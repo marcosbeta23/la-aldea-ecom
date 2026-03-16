@@ -2,9 +2,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 
 
 export async function GET(request: NextRequest) {
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) return authResult.response;
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'sales';

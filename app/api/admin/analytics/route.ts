@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate date range
     const now = new Date();
-    const daysBack = period === '30d' ? 30 : period === '90d' ? 90 : 7;
+    const daysBack = period === '30d' ? 30 : period === '90d' ? 90 : period === 'semester' ? 180 : 7;
     const startDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
     const prevStartDate = new Date(startDate.getTime() - daysBack * 24 * 60 * 60 * 1000);
     const startOfToday = new Date(now);
@@ -335,6 +335,8 @@ export async function GET(request: NextRequest) {
         onlineRevenueUYU,
         onlineRevenueUSD,
         onlineOrders: paidOrders.length,
+        mostradorRevenueUYU: 0,
+        mostradorOrders: 0,
       },
       previousPeriod: {
         totalRevenue: prevTotalRevenue,
