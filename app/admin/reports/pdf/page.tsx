@@ -657,7 +657,7 @@ export default function PdfReportPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis dataKey="date" tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} axisLine={false} tickFormatter={fmtCompact} />
-                    <Tooltip formatter={(v: number) => [fmt(v), 'Ingresos UYU']} contentStyle={{ fontSize: 12, fontFamily: 'system-ui', borderRadius: 8 }} />
+                    <Tooltip formatter={(v: number | undefined) => [fmt(v ?? 0), 'Ingresos UYU']} contentStyle={{ fontSize: 12, fontFamily: 'system-ui', borderRadius: 8 }} />
                     <Area type="monotone" dataKey="UYU" stroke="#2563eb" strokeWidth={2} fill="url(#gradUYU)" dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -689,12 +689,13 @@ export default function PdfReportPage() {
                           ))}
                         </Pie>
                         <Tooltip
-                          formatter={(value: number, name: string, props: any) => {
+                          formatter={(value: number | undefined, name: string, props: any) => {
                             const item = props.payload;
+                            const v = value ?? 0;
                             if (item.name === 'USD') {
-                              return [`${fmtUSD(item.originalValue)} (${fmt(value)})`, 'Ingresos'];
+                              return [`${fmtUSD(item.originalValue)} (${fmt(v)})`, 'Ingresos'];
                             }
-                            return [fmt(value), 'Ingresos'];
+                            return [fmt(v), 'Ingresos'];
                           }}
                           contentStyle={{ fontSize: 11, fontFamily: 'system-ui', borderRadius: 8 }}
                         />
@@ -734,7 +735,7 @@ export default function PdfReportPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fontFamily: 'system-ui' }} tickLine={false} />
                       <YAxis tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} axisLine={false} tickFormatter={fmtCompact} />
-                      <Tooltip formatter={(v: number, name: string) => [name === 'avgRevenue' ? fmt(v) : v, name === 'avgRevenue' ? 'Ingreso promedio' : 'Pedidos']}
+                      <Tooltip formatter={(v: number | undefined, name: string) => [name === 'avgRevenue' ? fmt(v ?? 0) : (v ?? 0), name === 'avgRevenue' ? 'Ingreso promedio' : 'Pedidos']}
                         contentStyle={{ fontSize: 11, fontFamily: 'system-ui', borderRadius: 8 }} />
                       <Bar dataKey="avgRevenue" radius={[4, 4, 0, 0]} name="avgRevenue">
                         {dayOfWeekData.map((entry, i) => {
@@ -813,7 +814,7 @@ export default function PdfReportPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                       <XAxis dataKey="name" tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} />
                       <YAxis tick={{ fontSize: 10, fontFamily: 'system-ui' }} tickLine={false} axisLine={false} tickFormatter={fmtCompact} />
-                      <Tooltip formatter={(v: number, name: string) => [name === 'revenue' ? fmt(v) : String(v), name === 'revenue' ? 'Ingresos UYU' : 'Pedidos']}
+                      <Tooltip formatter={(v: number | undefined, name: string) => [name === 'revenue' ? fmt(v ?? 0) : String(v ?? 0), name === 'revenue' ? 'Ingresos UYU' : 'Pedidos']}
                         contentStyle={{ fontSize: 11, fontFamily: 'system-ui', borderRadius: 8 }} />
                       <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} name="revenue" />
                       <Bar dataKey="orders" fill="#bfdbfe" radius={[4, 4, 0, 0]} name="orders" />
@@ -864,7 +865,7 @@ export default function PdfReportPage() {
                           labelLine={false}>
                           {paymentData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                         </Pie>
-                        <Tooltip formatter={(v: number) => [fmt(v), 'Ingresos']} contentStyle={{ fontSize: 11, fontFamily: 'system-ui' }} />
+                        <Tooltip formatter={(v: number | undefined) => [fmt(v ?? 0), 'Ingresos']} contentStyle={{ fontSize: 11, fontFamily: 'system-ui' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : <ChartPlaceholder height={160} />}
