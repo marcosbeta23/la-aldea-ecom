@@ -16,11 +16,6 @@ const FeaturedCarousel = dynamic(
   }
 );
 
-const LazyMap = dynamic(() => import("@/components/ui/LazyMap"), {
-  ssr: false,
-  loading: () => <div className="mt-8 h-[400px] w-full bg-slate-100 animate-pulse rounded-3xl" />,
-});
-
 export default function ClientHomePageElements({ featuredProducts }: { featuredProducts: Product[] }) {
   return (
     <>
@@ -39,10 +34,6 @@ export default function ClientHomePageElements({ featuredProducts }: { featuredP
           </div>
         </section>
       )}
-      
-      <div className="container mx-auto px-4 pb-16">
-        <LazyMap />
-      </div>
     </>
   );
 }

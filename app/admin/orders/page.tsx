@@ -5,7 +5,6 @@ import {
   ChevronRight,
   Eye,
   Phone,
-  Store,
   Globe,
   MessageCircle,
   Truck,
@@ -120,7 +119,7 @@ export default async function OrdersPage({
 }) {
   const params = await searchParams;
   const statusFilter = typeof params.status === 'string' ? params.status : undefined;
-  const sourceFilter = typeof params.source === 'string' ? params.source : undefined;
+  const sourceFilter = 'online';
   const searchQuery = typeof params.q === 'string' ? params.q.trim() : '';
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1;
   const perPage = 20;
@@ -227,36 +226,6 @@ export default async function OrdersPage({
         <OrderSearch initialQuery={searchQuery} statusFilter={statusFilter} />
       </div>
 
-      {/* Source Filter (Online / Mostrador) */}
-      <div className="flex gap-2">
-        {([
-          { value: '', label: 'Todos', icon: null },
-          { value: 'online', label: 'Online', icon: Globe },
-          { value: 'mostrador', label: 'Mostrador', icon: Store },
-        ] as const).map((option) => {
-          const isActive = (sourceFilter === option.value) || (!sourceFilter && !option.value);
-          const sourceQs = new URLSearchParams();
-          if (option.value) sourceQs.set('source', option.value);
-          if (statusFilter) sourceQs.set('status', statusFilter);
-          if (searchQuery) sourceQs.set('q', searchQuery);
-          const href = `/admin/orders${sourceQs.toString() ? `?${sourceQs.toString()}` : ''}`;
-
-          return (
-            <Link
-              key={option.value}
-              href={href}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                isActive
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {option.icon && <option.icon className="h-4 w-4" />}
-              {option.label}
-            </Link>
-          );
-        })}
-      </div>
 
       {/* Status Filters with counts */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
@@ -322,11 +291,6 @@ export default async function OrdersPage({
                       >
                         #{order.order_number}
                       </Link>
-                      {order.order_source === 'mostrador' && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          Mostrador
-                        </span>
-                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4">

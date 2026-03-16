@@ -94,8 +94,8 @@ async function generateSalesReport(period: string, startDate?: string | null, en
     .lte('created_at', end.toISOString())
     .order('created_at', { ascending: false });
 
-  if (source === 'online' || source === 'mostrador') {
-    query = query.eq('order_source', source);
+  if (source === 'online') {
+    query = query.eq('order_source', 'online');
   }
 
   const { data: orders } = await query;
@@ -232,7 +232,7 @@ function convertToCSV(data: any, type: string): string {
       order.currency || 'UYU',
       order.status,
       order.payment_method || '',
-      order.order_source || 'online',
+      order.order_source === 'mostrador' ? 'Local' : 'Online',
       order.shipping_department || '',
     ]);
     return [headers.join(','), ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(','))].join('\n');

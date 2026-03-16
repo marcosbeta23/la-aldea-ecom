@@ -12,6 +12,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 //   1. release_expired_reservations: always (safety net for inngest/stock-reservation-expiry)
 //   2. abandoned cart recovery: always (safety net for inngest/abandoned-cart-recovery)
 //   3. weekly report: only on Mondays
+//   4. data purge: always (trim search analytics & stale checkouts)
+//   5. monthly snapshots: only on the 1st of each month
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -80,6 +82,60 @@ export async function GET(request: NextRequest) {
     }
   } catch (err: any) {
     results.cancelAbandonedMp = { success: false, error: err.message };
+  }
+
+  // 5. Data Purge — trim search_analytics (>90d) and checkout_attempts (>6 months)
+  try {
+    const { error: purgeSearchError } = await supabaseAdmin.rpc('purge_old_data');
+    if (purgeSearchError) {
+      // Fallback if RPC doesn't exist yet
+      await Promise.all([
+        supabaseAdmin.from('search_analytics').delete().lt('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()),
+        supabaseAdmin.from('checkout_attempts').delete().eq('recovered', false).lt('created_at', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()),
+      ]);
+      results.dataPurge = { success: true, method: 'fallback' };
+    } else {
+      results.dataPurge = { success: true, method: 'rpc' };
+    }
+  } catch (err: any) {
+    results.dataPurge = { success: false, error: err.message };
+  }
+
+  // 6. Monthly Snapshots — only on the 1st of the month
+  const dayOfMonth = new Date().getUTCDate();
+  if (dayOfMonth === 1) {
+    try {
+      const { error: snapshotError } = await supabaseAdmin.rpc('generate_monthly_snapshot');
+      if (snapshotError) {
+        // Fallback manual logic if RPC not available
+        const lastMonth = new Date();
+        lastMonth.setUTCDate(0); // Last day of previous month
+        const startOfMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1).toISOString();
+        const endOfMonth = lastMonth.toISOString();
+
+        const { data: snapshotData } = await supabaseAdmin
+          .from('orders')
+          .select('total, currency, status')
+          .gte('created_at', startOfMonth)
+          .lte('created_at', endOfMonth)
+          .in('status', ['paid', 'invoiced', 'processing', 'shipped', 'delivered']) as { data: Array<{ total: number; currency: string; status: string }> | null };
+
+        const totalUYU = snapshotData?.filter(o => o.currency === 'UYU').reduce((s, o) => s + (o.total || 0), 0) || 0;
+        const totalUSD = snapshotData?.filter(o => o.currency === 'USD').reduce((s, o) => s + (o.total || 0), 0) || 0;
+        
+        await (supabaseAdmin.from('monthly_revenue_snapshots' as any) as any).upsert({
+          month: startOfMonth.split('T')[0],
+          revenue_uyu: totalUYU,
+          revenue_usd: totalUSD,
+          order_count: snapshotData?.length || 0,
+        });
+        results.monthlySnapshot = { success: true, method: 'fallback' };
+      } else {
+        results.monthlySnapshot = { success: true, method: 'rpc' };
+      }
+    } catch (err: any) {
+      results.monthlySnapshot = { success: false, error: err.message };
+    }
   }
 
   console.log('🔧 Maintenance cron complete:', JSON.stringify(results));

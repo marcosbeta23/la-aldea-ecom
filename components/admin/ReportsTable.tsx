@@ -61,7 +61,6 @@ export default function ReportsTable({
                 <th className="text-left py-2 px-3 text-slate-600 font-medium">Cliente</th>
                 <th className="text-right py-2 px-3 text-slate-600 font-medium">Total</th>
                 <th className="text-center py-2 px-3 text-slate-600 font-medium">Estado</th>
-                <th className="text-left py-2 px-3 text-slate-600 font-medium">Canal</th>
                 <th className="text-left py-2 px-3 text-slate-600 font-medium">Depto.</th>
               </tr>
             </thead>
@@ -88,9 +87,6 @@ export default function ReportsTable({
                     >
                       {statusLabel(order.status)}
                     </span>
-                  </td>
-                  <td className="py-2 px-3 text-slate-500 text-xs">
-                    {order.order_source === 'mostrador' ? 'Local' : 'Online'}
                   </td>
                   <td className="py-2 px-3 text-slate-500 text-xs truncate max-w-[120px]">
                     {order.shipping_department || '-'}

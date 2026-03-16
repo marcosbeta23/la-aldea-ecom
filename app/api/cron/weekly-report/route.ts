@@ -25,30 +25,37 @@ export async function GET(request: NextRequest) {
     // Fetch this week's orders
     const { data: thisWeekOrders } = await (supabaseAdmin as any)
       .from('orders')
-      .select('id, status, total, payment_method, order_source, created_at')
+      .select('id, status, total, currency, payment_method, order_source, created_at')
       .gte('created_at', weekStart.toISOString())
       .order('created_at', { ascending: false });
 
     const orders = (thisWeekOrders || []) as Array<{
-      id: string; status: string; total: number;
+      id: string; status: string; total: number; currency: string | null;
       payment_method: string | null; order_source: string | null; created_at: string;
     }>;
 
     // Fetch previous week's orders
     const { data: prevWeekOrders } = await (supabaseAdmin as any)
       .from('orders')
-      .select('id, status, total')
+      .select('id, status, total, currency')
       .gte('created_at', prevWeekStart.toISOString())
       .lt('created_at', weekStart.toISOString());
 
     const prevOrders = (prevWeekOrders || []) as Array<{
-      id: string; status: string; total: number;
+      id: string; status: string; total: number; currency: string | null;
     }>;
 
     // This week stats
     const paidOrders = orders.filter(o => paidStatuses.includes(o.status));
     const totalRevenue = paidOrders.reduce((s, o) => s + (o.total || 0), 0);
-    const avgOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
+    const onlinePaid = paidOrders;
+
+    const totalRevenueUYU = onlinePaid
+      .filter((o) => (o.currency || 'UYU') === 'UYU')
+      .reduce((s, o) => s + (o.total || 0), 0);
+    const totalRevenueUSD = onlinePaid
+      .filter((o) => o.currency === 'USD')
+      .reduce((s, o) => s + (o.total || 0), 0);
 
     // Previous week stats
     const prevPaidOrders = prevOrders.filter(o => paidStatuses.includes(o.status));
@@ -57,14 +64,6 @@ export async function GET(request: NextRequest) {
     const revenueChange = prevRevenue > 0
       ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100)
       : 0;
-
-    // Revenue by source
-    const onlineRevenue = paidOrders
-      .filter(o => (o.order_source || 'online') !== 'mostrador')
-      .reduce((s, o) => s + (o.total || 0), 0);
-    const mostradorRevenue = paidOrders
-      .filter(o => o.order_source === 'mostrador')
-      .reduce((s, o) => s + (o.total || 0), 0);
 
     // Status counts
     const statusCounts: Record<string, number> = {};
@@ -164,7 +163,7 @@ export async function GET(request: NextRequest) {
           </td>
           <td style="width: 8px;"></td>
           <td style="padding: 8px; text-align: center; background: #f8fafc; border-radius: 8px;">
-            <p style="margin: 0; font-size: 22px; font-weight: bold; color: #1e293b;">${fmt(avgOrderValue)}</p>
+            <p style="margin: 0; font-size: 22px; font-weight: bold; color: #1e293b;">${fmt(totalRevenueUYU / onlinePaid.length || 0)}</p>
             <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Ticket promedio</p>
           </td>
           <td style="width: 8px;"></td>
@@ -180,13 +179,13 @@ export async function GET(request: NextRequest) {
       <table style="width: 100%; margin-bottom: 20px;" cellpadding="0" cellspacing="0">
         <tr>
           <td style="padding: 10px; background: #eff6ff; border-radius: 8px;">
-            <p style="margin: 0; font-size: 12px; color: #3b82f6; font-weight: 600;">Online</p>
-            <p style="margin: 2px 0 0; font-size: 18px; font-weight: bold; color: #1e293b;">${fmt(onlineRevenue)}</p>
+            <p style="margin: 0; font-size: 12px; color: #3b82f6; font-weight: 600;">Online (UYU)</p>
+            <p style="margin: 2px 0 0; font-size: 18px; font-weight: bold; color: #1e293b;">${fmt(totalRevenueUYU)}</p>
           </td>
           <td style="width: 8px;"></td>
           <td style="padding: 10px; background: #ecfdf5; border-radius: 8px;">
-            <p style="margin: 0; font-size: 12px; color: #10b981; font-weight: 600;">Mostrador</p>
-            <p style="margin: 2px 0 0; font-size: 18px; font-weight: bold; color: #1e293b;">${fmt(mostradorRevenue)}</p>
+            <p style="margin: 0; font-size: 12px; color: #10b981; font-weight: 600;">Online (USD)</p>
+            <p style="margin: 2px 0 0; font-size: 18px; font-weight: bold; color: #1e293b;">$${totalRevenueUSD.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
           </td>
         </tr>
       </table>
@@ -261,8 +260,8 @@ export async function GET(request: NextRequest) {
       `${dateRange}\n\n` +
       `<b>Ingresos:</b> ${fmt(totalRevenue)} (${revenueChange >= 0 ? '+' : ''}${revenueChange}%)\n` +
       `<b>Pedidos pagados:</b> ${paidOrders.length}\n` +
-      `<b>Ticket promedio:</b> ${fmt(avgOrderValue)}\n` +
-      `<b>Online:</b> ${fmt(onlineRevenue)} | <b>Mostrador:</b> ${fmt(mostradorRevenue)}\n\n` +
+      `<b>Ticket promedio:</b> ${fmt(totalRevenueUYU / onlinePaid.length || 0)}\n` +
+      `<b>Online UYU:</b> ${fmt(totalRevenueUYU)} | <b>Online USD:</b> $${totalRevenueUSD.toLocaleString('en-US', { maximumFractionDigits: 0 })}\n\n` +
       (topProducts.length > 0
         ? `<b>Top productos:</b>\n${topProducts.map(([name, data]) => `  ${name}: ${data.sold} uds (${fmt(data.revenue)})`).join('\n')}\n\n`
         : '') +
@@ -283,7 +282,13 @@ export async function GET(request: NextRequest) {
         revenueChange,
         paidOrders: paidOrders.length,
         totalOrders: orders.length,
-        avgOrderValue,
+        channels: {
+          online: {
+            orders: onlinePaid.length,
+            revenueUYU: totalRevenueUYU,
+            revenueUSD: totalRevenueUSD,
+          }
+        },
         topProducts: topProducts.length,
         lowStock: lowStock.length,
         outOfStock: outOfStock.length,

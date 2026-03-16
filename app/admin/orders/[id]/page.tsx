@@ -214,11 +214,6 @@ export default async function OrderDetailPage({
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_BADGE_STYLES[order.status] || 'bg-slate-100 text-slate-800 border-slate-200'}`}>
                 {STATUS_LABELS[order.status] || order.status}
               </span>
-              {(order as any).order_source === 'mostrador' && (
-                <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  Mostrador
-                </span>
-              )}
               {currency === 'USD' && (
                 <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                   USD
@@ -414,11 +409,6 @@ export default async function OrderDetailPage({
                   )}
                   <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-2">
                     {formatCurrency(item.unit_price)} × {item.quantity}
-                    {!item.product_id && (
-                      <span className="text-xs text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                        mostrador
-                      </span>
-                    )}
                   </p>
                 </div>
                 <p className="font-semibold text-slate-900 shrink-0">
@@ -615,8 +605,6 @@ export default async function OrderDetailPage({
         </div>
       </div>
 
-      {/* ── Row 3: Billing + InvoiceForm ──────────────────────────── */}
-      {(order.invoice_type || (order as any).order_source !== 'mostrador') ? (
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Billing Info (from checkout) */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
@@ -669,10 +657,6 @@ export default async function OrderDetailPage({
           {/* Invoice Form */}
           <InvoiceForm order={order} />
         </div>
-      ) : (
-        /* Mostrador orders without billing data — just show InvoiceForm full-width */
-        <InvoiceForm order={order} />
-      )}
 
       {/* ── RefundButton (full-width) ─────────────────────────────── */}
       <RefundButton order={order} currency={currency} />

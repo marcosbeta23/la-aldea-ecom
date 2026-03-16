@@ -72,7 +72,6 @@ Full-stack e-commerce platform for La Aldea — a hardware, irrigation, and wate
 - **Guides** — CMS for product guides/articles
 - **Search Analytics** — track zero-result searches for catalog gaps
 - **Reports** — sales reports and insights
-- **Ventas Mostrador** — in-store sales (bypass checkout, direct order creation)
 - **PostHog Insights** — embedded analytics dashboard
 
 ### Security
@@ -122,7 +121,6 @@ la-aldea-ecom/
 │   │   ├── guides/             # Article CMS
 │   │   ├── search-analytics/   # Zero-result query dashboard
 │   │   ├── reports/            # Sales reports
-│   │   ├── ventas-mostrador/   # In-store sales
 │   │   └── analytics/          # PostHog embedded dashboard
 │   ├── api/                    # API Routes
 │   │   ├── checkout-attempt/   # Save abandoned cart attempts

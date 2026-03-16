@@ -129,20 +129,6 @@ export const CheckoutFormSchema = z.object({
 
 export type CheckoutFormData = z.infer<typeof CheckoutFormSchema>;
 
-// ── Counter Sale (Ventas Mostrador) schema ──────────────────────────
-
-export const CounterSaleSchema = z.object({
-  description: z.string().min(1, 'La descripción es requerida').max(200, 'Descripción muy larga'),
-  amount: z.number().positive('El monto debe ser mayor a 0'),
-  currency: z.enum(['UYU', 'USD']).default('UYU'),
-  customer_name: z.string().max(100, 'Nombre muy largo').optional().default('Cliente mostrador'),
-  customer_phone: z.string().max(20).optional().default(''),
-  payment_method: z.enum(['efectivo', 'credito', 'transfer']),
-  notes: z.string().max(500, 'Notas muy largas').optional().default(''),
-});
-
-export type CounterSaleInput = z.infer<typeof CounterSaleSchema>;
-
 // ── Category normalization ──────────────────────────────────────────
 
 import { KNOWN_CATEGORIES as CATEGORIES_LIST, getAllSubcategoryValues } from './categories';

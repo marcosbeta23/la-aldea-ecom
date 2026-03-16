@@ -10,7 +10,6 @@ interface DailySales {
   revenueUYU: number;
   revenueUSD: number;
   onlineRevenue: number;
-  mostradorRevenue: number;
 }
 
 interface TopProduct {
@@ -53,38 +52,42 @@ export async function GET(request: NextRequest) {
       // If exchange rate is unavailable, we still show individual currencies
     }
 
-    // Fetch current period orders
-    const { data: ordersData } = await supabaseAdmin
-      .from('orders')
-      .select('id, status, total, created_at, customer_email, order_source, payment_method, shipping_department, shipping_type, currency')
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false }) as { data: Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null; order_source: string | null; payment_method: string | null; shipping_department: string | null; shipping_type: string | null; currency: string | null }> | null };
+    // Parallelize independent queries
+    const [ordersResult, prevOrdersResult] = await Promise.all([
+      supabaseAdmin
+        .from('orders')
+        .select('id, status, total, created_at, customer_email, order_source, payment_method, shipping_department, shipping_type, currency')
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false }),
+      supabaseAdmin
+        .from('orders')
+        .select('id, status, total, currency')
+        .gte('created_at', prevStartDate.toISOString())
+        .lt('created_at', startDate.toISOString())
+    ]);
 
-    const orders = ordersData || [];
+    const orders = (ordersResult.data || []) as Array<{ id: string; status: string; total: number; created_at: string; customer_email: string | null; order_source: string | null; payment_method: string | null; shipping_department: string | null; shipping_type: string | null; currency: string | null }>;
+    const prevOrders = (prevOrdersResult.data || []) as Array<{ id: string; status: string; total: number; currency: string | null }>;
 
-    // Fetch previous period orders (for comparison)
-    const { data: prevOrdersData } = await supabaseAdmin
-      .from('orders')
-      .select('id, status, total, payment_method, currency')
-      .gte('created_at', prevStartDate.toISOString())
-      .lt('created_at', startDate.toISOString()) as { data: Array<{ id: string; status: string; total: number; payment_method: string | null; currency: string | null }> | null };
-
-    const prevOrders = prevOrdersData || [];
-
-    // Fetch order items for product analytics
     const orderIds = orders.map(o => o.id);
 
-    const { data: orderItemsData } = await supabaseAdmin
-      .from('order_items')
-      .select('order_id, product_id, product_name, quantity, unit_price, subtotal, currency')
-      .in('order_id', orderIds.length > 0 ? orderIds : ['none']) as { data: Array<{ order_id: string; product_id: string; product_name: string; quantity: number; unit_price: number; subtotal: number; currency: string | null }> | null };
+    // Fetch order items and products in parallel too
+    const [orderItemsResult, allProductsResult] = await Promise.all([
+      supabaseAdmin
+        .from('order_items')
+        .select('order_id, product_id, product_name, quantity, subtotal, currency')
+        .in('order_id', orderIds.length > 0 ? orderIds : ['none']),
+      supabaseAdmin
+        .from('products')
+        .select('id, name, sku, stock, sold_count, is_active, images')
+        .eq('is_active', true)
+        .gt('stock', 0)
+        .order('stock', { ascending: true })
+    ]);
 
-    const orderItems = orderItemsData || [];
+    const orderItems = (orderItemsResult.data || []) as Array<{ order_id: string; product_id: string; product_name: string; quantity: number; subtotal: number; currency: string | null }>;
+    const allProducts = (allProductsResult.data || []) as Array<{ id: string; name: string; sku: string; stock: number; sold_count: number; is_active: boolean; images: string[] | null }>;
 
-    // Order currency helper — use orders.currency directly (set during order creation)
-    const orderCurrency = (order: { currency: string | null }) => order.currency || 'UYU';
-
-    // Fetch products for images
     const productIds = [...new Set(orderItems.map(i => i.product_id).filter(Boolean))];
     const { data: productsData } = await supabaseAdmin
       .from('products')
@@ -94,20 +97,19 @@ export async function GET(request: NextRequest) {
     const products = productsData || [];
     const productMap = new Map(products.map(p => [p.id, p]));
 
-    // === Calculate Dashboard Stats ===
-
     // Filter paid orders
     const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'paid_pending_verification', 'ready_to_invoice', 'invoiced'];
     const paidOrders = orders.filter(o => paidStatuses.includes(o.status));
     const todayOrders = orders.filter(o => new Date(o.created_at) >= startOfToday);
     const todayPaidOrders = paidOrders.filter(o => new Date(o.created_at) >= startOfToday);
 
-    // Revenue calculations (currency-aware)
+    const orderCurrency = (order: { currency: string | null }) => order.currency || 'UYU';
+
     const paidOrdersUYU = paidOrders.filter(o => orderCurrency(o) === 'UYU');
     const paidOrdersUSD = paidOrders.filter(o => orderCurrency(o) === 'USD');
     const totalRevenueUYU = paidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
     const totalRevenueUSD = paidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
-    const totalRevenue = totalRevenueUYU; // Legacy field — UYU only to avoid mixing
+    const totalRevenue = totalRevenueUYU; 
 
     const todayPaidOrdersUYU = todayPaidOrders.filter(o => orderCurrency(o) === 'UYU');
     const todayPaidOrdersUSD = todayPaidOrders.filter(o => orderCurrency(o) === 'USD');
@@ -122,15 +124,10 @@ export async function GET(request: NextRequest) {
     // Unique customers
     const uniqueCustomers = new Set(orders.map(o => o.customer_email?.toLowerCase()).filter(Boolean)).size;
 
-    // Revenue by source (online vs mostrador) — currency-aware
-    const onlinePaidOrders = paidOrders.filter(o => (o.order_source || 'online') !== 'mostrador');
-    const mostradorPaidOrders = paidOrders.filter(o => o.order_source === 'mostrador');
-    const onlineRevenueUYU = onlinePaidOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0);
-    const onlineRevenueUSD = onlinePaidOrders.filter(o => orderCurrency(o) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0);
-    const onlineRevenue = onlineRevenueUYU; // Legacy field — UYU only
-    const mostradorRevenueUYU = mostradorPaidOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0);
-    const mostradorRevenueUSD = mostradorPaidOrders.filter(o => orderCurrency(o) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0);
-    const mostradorRevenue = mostradorRevenueUYU; // Legacy field — UYU only
+    const onlineRevenueUYU = totalRevenueUYU;
+    const onlineRevenueUSD = totalRevenueUSD;
+    const onlineRevenue = totalRevenue;
+    const onlinePaidOrders = paidOrders;
 
     // === Previous Period Comparison (per currency) ===
     const prevPaidOrders = prevOrders.filter(o => paidStatuses.includes(o.status));
@@ -191,18 +188,6 @@ export async function GET(request: NextRequest) {
       shippingTypeDistribution[type].revenue += order.total || 0;
     }
 
-    // === Inventory Health ===
-    const { data: allProductsData } = await (supabaseAdmin as any)
-      .from('products')
-      .select('id, name, sku, stock, sold_count, is_active, images')
-      .eq('is_active', true)
-      .gt('stock', 0)
-      .order('stock', { ascending: true });
-
-    const allProducts = (allProductsData || []) as Array<{
-      id: string; name: string; sku: string; stock: number;
-      sold_count: number; is_active: boolean; images: string[] | null;
-    }>;
 
     // Calculate avg daily sales from order items in the last 30 days
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -262,8 +247,7 @@ export async function GET(request: NextRequest) {
         orders: dayOrders.length,
         revenueUYU: dayOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
         revenueUSD: dayOrders.filter(o => orderCurrency(o) === 'USD').reduce((sum, o) => sum + (o.total || 0), 0),
-        onlineRevenue: dayOrders.filter(o => (o.order_source || 'online') !== 'mostrador' && orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
-        mostradorRevenue: dayOrders.filter(o => o.order_source === 'mostrador' && orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
+        onlineRevenue: dayOrders.filter(o => orderCurrency(o) === 'UYU').reduce((sum, o) => sum + (o.total || 0), 0),
       });
     }
 
@@ -350,11 +334,7 @@ export async function GET(request: NextRequest) {
         onlineRevenue,
         onlineRevenueUYU,
         onlineRevenueUSD,
-        mostradorRevenue,
-        mostradorRevenueUYU,
-        mostradorRevenueUSD,
-        onlineOrders: onlinePaidOrders.length,
-        mostradorOrders: mostradorPaidOrders.length,
+        onlineOrders: paidOrders.length,
       },
       previousPeriod: {
         totalRevenue: prevTotalRevenue,

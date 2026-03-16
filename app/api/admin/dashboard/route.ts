@@ -122,27 +122,6 @@ export async function GET() {
       (o) => o.status === 'pending'
     ).length;
 
-    // Revenue by source — currency-aware (only sum UYU with UYU, USD separately)
-    const onlinePaid = paidOrders.filter(
-      (o) => (o.order_source || 'online') !== 'mostrador'
-    );
-    const mostradorPaid = paidOrders.filter(
-      (o) => o.order_source === 'mostrador'
-    );
-
-    const onlineRevenueUYU = onlinePaid
-      .filter((o) => getCurrency(o) === 'UYU')
-      .reduce((s, o) => s + (o.total || 0), 0);
-    const onlineRevenueUSD = onlinePaid
-      .filter((o) => getCurrency(o) === 'USD')
-      .reduce((s, o) => s + (o.total || 0), 0);
-    const mostradorRevenueUYU = mostradorPaid
-      .filter((o) => getCurrency(o) === 'UYU')
-      .reduce((s, o) => s + (o.total || 0), 0);
-    const mostradorRevenueUSD = mostradorPaid
-      .filter((o) => getCurrency(o) === 'USD')
-      .reduce((s, o) => s + (o.total || 0), 0);
-
     // Avg ticket per currency
     const paidUYU = paidOrders.filter((o) => getCurrency(o) === 'UYU');
     const paidUSD = paidOrders.filter((o) => getCurrency(o) === 'USD');
@@ -184,14 +163,6 @@ export async function GET() {
         pendingOrders: pendingOrders.length,
         toVerify: toVerify.length,
         toInvoice: toInvoice.length,
-      },
-      channels: {
-        onlineRevenueUYU,
-        onlineRevenueUSD,
-        onlineOrders: onlinePaid.length,
-        mostradorRevenueUYU,
-        mostradorRevenueUSD,
-        mostradorOrders: mostradorPaid.length,
       },
       exchangeRate,
       productsCount: productsCount || 0,

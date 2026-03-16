@@ -38,7 +38,7 @@ export interface Product {
 }
 
 // Order source / sales channel
-export type OrderSource = 'online' | 'mostrador';
+export type OrderSource = 'online';
 
 // Payment methods
 export type PaymentMethod = 'mercadopago' | 'transfer' | 'efectivo' | 'credito';
@@ -48,11 +48,6 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   transfer: 'Transferencia',
   efectivo: 'Efectivo',
   credito: 'Crédito',
-};
-
-export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
-  online: 'Online',
-  mostrador: 'Mostrador',
 };
 
 export interface Order {

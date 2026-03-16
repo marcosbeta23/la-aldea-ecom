@@ -9,7 +9,6 @@ import {
   Clock,
   CheckCircle2,
   Truck,
-  Store,
   Globe,
   AlertTriangle,
   Zap,
@@ -46,14 +45,6 @@ interface DashboardData {
     pendingOrders: number;
     toVerify: number;
     toInvoice: number;
-  };
-  channels: {
-    onlineRevenueUYU: number;
-    onlineRevenueUSD: number;
-    onlineOrders: number;
-    mostradorRevenueUYU: number;
-    mostradorRevenueUSD: number;
-    mostradorOrders: number;
   };
   exchangeRate: number;
   productsCount: number;
@@ -137,7 +128,7 @@ const RECENT_ORDERS_INITIAL = 5;
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [onlineCurrency, setOnlineCurrency] = useState<'UYU' | 'USD'>('UYU');
+  const [combinedCurrency, setCombinedCurrency] = useState<'UYU' | 'USD'>('UYU');
 
   // Pagination state for recent orders
   const [ordersVisible, setOrdersVisible] = useState(RECENT_ORDERS_INITIAL);
@@ -344,52 +335,34 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Channel breakdown */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      {/* Channel breakdown & Total Gross Income */}
+      <div className="grid gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Online (30d)</p>
+              <p className="text-sm font-medium text-slate-500">Ingresos Brutos (30d)</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-slate-400">Moneda:</span>
+                <span className="text-xs text-slate-400">Ver en:</span>
                 <button
-                  onClick={() => setOnlineCurrency(c => c === 'UYU' ? 'USD' : 'UYU')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${onlineCurrency === 'USD' ? 'bg-blue-600' : 'bg-slate-300'}`}
-                  aria-label={`Cambiar a ${onlineCurrency === 'USD' ? 'UYU' : 'USD'}`}
+                  onClick={() => setCombinedCurrency(c => c === 'UYU' ? 'USD' : 'UYU')}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${combinedCurrency === 'USD' ? 'bg-blue-600' : 'bg-slate-300'}`}
+                  aria-label={`Cambiar a ${combinedCurrency === 'USD' ? 'UYU' : 'USD'}`}
                 >
-                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${onlineCurrency === 'USD' ? 'translate-x-5' : 'translate-x-1'}`} />
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${combinedCurrency === 'USD' ? 'translate-x-5' : 'translate-x-1'}`} />
                 </button>
-                <span className="text-xs font-medium text-slate-400">{onlineCurrency}</span>
+                <span className="text-xs font-medium text-slate-400">{combinedCurrency}</span>
               </div>
               <p className="mt-2 text-2xl font-bold text-slate-900">
-                {onlineCurrency === 'UYU'
-                  ? formatUYU(data.channels.onlineRevenueUYU)
-                  : formatUSD(data.channels.onlineRevenueUSD)}
+                {combinedCurrency === 'UYU'
+                  ? formatUYU(data.period30d.combinedRevenueUYU)
+                  : formatUSD(data.period30d.combinedRevenueUYU / (data.exchangeRate || 1))}
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                {data.channels.onlineOrders} pedidos online
+                Resumen: {formatUYU(data.period30d.revenueUYU)} + {formatUSD(data.period30d.revenueUSD)}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
               <Globe className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Mostrador (30d)</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{formatUYU(data.channels.mostradorRevenueUYU)}</p>
-              {data.channels.mostradorRevenueUSD > 0 && (
-                <p className="mt-0.5 text-sm font-semibold text-blue-600">{formatUSD(data.channels.mostradorRevenueUSD)}</p>
-              )}
-              <p className="mt-1 text-xs text-slate-400">
-                {data.channels.mostradorOrders} ventas en local
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-green-50 text-green-600 border border-green-100">
-              <Store className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -431,9 +404,6 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="font-mono text-sm font-medium text-blue-600">#{order.order_number}</span>
                         <StatusBadge status={order.status} />
-                        {order.order_source === 'mostrador' && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">mostrador</span>
-                        )}
                       </div>
                       <p className="text-sm text-slate-700 truncate">{order.customer_name}</p>
                     </div>
@@ -479,13 +449,6 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-3">Acciones Rápidas</h3>
             <div className="space-y-2">
-              <Link
-                href="/admin/ventas-mostrador/nueva"
-                className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
-              >
-                <Plus className="h-4 w-4 text-emerald-600" />
-                <span className="text-sm font-medium text-emerald-800">Nueva Venta Mostrador</span>
-              </Link>
               <Link
                 href="/admin/products/new"
                 className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"

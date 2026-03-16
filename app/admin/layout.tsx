@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { UserButton, useUser } from '@clerk/nextjs';
 import {
-  LayoutDashboard, Package, ShoppingCart, Store, Tag, Star,
+  LayoutDashboard, Package, ShoppingCart, Tag, Star,
   Menu, X, ChevronRight, Home, TrendingUp, FileText, Search,
   Boxes, Users, Building2, BookOpen,
 } from 'lucide-react';
@@ -21,7 +21,6 @@ const ALL_NAV_ITEMS = [
   { href: '/admin/search-analytics', label: 'Búsquedas',        icon: Search,          roles: ['owner'] },
   { href: '/admin/orders',           label: 'Pedidos',          icon: ShoppingCart,    roles: ['owner', 'staff'] },
   { href: '/admin/customers',        label: 'Clientes',         icon: Users,           roles: ['owner', 'staff'] },
-  { href: '/admin/ventas-mostrador', label: 'Ventas Mostrador', icon: Store,           roles: ['owner', 'staff'] },
   { href: '/admin/products',         label: 'Productos',        icon: Package,         roles: ['owner', 'staff'] },
   { href: '/admin/inventory',        label: 'Inventario',       icon: Boxes,           roles: ['owner', 'staff'] },
   { href: '/admin/coupons',          label: 'Cupones',          icon: Tag,             roles: ['owner', 'staff'] },
@@ -90,12 +89,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="shrink-0 p-4 border-t border-slate-700 space-y-2">
-          <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <Home className="h-5 w-5" />
-            <span>Ver tienda</span>
-          </Link>
-        </div>
       </aside>
 
       <div className="lg:pl-64">

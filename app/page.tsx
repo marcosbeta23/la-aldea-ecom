@@ -31,6 +31,14 @@ import {
 import HomeHero from "@/components/home/HomeHero";
 import ClientHomePageElements from "@/components/home/ClientHomePageElements";
 import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
+import dynamic from 'next/dynamic';
+
+const LazyMap = dynamic(() => import("@/components/ui/LazyMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="mt-8 h-[400px] w-full bg-slate-100 animate-pulse rounded-3xl" />
+  ),
+});
 
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
 
@@ -758,6 +766,13 @@ export default async function Home() {
                 
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Map Section — bottom of page */}
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4 pb-16">
+            <LazyMap />
           </div>
         </section>
 

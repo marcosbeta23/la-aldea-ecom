@@ -13,7 +13,7 @@ const ReportsTable = dynamic(() => import('@/components/admin/ReportsTable'), {
     </div>
   ),
 });
-import { Download, FileText, TrendingUp, Users, Package, Eye, Store, Globe, Filter } from 'lucide-react';
+import { Download, FileText, TrendingUp, Users, Package, Eye, Globe, Filter } from 'lucide-react';
 
 interface PreviewData {
   summary?: Record<string, any>;
@@ -210,13 +210,6 @@ export default function ReportsPage() {
                     <Globe className="h-3 w-3" />
                     Online
                   </button>
-                  <button
-                    onClick={() => { setSource('mostrador'); setPreview(null); }}
-                    className={`flex-1 px-3 py-2 transition-colors flex items-center justify-center gap-1 ${source === 'mostrador' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
-                  >
-                    <Store className="h-3 w-3" />
-                    Local
-                  </button>
                 </div>
               </div>
             )}
@@ -273,7 +266,6 @@ export default function ReportsPage() {
         <ul className="text-sm text-blue-800 space-y-1">
           <li>Los reportes CSV pueden abrirse en Excel o Google Sheets</li>
           <li>Los reportes de ventas incluyen moneda y departamento por orden</li>
-          <li>Usa el filtro de canal para separar ventas online de mostrador</li>
           <li>El preview muestra los primeros 50 registros del reporte</li>
         </ul>
       </div>

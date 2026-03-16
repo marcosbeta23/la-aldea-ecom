@@ -23,7 +23,6 @@ interface DailySale {
   revenueUYU: number;
   revenueUSD: number;
   onlineRevenue: number;
-  mostradorRevenue: number;
 }
 
 interface Distribution {
@@ -47,8 +46,8 @@ export function RevenueChart({
   data: DailySale[];
   chartType: 'line' | 'bar';
   setChartType: (v: 'line' | 'bar') => void;
-  revenueType: 'uyu' | 'usd' | 'canal';
-  setRevenueType: (v: 'uyu' | 'usd' | 'canal') => void;
+  revenueType: 'uyu' | 'usd';
+  setRevenueType: (v: 'uyu' | 'usd') => void;
 }) {
   const formatAxis = (v: number) =>
     v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`;
@@ -60,7 +59,7 @@ export function RevenueChart({
     label: new Date(d.date + 'T12:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit' }),
   }));
 
-  const isCanalView = revenueType === 'canal';
+  const isCanalView = false; // Canal view removed as it's only online now
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
@@ -79,12 +78,6 @@ export function RevenueChart({
               className={`px-3 py-1.5 transition-colors ${revenueType === 'usd' ? 'bg-green-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
             >
               US$
-            </button>
-            <button
-              onClick={() => setRevenueType('canal')}
-              className={`px-3 py-1.5 transition-colors ${revenueType === 'canal' ? 'bg-slate-700 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
-            >
-              Canal
             </button>
           </div>
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
@@ -111,11 +104,10 @@ export function RevenueChart({
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
             <YAxis tickFormatter={formatAxis} tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={40} />
             <Tooltip
-              formatter={(v: any, name: any) => [formatTooltipUYU(Number(v ?? 0)), name === 'onlineRevenue' ? 'Online' : 'Mostrador']}
+              formatter={(v: any) => [formatTooltipUYU(Number(v ?? 0)), 'Online']}
               contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
             />
-            <Bar dataKey="onlineRevenue" name="Online" fill="#3b82f6" radius={[2, 2, 0, 0]} maxBarSize={32} stackId="a" />
-            <Bar dataKey="mostradorRevenue" name="Mostrador" fill="#22c55e" radius={[2, 2, 0, 0]} maxBarSize={32} stackId="a" />
+            <Bar dataKey="onlineRevenue" name="Online" fill="#3b82f6" radius={[2, 2, 0, 0]} maxBarSize={32} />
           </BarChart>
         ) : chartType === 'line' ? (
           <LineChart data={formattedData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -253,7 +245,7 @@ export function DepartmentDonutChart({
 
           {sinEsp && (
             <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
-              + {sinEsp.orders} pedido{sinEsp.orders !== 1 ? 's' : ''} de retiro/mostrador sin departamento de envío ({formatCurrency(sinEsp.revenue)})
+              + {sinEsp.orders} pedido{sinEsp.orders !== 1 ? 's' : ''} sin departamento de envío ({formatCurrency(sinEsp.revenue)})
             </p>
           )}
         </>

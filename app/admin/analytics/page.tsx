@@ -10,7 +10,6 @@ import {
   Package,
   RefreshCw,
   BarChart3,
-  Store,
   Globe,
   CreditCard,
   MapPin,
@@ -50,14 +49,7 @@ interface AnalyticsData {
     avgOrderValueUSD: number;
     uniqueCustomers: number;
     conversionRate: number;
-    onlineRevenue: number;
-    onlineRevenueUYU: number;
-    onlineRevenueUSD: number;
-    mostradorRevenue: number;
-    mostradorRevenueUYU: number;
-    mostradorRevenueUSD: number;
     onlineOrders: number;
-    mostradorOrders: number;
   };
   previousPeriod: {
     totalRevenue: number;
@@ -84,7 +76,7 @@ interface AnalyticsData {
     daysRemaining: number;
     image: string | null;
   }>;
-  dailySales: Array<{ date: string; orders: number; revenueUYU: number; revenueUSD: number; onlineRevenue: number; mostradorRevenue: number }>;
+  dailySales: Array<{ date: string; orders: number; revenueUYU: number; revenueUSD: number; onlineRevenue: number }>;
   hourlyStats: Array<{ hour: number; orders: number }>;
   topProducts: Array<{
     id: string;
@@ -432,7 +424,7 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState('7d');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
-  const [revenueType, setRevenueType] = useState<'uyu' | 'usd' | 'canal'>('uyu');
+  const [revenueType, setRevenueType] = useState<'uyu' | 'usd'>('uyu');
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -593,22 +585,11 @@ export default function AnalyticsPage() {
               color="amber"
             />
             <StatCard
-              title="Online"
-              value={formatCurrency(data.summary.onlineRevenueUYU)}
-              subValue={data.summary.onlineRevenueUSD > 0
-                ? `${formatUSD(data.summary.onlineRevenueUSD)} · ${data.summary.onlineOrders} pedidos`
-                : `${data.summary.onlineOrders} pedidos online`}
+              title="Pedidos Online"
+              value={data.summary.onlineOrders}
+              subValue={`${data.summary.paidOrders} pedidos totales`}
               icon={Globe}
               color="blue"
-            />
-            <StatCard
-              title="Mostrador"
-              value={formatCurrency(data.summary.mostradorRevenueUYU)}
-              subValue={data.summary.mostradorRevenueUSD > 0
-                ? `${formatUSD(data.summary.mostradorRevenueUSD)} · ${data.summary.mostradorOrders} ventas`
-                : `${data.summary.mostradorOrders} ventas en local`}
-              icon={Store}
-              color="green"
             />
           </div>
 
