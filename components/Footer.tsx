@@ -100,8 +100,8 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2 text-slate-600">
                 <Mail className="h-4 w-4 shrink-0" />
-                <a href="mailto:la.aldeamartinbetancor@gmail.com" className="text-sm hover:text-blue-600 break-all">
-                  la.aldeamartinbetancor@gmail.com
+                <a href="mailto:contacto@laaldeatala.com.uy" className="text-sm hover:text-blue-600 break-all">
+                  contacto@laaldeatala.com.uy
                 </a>
               </li>
             </ul>

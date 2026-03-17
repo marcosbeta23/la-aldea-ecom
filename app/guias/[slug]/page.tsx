@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
+import { productBreadcrumb } from "@/lib/schema";
 import ArticleSectionBlock from '@/components/faq/ArticleSection';
 import RelatedLinks from '@/components/faq/RelatedLinks';
 import { getArticleBySlug, getAllSlugs } from '@/lib/faq-articles';
@@ -156,51 +157,120 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
 
   // JSON-LD TechArticle schema
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'TechArticle',
-    headline: article.title,
-    description: article.description,
-    datePublished: article.datePublished || '2025-01-01',
-    dateModified: article.dateModified || '2025-01-01',
-    author: {
-      '@type': 'Organization',
-      name: 'La Aldea',
-      url: siteUrl,
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "@id": `${siteUrl}/guias/${slug}`,
+  headline: article.title,
+  description: article.description,
+  
+  // REQUIRED by Google for Article rich results — use OG image or logo fallback
+  image: {
+    "@type": "ImageObject",
+    url: `${siteUrl}/assets/images/og-image.webp`, // swap for article-specific image when available
+    width: 1200,
+    height: 630,
+  },
+  
+  datePublished: article.datePublished || "2025-01-01",
+  dateModified: article.dateModified || article.datePublished || "2025-01-01",
+  
+  // Person author gets more E-E-A-T weight than Organization
+  author: {
+    "@type": "Person",
+    name: "Martín Betancor Peregalli",
+    url: `${siteUrl}/nosotros`,
+    jobTitle: "Especialista en Hidráulica y Riego",
+    worksFor: {
+      "@type": "Organization",
+      "@id": "https://laaldeatala.com.uy/#business",
+      name: "La Aldea",
     },
+  },
+  
+  publisher: {
+    "@type": "Organization",
+    "@id": "https://laaldeatala.com.uy/#business",
+    name: "La Aldea",
+    url: siteUrl,
+    logo: {
+      "@type": "ImageObject",
+      url: `${siteUrl}/assets/images/logo.webp`,
+      width: 260,
+      height: 80,
+    },
+  },
+  
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": `${siteUrl}/guias/${slug}`,
+  },
+  
+  // Links article to product categories — GEO/AEO signal
+  about: article.relatedCategories.map(rc => ({
+    "@type": "Thing",
+    name: rc.label,
+    url: `${siteUrl}/productos?category=${encodeURIComponent(rc.value)}`,
+  })),
+  
+  keywords: article.keywords.join(", "),
+  
+  // Speakable — marks content suitable for voice assistants (Google Assistant etc.)
+  speakable: {
+    "@type": "SpeakableSpecification",
+    cssSelector: ["h1", "h2", ".article-description"],
+  },
+  
+  isPartOf: {
+    "@type": "Blog",
+    "@id": `${siteUrl}/blog`,
+    name: "Guías y Artículos — La Aldea",
     publisher: {
-      '@type': 'Organization',
-      name: 'La Aldea',
-      url: siteUrl,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${siteUrl}/assets/images/logo.webp`,
-      },
+      "@id": "https://laaldeatala.com.uy/#business",
     },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': `${siteUrl}/guias/${slug}`,
-    },
-  };
+  },
+};
 
-  // HowTo schema for articles with 'steps' sections
-  const stepsSection = article.sections.find(s => s.type === 'steps');
-  const howToJsonLd = stepsSection ? {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: article.title,
-    description: article.description,
-    step: (stepsSection.content.match(/<li>([\s\S]*?)<\/li>/gi) ?? []).map((li, i) => ({
-      '@type': 'HowToStep',
+  // Breadcrumb — replaces your current manual construction
+  const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Inicio", item: siteUrl },
+    { "@type": "ListItem", position: 2, name: "Blog", item: `${siteUrl}/blog` },
+    { "@type": "ListItem", position: 3, name: article.breadcrumbLabel },
+  ],
+};
+
+// HowTo — fix the fragile regex with proper section content parsing
+const stepsSection = article.sections.find(s => s.type === "steps");
+const howToJsonLd = stepsSection ? {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: article.title,
+  description: article.description,
+  image: `${siteUrl}/assets/images/og-image.webp`,
+  // Parse steps from content — handle both <li> and numbered text
+  step: stepsSection.content
+    .split(/<li[^>]*>|<\/li>/)
+    .map(s => s.replace(/<[^>]+>/g, "").trim())
+    .filter(s => s.length > 10) // filter empty splits
+    .map((text, i) => ({
+      "@type": "HowToStep",
       position: i + 1,
-      text: li.replace(/<[^>]+>/g, '').trim(),
+      name: text.split(".")[0].trim().slice(0, 60), // first sentence as name
+      text: text,
     })),
-  } : null;
+} : null;
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       {howToJsonLd && (
         <script

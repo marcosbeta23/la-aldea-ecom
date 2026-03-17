@@ -232,6 +232,27 @@ export const metadata: Metadata = {
   },
 };
 
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://laaldeatala.com.uy/#website",
+  name: "La Aldea",
+  url: "https://laaldeatala.com.uy",
+  description: "Bombas de agua, riego, herramientas e insumos agrícolas en Tala, Uruguay",
+  publisher: {
+    "@id": "https://laaldeatala.com.uy/#business",
+  },
+  inLanguage: "es-UY",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://laaldeatala.com.uy/productos?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
@@ -258,23 +279,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
         <script
           type="application/ld+json"
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": "La Aldea",
-              "url": siteUrl,
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": {
-                  "@type": "EntryPoint",
-                  "urlTemplate": `${siteUrl}/productos?q={search_term_string}`,
-                },
-                "query-input": "required name=search_term_string",
-              },
-            }),
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         <PostHogProvider>
           {children}

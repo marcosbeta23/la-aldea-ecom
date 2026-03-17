@@ -344,8 +344,8 @@ export default function NosotrosPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900">Email</h3>
-                      <a href="mailto:la.aldeamartinbetancor@gmail.com" className="text-sm text-blue-600 hover:text-blue-700 mt-1 inline-block">
-                        la.aldeamartinbetancor@gmail.com
+                      <a href="mailto:contacto@laaldeatala.com.uy" className="text-sm text-blue-600 hover:text-blue-700 mt-1 inline-block">
+                        contacto@laaldeatala.com.uy
                       </a>
                     </div>
                   </div>

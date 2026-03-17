@@ -3,12 +3,12 @@ import type { Metadata } from 'next';
 import { supabaseAdmin } from '@/lib/supabase';
 import { Product, ProductReview } from '@/types/database';
 import Header from '@/components/Header';
-import Breadcrumbs from '@/components/common/Breadcrumbs';
 import BackToProductsLink from '@/components/products/BackToProductsLink';
 import ProductGallery from '@/components/products/ProductGallery';
 import ProductInfo from '@/components/products/ProductInfo';
 import ProductReviews from '@/components/products/ProductReviews';
 import RelatedProducts from '@/components/products/RelatedProducts';
+import { productBreadcrumb } from '@/lib/schema';
 
 export const dynamicParams = true; // explicitly allow on-demand slugs
 
@@ -169,88 +169,123 @@ export default async function ProductPage({ params }: ProductPageProps) {
       : 0;
 
   // JSON-LD Schema — Product
+  // JSON-LD Schema — Product (Upgraded for Google Shopping)
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+    "@context": "https://schema.org",
+    "@type": "Product",
     name: product.name,
     description: product.description,
     image: product.images,
     sku: product.sku,
     category: product.category?.[0] || undefined,
     brand: {
-      '@type': 'Brand',
-      name: product.brand || 'La Aldea',
+      "@type": "Brand",
+      name: product.brand || "La Aldea",
+    },
+    manufacturer: {
+      "@type": "Organization",
+      "@id": "https://laaldeatala.com.uy/#business",
+      name: "La Aldea",
     },
     offers: {
-      '@type': 'Offer',
+      "@type": "Offer",
       price: product.price_numeric,
-      priceCurrency: product.currency || 'UYU',
-      availability:
-        product.stock > 0
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-      url: `${siteUrl}/productos/${slug}`,
-      seller: {
-        '@type': 'Organization',
-        name: 'La Aldea',
-        telephone: '+598-92-744-725',
-      },
-    },
-    ...(reviews &&
-      reviews.length > 0 && {
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: avgRating.toFixed(1),
-          reviewCount: reviews.length,
-          bestRating: 5,
-          worstRating: 1,
+      priceCurrency: product.currency || "UYU",
+      availability: product.stock > 0
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      ...(product.stock > 0 && product.stock <= 3 && {
+        availabilityStarts: new Date().toISOString(),
+        inventoryLevel: {
+          "@type": "QuantitativeValue",
+          value: product.stock,
         },
       }),
+      url: `${siteUrl}/productos/${slug}`,
+      priceValidUntil: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+      seller: {
+        "@type": "Organization",
+        "@id": "https://laaldeatala.com.uy/#business",
+        name: "La Aldea",
+        telephone: "+59892744725",
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: "0",
+          currency: "UYU",
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "UY",
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 0,
+            maxValue: 1,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: product.shipping_type === "freight" ? 3 : 2,
+            maxValue: product.shipping_type === "freight" ? 7 : 5,
+            unitCode: "DAY",
+          },
+        },
+      },
+      availableAtOrFrom: {
+        "@type": "Place",
+        name: "La Aldea — Tala",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "José Alonso y Trelles y Av Artigas",
+          addressLocality: "Tala",
+          addressRegion: "Canelones",
+          postalCode: "91800",
+          addressCountry: "UY",
+        },
+      },
+    },
+    ...(product.original_price_numeric && product.discount_percentage && {
+      offers: {
+        "@type": "Offer",
+        price: product.price_numeric,
+        priceCurrency: product.currency || "UYU",
+        priceSpecification: {
+          "@type": "PriceSpecification",
+          price: product.price_numeric,
+          priceCurrency: product.currency || "UYU",
+          valueAddedTaxIncluded: true,
+        },
+      },
+    }),
+    ...(reviews && reviews.length > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: avgRating.toFixed(1),
+        reviewCount: reviews.length,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: reviews.slice(0, 3).map(r => ({
+        "@type": "Review",
+        author: { "@type": "Person", name: r.customer_name },
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: r.rating,
+          bestRating: 5,
+        },
+        reviewBody: r.comment || undefined,
+        datePublished: r.created_at.split("T")[0],
+      })),
+    }),
   };
 
   // JSON-LD Schema — BreadcrumbList
-  const mainCategory = product.category?.[0] || null;
-  const breadcrumbLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Inicio',
-        item: siteUrl,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Productos',
-        item: `${siteUrl}/productos`,
-      },
-      ...(mainCategory
-        ? [
-            {
-              '@type': 'ListItem',
-              position: 3,
-              name: mainCategory,
-              item: `${siteUrl}/productos?categoria=${encodeURIComponent(mainCategory)}`,
-            },
-            {
-              '@type': 'ListItem',
-              position: 4,
-              name: product.name,
-              item: `${siteUrl}/productos/${slug}`,
-            },
-          ]
-        : [
-            {
-              '@type': 'ListItem',
-              position: 3,
-              name: product.name,
-              item: `${siteUrl}/productos/${slug}`,
-            },
-          ]),
-    ],
-  };
+  const breadcrumbLd = productBreadcrumb(product.name, slug, product.category?.[0]);
 
   return (
     <>

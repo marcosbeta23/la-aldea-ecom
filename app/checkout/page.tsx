@@ -12,7 +12,6 @@ import Header from '@/components/Header';
 import { trackBeginCheckout } from '@/components/Analytics';
 import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONFIG, DAC_RATES } from '@/lib/shipping';
 import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
-// Fix #3 — Cloudflare Turnstile (Managed mode: invisible for ~99% of users)
 import { Turnstile } from '@marsidev/react-turnstile';
 
 interface CouponData {

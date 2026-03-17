@@ -39,157 +39,184 @@ export const revalidate = 300; // Cache homepage for 5 minutes at the edge
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
   "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "@id": "https://laaldeatala.com.uy/#organization",
-  "name": "La Aldea",
-  "description": "Especialistas en bombas de agua, sistemas de riego, instalaciones hidráulicas e insumos agrícolas en Tala, Canelones, Uruguay. Más de 25 años de experiencia.",
-  "url": "https://laaldeatala.com.uy",
-  "telephone": "+59892744725",
-  "email": "la.aldeamartinbetancor@gmail.com",
-  "image": "https://laaldeatala.com.uy/assets/images/og-image.webp",
-  "logo": "https://laaldeatala.com.uy/assets/images/logo.webp",
-  "address": {
+  "@type": "HardwareStore",
+  "@id": "https://laaldeatala.com.uy/#business",
+  name: "La Aldea",
+  alternateName: "La Aldea Tala",
+  description: "Especialistas en bombas de agua, sistemas de riego, instalaciones hidráulicas e insumos agrícolas en Tala, Canelones, Uruguay. Más de 25 años de experiencia.",
+  url: "https://laaldeatala.com.uy",
+  telephone: "+59892744725",
+  email: "contacto@laaldeatala.com.uy",
+  image: "https://laaldeatala.com.uy/assets/images/og-image.webp",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://laaldeatala.com.uy/assets/images/logo.webp",
+    width: 260,
+    height: 80,
+  },
+  address: {
     "@type": "PostalAddress",
-    "streetAddress": "José Alonso y Trelles y Av Artigas",
-    "addressLocality": "Tala",
-    "addressRegion": "Canelones",
-    "postalCode": "91800",
-    "addressCountry": "UY"
+    streetAddress: "José Alonso y Trelles y Av Artigas",
+    addressLocality: "Tala",
+    addressRegion: "Canelones",
+    postalCode: "91800",
+    addressCountry: "UY"
   },
-  "geo": {
+  geo: {
     "@type": "GeoCoordinates",
-    "latitude": -34.346943768995686,
-    "longitude": -55.76359424741334
+    latitude: -34.346943768995686,
+    longitude: -55.76359424741334
   },
-  "openingHoursSpecification": [
+  hasMap: "https://www.google.com/maps?q=-34.346943768995686,-55.76359424741334",
+  openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      "opens": "08:00",
-      "closes": "12:00"
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "08:00",
+      closes: "12:00"
     },
     {
       "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      "opens": "14:00",
-      "closes": "18:00"
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "14:00",
+      closes: "18:00"
     },
     {
       "@type": "OpeningHoursSpecification",
-      "dayOfWeek": "Saturday",
-      "opens": "08:30",
-      "closes": "12:00"
+      dayOfWeek: "Saturday",
+      opens: "08:30",
+      closes: "12:00"
     }
   ],
-  "priceRange": "$$",
-  "paymentAccepted": "Cash, Credit Card, Debit Card, Bank Transfer, MercadoPago",
-  "currenciesAccepted": "UYU",
-  "foundingDate": "1999",
-  "founder": {
+  priceRange: "$$",
+  paymentAccepted: "Cash, Credit Card, Debit Card, Bank Transfer, MercadoPago",
+  currenciesAccepted: ["UYU", "USD"],
+  foundingDate: "2000 ",
+  founder: {
     "@type": "Person",
-    "name": "Martín Betancor Peregalli"
+    name: "Martín Betancor Peregalli"
   },
-  "areaServed": {
+  areaServed: {
     "@type": "Country",
-    "name": "Uruguay"
+    name: "Uruguay"
   },
-  "contactPoint": [
+  knowsAbout: [
+    "Bombas de agua",
+    "Sistemas de riego",
+    "Instalaciones hidráulicas",
+    "Bombas sumergibles",
+    "Riego por goteo",
+    "Riego por aspersión",
+    "Agroquímicos",
+    "Energía solar",
+    "Herramientas",
+    "Tratamiento de agua",
+    "Piscinas",
+  ],
+  contactPoint: [
     {
       "@type": "ContactPoint",
-      "telephone": "+59892744725",
-      "contactType": "customer service",
-      "availableLanguage": "Spanish",
-      "areaServed": "UY"
+      telephone: "+59892744725",
+      contactType: "customer service",
+      contactOption: "TollFree",
+      availableLanguage: "Spanish",
+      areaServed: "UY"
     },
     {
       "@type": "ContactPoint",
-      "telephone": "+59843154393",
-      "contactType": "technical support",
-      "availableLanguage": "Spanish",
-      "areaServed": "UY"
+      telephone: "+59892744725",
+      contactType: "sales",
+      availableLanguage: "Spanish",
+      areaServed: "UY"
+    },
+    {
+      "@type": "ContactPoint",
+      telephone: "+59843154393",
+      contactType: "technical support",
+      availableLanguage: "Spanish",
+      areaServed: "UY"
     }
   ],
-  "sameAs": [
-    "https://www.facebook.com/profile.php?id=61561171162882",
+  sameAs: [
+    "https://www.facebook.com/laaldeatala",
     "https://www.instagram.com/laaldeatala/",
     "https://maps.app.goo.gl/4oUish4o13iMrJ2c9"
   ],
-  "hasOfferCatalog": {
+  hasOfferCatalog: {
     "@type": "OfferCatalog",
-    "name": "Productos y Servicios",
-    "itemListElement": [
+    name: "Productos y Servicios",
+    itemListElement: [
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Service",
-          "name": "Instalaciones Hidráulicas",
-          "description": "Diseño e instalación de sistemas hidráulicos completos"
+          name: "Instalaciones Hidráulicas",
+          description: "Diseño e instalación de sistemas hidráulicos completos"
         }
       },
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Product",
-          "name": "Bombas de Agua",
-          "description": "Bombas sumergibles, de superficie y centrífugas"
+          name: "Bombas de Agua",
+          description: "Bombas sumergibles, de superficie y centrífugas"
         }
       },
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Product",
-          "name": "Sistemas de Riego",
-          "description": "Riego por goteo, aspersión y automatización"
+          name: "Sistemas de Riego",
+          description: "Riego por goteo, aspersión y automatización"
         }
       },
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Product",
-          "name": "Droguería Industrial",
-          "description": "Productos de limpieza y químicos industriales DIU"
+          name: "Droguería Industrial",
+          description: "Productos de limpieza y químicos industriales DIU"
         }
       },
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Product",
-          "name": "Filtros de Agua",
-          "description": "Filtros Gianni para agua potable"
+          name: "Filtros de Agua",
+          description: "Filtros Gianni para agua potable"
         }
       },
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Product",
-          "name": "Productos para Piscinas",
-          "description": "Bombas, filtros, cloro y mantenimiento"
+          name: "Productos para Piscinas",
+          description: "Bombas, filtros, cloro y mantenimiento"
         }
       },
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Product",
-          "name": "Herramientas",
-          "description": "Herramientas manuales y eléctricas profesionales"
+          name: "Herramientas",
+          description: "Herramientas manuales y eléctricas profesionales"
         }
       },
       {
         "@type": "Offer",
-        "itemOffered": {
+        itemOffered: {
           "@type": "Product",
-          "name": "Energías Renovables",
-          "description": "Paneles solares e inversores para sistemas de bombeo"
+          name: "Energías Renovables",
+          description: "Paneles solares e inversores para sistemas de bombeo"
         }
       }
     ]
   },
-  "aggregateRating": {
+  aggregateRating: {
     "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "reviewCount": "47",
-    "bestRating": "5",
-    "worstRating": "1"
+    ratingValue: "4.8",
+    bestRating: "5",
+    worstRating: "1"
   }
 };
 

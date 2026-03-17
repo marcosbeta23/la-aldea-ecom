@@ -32,7 +32,7 @@ interface SendOrderConfirmationParams {
 // CORE EMAIL SENDER
 // =====================================================
 
-async function sendEmail({ to, toName, subject, htmlContent }: SendEmailParams): Promise<boolean> {
+export async function sendEmail({ to, toName, subject, htmlContent }: SendEmailParams): Promise<boolean> {
   if (!BREVO_API_KEY) {
     console.warn('[Email] BREVO_API_KEY not configured, skipping email');
     return false;

@@ -84,7 +84,7 @@ export default function Layout({ preview, children }: LayoutProps) {
             <Hr style={divider} />
             <Text style={footerBrand}>La Aldea - Agroinsumos y Riego</Text>
             <Text style={footerAddress}>Tala, Canelones, Uruguay</Text>
-            <Text style={footerContact}>Tel: 092 744 725 | la.aldeamartinbetancor@gmail.com</Text>
+            <Text style={footerContact}>Tel: 092 744 725 | contacto@laaldeatala.com.uy</Text>
             <Link href={BASE_URL} style={footerLink}>
               laaldeatala.com.uy
             </Link>

@@ -95,6 +95,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export default async function BlogPage() {
+
   const allArticles = await getAllArticles();
 
   // Sort articles newest first
@@ -104,6 +105,47 @@ export default async function BlogPage() {
     return db.localeCompare(da);
   });
 
+  // --- SCHEMA.ORG JSON-LD ---
+  // CollectionPage tells Google this is an article index
+  const blogPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${siteUrl}/blog`,
+    name: "Guías y Artículos Técnicos — La Aldea",
+    description: "Artículos, guías técnicas y consejos sobre riego, bombas de agua, agroquímicos, piscinas y más. Para productores y hogares en Uruguay.",
+    url: `${siteUrl}/blog`,
+    inLanguage: "es-UY",
+    isPartOf: {
+      "@id": `${siteUrl}/#website`,
+    },
+    publisher: {
+      "@id": "https://laaldeatala.com.uy/#business",
+    },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Inicio", item: siteUrl },
+        { "@type": "ListItem", position: 2, name: "Blog" },
+      ],
+    },
+  };
+
+  // ItemList — each article as a ListItem, Google uses this for rich carousels
+  const articleListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Artículos técnicos de La Aldea",
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    numberOfItems: articles.length,
+    itemListElement: articles.map((article, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${siteUrl}/guias/${article.slug}`,
+      name: article.title,
+      description: article.description,
+    })),
+  };
+
   const grouped = groupByCategory(articles);
   const categories = Object.keys(grouped);
 
@@ -112,6 +154,8 @@ export default async function BlogPage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPageSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleListSchema) }} />
       <Header />
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">

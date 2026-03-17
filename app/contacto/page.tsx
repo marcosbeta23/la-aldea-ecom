@@ -29,24 +29,65 @@ export const metadata: Metadata = {
   alternates: { canonical: `${siteUrl}/contacto` },
 };
 
+// app/contacto/page.tsx — replace existing contactSchema
 const contactSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'ContactPage',
-  name: 'Contacto — La Aldea',
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  name: "Contacto — La Aldea",
   url: `${siteUrl}/contacto`,
+  description: "Contactá a La Aldea en Tala, Canelones. Asesoramiento técnico sin costo en bombas de agua, riego y agroquímicos.",
   mainEntity: {
-    '@type': 'LocalBusiness',
-    name: 'La Aldea',
-    telephone: '+59892744725',
-    email: 'la.aldeamartinbetancor@gmail.com',
+    "@type": "HardwareStore",
+    "@id": "https://laaldeatala.com.uy/#business",
+    name: "La Aldea",
+    telephone: "+59892744725",
+    email: "la.aldeamartinbetancor@gmail.com",
+    url: "https://laaldeatala.com.uy",
     address: {
-      '@type': 'PostalAddress',
-      streetAddress: 'Jose Alonso y Trelles y Av Artigas',
-      addressLocality: 'Tala',
-      addressRegion: 'Canelones',
-      addressCountry: 'UY',
-      postalCode: '91800',
+      "@type": "PostalAddress",
+      streetAddress: "José Alonso y Trelles y Av Artigas",
+      addressLocality: "Tala",
+      addressRegion: "Canelones",
+      postalCode: "91800",
+      addressCountry: "UY",
     },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: -34.346943768995686,
+      longitude: -55.76359424741334,
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "08:00",
+        closes: "12:00",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "14:00",
+        closes: "18:00",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: "Saturday",
+        opens: "08:30",
+        closes: "12:00",
+      },
+    ],
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        telephone: "+59892744725",
+        contactType: "customer service",
+        availableLanguage: "Spanish",
+      },
+    ],
+    sameAs: [
+      "https://www.instagram.com/laaldeatala/",
+      "https://www.facebook.com/profile.php?id=61561171162882",
+    ],
   },
 };
 
@@ -136,10 +177,10 @@ export default function ContactoPage() {
                     <h3 className="font-semibold text-slate-900">Email</h3>
                   </div>
                   <a
-                    href="mailto:la.aldeamartinbetancor@gmail.com"
+                    href="mailto:contacto@laaldeatala.com.uy"
                     className="text-sm text-blue-600 hover:text-blue-700"
                   >
-                    la.aldeamartinbetancor@gmail.com
+                    contacto@laaldeatala.com.uy
                   </a>
                   <p className="text-xs text-slate-400 mt-2">Respondemos en 24-48 horas habiles</p>
                 </div>

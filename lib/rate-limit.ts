@@ -7,6 +7,14 @@ type Options = {
   interval?: number; // Time window in milliseconds
 };
 
+export function getClientIP(req: Request): string {
+  return (
+    req.headers.get("CF-Connecting-IP") ??       // real IP when behind Cloudflare
+    req.headers.get("X-Forwarded-For")?.split(",")[0].trim() ??
+    "unknown"
+  );
+}
+
 export default function rateLimit(options?: Options) {
   const tokenCache = new LRUCache({
     max: options?.uniqueTokenPerInterval || 500,
@@ -50,3 +58,4 @@ export const contactLimiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500,
 });
+
