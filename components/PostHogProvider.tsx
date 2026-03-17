@@ -4,7 +4,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, Suspense, useState, ReactNode } from 'react';
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
-const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
+const POSTHOG_HOST = '/ingest';
 const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
 
 function PostHogPageview({ client }: { client: any }) {
