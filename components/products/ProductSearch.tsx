@@ -4,6 +4,7 @@ import { useState, useTransition, useRef, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, X, Loader2, Tag, Layers, Package } from 'lucide-react';
 import Image from 'next/image';
+import { trackSearch } from '@/lib/analytics';
 
 interface Suggestion {
   type: 'product' | 'category' | 'brand';
@@ -90,17 +91,21 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setShowSuggestions(false);
-    
+
     const params = new URLSearchParams(searchParams.toString());
-    
-    if (query.trim()) {
-      params.set('q', query.trim());
+
+    const trimmed = query.trim();
+    if (trimmed) {
+      params.set('q', trimmed);
     } else {
       params.delete('q');
     }
-    
+
     params.delete('page');
-    
+
+    // Fire PostHog search event (resultCount unknown here, clickedResult false)
+    trackSearch(trimmed, 0, false);
+
     startTransition(() => {
       router.push(`/productos?${params.toString()}`);
     });
@@ -121,7 +126,10 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
     setShowSuggestions(false);
-    
+
+    // Fire PostHog search event for suggestion click (clickedResult true)
+    trackSearch(query.trim(), 0, true);
+
     if (suggestion.type === 'product' && suggestion.sku) {
       router.push(`/productos/${suggestion.slug ?? suggestion.sku}`);
     } else if (suggestion.type === 'category') {

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
+import { trackRemoveFromCart } from '@/lib/analytics';
 import Header from '@/components/Header';
 
 export default function CartPage() {
@@ -160,7 +161,10 @@ export default function CartPage() {
                         {formatPrice(item.product.price_numeric * item.quantity, item.product.currency)}
                       </p>
                       <button
-                        onClick={() => removeItem(item.product.id)}
+                        onClick={() => {
+                          removeItem(item.product.id);
+                          trackRemoveFromCart(item.product.id, item.product.name);
+                        }}
                         className="text-red-500 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                         aria-label="Eliminar producto"
                       >

@@ -1,4 +1,3 @@
-/*
 
 function capture(event: string, properties?: Record<string, unknown>) {
   if (typeof window === "undefined") return; // SSR guard
@@ -102,6 +101,7 @@ export function trackAssistantMessage(
   capture("assistant_message", { resolved, message_count: messageCount, topic });
 }
 
+/*
 // Wishlist
 export function trackWishlistAdd(productId: string, productName: string) {
   capture("wishlist_add", { productId, productName });

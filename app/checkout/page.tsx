@@ -10,6 +10,16 @@ import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, T
 import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 import { trackBeginCheckout } from '@/components/Analytics';
+import {
+  trackCheckoutStarted as trackCheckoutStartedPH,
+  trackCheckoutStepCompleted as trackCheckoutStepCompletedPH,
+  trackPaymentSelected as trackPaymentSelectedPH,
+  trackShippingSelected as trackShippingSelectedPH,
+  trackOrderSubmitted as trackOrderSubmittedPH,
+  trackCouponApplied as trackCouponAppliedPH,
+  trackCouponFailed as trackCouponFailedPH,
+  trackStockCollision as trackStockCollisionPH
+} from '@/lib/analytics';
 import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONFIG, DAC_RATES } from '@/lib/shipping';
 import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -78,6 +88,34 @@ export default function CheckoutPage() {
   const watchedName = watch('name');
   const watchedPhone = watch('phone');
 
+  // Track checkout step completed for shipping method
+  const prevShipping = useRef<string | null>(null);
+  useEffect(() => {
+    if (shippingMethod && shippingMethod !== prevShipping.current) {
+      trackCheckoutStepCompletedPH('envio', { shippingMethod });
+      let phShippingMethod: 'pickup' | 'freight' | 'dac';
+      if (shippingMethod === 'pickup') {
+        phShippingMethod = 'pickup';
+      } else if (shippingMethod === 'freight') {
+        phShippingMethod = 'freight';
+      } else {
+        phShippingMethod = 'dac';
+      }
+      trackShippingSelectedPH(phShippingMethod);
+      prevShipping.current = shippingMethod;
+    }
+  }, [shippingMethod]);
+
+  // Track checkout step completed for payment method
+  const prevPayment = useRef<string | null>(null);
+  useEffect(() => {
+    if (paymentMethod && paymentMethod !== prevPayment.current) {
+      trackCheckoutStepCompletedPH('pago', { paymentMethod });
+      trackPaymentSelectedPH(paymentMethod);
+      prevPayment.current = paymentMethod;
+    }
+  }, [paymentMethod]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -113,6 +151,7 @@ export default function CheckoutPage() {
         })),
         getSubtotal()
       );
+      trackCheckoutStartedPH(items.length, getSubtotal());
     }
   }, [mounted, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -243,7 +282,7 @@ export default function CheckoutPage() {
 
   // Apply coupon
   const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
+    if (!couponCode.trim()) return;    
 
     setCouponLoading(true);
     setCouponError('');
@@ -262,12 +301,15 @@ export default function CheckoutPage() {
 
       if (!response.ok) {
         setCouponError(data.error || 'Cupón inválido');
+        trackCouponFailedPH(couponCode, data.error || 'invalid');
         return;
       }
 
       setAppliedCoupon(data.coupon);
+      trackCouponAppliedPH(couponCode, data.coupon?.discount_amount || 0);
     } catch (error) {
       setCouponError('Error al validar el cupón');
+      trackCouponFailedPH(couponCode, 'network_error');
     } finally {
       setCouponLoading(false);
     }
@@ -335,6 +377,14 @@ export default function CheckoutPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Stock collision: API returns 409 and error: 'stock_collision'
+        if (response.status === 409 && data.error === 'stock_collision') {
+          if (data.productId && data.productName) {
+            trackStockCollisionPH(data.productId, data.productName);
+          }
+          setSubmitError(`No hay suficiente stock para "${data.productName}". Stock disponible: ${data.available}`);
+          return;
+        }
         // Build a detailed error message from server response
         let errorMsg = data.error || 'Error al crear el pedido';
         if (data.details) {
@@ -345,6 +395,28 @@ export default function CheckoutPage() {
         }
         throw new Error(errorMsg);
       }
+
+      // Fire PostHog order_submitted event before redirect
+      // Map cartShippingType to valid PostHog values
+      let shippingType: 'pickup' | 'dac' | 'freight';
+      if (formData.shippingMethod === 'pickup') {
+        shippingType = 'pickup';
+      } else if (formData.shippingMethod === 'freight') {
+        shippingType = 'freight';
+      } else if (cartShippingType === 'pickup_only') {
+        shippingType = 'pickup';
+      } else if (cartShippingType === 'freight') {
+        shippingType = 'freight';
+      } else {
+        shippingType = 'dac';
+      }
+      trackOrderSubmittedPH(
+        formData.paymentMethod,
+        shippingType,
+        total,
+        formData.paymentCurrency,
+        items.length
+      );
 
       // Handle redirect based on payment method
       if (formData.paymentMethod === 'transfer') {

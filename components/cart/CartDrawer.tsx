@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
+import { trackRemoveFromCart } from '@/lib/analytics';
 import { usePathname } from 'next/navigation';
 
 export default function CartDrawer() {
@@ -173,7 +174,10 @@ export default function CartDrawer() {
                         </button>
                       </div>
                       <button
-                        onClick={() => removeItem(item.product.id)}
+                        onClick={() => {
+                          removeItem(item.product.id);
+                          trackRemoveFromCart(item.product.id, item.product.name);
+                        }}
                         className="p-1 text-slate-400 hover:text-red-500 transition-colors"
                         aria-label="Eliminar producto"
                       >

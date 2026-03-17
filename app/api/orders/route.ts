@@ -182,12 +182,16 @@ export async function POST(request: NextRequest) {
 
       // Verify stock BEFORE creating order
       if (product.stock < item.quantity) {
+        // PostHog stock collision event (client will track)
         return NextResponse.json(
           {
             success: false,
-            error: `Insufficient stock for ${product.name}. Available: ${product.stock}`
+            error: 'stock_collision',
+            productId: product.id,
+            productName: product.name,
+            available: product.stock
           },
-          { status: 400 }
+          { status: 409 }
         );
       }
 

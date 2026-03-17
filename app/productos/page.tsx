@@ -6,6 +6,7 @@ import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/cate
 import { getArticlesForCategory } from '@/lib/faq-articles';
 import { Product } from '@/types/database';
 import ProductGrid from '@/components/products/ProductGrid';
+import SearchAnalytics from '@/components/products/SearchAnalytics';
 import ProductFilters from '@/components/products/ProductFilters';
 import ProductSearch from '@/components/products/ProductSearch';
 import FilterPersistence from '@/components/products/FilterPersistence';
@@ -508,6 +509,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
             {/* Products Grid */}
             <div className="flex-1 min-w-0">
+              {/* PostHog search analytics: fire only if search query present */}
+              {params.q && (
+                <SearchAnalytics query={params.q} resultCount={total} />
+              )}
               <ProductGrid products={products} />
 
               {/* Pagination */}

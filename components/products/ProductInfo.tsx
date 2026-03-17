@@ -5,7 +5,8 @@ import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star, AlertCirc
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
-import { trackViewItem, trackAddToCart } from '@/components/Analytics';
+import { trackViewItem, trackAddToCart as trackAddToCartGA4 } from '@/components/Analytics';
+import { trackProductView, trackAddToCart as trackAddToCartPH } from '@/lib/analytics';
 
 interface ProductInfoProps {
   product: Product;
@@ -28,7 +29,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
   const lowStock = product.stock > 0 && product.stock <= 5;
   const isOnRequest = product.availability_type === 'on_request';
 
-  // Track view_item event on mount
+  // Track view_item event (GA4) and product_view (PostHog) on mount
   useEffect(() => {
     trackViewItem({
       id: product.id,
@@ -37,6 +38,12 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       category: product.category?.[0] || undefined,
       brand: product.brand || undefined,
     });
+    trackProductView(
+      product.id,
+      product.name,
+      product.price_numeric,
+      product.category?.[0] || ''
+    );
   }, [product.id, product.name, product.price_numeric, product.category, product.brand]);
 
   // Show sticky cart button on mobile when scrolled past main CTA
@@ -60,8 +67,8 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
     if (result.success) {
       setIsAdding(true);
 
-      // Track add_to_cart event
-      trackAddToCart({
+      // Track add_to_cart event (GA4)
+      trackAddToCartGA4({
         id: product.id,
         name: product.name,
         price: product.price_numeric,
@@ -69,6 +76,13 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
         category: product.category?.[0] || undefined,
         brand: product.brand || undefined,
       });
+      // Track add_to_cart event (PostHog)
+      trackAddToCartPH(
+        product.id,
+        product.name,
+        product.price_numeric,
+        quantity
+      );
 
       setTimeout(() => {
         setIsAdding(false);
