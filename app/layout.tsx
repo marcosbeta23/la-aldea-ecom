@@ -248,6 +248,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
 
 
+        {/* Cloudflare Web Analytics */}
+        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}'></script>
+        {/* End Cloudflare Web Analytics */}
+
         <Partytown forward={['dataLayer.push', 'gtag']} nonce={nonce} />
       </head>
       <body className={`${inter.variable} ${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
@@ -273,10 +277,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           }}
         />
         <PostHogProvider>
-
-                    {/* Cloudflare Web Analytics */}
-                    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}'></script>
-                    {/* End Cloudflare Web Analytics */}
           {children}
           <ConditionalFooter />
           <ClientLayoutElements />
