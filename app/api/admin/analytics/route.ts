@@ -113,13 +113,14 @@ export async function GET(request: NextRequest) {
     const todayOrders = orders.filter(o => new Date(o.created_at) >= startOfToday);
     const todayPaidOrders = paidOrders.filter(o => new Date(o.created_at) >= startOfToday);
 
-    const orderCurrency = (order: { currency: string | null }) => order.currency || 'UYU';
+    const orderCurrency = (order: { currency: string | null; payment_method?: string | null }) =>
+      order.payment_method === 'mercadopago' ? 'UYU' : (order.currency || 'UYU');
 
     const paidOrdersUYU = paidOrders.filter(o => orderCurrency(o) === 'UYU');
     const paidOrdersUSD = paidOrders.filter(o => orderCurrency(o) === 'USD');
     const totalRevenueUYU = paidOrdersUYU.reduce((sum, o) => sum + (o.total || 0), 0);
     const totalRevenueUSD = paidOrdersUSD.reduce((sum, o) => sum + (o.total || 0), 0);
-    const totalRevenue = totalRevenueUYU; 
+    const totalRevenue = totalRevenueUYU;
 
     const todayPaidOrdersUYU = todayPaidOrders.filter(o => orderCurrency(o) === 'UYU');
     const todayPaidOrdersUSD = todayPaidOrders.filter(o => orderCurrency(o) === 'USD');
@@ -273,7 +274,7 @@ export async function GET(request: NextRequest) {
 
     // === Top Products ===
     const productSales = new Map<string, { sold: number; revenue: number; name: string }>();
-    
+
     for (const item of orderItems) {
       const order = orders.find(o => o.id === item.order_id);
       if (order && paidStatuses.includes(order.status)) {
@@ -308,7 +309,7 @@ export async function GET(request: NextRequest) {
     // === Conversion Rate (simplified) ===
     const pendingOrders = orders.filter(o => o.status === 'pending').length;
     const completedOrders = paidOrders.length;
-    const conversionRate = orders.length > 0 
+    const conversionRate = orders.length > 0
       ? ((completedOrders / (orders.length + abandonedCount)) * 100).toFixed(1)
       : '0';
 
@@ -322,10 +323,10 @@ export async function GET(request: NextRequest) {
     const fulfilledOrders = orders.filter(o => o.status === 'delivered' && (o.paid_at || o.created_at));
     const avgFulfillmentDays = fulfilledOrders.length > 0
       ? (fulfilledOrders.reduce((acc, o) => {
-          const start = new Date(o.paid_at || o.created_at).getTime();
-          const end = new Date(o.updated_at).getTime();
-          return acc + (end - start);
-        }, 0) / fulfilledOrders.length / (1000 * 60 * 60 * 24)).toFixed(1)
+        const start = new Date(o.paid_at || o.created_at).getTime();
+        const end = new Date(o.updated_at).getTime();
+        return acc + (end - start);
+      }, 0) / fulfilledOrders.length / (1000 * 60 * 60 * 24)).toFixed(1)
       : '0';
 
     // Customer Retention
@@ -335,7 +336,7 @@ export async function GET(request: NextRequest) {
       .select('customer_email')
       .in('customer_email', emails.length > 0 ? [...new Set(emails)] : ['none'])
       .lt('created_at', startDate.toISOString());
-    
+
     const returningEmails = new Set(((pastOrdersCount || []) as any[]).map(o => o.customer_email));
     const uniqueEmailsInPeriod = [...new Set(emails)];
     const returningCustomers = uniqueEmailsInPeriod.filter(email => returningEmails.has(email)).length;
@@ -409,8 +410,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Analytics error:', error);
-    return NextResponse.json({ 
-      error: error.message || 'Error fetching analytics' 
+    return NextResponse.json({
+      error: error.message || 'Error fetching analytics'
     }, { status: 500 });
   }
 }

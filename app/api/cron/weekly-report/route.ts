@@ -50,11 +50,14 @@ export async function GET(request: NextRequest) {
     const totalRevenue = paidOrders.reduce((s, o) => s + (o.total || 0), 0);
     const onlinePaid = paidOrders;
 
+    const getCurrency = (o: { currency: string | null; payment_method?: string | null }) =>
+      o.payment_method === 'mercadopago' ? 'UYU' : (o.currency || 'UYU');
+
     const totalRevenueUYU = onlinePaid
-      .filter((o) => (o.currency || 'UYU') === 'UYU')
+      .filter((o) => getCurrency(o) === 'UYU')
       .reduce((s, o) => s + (o.total || 0), 0);
     const totalRevenueUSD = onlinePaid
-      .filter((o) => o.currency === 'USD')
+      .filter((o) => getCurrency(o) === 'USD')
       .reduce((s, o) => s + (o.total || 0), 0);
 
     // Previous week stats

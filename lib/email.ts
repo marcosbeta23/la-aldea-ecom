@@ -72,7 +72,10 @@ export async function sendEmail({ to, toName, subject, htmlContent }: SendEmailP
 // HELPERS
 // =====================================================
 
-function formatPrice(price: number): string {
+function formatPrice(price: number, currency = 'UYU'): string {
+  if (currency === 'USD') {
+    return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   return `UYU ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 }
 
@@ -200,7 +203,7 @@ export async function sendAdminOrderNotification({ order, items }: SendOrderConf
   return sendEmail({
     to: ADMIN_EMAIL,
     toName: 'La Aldea Admin',
-    subject: `Nuevo Pedido ${order.order_number} - ${formatPrice(order.total)}`,
+    subject: `Nuevo Pedido ${order.order_number} - ${formatPrice(order.total, order.currency)}`,
     htmlContent,
   });
 }
@@ -235,6 +238,7 @@ export async function sendOrderStatusUpdate(
     customerName: order.customer_name,
     newStatus,
     total: order.total,
+    currency: order.currency || 'UYU',
     trackingNumber,
     reviewUrl: process.env.GOOGLE_REVIEW_URL || undefined,
   }));
@@ -269,6 +273,7 @@ export async function sendInvoiceEmail({ order, items, invoiceFileUrl }: SendInv
     invoiceNumber: order.invoice_number || '',
     invoiceType: order.invoice_type,
     total: order.total,
+    currency: order.currency || 'UYU',
     items: items.map(i => ({
       product_name: i.product_name,
       quantity: i.quantity,

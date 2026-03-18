@@ -8,7 +8,7 @@ import { getExchangeRate, convertPrice } from '@/lib/exchange-rate';
 import { sendTransferOrderConfirmation } from '@/lib/email';
 import { verifyOrderToken } from '@/lib/order-token';
 
-// Fix #3 — Cloudflare Turnstile verification (skipped when env var not configured)
+// Cloudflare Turnstile verification (skipped when env var not configured)
 async function verifyTurnstile(token: string): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) return true; // graceful degradation if not configured
@@ -26,12 +26,12 @@ async function verifyTurnstile(token: string): Promise<boolean> {
   }
 }
 
-// 🔒 SECURE ORDER CREATION
+// SECURE ORDER CREATION
 // This version NEVER trusts frontend prices
 // All calculations done server-side using database as source of truth
 
 export async function POST(request: NextRequest) {
-  // ⚡ RATE LIMITING - Max 5 orders per minute per IP
+  // RATE LIMITING - Max 5 orders per minute per IP
   const ip = getClientIp(request);
 
   // Prefer Upstash distributed rate limiter; fall back to in-memory LRU
@@ -55,24 +55,24 @@ export async function POST(request: NextRequest) {
   }
   try {
     const body = await request.json();
-    
-    // 1️⃣ VALIDATE INPUT WITH ZOD
+
+    // VALIDATE INPUT WITH ZOD
     const validation = CreateOrderSchema.safeParse(body);
-    
+
     if (!validation.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Validation failed', 
-          details: validation.error.flatten().fieldErrors 
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten().fieldErrors
         },
         { status: 400 }
       );
     }
-    
+
     const { items, couponCode, customer, turnstile_token } = validation.data;
 
-    // Fix #3 — Turnstile CAPTCHA (only enforced when TURNSTILE_SECRET_KEY is set)
+    // Turnstile CAPTCHA (only enforced when TURNSTILE_SECRET_KEY is set)
     if (process.env.TURNSTILE_SECRET_KEY && turnstile_token) {
       const isHuman = await verifyTurnstile(turnstile_token);
       if (!isHuman) {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fix #3 — Email-based rate limit (in addition to IP-based limit above)
+    // Email-based rate limit (in addition to IP-based limit above)
     const emailKey = `order:email:${(customer.email || customer.phone).toLowerCase()}`;
     if (ordersRatelimit) {
       const { success } = await ordersRatelimit.limit(emailKey);
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fix #3 — Pending order cap: max 5 pending orders per email in the last hour
+    // Pending order cap: max 5 pending orders per email in the last hour
     if (customer.email) {
       const { count } = await (supabaseAdmin as any)
         .from('orders')
@@ -115,22 +115,22 @@ export async function POST(request: NextRequest) {
       }
     }
     const paymentCurrency = customer.payment_currency || 'UYU';
-    
-    // 2️⃣ FETCH PRODUCTS FROM DATABASE (source of truth)
+
+    // FETCH PRODUCTS FROM DATABASE (source of truth)
     const productIds = items.map((item: any) => item.id);
     const { data: products, error: productsError } = await supabaseAdmin
       .from('products')
       .select('id, sku, name, price_numeric, currency, stock, is_active, availability_type')
       .in('id', productIds) as { data: any[] | null; error: any };
-    
+
     if (productsError || !products) {
       return NextResponse.json(
         { success: false, error: 'Failed to fetch products' },
         { status: 500 }
       );
     }
-    
-    // 3️⃣ FETCH EXCHANGE RATE if needed
+
+    // FETCH EXCHANGE RATE if needed
     // Always fetch rate when ANY product is USD or payment is USD,
     // since MercadoPago Uruguay only accepts UYU preferences.
     const productCurrencies = new Set(products.map((p: any) => p.currency || 'UYU'));
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4️⃣ RECALCULATE TOTAL in payment currency (DO NOT trust frontend prices)
+    // RECALCULATE TOTAL in payment currency (DO NOT trust frontend prices)
     let subtotal = 0;
     const orderItems: any[] = [];
 
@@ -223,53 +223,44 @@ export async function POST(request: NextRequest) {
         subtotal: itemSubtotal, // Subtotal in payment currency
       });
     }
-    
-    // 4️⃣ VALIDATE COUPON (if provided)
+
+    // VALIDATE COUPON (if provided)
     let discountAmount = 0;
     let validatedCoupon: any = null;
-    
+
     if (couponCode) {
       const couponResult = await validateCoupon(couponCode, subtotal);
-      
+
       if (!couponResult.valid) {
         return NextResponse.json(
           { success: false, error: couponResult.error || 'Invalid coupon' },
           { status: 400 }
         );
       }
-      
+
       discountAmount = couponResult.discount_amount || 0;
       validatedCoupon = couponResult.coupon;
     }
-    
-    // 5️⃣ CALCULATE FINAL TOTAL
+
+    // CALCULATE FINAL TOTAL
     const finalTotal = subtotal - discountAmount;
-    
+
     if (finalTotal <= 0) {
       return NextResponse.json(
         { success: false, error: 'Invalid total amount' },
         { status: 400 }
       );
     }
-    
-    // 6️⃣ GENERATE ORDER NUMBER
+
+    // GENERATE ORDER NUMBER
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     const order_number = `LA-${timestamp}-${random}`;
-    
+
     // Determine payment method
     const paymentMethod = customer.payment_method || 'mercadopago';
 
-    // Fix #3 — Reservation window split by payment method
-    // Transfer customers in Uruguay often pay hours later — keep their 24h window.
-    // MercadoPago redirects complete in minutes — reduce to 30min to free up stock faster.
-    const RESERVATION_MINUTES =
-      paymentMethod === 'transfer'    ? 1440 :  // 24h
-      paymentMethod === 'mercadopago' ? 30   :  // 30 min
-      60;                                       // fallback
-    const reservedUntil = new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000).toISOString();
-    
-    // 7️⃣ CREATE ORDER IN DATABASE
+    // CREATE ORDER IN DATABASE
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
@@ -287,7 +278,7 @@ export async function POST(request: NextRequest) {
         discount_amount: discountAmount,
         coupon_code: validatedCoupon?.code || null,
         total: finalTotal, // THIS is the amount in payment currency
-        currency: paymentCurrency,
+        currency: paymentMethod === 'mercadopago' ? 'UYU' : paymentCurrency,
         exchange_rate_used: exchangeRate,
         status: 'pending',
         payment_method: paymentMethod,
@@ -298,7 +289,7 @@ export async function POST(request: NextRequest) {
       } as any)
       .select()
       .single();
-    
+
     if (orderError || !order) {
       console.error('Order creation failed:', orderError);
       return NextResponse.json(
@@ -306,17 +297,17 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    
+
     // 8️⃣ INSERT ORDER ITEMS
     const itemsWithOrderId = orderItems.map((item: any) => ({
       ...item,
       order_id: (order as any).id,
     }));
-    
+
     const { error: itemsError } = await supabaseAdmin
       .from('order_items')
       .insert(itemsWithOrderId as any);
-    
+
     if (itemsError) {
       console.error('Order items creation failed:', itemsError);
       // Rollback: delete order
@@ -326,7 +317,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    
+
     // NOTE: For MercadoPago orders, coupon usage (current_uses) is incremented
     // in the webhook after payment is confirmed, to avoid counting abandoned payments.
     // For bank transfer orders, we increment here since there's no webhook.
@@ -345,8 +336,8 @@ export async function POST(request: NextRequest) {
       console.log('🏦 Bank transfer order created:', (order as any).order_number);
 
       // Telegram alerts (fire-and-forget)
-      alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
-      alertNewTransferOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
+      alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => { });
+      alertNewTransferOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => { });
 
       // Send customer confirmation email with bank transfer details
       if (customer.email) {
@@ -378,7 +369,7 @@ export async function POST(request: NextRequest) {
         currency: paymentCurrency,
       });
     }
-    
+
     // MercadoPago flow
     // Final safety check: validate all order items have valid prices before MP payload
     for (const item of orderItems) {
@@ -393,7 +384,7 @@ export async function POST(request: NextRequest) {
     // Use APP_URL for server-side (NEXT_PUBLIC_URL only works client-side)
     const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
     const isLocalhost = appUrl.includes('localhost') || appUrl.includes('127.0.0.1');
-    
+
     // MercadoPago Uruguay only supports UYU — convert all prices to UYU for MP
     const mpPayload: any = {
       items: orderItems.map((item: any) => {
@@ -431,12 +422,12 @@ export async function POST(request: NextRequest) {
         phone: { number: customer.phone },
       },
     };
-    
+
     // Only add auto_return for production URLs (MercadoPago rejects localhost)
     if (!isLocalhost) {
       mpPayload.auto_return = 'approved';
     }
-    
+
     console.log('🔵 Creating MercadoPago preference with:', {
       appUrl,
       isLocalhost,
@@ -445,7 +436,7 @@ export async function POST(request: NextRequest) {
       items_count: mpPayload.items.length,
       order_id: (order as any).id
     });
-    
+
     const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -454,38 +445,38 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(mpPayload),
     });
-    
+
     if (!mpResponse.ok) {
       const mpError = await mpResponse.json();
       console.error('❌ MercadoPago error:', JSON.stringify(mpError));
       console.error('❌ Request payload was:', JSON.stringify(mpPayload));
-      
+
       // Rollback: delete order and items
       await supabaseAdmin.from('order_items').delete().eq('order_id', (order as any).id);
       await supabaseAdmin.from('orders').delete().eq('id', (order as any).id);
-      
+
       return NextResponse.json(
         { success: false, error: 'Payment gateway error' },
         { status: 500 }
       );
     }
-    
+
     const mpData = await mpResponse.json();
     console.log('✅ MercadoPago preference created:', mpData.id);
 
     // Telegram alert for new order (fire-and-forget)
-    alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => {});
-    
+    alertNewOrder((order as any).order_number, finalTotal, customer.name, paymentCurrency).catch(() => { });
+
     // 🔟 UPDATE ORDER WITH PREFERENCE ID
     const { error: updateError } = await (supabaseAdmin as any)
       .from('orders')
       .update({ mp_preference_id: mpData.id })
       .eq('id', (order as any).id);
-    
+
     if (updateError) {
       console.error('Failed to update order with preference ID:', updateError);
     }
-    
+
     // ✅ RETURN RESPONSE
     return NextResponse.json({
       success: true,
@@ -494,7 +485,7 @@ export async function POST(request: NextRequest) {
       init_point: mpData.init_point,
       preference_id: mpData.id,
     });
-    
+
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(
@@ -512,31 +503,31 @@ async function validateCoupon(code: string, subtotal: number) {
     .eq('code', code.toUpperCase())
     .eq('is_active', true)
     .single() as { data: any };
-  
+
   if (!coupon) {
     return { valid: false, error: 'Coupon not found' };
   }
-  
+
   const couponData: any = coupon;
-  
+
   // Check expiration
   if (couponData.valid_until && new Date(couponData.valid_until) < new Date()) {
     return { valid: false, error: 'Coupon expired' };
   }
-  
+
   // Check minimum purchase
   if (subtotal < couponData.min_purchase_amount) {
-    return { 
-      valid: false, 
-      error: `Minimum purchase amount: $${couponData.min_purchase_amount}` 
+    return {
+      valid: false,
+      error: `Minimum purchase amount: $${couponData.min_purchase_amount}`
     };
   }
-  
+
   // Check usage limit
   if (couponData.max_uses && couponData.current_uses >= couponData.max_uses) {
     return { valid: false, error: 'Coupon usage limit reached' };
   }
-  
+
   // Calculate discount
   let discount_amount = 0;
   if (couponData.discount_type === 'percentage') {
@@ -544,10 +535,10 @@ async function validateCoupon(code: string, subtotal: number) {
   } else {
     discount_amount = couponData.discount_value;
   }
-  
+
   // Don't allow discount greater than subtotal
   discount_amount = Math.min(discount_amount, subtotal);
-  
+
   return {
     valid: true,
     discount_amount,

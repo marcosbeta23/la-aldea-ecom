@@ -7,11 +7,15 @@ interface StatusUpdateProps {
   customerName: string;
   newStatus: string;
   total: number;
+  currency?: string;          // ✅ agregar
   trackingNumber?: string;
   reviewUrl?: string;
 }
 
-function formatPrice(price: number): string {
+function formatPrice(price: number, currency = 'UYU'): string {  // ✅ agregar parámetro
+  if (currency === 'USD') {
+    return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   return `UYU ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 }
 
@@ -94,6 +98,7 @@ export default function StatusUpdate({
   customerName,
   newStatus,
   total,
+  currency = 'UYU',
   trackingNumber,
   reviewUrl,
 }: StatusUpdateProps) {
@@ -135,7 +140,7 @@ export default function StatusUpdate({
             <Text style={infoLabel}>Total</Text>
           </Column>
           <Column align="right">
-            <Text style={infoValue}>{formatPrice(total)}</Text>
+            <Text style={infoValue}>{formatPrice(total, currency)}</Text>
           </Column>
         </Row>
         {trackingNumber && (

@@ -1,95 +1,160 @@
-# La Aldea E-Commerce
+# La Aldea — E-Commerce Platform
 
-Full-stack e-commerce platform for La Aldea — a hardware, irrigation, and water pump store in Tala, Uruguay. Built with Next.js App Router, TypeScript, and Supabase.
+Full-stack e-commerce platform for [La Aldea](https://laaldeatala.com.uy), a hardware, irrigation, and water pump store in Tala, Uruguay. Built from the ground up — storefront, checkout, payments, fulfillment, inventory, and a complete admin panel — production-ready and live.
 
-**Production:** [laaldeatala.com.uy](https://laaldeatala.com.uy)
+**→ [laaldeatala.com.uy](https://laaldeatala.com.uy)**
 
 ---
 
-## Tech Stack
+## Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | Next.js 16 + React 19 + TypeScript |
-| **Styling** | Tailwind CSS v4 |
-| **Database** | Supabase (PostgreSQL + Storage + RLS) |
-| **Auth (Admin)** | Clerk |
+| | |
+|---|---|
+| **Framework** | Next.js 16 (App Router) · React 19 · TypeScript |
+| **Database** | Supabase — PostgreSQL with pgvector, pg_trgm, unaccent |
+| **Auth** | Clerk |
 | **Payments** | MercadoPago Uruguay |
-| **Email** | Brevo (transactional) |
-| **Background Jobs** | Inngest (event-driven functions) |
-| **Rate Limiting / Cache** | Upstash Redis |
-| **Error Monitoring** | Sentry |
-| **Analytics** | PostHog + Google Analytics 4 |
-| **Notifications** | Telegram Bot |
+| **Background Jobs** | Inngest — event-driven and scheduled functions |
+| **Cache / Rate Limiting** | Upstash Redis |
+| **Email** | Brevo (transactional, React Email templates) |
+| **Notifications** | Telegram Bot · WhatsApp Business API |
+| **Error Monitoring** | Sentry (browser + server + Edge, with session replay) |
+| **Analytics** | PostHog · Google Analytics 4 (via Partytown worker) · Vercel Analytics |
+| **CDN / Security** | Cloudflare — WAF, Bot Fight Mode, Email Routing, Workers |
+| **AI — Reasoning** | Claude Sonnet (`claude-sonnet-4-6`) — Anthropic |
+| **AI — Fast Inference** | Groq (`llama-3.3-70b-versatile`) — free tier |
+| **AI — Embeddings** | OpenAI `text-embedding-3-small` |
 | **Hosting** | Vercel (Edge + Serverless) |
+| **Styling** | Tailwind CSS v4 |
 
 ---
 
 ## Features
 
 ### Storefront
-- Product catalog with 700+ products, categories, and brand filtering
-- Full-text search with autocomplete (Upstash-cached, 30 req/min rate-limited)
-- Product detail pages with image gallery, stock tracking, and JSON-LD structured data
-- Product guides/articles (CMS-managed via Supabase)
-- Wishlist (localStorage-persisted)
-- Partner/brand carousel on homepage
-- FAQ and informational pages (Contacto, Nosotros, FAQs, Guias)
-- Responsive design, mobile-first
 
-### Cart & Checkout
-- Persistent cart with localStorage + Zustand
-- Coupon/discount code system with rate limiting
-- Multi-step checkout with address, shipping, and payment selection
-- Shipping modes: **Pickup** (store), **DAC** (24-72h courier), **Freight/Flete** (coordinated via WhatsApp)
-- Freight option always visible for coordination via bus, trusted carrier, or any transport
-- MercadoPago integration (redirect to MP checkout)
-- Bank transfer payment option (manual verification flow)
-- Abandoned cart tracking (`checkout_attempts` table)
-- Quote request flow for large/custom orders
+The product catalog supports 400+ SKUs with category/subcategory taxonomy, brand filtering, price range, stock availability, and sort by popularity, price, or recency.
 
-### Order Flow
-- MercadoPago webhook (`/api/webhooks/mercadopago`) verifies signature and updates order status
-- Inventory locked on checkout start, released on expiry if unpaid (`Inngest: stock-reservation-expiry`)
-- On payment approval:
-  - Order status → `paid`
-  - Stock decremented
-  - Confirmation email sent (Inngest: `order-confirmation`)
-  - Telegram alert to owner
-- Abandoned cart recovery emails (Inngest: `abandoned-cart-recovery`, 2h delay)
-- Order status change notifications (Inngest: `order-status-notification`)
+**Search** is a five-layer pipeline:
 
-### Admin Panel (`/admin`)
-- Protected by Clerk auth
-- **Dashboard** — sales overview, recent orders, quick stats
-- **Orders** — list, filter by status, view details, update status, add notes
-- **Products** — full CRUD, image upload (Supabase Storage), bulk operations
-- **Inventory** — stock levels, low-stock alerts
-- **Coupons** — create/edit discount codes (percentage or fixed, per-user limits)
-- **Customers** — order history per customer
-- **Brands/Partners** — manage the partner carousel
-- **Reviews** — moderate and publish product reviews
-- **Guides** — CMS for product guides/articles
-- **Search Analytics** — track zero-result searches for catalog gaps
-- **Reports** — sales reports and insights
-- **PostHog Insights** — embedded analytics dashboard
+1. **Synonym resolution** — DB-managed `search_synonyms` table maps colloquial terms to catalog terms. Editable without a deploy.
+2. **AI query expansion** — Groq expands the query with regional Spanish synonyms before hitting the DB. Cached in Upstash with output sanitization against injection.
+3. **Full-text search** — `search_vector` tsvector with `pg_trgm` and `unaccent`, accent-insensitive, `websearch` mode.
+4. **Fuzzy trigram fallback** — `search_products_fuzzy` RPC with similarity threshold 0.2, catches typos and partial matches.
+5. **Semantic fallback** — pgvector cosine similarity on `text-embedding-3-small` embeddings. Re-ranks keyword results and provides a pure semantic fallback for zero-result queries. Query embeddings cached in Upstash (1h TTL).
 
-### Security
-- CSP nonces per request (Edge middleware + `proxy.ts`)
-- CSRF protection middleware on all mutating routes
-- MercadoPago webhook signature verification (HMAC-SHA256)
-- Upstash rate limiting on search, coupon validation, and quote requests
-- RLS policies on all Supabase tables
-- Sentry error tracking (client + server + Edge)
-- Environment secrets never exposed client-side
+Zero-result searches get AI-suggested categories via Groq. Question-intent queries (detected by heuristic + Groq classifier) route to a conversational prompt instead of a product grid.
 
-### SEO & Performance
-- `robots.ts` and `sitemap.ts` auto-generated
-- Per-page Open Graph and Twitter Card metadata
-- Absolute og:image URLs
-- JSON-LD structured data on product pages (`Product` schema with `priceCurrency: "UYU"`)
-- Image optimization via Next.js `<Image>` + Supabase CDN
-- Vercel Edge caching for exchange rates
+### Checkout
+
+Multi-step flow: personal details → shipping → invoice type → payment. Shipping options: store pickup, DAC courier (24–72h), and freight coordination via WhatsApp. MercadoPago redirect checkout and manual bank transfer are both supported.
+
+Prices are **never trusted from the frontend** — all totals are recalculated server-side from the database on every order. Products priced in USD are converted at the live BROU sell rate (fetched from DolarAPI, 4h Upstash cache, env var fallback). The exchange rate used is recorded on the order at time of purchase.
+
+The invoice step supports `consumer_final` (no tax ID) and `invoice_rut` (requires a 12-digit Uruguayan RUT + business name), validated by Zod.
+
+### Order Lifecycle
+
+```
+pending → paid_pending_verification → ready_to_invoice → invoiced → processing → shipped → delivered
+                                    ↘ awaiting_stock ↗
+                       cancelled / refunded (reachable from most states)
+```
+
+MercadoPago payments are processed by a webhook that verifies the HMAC-SHA256 signature, checks idempotency against the stored `mp_payment_id`, validates the paid amount against the order total, and atomically reserves stock via a `FOR UPDATE` RPC. Amount mismatches auto-cancel the order, log the event to `order_logs`, and send a Telegram fraud alert.
+
+Bank transfers follow a separate path: confirmation email on creation, 24h Inngest-scheduled reminder, 48h auto-cancel via maintenance cron.
+
+Refunds call the MercadoPago Refunds API, optionally restore stock via RPC, update order status, and notify the customer by WhatsApp and email.
+
+Every status transition triggers the `order-status-notification` Inngest function, which dispatches to three independent channels — email (Brevo), WhatsApp (Business API), Telegram admin alert — as separate steps with independent retry logic.
+
+### Admin Panel
+
+Protected by Clerk with `owner` and `staff` roles. Route-level RBAC enforced in Edge middleware. All actions logged to `admin_audit_log`.
+
+| Section | Description |
+|---|---|
+| **Dashboard** | Revenue in UYU + USD combined with live exchange rate, order counts by status, low-stock alerts, recent orders |
+| **Analytics** | Revenue trends, department geography, payment method distribution, shipping breakdown, inventory runway (days of stock remaining at current sales velocity), hourly order heatmap, PostHog conversion funnel |
+| **AI Reports** | Executive analysis of any time period via Groq (default, free) or Claude Sonnet (opt-in). Includes trend summary, geographic insights, peak hours, top products, and actionable recommendations |
+| **Admin Assistant** | Natural language chat backed by Claude Sonnet with Supabase tool calls. Answers ad-hoc questions about orders, inventory, sales, customers, abandoned carts, and catalog gaps in real time |
+| **Orders** | Full lifecycle management — status transitions, notes, invoice fields (number, type, RUT, PDF upload), refund initiation, linked MercadoPago IDs, one-click WhatsApp and email dispatch |
+| **Products** | Full CRUD with Supabase Storage image upload, related product management (similar / accessory / upgrade), discount scheduling with end-date |
+| **Inventory** | Stock levels, low-stock threshold configuration, change log |
+| **Customers** | Order history and lifetime value per customer |
+| **Search Analytics** | Zero-result query feed — the direct catalog gap identification view |
+| **Coupons** | Percentage and fixed-amount codes with per-use limits, minimum purchase, validity window |
+| **Guides** | CMS for product articles — section editor, SEO metadata, publish/draft workflow |
+| **Reviews** | Moderation queue with verified-purchase flag |
+| **Partners** | Homepage brand carousel management |
+
+### Automated Background Jobs (Inngest)
+
+| Function | Trigger | Description |
+|---|---|---|
+| `order-confirmation` | `order/payment.approved` | Confirmation email + Telegram alert |
+| `abandoned-cart-recovery` | `checkout/attempt.created` + 2h | Recovery email if no completed order |
+| `stock-reservation-expiry` | `order/stock.reserved` → `reserved_until` | Per-order precise stock release |
+| `order-status-notification` | `order/status.changed` | Email + WhatsApp + Telegram, independent retry per channel |
+| `low-stock-alert` | `order/payment.approved` | Telegram alert when any ordered item drops to ≤3 units |
+| `review-request` | `order/status.changed` + 7d | Review solicitation after delivery |
+| `bank-transfer-reminder` | `order/transfer.created` + 24h | Payment reminder before auto-cancel |
+| `generate-embedding` | `product/embedding.needed` | Compute and persist pgvector embedding |
+| `daily-maintenance` | Cron 3 AM (Montevideo) | Release expired stock locks, cancel stale orders, Monday weekly report |
+
+---
+
+## Database
+
+### Design Notes
+
+The `orders` table carries the full lifecycle in a single row: 12 status values, dual-currency fields with exchange rate snapshot, invoice fields (number, type, RUT, business name, PDF URL), refund fields, email delivery timestamps, and the MercadoPago payment ID. `order_logs` is an append-only audit trail of every state transition and notification event.
+
+Stock is reserved atomically in `inventory_locks` using `FOR UPDATE OF` row locks — preventing race conditions when concurrent buyers compete for the last unit. Locks expire after 24h, released by Inngest with per-order precision, with the maintenance cron as a safety net.
+
+`monthly_revenue_snapshots` pre-aggregates revenue at month close for O(1) historical reporting without scanning `orders`.
+
+### PostgreSQL Extensions
+
+| Extension | Schema | Purpose |
+|---|---|---|
+| `pg_trgm` | `extensions` | Trigram similarity search, GIN index on `products.name` |
+| `pgvector` | `extensions` | `products.embedding vector(1536)`, IVFFlat index (lists = 20) |
+| `unaccent` | `extensions` | Accent-insensitive tsvector for `search_vector` |
+
+### Key RPC Functions
+
+| Function | Purpose |
+|---|---|
+| `reserve_stock_for_order(order_id, hours)` | Atomic stock lock with `FOR UPDATE OF`, returns per-item success/failure |
+| `release_expired_reservations()` | Batch release of expired `inventory_locks` |
+| `restore_stock_for_order(order_id)` | Stock restoration on cancellation or refund |
+| `search_products_fuzzy(query, threshold, limit)` | pg_trgm trigram similarity search |
+| `search_products_semantic(embedding, threshold, limit)` | pgvector cosine similarity search |
+
+### Row-Level Security
+
+RLS enabled on all 17 tables. PII and business-sensitive tables (`orders`, `addresses`, `admin_users`, `order_items`, `discount_coupons`, `admin_audit_log`, `inventory_log`, `checkout_attempts`, `inventory_locks`, `order_logs`, and others) are `service_role`-only — zero anon access. `products` allows anon `SELECT` on active rows only (required for `sitemap.ts`). `guides` allows anon `SELECT` on published rows only. All policies defined in `scripts/rls-complete.sql`.
+
+---
+
+## Security
+
+| Vector | Implementation |
+|---|---|
+| **XSS** | Per-request CSP nonces in Edge middleware (`'nonce-{n}' 'strict-dynamic'`, `object-src 'none'`, `base-uri 'self'`). `sanitize-html` strips all tags from user-submitted review text before storage. Zod drops unexpected fields on every API input. |
+| **CSRF** | `Origin` vs `Host` check in Edge middleware on all mutating routes. Explicitly exempt: MP webhook (HMAC-verified independently), Inngest (cryptographically signed), cron routes (secret-authenticated). |
+| **SQL injection** | Supabase JS client parameterizes all queries. Groq expansion terms validated by `sanitizeExpansionTerms` (strips `<>{}[]\`, length bounds, hard cap at 4) before reaching the DB. All RPCs compiled with `SET search_path = public`. `pg_trgm` extension lives in `extensions` schema, not `public`. |
+| **Price manipulation** | Frontend prices ignored entirely. Unit prices fetched from DB at order creation; totals fully recalculated server-side. |
+| **Payment fraud** | MercadoPago webhook HMAC-SHA256 verification. Payment amount validated against stored total — mismatch auto-cancels order, logs event, sends Telegram alert. Idempotency check on `mp_payment_id` prevents double-processing. |
+| **Bot / DDoS** | Cloudflare: Bot Fight Mode, WAF rule blocking no-`User-Agent` requests, rate limit on checkout endpoints. Upstash sliding-window limiters: search (30/min), orders (5/min), coupon validation, quote requests, reviews (3/min per IP + per email), AI assistant (20/min). Cloudflare Turnstile CAPTCHA on checkout with server-side verification and graceful degradation. Honeypot field on review forms. |
+| **Auth & authorization** | Clerk with short-lived JWTs and PKCE. Route-level RBAC in Edge middleware. Admin actions logged to `admin_audit_log` with IP and user-agent. |
+| **Order enumeration** | Public order lookup requires an HMAC-signed token bound to `order_id + customer_email` — valid order number alone is not sufficient. |
+| **AI prompt injection** | Fixed-identity block in customer assistant system prompt with explicit refusal patterns for "ignore instructions", "developer mode", and roleplay attacks. Product context wrapped in `[DATOS DEL SISTEMA]` markers; `description` excluded from context queries (primary injection surface if external product data is ever imported). |
+| **AI output validation** | `containsSensitiveData()` scans responses for price (7 regex patterns) and stock claim (4 patterns) before returning to client. Filtered responses substitute a safe fallback message. |
+| **AI cost attacks** | Input capped at 500 chars/message, 10-turn history limit, role normalization on all messages. |
+| **Secrets** | `SUPABASE_SERVICE_ROLE_KEY`, `MP_ACCESS_TOKEN`, all AI keys — server-side only, never `NEXT_PUBLIC_`-prefixed. `.env.local` gitignored. |
 
 ---
 
@@ -97,212 +162,87 @@ Full-stack e-commerce platform for La Aldea — a hardware, irrigation, and wate
 
 ```
 la-aldea-ecom/
-├── app/                        # Next.js App Router
-│   ├── page.tsx                # Homepage
-│   ├── layout.tsx              # Root layout (fonts, metadata, providers, CSP nonce)
-│   ├── globals.css             # Global styles
-│   ├── productos/              # Product listing + [slug] detail pages
-│   ├── cart/                   # Cart page
-│   ├── checkout/               # Checkout page (shipping, payment)
-│   ├── gracias/                # Order confirmation page
-│   ├── pedido/                 # Order tracking
-│   ├── wishlist/               # Wishlist page
-│   ├── guias/                  # Product guides/articles
-│   ├── blog/                   # Blog (redirects to guides)
-│   ├── admin/                  # Admin panel (Clerk-protected)
-│   │   ├── page.tsx            # Dashboard
-│   │   ├── orders/             # Order management
-│   │   ├── products/           # Product CRUD
-│   │   ├── inventory/          # Stock tracking
-│   │   ├── coupons/            # Discount codes
-│   │   ├── customers/          # Customer list
-│   │   ├── partners/           # Brand carousel CMS
-│   │   ├── reviews/            # Review moderation
-│   │   ├── guides/             # Article CMS
-│   │   ├── search-analytics/   # Zero-result query dashboard
-│   │   ├── reports/            # Sales reports
-│   │   └── analytics/          # PostHog embedded dashboard
-│   ├── api/                    # API Routes
-│   │   ├── checkout-attempt/   # Save abandoned cart attempts
-│   │   ├── coupons/validate/   # Coupon validation (rate-limited)
-│   │   ├── exchange-rate/      # BCU UYU/USD rate (Upstash-cached)
-│   │   ├── inngest/            # Inngest function endpoint
-│   │   ├── orders/             # Order creation + management
-│   │   ├── products/           # Product API
-│   │   ├── quote-request/      # Large order quote form
-│   │   ├── search/             # Search API (rate-limited)
-│   │   ├── reviews/            # Review submission
-│   │   ├── webhooks/mercadopago/ # MP payment webhook
-│   │   ├── admin/              # Admin-only API routes
-│   │   ├── cron/maintenance    # Daily maintenance job
-│   │   └── sentry-tunnel/      # Sentry CSP-compatible tunnel
-│   ├── sitemap.ts              # Auto-generated XML sitemap
-│   └── robots.ts               # robots.txt rules
+├── app/
+│   ├── (storefront)               # productos, cart, checkout, gracias, pedido,
+│   │                              # wishlist, guias, faq, contacto, nosotros
+│   ├── admin/                     # Clerk-protected, role-gated
+│   │   ├── analytics/             # Revenue, geography, inventory health, PostHog funnel
+│   │   ├── orders/                # Lifecycle management, refund, invoice
+│   │   ├── products/ inventory/   # CRUD, related products, stock log
+│   │   ├── customers/ coupons/    # Customer history, discount codes
+│   │   ├── reviews/ guides/       # Content moderation and CMS
+│   │   ├── partners/              # Brand carousel
+│   │   ├── search-analytics/      # Zero-result query feed
+│   │   └── reports/               # AI-powered sales reports
+│   └── api/
+│       ├── webhooks/mercadopago/  # HMAC-verified, idempotent, fraud-detected
+│       ├── admin/assistant/       # Claude + Supabase tool calls
+│       ├── admin/reports/insights/# Groq / Claude report generation
+│       ├── search/suggestions/    # 5-layer search pipeline
+│       ├── orders/                # Server-side price recalc, Turnstile, Zod
+│       ├── cron/maintenance/      # Daily safety net
+│       └── sentry-tunnel/         # CSP-compatible Sentry relay
 │
-├── components/
-│   ├── Header.tsx              # Site header + nav
-│   ├── Footer.tsx              # Site footer
-│   ├── Analytics.tsx           # GA4 + PostHog init (nonce-aware)
-│   ├── PostHogProvider.tsx     # PostHog React context
-│   ├── products/               # Product card, grid, filters, image gallery
-│   ├── cart/                   # Cart drawer, cart item, totals
-│   ├── admin/                  # Admin UI components
-│   ├── ui/                     # Shared UI primitives
-│   └── common/                 # Shared layout components
+├── inngest/functions/             # 9 background functions
 │
 ├── lib/
-│   ├── supabase.ts             # Supabase client (browser + server)
-│   ├── mercadopago.ts          # MercadoPago SDK wrapper
-│   ├── shipping.ts             # Shipping config + option logic
-│   ├── redis.ts                # Upstash Redis + rate limiter instances
-│   ├── email.ts                # Brevo email templates + sender
-│   ├── telegram.ts             # Telegram alert helpers
-│   ├── notifications.ts        # Unified notification dispatch
-│   ├── exchange-rate.ts        # BCU API + fallback rate
-│   ├── validators.ts           # Zod schemas for all API inputs
-│   ├── categories.ts           # Category taxonomy
-│   ├── inngest.ts              # Inngest client
-│   ├── rate-limit.ts           # Rate limiter helpers
-│   ├── admin-auth.ts           # Clerk admin check helper
-│   └── whatsapp.ts             # WhatsApp deeplink helpers
+│   ├── ai.ts                      # callClaude() / callGroq() — raw fetch, no SDK overhead
+│   ├── exchange-rate.ts           # DolarAPI → Upstash cache → env var fallback
+│   ├── validators.ts              # Zod schemas for all API inputs
+│   ├── schema.ts                  # Centralized JSON-LD schema helpers
+│   ├── notifications.ts           # Typed WhatsApp message templates
+│   ├── analytics.ts               # PostHog event helpers
+│   └── search/                    # ai-fallback, query-expansion, intent-detection,
+│                                  # embedding-cache
+├── scripts/
+│   ├── backfill-embeddings.ts     # One-time pgvector bulk embed
+│   ├── rls-complete.sql           # Full RLS policy set for all 17 tables
+│   └── security-fixes.sql         # pg_trgm schema hardening, RPC search_path fix
 │
-├── inngest/
-│   └── functions/              # Background job definitions
-│       ├── order-confirmation.ts       # Post-payment email + Telegram
-│       ├── abandoned-cart-recovery.ts  # 2h delay recovery email
-│       ├── stock-reservation-expiry.ts # Release held stock if unpaid
-│       └── order-status-notification.ts # Status change emails
-│
-├── stores/                     # Zustand state stores (cart, etc.)
-├── types/                      # Shared TypeScript types
-├── emails/                     # Email templates (React Email)
-├── hooks/                      # Custom React hooks
-├── scripts/                    # Historical SQL migration scripts
-├── public/                     # Static assets
-├── proxy.ts                    # Edge middleware (CSP nonces, CSRF, rate limiting)
-├── next.config.ts              # Next.js config (Sentry, CSP headers, image domains)
-├── vercel.json                 # Vercel cron config (daily at 03:00 UTC)
-└── instrumentation.ts          # Sentry server/edge init
+└── proxy.ts                       # Edge middleware: CSP nonces, CSRF, Clerk, rate limiting
 ```
 
 ---
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 20.9.0 or higher
-- pnpm
-
-### Installation
+**Prerequisites:** Node.js ≥ 20.9, pnpm
 
 ```bash
 git clone https://github.com/your-username/la-aldea-ecom.git
 cd la-aldea-ecom
 pnpm install
+cp .env.example .env.local   # fill in all values
+pnpm dev
 ```
 
-### Environment Variables
+Required services: Supabase · Clerk · MercadoPago · Upstash · Brevo · Inngest · Sentry · Anthropic · Groq · OpenAI
 
-Copy `.env.example` to `.env.local` and fill in your credentials:
+**First-time database setup:**
 
 ```bash
-cp .env.example .env.local
+# Run in Supabase Dashboard → SQL Editor, in order:
+# scripts/rls-complete.sql
+# scripts/security-fixes.sql
+# (any remaining scripts/)
+
+# Seed pgvector embeddings — run locally, not on Vercel (~$0.04 for 400 products, ~4 min)
+npx tsx scripts/backfill-embeddings.ts
 ```
 
-Required services:
-- **Supabase** — database, storage, auth
-- **MercadoPago** — payments (use sandbox keys for development)
-- **Clerk** — admin authentication
-- **Upstash** — Redis rate limiting and caching
-- **Brevo** — transactional emails
-- **Inngest** — background jobs
-- **Sentry** — error monitoring
-
-For the full list of environment variables and where to get each one, see `PRE_LAUNCH_FINAL.md` (section 2) in the data repo.
-
-### Development
-
-```bash
-pnpm dev        # Start dev server (Turbopack)
-pnpm build      # Production build
-pnpm start      # Start production server
-pnpm lint       # Run ESLint
-```
+New products auto-embed via the `generate-embedding` Inngest function on create/update.
 
 ---
 
-## Database
+## AI Cost Reference
 
-All migrations are in `scripts/` (historical) and `sql/` (pre-launch). Run in Supabase Dashboard > SQL Editor.
-
-Key tables:
-- `products` — product catalog (700+ items)
-- `orders` — orders with full status lifecycle
-- `order_items` — line items per order
-- `order_logs` — status change history
-- `inventory_locks` — stock reservations held during checkout
-- `coupons` — discount codes with usage tracking
-- `partners` — brands shown in homepage carousel
-- `checkout_attempts` — abandoned cart tracking
-- `search_analytics` — zero-result query logging
-- `guides` — product articles/guides (CMS)
-- `reviews` — product reviews
-
----
-
-## Inngest Background Jobs
-
-| Function | Trigger | Description |
-|----------|---------|-------------|
-| `order-confirmation` | `order/payment.approved` | Send confirmation email + Telegram alert |
-| `abandoned-cart-recovery` | `checkout/attempt.created` (2h delay) | Send recovery email if order not completed |
-| `stock-reservation-expiry` | `inventory/lock.created` (30min delay) | Release held stock if payment not completed |
-| `order-status-notification` | `order/status.changed` | Send status update email to customer |
-
-Inngest auto-discovers functions at `/api/inngest` after deploy.
-
----
-
-## Cron Jobs
-
-Defined in `vercel.json`:
-
-| Path | Schedule | Description |
-|------|----------|-------------|
-| `/api/cron/maintenance` | Daily at 03:00 UTC | Cleanup, stale lock release, etc. |
-
-Protected by `CRON_SECRET` env var.
-
----
-
-## Deployment
-
-The project is deployed on Vercel. All environment variables must be set in the Vercel Dashboard before deploying to production.
-
-See `PRE_LAUNCH_FINAL.md` for the complete pre-launch checklist including:
-- SQL migrations to run in Supabase
-- Vercel environment variable setup
-- MercadoPago production credentials and webhook
-- Clerk production instance setup
-- DNS configuration
-
----
-
-## Security Notes
-
-- `.env.local` is gitignored — never commit credentials
-- `SUPABASE_SERVICE_ROLE_KEY` and `MP_ACCESS_TOKEN` are server-side only
-- RLS is enabled on all Supabase tables
-- CSRF middleware protects all POST/PATCH/DELETE routes
-- CSP nonces are generated per request in Edge middleware
-
----
-
-## Project Owner
-
-- **Business:** La Aldea — Tala, Canelones, Uruguay
-- **Contact:** +598 92 744 725 | contacto@laaldeatala.com.uy
+| Feature | Model | Monthly |
+|---|---|---|
+| Search expansion, fallback, intent detection | Groq Llama 3.3 70B | **$0** (free tier) |
+| Report analysis (default / opt-in) | Groq / Claude Sonnet | $0 / ~$0.004 per run |
+| Admin assistant | Claude Sonnet 4.6 | ~$8–12 |
+| Semantic search query embeddings | OpenAI text-embedding-3-small | < $0.10 |
+| **Total** | | **~$10–16 / month** |
 
 ---
 

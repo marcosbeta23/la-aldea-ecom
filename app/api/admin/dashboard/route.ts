@@ -83,8 +83,8 @@ export async function GET() {
     }>;
 
     // --- Calculate stats ---
-    const getCurrency = (o: { currency: string | null }) =>
-      o.currency || 'UYU';
+    const getCurrency = (o: { currency: string | null; payment_method?: string | null }) =>
+      o.payment_method === 'mercadopago' ? 'UYU' : (o.currency || 'UYU');
 
     const paidOrders = orders.filter((o) => PAID_STATUSES.includes(o.status));
     const todayOrders = orders.filter(

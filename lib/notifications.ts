@@ -3,6 +3,16 @@
 
 import type { Order, OrderItem } from '@/types/database';
 
+function formatPrice(price: number | undefined, currency: string = 'UYU'): string {
+  const safePrice = price ?? 0;
+
+  if (currency === 'USD') {
+    return `US$ ${safePrice.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  return `UYU ${safePrice.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
+}
+
 // =====================================================
 // MESSAGE TEMPLATES (Spanish - Uruguay)
 // =====================================================
@@ -26,7 +36,7 @@ export function getPaymentReceivedMessage(ctx: NotificationContext): string {
 
 Estamos verificando el stock y en breve te confirmamos la factura y el envío.
 
-Total: UYU ${order.total.toLocaleString('es-UY')}
+Total: ${formatPrice(order.total, order.currency)}
 
 Gracias por tu compra 🙏
 — *La Aldea*`;
@@ -37,11 +47,11 @@ Gracias por tu compra 🙏
  */
 export function getAwaitingStockMessage(ctx: NotificationContext): string {
   const { order, failedProducts } = ctx;
-  
-  const productList = failedProducts?.map(p => 
+
+  const productList = failedProducts?.map(p =>
     `• ${p.name} (pedido: ${p.requested}, disponible: ${p.available})`
   ).join('\n') || 'Algunos productos';
-  
+
   return `Hola ${order.customer_name} 👋
 
 ⚠️ *Aviso sobre tu pedido #${order.order_number}*
@@ -84,9 +94,9 @@ export function getInvoiceGeneratedMessage(ctx: NotificationContext): string {
 
 Tu factura N° *${invoiceNumber || order.invoice_number}* para el pedido #${order.order_number} fue generada.
 
-${order.shipping_type === 'pickup' 
-  ? 'Podés pasar a retirar tu pedido cuando quieras.'
-  : 'Te avisamos cuando despachemos tu pedido.'}
+${order.shipping_type === 'pickup'
+      ? 'Podés pasar a retirar tu pedido cuando quieras.'
+      : 'Te avisamos cuando despachemos tu pedido.'}
 
 — *La Aldea*`;
 }
@@ -114,13 +124,14 @@ Te avisamos cuando esté por llegar.
 export function getRefundInitiatedMessage(ctx: NotificationContext): string {
   const { order, refundAmount } = ctx;
   const amount = refundAmount || order.refund_amount || order.total;
-  
+  const formattedAmount = formatPrice(amount, order.currency);
+
   return `Hola ${order.customer_name} 👋
 
 💸 *Iniciamos tu reembolso*
 
 Pedido: #${order.order_number}
-Monto: UYU ${amount.toLocaleString('es-UY')}
+Monto: ${formattedAmount}
 
 El proceso puede tardar entre *1 y 15 días* según tu medio de pago. Te avisamos cuando se complete.
 
@@ -133,16 +144,63 @@ El proceso puede tardar entre *1 y 15 días* según tu medio de pago. Te avisamo
 export function getRefundCompletedMessage(ctx: NotificationContext): string {
   const { order, refundAmount } = ctx;
   const amount = refundAmount || order.refund_amount || order.total;
-  
+  const formattedAmount = formatPrice(amount, order.currency);
+
   return `Hola ${order.customer_name} 👋
 
 ✅ *Reembolso completado*
 
-El reembolso de UYU ${amount.toLocaleString('es-UY')} por tu pedido #${order.order_number} fue procesado.
+El reembolso de ${formattedAmount} por tu pedido #${order.order_number} fue procesado.
 
 Dependiendo de tu banco/medio de pago, puede tardar unos días en reflejarse.
 
 — *La Aldea*`;
+}
+
+// =====================================================
+// ADMIN NOTIFICATIONS
+// =====================================================
+
+export function getAdminNewOrderMessage(ctx: NotificationContext): string {
+  const { order, items } = ctx;
+  const formattedAmount = formatPrice(order.total, order.currency);
+
+  const itemList =
+    items?.length
+      ? items
+        .map(
+          (i) =>
+            `• ${i.product_name} x${i.quantity} = ${formatPrice(i.subtotal, order.currency)}`
+        )
+        .join('\n')
+      : 'Sin detalle de productos';
+
+  return `🛒 *NUEVO PEDIDO*
+
+Pedido: #${order.order_number}
+Cliente: ${order.customer_name}
+Tel: ${order.customer_phone || 'No informado'}
+
+*Productos:*
+${itemList}
+
+*Total: ${formattedAmount}*
+
+Estado: ${order.status}`;
+}
+
+export function getAdminRefundAlertMessage(ctx: NotificationContext): string {
+  const { order, refundAmount } = ctx;
+
+  const amount = refundAmount ?? order.refund_amount ?? order.total;
+  const formattedAmount = formatPrice(amount, order.currency);
+
+  return `💸 *REEMBOLSO PROCESADO*
+
+Pedido: #${order.order_number}
+Cliente: ${order.customer_name}
+Monto: ${formattedAmount}
+Motivo: ${order.refund_reason || 'No especificado'}`;
 }
 
 // =====================================================
@@ -162,14 +220,14 @@ export function getWhatsAppUrl(phone: string, message: string): string {
  * Get WhatsApp URL for order notification
  */
 export function getOrderWhatsAppUrl(
-  order: Order, 
+  order: Order,
   messageType: 'payment_received' | 'awaiting_stock' | 'invoice_generated' | 'shipped' | 'refund_initiated',
   ctx?: Partial<NotificationContext>
 ): string | null {
   if (!order.customer_phone) return null;
-  
+
   const fullCtx: NotificationContext = { order, ...ctx };
-  
+
   let message: string;
   switch (messageType) {
     case 'payment_received':
@@ -190,7 +248,7 @@ export function getOrderWhatsAppUrl(
     default:
       return null;
   }
-  
+
   return getWhatsAppUrl(order.customer_phone, message);
 }
 
@@ -200,7 +258,7 @@ export function getOrderWhatsAppUrl(
 
 export function getPaymentReceivedEmailHtml(ctx: NotificationContext): string {
   const { order } = ctx;
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -270,8 +328,8 @@ export function getInvoiceEmailHtml(ctx: NotificationContext): string {
       <p>Tu factura para el pedido #${order.order_number} fue generada:</p>
       <p class="invoice-number">Factura N° ${invoiceNumber || order.invoice_number}</p>
       <p>${order.shipping_type === 'pickup'
-        ? 'Podés pasar a retirar tu pedido cuando quieras.'
-        : 'Te avisamos cuando despachemos tu pedido.'}</p>
+      ? 'Podés pasar a retirar tu pedido cuando quieras.'
+      : 'Te avisamos cuando despachemos tu pedido.'}</p>
     </div>
     <div class="review-cta">
       <p>⭐ ¿Cómo fue tu experiencia? Tu opinión nos ayuda a mejorar.</p>
@@ -288,38 +346,4 @@ export function getInvoiceEmailHtml(ctx: NotificationContext): string {
   `.trim();
 }
 
-// =====================================================
-// ADMIN NOTIFICATIONS
-// =====================================================
 
-export function getAdminNewOrderMessage(ctx: NotificationContext): string {
-  const { order, items } = ctx;
-  
-  const itemList = items?.map(i => 
-    `• ${i.product_name} x${i.quantity} = UYU ${i.subtotal.toLocaleString('es-UY')}`
-  ).join('\n') || '';
-  
-  return `🛒 *NUEVO PEDIDO*
-
-Pedido: #${order.order_number}
-Cliente: ${order.customer_name}
-Tel: ${order.customer_phone}
-
-*Productos:*
-${itemList}
-
-*Total: UYU ${order.total.toLocaleString('es-UY')}*
-
-Estado: ${order.status}`;
-}
-
-export function getAdminRefundAlertMessage(ctx: NotificationContext): string {
-  const { order, refundAmount } = ctx;
-  
-  return `💸 *REEMBOLSO PROCESADO*
-
-Pedido: #${order.order_number}
-Cliente: ${order.customer_name}
-Monto: UYU ${(refundAmount || order.total).toLocaleString('es-UY')}
-Motivo: ${order.refund_reason || 'No especificado'}`;
-}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { inngest } from '@/lib/inngest';
 import { alertRefundProcessed } from '@/lib/telegram';
 
 // Verify admin authentication via Clerk
@@ -12,16 +13,16 @@ async function verifyAdmin() {
 // MercadoPago Refund API
 async function createMPRefund(paymentId: string, amount?: number) {
   const accessToken = process.env.MP_ACCESS_TOKEN;
-  
+
   if (!accessToken) {
     throw new Error('MP_ACCESS_TOKEN not configured');
   }
-  
+
   const refundBody: Record<string, unknown> = {};
   if (amount) {
     refundBody.amount = amount;
   }
-  
+
   const response = await fetch(
     `https://api.mercadopago.com/v1/payments/${paymentId}/refunds`,
     {
@@ -33,13 +34,13 @@ async function createMPRefund(paymentId: string, amount?: number) {
       body: JSON.stringify(refundBody),
     }
   );
-  
+
   if (!response.ok) {
     const error = await response.json();
     console.error('MercadoPago refund error:', error);
     throw new Error(error.message || 'Failed to process refund with MercadoPago');
   }
-  
+
   return response.json();
 }
 
@@ -54,36 +55,36 @@ export async function POST(
       { status: 401 }
     );
   }
-  
+
   const { id: orderId } = await params;
-  
+
   try {
     const body = await request.json();
     const { amount, reason, restoreStock = true } = body;
-    
+
     if (!reason || reason.trim().length === 0) {
       return NextResponse.json(
         { success: false, error: 'Refund reason is required' },
         { status: 400 }
       );
     }
-    
+
     // Fetch order
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select('*')
       .eq('id', orderId)
       .single() as { data: any; error: any };
-    
+
     if (orderError || !order) {
       return NextResponse.json(
         { success: false, error: 'Order not found' },
         { status: 404 }
       );
     }
-    
+
     const orderData = order as any;
-    
+
     // Validate order can be refunded
     if (orderData.status === 'refunded') {
       return NextResponse.json(
@@ -91,14 +92,14 @@ export async function POST(
         { status: 400 }
       );
     }
-    
+
     if (!orderData.mp_payment_id) {
       return NextResponse.json(
         { success: false, error: 'Order has no MercadoPago payment ID' },
         { status: 400 }
       );
     }
-    
+
     // Validate amount
     const refundAmount = amount ? Number(amount) : orderData.total;
     if (refundAmount <= 0 || refundAmount > orderData.total) {
@@ -107,10 +108,10 @@ export async function POST(
         { status: 400 }
       );
     }
-    
+
     let mpRefund;
     let refundStatus = 'pending';
-    
+
     // Process refund with MercadoPago
     try {
       mpRefund = await createMPRefund(
@@ -122,7 +123,7 @@ export async function POST(
     } catch (mpError: any) {
       console.error('MercadoPago refund failed:', mpError);
       refundStatus = 'failed';
-      
+
       // Still update order with failed refund status so admin can retry
       await (supabaseAdmin as any)
         .from('orders')
@@ -136,14 +137,14 @@ export async function POST(
         .eq('id', orderId);
 
       // Telegram alert for failed refund
-      alertRefundProcessed(orderData.order_number, refundAmount, false, orderData.customer_name || '', orderData.currency || 'UYU').catch(() => {});
+      alertRefundProcessed(orderData.order_number, refundAmount, false, orderData.customer_name || '', orderData.currency || 'UYU').catch(() => { });
 
       return NextResponse.json(
         { success: false, error: `MercadoPago refund failed: ${mpError.message}` },
         { status: 500 }
       );
     }
-    
+
     // Restore stock if requested
     if (restoreStock && orderData.stock_reserved) {
       try {
@@ -156,7 +157,7 @@ export async function POST(
         // Don't fail the refund, just log it
       }
     }
-    
+
     // Update order
     const { error: updateError } = await (supabaseAdmin as any)
       .from('orders')
@@ -171,12 +172,12 @@ export async function POST(
         updated_at: new Date().toISOString(),
       })
       .eq('id', orderId);
-    
+
     if (updateError) {
       console.error('Failed to update order after refund:', updateError);
       // Refund already processed with MP, so return partial success
     }
-    
+
     // Log the event
     await (supabaseAdmin as any)
       .from('order_logs')
@@ -195,7 +196,22 @@ export async function POST(
       });
 
     // Telegram alert for successful refund
-    alertRefundProcessed(orderData.order_number, refundAmount, true, orderData.customer_name || '', orderData.currency || 'UYU').catch(() => {});
+    alertRefundProcessed(orderData.order_number, refundAmount, true, orderData.customer_name || '', orderData.currency || 'UYU').catch(() => { });
+
+    inngest.send({
+      name: 'order/status.changed',
+      data: {
+        orderId,
+        orderNumber: orderData.order_number,
+        oldStatus: orderData.status,
+        newStatus: 'refunded',
+        customerName: orderData.customer_name || '',
+        customerEmail: orderData.customer_email || null,
+        customerPhone: orderData.customer_phone || null,
+        total: refundAmount,
+        currency: orderData.currency || 'UYU',
+      },
+    }).catch(() => { });
 
     return NextResponse.json({
       success: true,
@@ -205,7 +221,7 @@ export async function POST(
         status: refundStatus,
       },
     });
-    
+
   } catch (error: any) {
     console.error('Refund error:', error);
     return NextResponse.json(

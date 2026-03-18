@@ -14,12 +14,16 @@ interface InvoiceEmailProps {
   invoiceNumber: string;
   invoiceType: 'consumer_final' | 'invoice_rut' | null;
   total: number;
+  currency?: string;
   items: OrderItem[];
   invoiceFileUrl?: string;
   reviewUrl?: string;
 }
 
-function formatPrice(price: number): string {
+function formatPrice(price: number, currency = 'UYU'): string {
+  if (currency === 'USD') {
+    return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   return `UYU ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 }
 
@@ -29,6 +33,7 @@ export default function InvoiceEmail({
   invoiceNumber,
   invoiceType,
   total,
+  currency = 'UYU',
   items,
   invoiceFileUrl,
   reviewUrl,
@@ -65,7 +70,7 @@ export default function InvoiceEmail({
         <Hr style={{ borderColor: '#86efac', margin: '8px 0' }} />
         <Row>
           <Column><Text style={invoiceTotalLabel}>Total</Text></Column>
-          <Column align="right"><Text style={invoiceTotalValue}>{formatPrice(total)}</Text></Column>
+          <Column align="right"><Text style={invoiceTotalValue}>{formatPrice(total, currency)}</Text></Column>
         </Row>
       </Section>
 
@@ -101,7 +106,7 @@ export default function InvoiceEmail({
               <Text style={cellText}>{item.quantity}</Text>
             </Column>
             <Column style={{ width: '25%' }} align="right">
-              <Text style={cellText}>{formatPrice(item.subtotal)}</Text>
+              <Text style={cellText}>{formatPrice(item.subtotal, currency)}</Text>
             </Column>
           </Row>
         ))}

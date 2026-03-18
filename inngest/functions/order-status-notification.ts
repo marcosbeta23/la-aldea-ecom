@@ -52,7 +52,7 @@ export const orderStatusNotification = inngest.createFunction(
     const order = await step.run('fetch-order', async () => {
       const { data } = await supabaseAdmin
         .from('orders')
-        .select('*')
+        .select('*, currency')
         .eq('id', orderId)
         .single() as { data: any };
 
