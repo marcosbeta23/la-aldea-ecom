@@ -19,10 +19,10 @@ export default function Header() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.pageYOffset;
-      
+
       // Navbar background change
       setScrolled(currentScroll > 50);
-      
+
       // Hide/show logic
       if (currentScroll > lastScroll && currentScroll > 100) {
         // Scrolling down & past threshold
@@ -31,7 +31,7 @@ export default function Header() {
         // Scrolling up
         setHidden(false);
       }
-      
+
       setLastScroll(currentScroll);
     };
 
@@ -57,12 +57,12 @@ export default function Header() {
   }, [mobileMenuOpen]);
 
   return (
-    <header 
+    <header
       className={`
         fixed top-0 left-0 right-0 z-50 
         transition-all duration-300 ease-in-out
         ${scrolled || !isHomepage || mobileMenuOpen
-          ? 'bg-white shadow-sm border-b border-slate-200' 
+          ? 'bg-white shadow-sm border-b border-slate-200'
           : 'bg-transparent border-b border-transparent'
         }
         ${hidden ? '-translate-y-full' : 'translate-y-0'}
@@ -72,89 +72,83 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center transition-opacity hover:opacity-80" aria-label="La Aldea - Ir a página de inicio">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/logo.svg"
             alt="La Aldea"
             width={180}
             height={52}
-            className={`h-12 w-auto transition-all${
-              scrolled || !isHomepage || mobileMenuOpen
+            className={`h-12 w-auto transition-all${scrolled || !isHomepage || mobileMenuOpen
                 ? ' drop-shadow-[0_2px_8px_rgba(0,0,0,0.20)]'
                 : ''
-            }`}
+              }`}
             style={{ maxWidth: '180px' }}
           />
         </Link>
 
         {/* Desktop Navigation - Centered */}
         <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <Link 
-            href="/" 
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              pathname === '/'
+          <Link
+            href="/"
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/'
                 ? (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-white bg-white/10')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-white bg-white/10')
                 : (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                    : 'text-white/90 hover:bg-white/10')
-            }`}
+                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                  : 'text-white/90 hover:bg-white/10')
+              }`}
           >
             Inicio
           </Link>
           <Link
             href="/productos"
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              pathname.startsWith('/productos')
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname.startsWith('/productos')
                 ? (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-white bg-white/10')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-white bg-white/10')
                 : (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                    : 'text-white/90 hover:bg-white/10')
-            }`}
+                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                  : 'text-white/90 hover:bg-white/10')
+              }`}
           >
             Tienda
           </Link>
           <Link
             href="/faq"
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              pathname === '/faq'
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/faq'
                 ? (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-white bg-white/10')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-white bg-white/10')
                 : (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                    : 'text-white/90 hover:bg-white/10')
-            }`}
+                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                  : 'text-white/90 hover:bg-white/10')
+              }`}
           >
             FAQ
           </Link>
           <Link
             href="/blog"
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              pathname === '/blog' || pathname.startsWith('/guias')
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/blog' || pathname.startsWith('/guias')
                 ? (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-white bg-white/10')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-white bg-white/10')
                 : (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                    : 'text-white/90 hover:bg-white/10')
-            }`}
+                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                  : 'text-white/90 hover:bg-white/10')
+              }`}
           >
             Blog
           </Link>
           <Link
             href="/contacto"
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              pathname === '/contacto'
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/contacto'
                 ? (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-white bg-white/10')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-white bg-white/10')
                 : (scrolled || !isHomepage || mobileMenuOpen
-                    ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                    : 'text-white/90 hover:bg-white/10')
-            }`}
+                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                  : 'text-white/90 hover:bg-white/10')
+              }`}
           >
             Contacto
           </Link>
@@ -163,23 +157,21 @@ export default function Header() {
         {/* Actions */}
         <div className="flex items-center gap-4 sm:gap-6">
           {/* Wishlist Icon */}
-          <WishlistWidget 
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-              scrolled || !isHomepage || mobileMenuOpen
-                ? 'text-slate-600 hover:bg-slate-100' 
+          <WishlistWidget
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:bg-slate-100'
                 : 'text-white hover:bg-white/10'
-            }`}
+              }`}
             iconClassName="h-5 w-5"
             scrolled={scrolled || !isHomepage || mobileMenuOpen}
           />
 
           {/* Cart Icon */}
-          <CartWidget 
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-              scrolled || !isHomepage || mobileMenuOpen
-                ? 'text-slate-600 hover:bg-slate-100' 
+          <CartWidget
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:bg-slate-100'
                 : 'text-white hover:bg-white/10'
-            }`}
+              }`}
             iconClassName="h-5 w-5"
             scrolled={scrolled || !isHomepage || mobileMenuOpen}
           />
@@ -197,13 +189,12 @@ export default function Header() {
           </a>
 
           {/* Mobile Menu Button */}
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-              scrolled || !isHomepage || mobileMenuOpen
-                ? 'text-slate-600 hover:bg-slate-100' 
+            className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:bg-slate-100'
                 : 'text-white hover:bg-white/10'
-            }`}
+              }`}
             aria-label="Abrir menú de navegación"
           >
             {mobileMenuOpen ? (
@@ -216,90 +207,83 @@ export default function Header() {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      <div 
+      <div
         className={`
           lg:hidden absolute left-0 right-0 top-full w-full
           bg-white shadow-lg border-t border-slate-200
           transition-all duration-300 ease-in-out
-          ${mobileMenuOpen 
-            ? 'opacity-100 translate-y-0 pointer-events-auto' 
+          ${mobileMenuOpen
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 -translate-y-4 pointer-events-none'
           }
         `}
         style={{ maxHeight: mobileMenuOpen ? 'calc(100vh - 64px)' : '0' }}
       >
         <nav className="flex flex-col overflow-y-auto" style={{ maxHeight: 'calc(100vh - 64px)' }}>
-          <Link 
-            href="/" 
-            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname === '/' 
-                ? 'text-blue-600 bg-blue-50' 
+          <Link
+            href="/"
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             Inicio
           </Link>
-          <Link 
-            href="/productos" 
-            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname.startsWith('/productos')
-                ? 'text-blue-600 bg-blue-50' 
+          <Link
+            href="/productos"
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname.startsWith('/productos')
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             Tienda
           </Link>
           <Link
-            href="/cart" 
-            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname === '/cart'
-                ? 'text-blue-600 bg-blue-50' 
+            href="/cart"
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/cart'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             Carrito
           </Link>
-          <Link 
-            href="/wishlist" 
-            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname === '/wishlist'
-                ? 'text-blue-600 bg-blue-50' 
+          <Link
+            href="/wishlist"
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/wishlist'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             Lista de Deseos
           </Link>
           <Link
             href="/blog"
-            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname === '/blog' || pathname.startsWith('/guias')
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/blog' || pathname.startsWith('/guias')
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             Blog
           </Link>
           <Link
             href="/faq"
-            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname === '/faq'
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/faq'
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             Preguntas Frecuentes
           </Link>
           <Link
             href="/contacto"
-            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${
-              pathname === '/contacto'
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/contacto'
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             Contacto
           </Link>
-          
+
           <div className="p-6">
             <a
               href="https://wa.me/59892744725"
