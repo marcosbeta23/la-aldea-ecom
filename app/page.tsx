@@ -157,7 +157,7 @@ const localBusinessSchema = {
       {
         "@type": "Offer",
         itemOffered: {
-          "@type": "Product",
+          "@type": "Service",
           name: "Bombas de Agua",
           description: "Bombas sumergibles, de superficie y centrífugas"
         }
@@ -165,7 +165,7 @@ const localBusinessSchema = {
       {
         "@type": "Offer",
         itemOffered: {
-          "@type": "Product",
+          "@type": "Service",
           name: "Sistemas de Riego",
           description: "Riego por goteo, aspersión y automatización"
         }
@@ -173,7 +173,7 @@ const localBusinessSchema = {
       {
         "@type": "Offer",
         itemOffered: {
-          "@type": "Product",
+          "@type": "Service",
           name: "Droguería Industrial",
           description: "Productos de limpieza y químicos industriales DIU"
         }
@@ -181,7 +181,7 @@ const localBusinessSchema = {
       {
         "@type": "Offer",
         itemOffered: {
-          "@type": "Product",
+          "@type": "Service",
           name: "Filtros de Agua",
           description: "Filtros Gianni para agua potable"
         }
@@ -189,7 +189,7 @@ const localBusinessSchema = {
       {
         "@type": "Offer",
         itemOffered: {
-          "@type": "Product",
+          "@type": "Service",
           name: "Productos para Piscinas",
           description: "Bombas, filtros, cloro y mantenimiento"
         }
@@ -197,7 +197,7 @@ const localBusinessSchema = {
       {
         "@type": "Offer",
         itemOffered: {
-          "@type": "Product",
+          "@type": "Service",
           name: "Herramientas",
           description: "Herramientas manuales y eléctricas profesionales"
         }
@@ -205,7 +205,7 @@ const localBusinessSchema = {
       {
         "@type": "Offer",
         itemOffered: {
-          "@type": "Product",
+          "@type": "Service",
           name: "Energías Renovables",
           description: "Paneles solares e inversores para sistemas de bombeo"
         }
@@ -390,7 +390,7 @@ export default async function Home() {
       .eq('is_active', true)
       .order('display_order', { ascending: true })
   ]);
-  
+
   const featuredProducts = (productsRes.data || []) as Product[];
   const dbPartners = partnersRes.data;
 
@@ -489,13 +489,13 @@ export default async function Home() {
                     />
                     {/* Gradient overlay */}
                     <div className={`absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent`} />
-                    
+
                     {/* Icon badge */}
                     <div className={`absolute top-4 left-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${category.color} shadow-lg`}>
                       <category.icon className="h-6 w-6 text-white" />
                     </div>
                   </div>
-                  
+
                   {/* Content overlay at bottom */}
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="text-xl font-bold text-white">{category.title}</h3>
@@ -534,10 +534,10 @@ export default async function Home() {
                   Instalaciones y Proyectos a Medida
                 </h2>
                 <p className="mt-4 text-lg text-slate-600">
-                  Más que productos: ofrecemos soluciones completas. Si tienes una idea, problema 
+                  Más que productos: ofrecemos soluciones completas. Si tienes una idea, problema
                   o proyecto relacionado con agua, consultanos — seguramente podamos ayudarte.
                 </p>
-                
+
                 {/* Quick stats inline */}
                 <div className="mt-6 flex flex-wrap gap-6">
                   <div className="flex items-center gap-2">
@@ -569,7 +569,7 @@ export default async function Home() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Irrigation image */}
               <div className="relative">
                 <div className="aspect-[16/10] overflow-hidden rounded-3xl shadow-2xl">
@@ -655,11 +655,10 @@ export default async function Home() {
               {testimonials.map((testimonial, i) => (
                 <div
                   key={i}
-                  className={`rounded-3xl p-6 ${
-                    testimonial.featured 
-                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white' 
+                  className={`rounded-3xl p-6 ${testimonial.featured
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white'
                       : 'bg-slate-800 text-slate-100'
-                  }`}
+                    }`}
                 >
                   <Quote className={`h-8 w-8 ${testimonial.featured ? 'text-blue-200' : 'text-slate-600'}`} />
                   <p className={`mt-4 text-sm leading-relaxed ${testimonial.featured ? 'text-blue-50' : 'text-slate-300'}`}>
@@ -732,15 +731,15 @@ export default async function Home() {
                   Más de 25 años en el rubro
                 </h2>
                 <p className="mt-6 text-lg text-slate-600">
-                  En La Aldea, ubicados en Tala, departamento de Canelones, trabajamos para ofrecer 
+                  En La Aldea, ubicados en Tala, departamento de Canelones, trabajamos para ofrecer
                   soluciones confiables en sistemas de bombeo, riego y agua potable.
                 </p>
                 <p className="mt-4 text-slate-600">
-                  Fundada por Martín Betancor Peregalli, nuestra empresa combina décadas de 
-                  experiencia técnica con un compromiso inquebrantable con la calidad y el 
+                  Fundada por Martín Betancor Peregalli, nuestra empresa combina décadas de
+                  experiencia técnica con un compromiso inquebrantable con la calidad y el
                   servicio personalizado.
                 </p>
-                
+
                 <div className="mt-8 flex flex-wrap gap-4">
                   {features.map((feature, i) => (
                     <div key={i} className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2">
@@ -784,7 +783,7 @@ export default async function Home() {
                     Llamar: 4315 4393
                   </a>
                 </div>
-                
+
               </div>
             </div>
           </div>

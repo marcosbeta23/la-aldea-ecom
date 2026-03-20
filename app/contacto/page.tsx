@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   alternates: { canonical: `${siteUrl}/contacto` },
 };
 
-// app/contacto/page.tsx — replace existing contactSchema
+// app/contacto/page.tsx 
 const contactSchema = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
@@ -40,6 +40,15 @@ const contactSchema = {
     "@type": "HardwareStore",
     "@id": "https://laaldeatala.com.uy/#business",
     name: "La Aldea",
+    alternateName: "La Aldea Tala",
+    priceRange: "$$",
+    image: "https://laaldeatala.com.uy/assets/images/og-image.webp",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://laaldeatala.com.uy/assets/images/logo.webp",
+      width: 260,
+      height: 80,
+    },
     telephone: "+59892744725",
     email: "la.aldeamartinbetancor@gmail.com",
     url: "https://laaldeatala.com.uy",
