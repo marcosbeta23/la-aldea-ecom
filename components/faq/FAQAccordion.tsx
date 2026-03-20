@@ -2,10 +2,15 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import Link from 'next/link';
 
-interface FAQ {
+export interface FAQ {
   question: string;
   answer: string;
+  relatedGuide?: {
+    slug: string;
+    label: string;
+  };
 }
 
 interface FAQAccordionProps {
@@ -42,7 +47,12 @@ export default function FAQAccordion({ faqs }: FAQAccordionProps) {
             }`}
           >
             <div className="px-6 pb-4 text-slate-600">
-              {faq.answer}
+              <p>{faq.answer}</p>
+              {faq.relatedGuide && (
+                <Link href={`/guias/${faq.relatedGuide.slug}`} className="inline-block mt-2 text-blue-600 hover:text-blue-700 hover:underline font-medium">
+                  {faq.relatedGuide.label} →
+                </Link>
+              )}
             </div>
           </div>
         </div>

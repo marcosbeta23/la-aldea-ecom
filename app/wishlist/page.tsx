@@ -9,6 +9,10 @@ import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 import { Product } from '@/types/database';
 
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 export default function WishlistPage() {
   const { items: wishlistIds, removeItem } = useWishlistStore();
   const { addItem: addToCart } = useCartStore();
@@ -71,7 +75,7 @@ export default function WishlistPage() {
           <div className="container mx-auto px-4 py-8">
             <div className="animate-pulse">
               <div className="h-8 bg-slate-200 rounded w-48 mb-8" />
-              <div className="h-64 bg-slate-200 rounded-2xl" />
+              <div className="aspect-[4/3] w-full max-h-[500px] bg-slate-200 rounded-2xl" />
             </div>
           </div>
         </main>

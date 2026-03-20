@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
+import { Suspense, cache } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
 import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
@@ -30,12 +30,35 @@ interface ProductsPageProps {
 }
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
+const PER_PAGE = 24;
 
 export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
   const params = await searchParams;
   const cat = params.categoria;
   const sub = params.sub;
   const catConfig = cat ? CATEGORY_HIERARCHY.find(c => c.value === cat) : null;
+
+  // Obtener conteo real para totalPages
+  const { total, page: currentPage } = await cachedGetProducts(params);
+  const totalPages = Math.ceil(total / PER_PAGE);
+
+  // Determinar si hay filtros de refinamiento que deben ser noindex
+  const hasRefinementFilters = !!(
+    params.marca ||
+    params.stock ||
+    params.orden ||
+    params.precio_min ||
+    params.precio_max ||
+    params.q ||
+    (params.page && params.page !== '1')
+  );
+
+  // Canonical SIEMPRE apunta solo a categoria + sub (sin filtros de refinamiento)
+  const canonicalParams = new URLSearchParams();
+  if (cat) canonicalParams.set('categoria', cat);
+  if (sub) canonicalParams.set('sub', sub);
+  const canonicalQs = canonicalParams.toString();
+  const canonical = `${siteUrl}/productos${canonicalQs ? `?${canonicalQs}` : ''}`;
 
   const title = cat
     ? sub ? `${sub} — ${cat}` : cat
@@ -46,13 +69,6 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
       ? `${catConfig.description}. Compra ${cat.toLowerCase()}${sub ? ` ${sub.toLowerCase()}` : ''} en La Aldea, Tala. Envíos a todo Uruguay.`
       : `Compra ${cat.toLowerCase()} en La Aldea, Tala. Envíos a todo Uruguay.`
     : 'Catálogo completo de bombas de agua, sistemas de riego, insumos agrícolas, herramientas y más. Envíos a todo Uruguay.';
-
-  // Canonical — keep category/sub, strip pagination/sort/stock params
-  const canonicalParams = new URLSearchParams();
-  if (cat) canonicalParams.set('categoria', cat);
-  if (sub) canonicalParams.set('sub', sub);
-  const canonicalQs = canonicalParams.toString();
-  const canonical = `${siteUrl}/productos${canonicalQs ? `?${canonicalQs}` : ''}`;
 
   return {
     title,
@@ -65,7 +81,26 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
     },
     alternates: {
       canonical,
+      // Solo cuando hay página anterior o siguiente
+      ...(currentPage > 1 && {
+        prev: `${siteUrl}/productos?${new URLSearchParams({
+          ...(cat && { categoria: cat }),
+          ...(sub && { sub }),
+          ...(currentPage - 1 > 1 && { page: String(currentPage - 1) }),
+        }).toString()}`,
+      }),
+      ...(currentPage < totalPages && {
+        next: `${siteUrl}/productos?${new URLSearchParams({
+          ...(cat && { categoria: cat }),
+          ...(sub && { sub }),
+          page: String(currentPage + 1),
+        }).toString()}`,
+      }),
     },
+    // Si hay filtros de refinamiento, noindex pero follow para pasar equity
+    robots: hasRefinementFilters
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
   };
 }
 
@@ -85,7 +120,7 @@ async function resolveQuery(query: string): Promise<string> {
   return data?.maps_to ?? query;
 }
 
-async function getProducts(searchParams: {
+const cachedGetProducts = cache(async function getProducts(searchParams: {
   categoria?: string;
   sub?: string;
   marca?: string;
@@ -205,9 +240,8 @@ async function getProducts(searchParams: {
 
   // Pagination
   const page = parseInt(searchParams.page || '1', 10);
-  const perPage = 24;
-  const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
+  const from = (page - 1) * PER_PAGE;
+  const to = from + PER_PAGE - 1;
 
   query = query.range(from, to);
 
@@ -215,16 +249,16 @@ async function getProducts(searchParams: {
 
   if (error) {
     console.error('Error fetching products:', error);
-    return { products: [], total: 0, page, perPage };
+    return { products: [], total: 0, page, perPage: PER_PAGE };
   }
 
   return {
     products: data || [],
     total: count || 0,
     page,
-    perPage,
+    perPage: PER_PAGE,
   };
-}
+});
 
 /**
  * Strip diacritics/accents from a string.
@@ -381,7 +415,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   // If user is just landing on /productos with no filters, show category browsing
   // Otherwise show filtered product grid
   const [productResult, filterResult] = await Promise.all([
-    browsing ? getProducts(params) : getProducts({ ...params, orden: 'popular' }),
+    browsing ? cachedGetProducts(params) : cachedGetProducts({ ...params, orden: 'popular' }),
     getFilterOptions(params.categoria),
   ]);
 
@@ -410,7 +444,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 <p className="text-blue-100 text-sm mt-1 max-w-xl">
                   {params.categoria
                     ? CATEGORY_HIERARCHY.find(c => c.value === params.categoria)?.description ||
-                      `Todos los productos de ${params.categoria}`
+                    `Todos los productos de ${params.categoria}`
                     : 'Bombas de agua, riego, insumos agrícolas, herramientas y más. Envíos a todo Uruguay.'}
                 </p>
               </div>
@@ -435,11 +469,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               <Link
                 href="/productos"
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  !params.categoria
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!params.categoria
                     ? 'bg-white text-blue-700'
                     : 'bg-white/15 text-white hover:bg-white/25'
-                }`}
+                  }`}
               >
                 Todos
               </Link>
@@ -447,11 +480,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 <Link
                   key={cat.value}
                   href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    params.categoria === cat.value
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${params.categoria === cat.value
                       ? 'bg-white text-blue-700'
                       : 'bg-white/15 text-white hover:bg-white/25'
-                  }`}
+                    }`}
                 >
                   {cat.value} ({cat.count})
                 </Link>
@@ -537,9 +569,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     {/* Page 1 */}
                     <Link
                       href={`/productos?${new URLSearchParams({ ...params, page: '1' } as Record<string, string>).toString()}`}
-                      className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-                        page === 1 ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-                      }`}
+                      className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${page === 1 ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                        }`}
                     >
                       1
                     </Link>
@@ -554,9 +585,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         <Link
                           key={p}
                           href={`/productos?${new URLSearchParams({ ...params, page: String(p) } as Record<string, string>).toString()}`}
-                          className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-                            p === page ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-                          }`}
+                          className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${p === page ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                            }`}
                         >
                           {p}
                         </Link>
@@ -569,9 +599,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     {totalPages > 1 && (
                       <Link
                         href={`/productos?${new URLSearchParams({ ...params, page: String(totalPages) } as Record<string, string>).toString()}`}
-                        className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-                          page === totalPages ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-                        }`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${page === totalPages ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                          }`}
                       >
                         {totalPages}
                       </Link>

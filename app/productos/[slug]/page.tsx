@@ -177,6 +177,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     description: product.description,
     image: product.images,
     sku: product.sku,
+    mpn: product.sku,
     category: product.category?.[0] || undefined,
     brand: {
       "@type": "Brand",
@@ -247,6 +248,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
           postalCode: "91800",
           addressCountry: "UY",
         },
+        openingHoursSpecification: [
+          {
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            opens: "08:00",
+            closes: "18:00"
+          },
+          {
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: "Saturday",
+            opens: "08:30",
+            closes: "12:00"
+          }
+        ]
       },
     },
     ...(product.original_price_numeric && product.discount_percentage && {

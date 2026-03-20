@@ -152,10 +152,20 @@ export default async function BlogPage() {
   // Pick the 3 most recently modified articles for the featured section
   const featured = articles.slice(0, 3);
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Blog" },
+    ],
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPageSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleListSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <Header />
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">

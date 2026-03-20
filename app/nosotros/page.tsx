@@ -79,6 +79,10 @@ const organizationSchema = {
     '@type': 'Person',
     name: 'Martin Betancor Peregalli',
     jobTitle: 'Fundador y Director Tecnico',
+    image: `${siteUrl}/assets/images/martin-betancor.webp`,
+    sameAs: [
+      `${siteUrl}/nosotros`,
+    ],
     worksFor: { '@type': 'Organization', name: 'La Aldea' },
   },
   address: {

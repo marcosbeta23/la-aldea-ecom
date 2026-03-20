@@ -21,12 +21,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${siteUrl}/faq`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
       url: `${siteUrl}/contacto`,
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -36,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${siteUrl}/nosotros`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.65,
     },
     {
       url: `${siteUrl}/blog`,
@@ -44,12 +38,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: `${siteUrl}/terminos`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/privacidad`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
+
+  // Reglas de exclusión lógicas anotadas
+  const EXCLUDED_PATHS = [
+    '/gracias',
+    '/procesando',
+    '/pendiente',
+    '/error',
+    '/cart',
+    '/checkout',
+    '/wishlist',
+    '/pedido',
+  ];
+
+  const categoryLastModified = new Date();
+  const day = categoryLastModified.getDay();
+  const diff = categoryLastModified.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+  categoryLastModified.setDate(diff);
 
   // Category landing pages — one per main category
   const categoryPages: MetadataRoute.Sitemap = CATEGORY_HIERARCHY.map((cat) => ({
     url: `${siteUrl}/productos?categoria=${encodeURIComponent(cat.value)}`,
-    lastModified: new Date(),
+    lastModified: categoryLastModified,
     changeFrequency: "weekly" as const,
     priority: 0.85,
   }));
@@ -59,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${siteUrl}/guias/${article.slug}`,
     lastModified: article.dateModified ? new Date(article.dateModified) : new Date(),
     changeFrequency: "monthly" as const,
-    priority: 0.7,
+    priority: 0.75,
   }));
 
   // DB-managed guide pages from Supabase
@@ -78,7 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           url: `${siteUrl}/guias/${g.slug}`,
           lastModified: g.date_modified ? new Date(g.date_modified) : new Date(),
           changeFrequency: "monthly" as const,
-          priority: 0.7,
+          priority: 0.75,
         }));
     }
   } catch {
@@ -96,7 +119,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order("updated_at", { ascending: false }) as { data: any[] | null; error: any };
 
     if (!error && products && Array.isArray(products)) {
-      productPages = products.map((product: { slug: string; updated_at: string | null }) => ({
+      productPages = products
+        .filter((product: { slug: string; updated_at: string | null }) => product.slug && product.slug.length > 0)
+        .map((product: { slug: string; updated_at: string | null }) => ({
         url: `${siteUrl}/productos/${product.slug}`,
         lastModified: product.updated_at
           ? new Date(product.updated_at)

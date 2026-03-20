@@ -1,6 +1,3 @@
-'use client';
-
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Search, Phone, ChevronDown } from "lucide-react";
 import HeroSection from "@/components/HeroSection";

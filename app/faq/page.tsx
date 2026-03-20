@@ -14,12 +14,25 @@ export const metadata: Metadata = {
     type: 'website',
   },
   alternates: {
-    canonical: 'https://laaldeatala.com.uy/faq',
+    canonical: 'https://laaldeatala.com.uy/blog',
+  },
+  robots: {
+    index: false,
+    follow: true,
   },
 };
 
+export interface FAQItem {
+  question: string;
+  answer: string;
+  relatedGuide?: {
+    slug: string;
+    label: string;
+  };
+}
+
 // FAQ data organized by category — answers include inline links to articles
-const faqData = {
+const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> = {
   instalaciones: {
     title: 'Instalaciones Hidraulicas',
     icon: '🔧',
@@ -75,10 +88,18 @@ const faqData = {
       {
         question: '¿Que diferencia hay entre una bomba sumergible y una bomba de superficie?',
         answer: 'Las bombas sumergibles van dentro del agua (pozos, tanques) y son mas eficientes para grandes profundidades. Las de superficie van fuera del agua y son ideales para cisternas, rios o arroyos poco profundos. Lee nuestra guia completa de tipos de bombas para una comparacion detallada.',
+        relatedGuide: {
+          slug: 'como-elegir-bomba-agua',
+          label: 'Ver guía completa de selección de bombas'
+        }
       },
       {
         question: '¿Como elegir la bomba de agua adecuada?',
         answer: 'Debes considerar: profundidad del agua, caudal necesario (litros/hora), presion requerida, tipo de uso (domestico/agricola) y alimentacion electrica disponible. Consulta nuestra guia de seleccion de bombas para un analisis tecnico completo.',
+        relatedGuide: {
+          slug: 'como-elegir-bomba-agua',
+          label: 'Guía de selección de bombas'
+        }
       },
       {
         question: '¿Ofrecen servicio tecnico para bombas?',
@@ -213,6 +234,10 @@ const faqData = {
       {
         question: '¿Cuanto cloro necesita una piscina de 50.000 litros?',
         answer: 'Aproximadamente 250-500g de cloro granulado por aplicacion para alcanzar 1-3 ppm. La dosis exacta depende del pH actual y la temperatura del agua. Consulta nuestra guia completa de mantenimiento de piscinas.',
+        relatedGuide: {
+          slug: 'mantenimiento-piscinas',
+          label: 'Guía completa de mantenimiento'
+        }
       },
       {
         question: '¿Cada cuanto hay que tratar el agua de la piscina?',
@@ -260,6 +285,7 @@ const faqData = {
 
 // Flatten FAQs for JSON-LD schema
 const allFaqs = Object.values(faqData).flatMap((category) => category.faqs);
+const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
 export default function FAQPage() {
   // JSON-LD Schema for FAQPage
@@ -276,11 +302,24 @@ export default function FAQPage() {
     })),
   };
 
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: 'Preguntas Frecuentes' },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
       <Header />

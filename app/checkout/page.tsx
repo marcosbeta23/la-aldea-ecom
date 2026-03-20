@@ -24,6 +24,10 @@ import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONF
 import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
 import { Turnstile } from '@marsidev/react-turnstile';
 
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 interface CouponData {
   code: string;
   discount_type: 'percentage' | 'fixed';
@@ -173,7 +177,7 @@ export default function CheckoutPage() {
       .then(data => {
         if (data.rate) setExchangeRate(data.rate);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [mounted]);
 
   // Track checkout attempt for abandoned cart recovery
@@ -214,7 +218,7 @@ export default function CheckoutPage() {
           subtotal: getSubtotal(),
           currency: getCartCurrency(),
         }),
-      }).catch(() => {}); // Non-blocking
+      }).catch(() => { }); // Non-blocking
     }
   }, [mounted, watchedEmail, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -282,7 +286,7 @@ export default function CheckoutPage() {
 
   // Apply coupon
   const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;    
+    if (!couponCode.trim()) return;
 
     setCouponLoading(true);
     setCouponError('');
@@ -517,9 +521,8 @@ export default function CheckoutPage() {
                       <input
                         type="text"
                         {...register('name')}
-                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                          errors.name ? 'border-red-500' : 'border-slate-300'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${errors.name ? 'border-red-500' : 'border-slate-300'
+                          }`}
                         placeholder="Juan Pérez"
                       />
                       {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
@@ -533,9 +536,8 @@ export default function CheckoutPage() {
                       <input
                         type="email"
                         {...register('email')}
-                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                          errors.email ? 'border-red-500' : 'border-slate-300'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${errors.email ? 'border-red-500' : 'border-slate-300'
+                          }`}
                         placeholder="juan@email.com"
                       />
                       {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
@@ -549,9 +551,8 @@ export default function CheckoutPage() {
                       <input
                         type="tel"
                         {...register('phone')}
-                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                          errors.phone ? 'border-red-500' : 'border-slate-300'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${errors.phone ? 'border-red-500' : 'border-slate-300'
+                          }`}
                         placeholder="099 123 456"
                       />
                       {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
@@ -564,9 +565,8 @@ export default function CheckoutPage() {
                       </label>
                       <select
                         {...register('department')}
-                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 ${
-                          errors.department ? 'border-red-500' : 'border-slate-300'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 ${errors.department ? 'border-red-500' : 'border-slate-300'
+                          }`}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Montevideo">Montevideo</option>
@@ -607,11 +607,10 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setValue('shippingMethod', 'pickup')}
-                        className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          shippingMethod === 'pickup'
+                        className={`p-4 rounded-xl border-2 text-left transition-colors ${shippingMethod === 'pickup'
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-slate-200 hover:border-slate-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-slate-900">Retiro en local</span>
@@ -628,11 +627,10 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setValue('shippingMethod', 'delivery')}
-                        className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          shippingMethod === 'delivery'
+                        className={`p-4 rounded-xl border-2 text-left transition-colors ${shippingMethod === 'delivery'
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-slate-200 hover:border-slate-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-slate-900">{shippingOptions.deliveryLabel}</span>
@@ -655,11 +653,10 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setValue('shippingMethod', 'freight')}
-                        className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                          shippingMethod === 'freight'
+                        className={`p-4 rounded-xl border-2 text-left transition-colors ${shippingMethod === 'freight'
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-slate-200 hover:border-slate-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-slate-900">Coordinar flete/envío</span>
@@ -674,15 +671,13 @@ export default function CheckoutPage() {
 
                   {/* Freight consultation card — always available (except pickup_only) */}
                   {cartShippingType !== 'pickup_only' && (
-                    <div className={`mt-4 p-4 border rounded-xl ${
-                      freightConfirmed
+                    <div className={`mt-4 p-4 border rounded-xl ${freightConfirmed
                         ? 'bg-green-50 border-green-200'
                         : 'bg-slate-50 border-slate-200'
-                    }`}>
+                      }`}>
                       <div className="flex items-start gap-3">
-                        <Truck className={`h-5 w-5 mt-0.5 shrink-0 ${
-                          freightConfirmed ? 'text-green-600' : 'text-slate-500'
-                        }`} />
+                        <Truck className={`h-5 w-5 mt-0.5 shrink-0 ${freightConfirmed ? 'text-green-600' : 'text-slate-500'
+                          }`} />
                         <div className="flex-1">
                           {!freightConfirmed ? (
                             <>
@@ -721,15 +716,13 @@ export default function CheckoutPage() {
                                   setValue('shippingMethod', 'pickup');
                                 }
                               }}
-                              className={`h-4 w-4 rounded border-slate-300 focus:ring-2 ${
-                                freightConfirmed
+                              className={`h-4 w-4 rounded border-slate-300 focus:ring-2 ${freightConfirmed
                                   ? 'text-green-600 focus:ring-green-500'
                                   : 'text-slate-400 focus:ring-slate-400'
-                              }`}
+                                }`}
                             />
-                            <span className={`text-sm font-medium ${
-                              freightConfirmed ? 'text-green-700' : 'text-slate-600'
-                            }`}>
+                            <span className={`text-sm font-medium ${freightConfirmed ? 'text-green-700' : 'text-slate-600'
+                              }`}>
                               Ya coordiné el envío/flete por WhatsApp
                             </span>
                           </label>
@@ -790,9 +783,8 @@ export default function CheckoutPage() {
                           <input
                             type="text"
                             {...register('address')}
-                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                              errors.address ? 'border-red-500' : 'border-slate-300'
-                            }`}
+                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${errors.address ? 'border-red-500' : 'border-slate-300'
+                              }`}
                             placeholder="Av. Principal 1234"
                           />
                           {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
@@ -804,9 +796,8 @@ export default function CheckoutPage() {
                           <input
                             type="text"
                             {...register('city')}
-                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                              errors.city ? 'border-red-500' : 'border-slate-300'
-                            }`}
+                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${errors.city ? 'border-red-500' : 'border-slate-300'
+                              }`}
                             placeholder="Montevideo"
                           />
                           {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>}
@@ -840,11 +831,10 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => { setValue('invoiceType', 'consumer_final'); setValue('invoiceTaxId', ''); setValue('invoiceBusinessName', ''); }}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        invoiceType === 'consumer_final'
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${invoiceType === 'consumer_final'
                           ? 'border-blue-600 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <Receipt className={`h-5 w-5 ${invoiceType === 'consumer_final' ? 'text-blue-600' : 'text-slate-400'}`} />
@@ -861,11 +851,10 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setValue('invoiceType', 'invoice_rut')}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        invoiceType === 'invoice_rut'
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${invoiceType === 'invoice_rut'
                           ? 'border-blue-600 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <FileText className={`h-5 w-5 ${invoiceType === 'invoice_rut' ? 'text-blue-600' : 'text-slate-400'}`} />
@@ -905,9 +894,8 @@ export default function CheckoutPage() {
                                 setValue('invoiceTaxId', formatted);
                               },
                             })}
-                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                              errors.invoiceTaxId ? 'border-red-500' : 'border-slate-300'
-                            }`}
+                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${errors.invoiceTaxId ? 'border-red-500' : 'border-slate-300'
+                              }`}
                             placeholder="21 123456 0001 19"
                           />
                           {errors.invoiceTaxId && <p className="text-red-500 text-sm mt-1">{errors.invoiceTaxId.message}</p>}
@@ -919,9 +907,8 @@ export default function CheckoutPage() {
                           <input
                             type="text"
                             {...register('invoiceBusinessName')}
-                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${
-                              errors.invoiceBusinessName ? 'border-red-500' : 'border-slate-300'
-                            }`}
+                            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400 ${errors.invoiceBusinessName ? 'border-red-500' : 'border-slate-300'
+                              }`}
                             placeholder="Nombre de la empresa o persona"
                           />
                           {errors.invoiceBusinessName && <p className="text-red-500 text-sm mt-1">{errors.invoiceBusinessName.message}</p>}
@@ -937,7 +924,7 @@ export default function CheckoutPage() {
                       <div className="text-sm">
                         <p className="font-medium text-blue-800 mb-1">Sobre la facturación</p>
                         <p className="text-blue-700">
-                          La factura se genera una vez confirmado el pago y será enviada a tu email. 
+                          La factura se genera una vez confirmado el pago y será enviada a tu email.
                           Si necesitás factura con RUT, seleccioná esa opción y completá los datos.
                         </p>
                       </div>
@@ -956,11 +943,10 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setValue('paymentMethod', 'mercadopago')}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        paymentMethod === 'mercadopago'
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${paymentMethod === 'mercadopago'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <CreditCard className={`h-5 w-5 ${paymentMethod === 'mercadopago' ? 'text-blue-600' : 'text-slate-400'}`} />
@@ -977,11 +963,10 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setValue('paymentMethod', 'transfer')}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                        paymentMethod === 'transfer'
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${paymentMethod === 'transfer'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <Building2 className={`h-5 w-5 ${paymentMethod === 'transfer' ? 'text-blue-600' : 'text-slate-400'}`} />
@@ -1033,7 +1018,7 @@ export default function CheckoutPage() {
                           </p>
                           <p className="mt-2 text-amber-800">
                             <strong>Importante:</strong> Tu pedido quedará en estado pendiente hasta que confirmemos el pago.
-                            Enviá el comprobante por WhatsApp al <span className="font-medium">092 744 725</span>.
+                            Enviá el comprobante por WhatsApp al <span className="font-medium">+598 92 744 725</span>.
                           </p>
                         </div>
                       </div>
@@ -1168,22 +1153,20 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setValue('paymentCurrency', 'UYU')}
-                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
-                          paymentCurrency === 'UYU'
+                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${paymentCurrency === 'UYU'
                             ? 'border-blue-600 bg-blue-50 text-blue-700'
                             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                        }`}
+                          }`}
                       >
                         $ UYU
                       </button>
                       <button
                         type="button"
                         onClick={() => setValue('paymentCurrency', 'USD')}
-                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${
-                          paymentCurrency === 'USD'
+                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${paymentCurrency === 'USD'
                             ? 'border-blue-600 bg-blue-50 text-blue-700'
                             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                        }`}
+                          }`}
                       >
                         US$ USD
                       </button>
@@ -1259,7 +1242,7 @@ export default function CheckoutPage() {
                   <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
                     <ShieldCheck className="h-4 w-4 text-green-500" />
                     {paymentMethod === 'transfer'
-                      ? 'Pedido seguro • Confirmación por WhatsApp' 
+                      ? 'Pedido seguro • Confirmación por WhatsApp'
                       : 'Pago seguro con MercadoPago'}
                   </div>
                 </div>

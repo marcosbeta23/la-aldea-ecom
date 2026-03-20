@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { autoLinkBlogContent } from '@/lib/auto-link';
 import {
   ArrowLeft,
   Save,
@@ -639,7 +640,12 @@ export default function GuideEditor({ guideId }: { guideId: string | null }) {
                     {previewHtml === index ? (
                       <div
                         className="w-full min-h-[200px] px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: section.content }}
+                        dangerouslySetInnerHTML={{
+                          __html: autoLinkBlogContent(section.content, form.slug || '', {
+                            maxLinks: 5,
+                            linkClass: 'text-blue-600 underline bg-yellow-50',
+                          }),
+                        }}
                       />
                     ) : (
                       <textarea
@@ -672,6 +678,16 @@ export default function GuideEditor({ guideId }: { guideId: string | null }) {
                     <p className="mt-2">
                       Para enlaces internos usa: <code>&lt;a href=&quot;/productos?categoria=Riego&quot;&gt;Ver riego&lt;/a&gt;</code>
                     </p>
+                  </div>
+                  
+                  <div className="text-xs text-slate-400 mt-1">
+                    {(() => {
+                      const linked = autoLinkBlogContent(section.content, form.slug || '', { maxLinks: 10 });
+                      const count = (linked.match(/<a href/g) || []).length;
+                      return count > 0
+                        ? `${count} auto-link${count > 1 ? 's' : ''} detectado${count > 1 ? 's' : ''}`
+                        : 'Sin auto-links detectados en este texto';
+                    })()}
                   </div>
                 </div>
               )}

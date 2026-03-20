@@ -6,6 +6,10 @@ import Link from 'next/link';
 import { Download, CheckCircle, Package, Mail, Home, ShoppingBag, AlertTriangle } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 interface OrderItem {
   id: string;
   product_name: string;
@@ -75,7 +79,7 @@ function GraciasContent() {
 
     const cur = order.currency || 'UYU';
     const prefix = cur === 'USD' ? 'US$' : '$';
-    
+
     // Create printable receipt HTML
     const receiptHTML = `
       <!DOCTYPE html>
@@ -104,10 +108,10 @@ function GraciasContent() {
           <div class="logo">La Aldea</div>
           <div style="color: #666; margin-top: 5px;">Comprobante de Compra</div>
           <div class="order-number">Pedido #${order.order_number}</div>
-          <div style="color: #666; font-size: 12px;">${new Date(order.created_at).toLocaleDateString('es-UY', { 
-            dateStyle: 'long',
-            timeZone: 'America/Montevideo'
-          })}</div>
+          <div style="color: #666; font-size: 12px;">${new Date(order.created_at).toLocaleDateString('es-UY', {
+      dateStyle: 'long',
+      timeZone: 'America/Montevideo'
+    })}</div>
         </div>
 
         <div class="section">
@@ -208,11 +212,11 @@ function GraciasContent() {
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          
+
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             ¡Gracias por tu compra!
           </h1>
-          
+
           <p className="text-gray-600 mb-4">
             Tu pago fue procesado exitosamente
           </p>
@@ -234,7 +238,7 @@ function GraciasContent() {
                 <Package className="w-5 h-5" />
                 Resumen del Pedido
               </h2>
-              
+
               <div className="space-y-3">
                 {order.order_items.map((item) => (
                   <div key={item.id} className="flex justify-between items-start">
@@ -297,7 +301,7 @@ function GraciasContent() {
               <Download className="w-5 h-5" />
               Descargar Comprobante
             </button>
-            
+
             <Link
               href="/"
               className="flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
@@ -306,7 +310,7 @@ function GraciasContent() {
               Volver al Inicio
             </Link>
           </div>
-          
+
           <div className="mt-4 text-center">
             <Link
               href="/productos"

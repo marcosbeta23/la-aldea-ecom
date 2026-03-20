@@ -4,6 +4,10 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 function ErrorContent() {
   const searchParams = useSearchParams();
   const message = searchParams.get('message') || 'Hubo un problema al procesar tu pago';
@@ -26,21 +30,21 @@ function ErrorContent() {
             />
           </svg>
         </div>
-        
+
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           Pago No Completado
         </h1>
-        
+
         <p className="text-gray-600 mb-6">
           {message}
         </p>
-        
+
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-yellow-800">
             No se realizó ningún cargo. Tu carrito sigue activo y puedes intentar nuevamente.
           </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
             href="/checkout"
@@ -48,7 +52,7 @@ function ErrorContent() {
           >
             Intentar de nuevo
           </Link>
-          
+
           <Link
             href="/cart"
             className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"

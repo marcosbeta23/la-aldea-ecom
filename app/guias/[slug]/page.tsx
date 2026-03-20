@@ -8,8 +8,9 @@ import RelatedLinks from '@/components/faq/RelatedLinks';
 import { getArticleBySlug, getAllSlugs } from '@/lib/faq-articles';
 import type { FaqArticle } from '@/lib/faq-articles';
 import { supabaseAdmin } from '@/lib/supabase';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { FAQ_BY_GUIDE } from '@/lib/faq-by-guide';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -154,6 +155,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
 
   // Resolve related articles from DB for the sidebar
   const relatedArticles = await resolveArticlesBySlugs(article.relatedArticles);
+  const relatedFaqs = FAQ_BY_GUIDE[slug] || [];
 
   // JSON-LD TechArticle schema
   const jsonLd = {
@@ -249,17 +251,30 @@ const howToJsonLd = stepsSection ? {
   name: article.title,
   description: article.description,
   image: `${siteUrl}/assets/images/og-image.webp`,
-  // Parse steps from content — handle both <li> and numbered text
-  step: stepsSection.content
-    .split(/<li[^>]*>|<\/li>/)
-    .map(s => s.replace(/<[^>]+>/g, "").trim())
-    .filter(s => s.length > 10) // filter empty splits
+  // Parse steps from content — handle both <li> and numbered text strictly
+  step: (stepsSection.content.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [])
+    .map(li => li.replace(/<[^>]*>/g, '').trim())
+    .filter(text => text.length > 5)
     .map((text, i) => ({
       "@type": "HowToStep",
       position: i + 1,
-      name: text.split(".")[0].trim().slice(0, 60), // first sentence as name
+      name: text.split(".")[0].trim().slice(0, 60),
       text: text,
     })),
+} : null;
+
+// FAQPage JSON-LD
+const faqJsonLd = relatedFaqs.length > 0 ? {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: relatedFaqs.map(faq => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
 } : null;
 
   return (
@@ -276,6 +291,12 @@ const howToJsonLd = stepsSection ? {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+        />
+      )}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
 
@@ -302,7 +323,28 @@ const howToJsonLd = stepsSection ? {
             <h1 className="text-2xl lg:text-3xl font-bold max-w-3xl">
               {article.title}
             </h1>
-            <p className="mt-3 text-blue-100 max-w-2xl text-sm lg:text-base">
+            
+            <div className="mt-6 flex items-center gap-3 border-b border-blue-500/30 pb-4">
+              <div className="h-10 w-10 overflow-hidden rounded-full bg-blue-100 flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/images/martin-betancor.webp"
+                  alt="Martín Betancor Peregalli"
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    // Fallback to logo if author image missing
+                    (e.target as HTMLImageElement).src = "/logo.svg";
+                    (e.target as HTMLImageElement).className = "h-full w-full object-contain p-2";
+                  }}
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">Martín Betancor Peregalli</p>
+                <p className="text-xs text-blue-200">Director Técnico — La Aldea</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-blue-100 max-w-2xl text-sm lg:text-base">
               {article.description}
             </p>
           </div>
@@ -314,8 +356,33 @@ const howToJsonLd = stepsSection ? {
             {/* Article body */}
             <article className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 overflow-hidden">
               {article.sections.map((section, i) => (
-                <ArticleSectionBlock key={i} section={section} index={i} />
+                <ArticleSectionBlock key={i} section={section} index={i} currentSlug={slug} />
               ))}
+
+              {/* FAQs relacionadas al final del artículo */}
+              {relatedFaqs.length > 0 && (
+                <section className="mt-10 pt-8 border-t border-slate-200">
+                  <h2 className="text-xl font-bold text-slate-900 mb-4">
+                    Preguntas frecuentes
+                  </h2>
+                  <div className="space-y-2">
+                    {relatedFaqs.map((faq, i) => (
+                      <details
+                        key={i}
+                        className="group border border-slate-200 rounded-lg overflow-hidden"
+                      >
+                        <summary className="flex items-center justify-between p-4 cursor-pointer font-medium text-slate-900 list-none hover:bg-slate-50 transition-colors">
+                          {faq.question}
+                          <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform shrink-0 ml-2" />
+                        </summary>
+                        <div className="px-4 pb-4 text-sm text-slate-600 leading-relaxed">
+                          <p>{faq.answer}</p>
+                        </div>
+                      </details>
+                    ))}
+                  </div>
+                </section>
+              )}
 
               {/* Back to guides */}
               <div className="mt-10 pt-6 border-t border-slate-200">
