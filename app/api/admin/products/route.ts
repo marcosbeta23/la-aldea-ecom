@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
+import { inngest } from '@/lib/inngest';
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -164,6 +165,12 @@ export async function POST(request: NextRequest) {
     // Bust ISR cache
     revalidatePath('/productos');
     revalidatePath('/');
+
+    // Fire embedding generation (fire-and-forget)
+    inngest.send({
+      name: 'product/embedding.needed',
+      data: { productId: product.id },
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {

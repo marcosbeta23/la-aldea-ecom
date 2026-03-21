@@ -4,6 +4,7 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
 import { alertOutOfStock, alertLowStock } from '@/lib/telegram';
+import { inngest } from '@/lib/inngest';
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -148,6 +149,12 @@ export async function PUT(
     revalidatePath(`/productos/${product.slug}`);
     revalidatePath('/productos');
     revalidatePath('/');
+
+    // Fire embedding generation (fire-and-forget)
+    inngest.send({
+      name: 'product/embedding.needed',
+      data: { productId: id },
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {

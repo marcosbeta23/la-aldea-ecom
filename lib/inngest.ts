@@ -65,6 +65,25 @@ type Events = {
       currency: string;
     };
   };
+
+  // Fired from product create/update routes to generate embeddings
+  'product/embedding.needed': {
+    data: {
+      productId: string;
+    };
+  };
+
+  // Fired from /api/orders when paymentMethod === 'transfer'
+  'order/transfer.created': {
+    data: {
+      orderId: string;
+      orderNumber: string;
+      customerEmail: string | null;
+      customerName: string;
+      total: number;
+      currency: string;
+    };
+  };
 };
 
 // =====================================================

@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Tag, Star,
   TrendingUp, FileText, Search, Boxes, Users, Building2, BookOpen,
 } from 'lucide-react';
+import { AssistantChat } from '@/components/admin/AssistantChat';
 
 // Nav items live here (client component) — icons are forwardRef components
 // and cannot be passed as props from a Server Component.
@@ -113,6 +114,13 @@ export default function AdminSidebarClient({
             );
           })}
         </nav>
+
+        {/* AI Assistant — owner only */}
+        {role === 'owner' && (
+          <div className="border-t border-slate-700 mt-auto p-3 shrink-0">
+            <AssistantChat />
+          </div>
+        )}
       </aside>
 
       {/* Main Content Area */}

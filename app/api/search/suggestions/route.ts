@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cacheGet, cacheSet, searchRatelimit, getClientIp } from '@/lib/redis';
+import { expandQuery } from '@/lib/search/query-expansion';
+import { getSearchFallback } from '@/lib/search/ai-fallback';
+import { getCachedQueryEmbedding } from '@/lib/search/embedding-cache';
 
 // ── Synonym resolver ──────────────────────────────────────────────────────────
 async function resolveQuery(query: string): Promise<string> {
@@ -47,7 +50,17 @@ export async function GET(request: NextRequest) {
 
     // Only hit the DB for synonym + search on cache miss
     const resolvedQuery = await resolveQuery(rawQuery);
-    const normalizedQuery = stripAccents(resolvedQuery.trim());
+
+    // AI query expansion — only when synonym lookup found nothing
+    let searchTerms = [resolvedQuery];
+    if (resolvedQuery === rawQuery) {
+      try {
+        searchTerms = await expandQuery(resolvedQuery);
+      } catch {
+        // Expansion failure is non-critical
+      }
+    }
+    const normalizedQuery = stripAccents(searchTerms[0].trim());
 
     if (normalizedQuery.length < 2) {
       return NextResponse.json({ suggestions: [] });
@@ -68,18 +81,23 @@ export async function GET(request: NextRequest) {
     let products: ProductResult[] | null = null;
 
     // ── Step 1: Full-text search (accent-insensitive via 'simple' config + unaccent) ──
-    const { data: ftsProducts, error: ftsError } = await supabaseAdmin
-      .from('products')
-      .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
-      .eq('is_active', true)
-      .textSearch('search_vector', normalizedQuery, {
-        type: 'websearch',
-        config: 'simple',  // 'simple' works with our unaccented tsvector
-      })
-      .limit(8) as { data: ProductResult[] | null; error: any };
+    // Try each expanded term until we get results
+    for (const term of searchTerms.map(t => stripAccents(t.trim()))) {
+      if (term.length < 2) continue;
+      const { data: ftsProducts, error: ftsError } = await supabaseAdmin
+        .from('products')
+        .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
+        .eq('is_active', true)
+        .textSearch('search_vector', term, {
+          type: 'websearch',
+          config: 'simple',
+        })
+        .limit(8) as { data: ProductResult[] | null; error: any };
 
-    if (!ftsError && ftsProducts && ftsProducts.length > 0) {
-      products = ftsProducts;
+      if (!ftsError && ftsProducts && ftsProducts.length > 0) {
+        products = ftsProducts;
+        break;
+      }
     }
 
     // Fuzzy trigram fallback (handles typos like "pisinas" → "piscinas")
@@ -111,6 +129,34 @@ export async function GET(request: NextRequest) {
         .limit(8) as { data: ProductResult[] | null };
 
       products = ilikeProducts;
+    }
+
+    // ── Step 4: Semantic search via pgvector (if available) ──
+    if (!products || products.length === 0) {
+      try {
+        const qEmbed = await getCachedQueryEmbedding(normalizedQuery);
+        if (qEmbed) {
+          const { data: semanticResults } = await (supabaseAdmin as any)
+            .rpc('search_products_semantic', {
+              query_embedding: `[${qEmbed.join(',')}]`,
+              similarity_threshold: 0.70,
+              result_limit: 8,
+            });
+
+          if (semanticResults?.length) {
+            const ids = semanticResults.map((r: any) => r.id);
+            const { data: fullProducts } = await supabaseAdmin
+              .from('products')
+              .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
+              .in('id', ids)
+              .eq('is_active', true) as { data: ProductResult[] | null };
+
+            if (fullProducts?.length) products = fullProducts;
+          }
+        }
+      } catch {
+        // Semantic search is non-critical — skip silently
+      }
     }
 
     // Boost: products whose name starts with the query come first
@@ -186,14 +232,6 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    const result = {
-      suggestions: suggestions.slice(0, 10),
-      query: resolvedQuery,
-    };
-
-    // Cache for 60 seconds
-    await cacheSet(cacheKey, result, 60);
-
     // Log search analytics (fire-and-forget)
     const productCount = products?.length || 0;
     (supabaseAdmin as any)
@@ -205,6 +243,45 @@ export async function GET(request: NextRequest) {
       })
       .then(() => {})
       .catch(() => {});
+
+    // ── AI Fallback on zero results ──
+    let fallback: { message: string; suggestions: string[] } | undefined;
+    if (productCount === 0) {
+      try {
+        // Get available categories for fallback suggestions
+        const { data: catData } = await supabaseAdmin
+          .from('products')
+          .select('category')
+          .eq('is_active', true) as { data: Array<{ category: string[] }> | null };
+
+        const categories = [...new Set(
+          (catData || []).flatMap(p => p.category || [])
+        )];
+        fallback = await getSearchFallback(rawQuery, categories);
+
+        // Log fallback usage
+        (supabaseAdmin as any)
+          .from('search_analytics')
+          .insert({
+            query: resolvedQuery.toLowerCase(),
+            results_count: 0,
+            source: 'fallback',
+          })
+          .then(() => {})
+          .catch(() => {});
+      } catch {
+        // Fallback failure is non-critical
+      }
+    }
+
+    const result = {
+      suggestions: suggestions.slice(0, 10),
+      query: resolvedQuery,
+      ...(fallback && { zeroResults: true, fallback }),
+    };
+
+    // Cache for 60 seconds
+    await cacheSet(cacheKey, result, 60);
 
     return NextResponse.json(result);
 

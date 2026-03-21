@@ -12,6 +12,8 @@ import { lowStockAlert } from "@/inngest/functions/low-stock-alert";
 import { reviewRequest } from "@/inngest/functions/review-request";
 // Fix #5: Maintenance cron via Inngest (cryptographically signed, no CRON_SECRET header needed)
 import { maintenanceCron } from '@/inngest/functions/maintenance';
+import { generateEmbedding } from '@/inngest/functions/generate-embedding';
+import { bankTransferReminder } from '@/inngest/functions/bank-transfer-reminder';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -23,6 +25,8 @@ export const { GET, POST, PUT } = serve({
     maintenanceCron,
     lowStockAlert,
     reviewRequest,
+    generateEmbedding,
+    bankTransferReminder,
   ],
 });
 

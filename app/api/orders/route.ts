@@ -7,6 +7,7 @@ import { alertNewOrder, alertNewTransferOrder } from '@/lib/telegram';
 import { getExchangeRate, convertPrice } from '@/lib/exchange-rate';
 import { sendTransferOrderConfirmation } from '@/lib/email';
 import { verifyOrderToken } from '@/lib/order-token';
+import { inngest } from '@/lib/inngest';
 
 // Cloudflare Turnstile verification (skipped when env var not configured)
 async function verifyTurnstile(token: string): Promise<boolean> {
@@ -360,6 +361,19 @@ export async function POST(request: NextRequest) {
           console.error('[Email] Crash sending transfer confirmation:', err);
         }
       }
+
+      // Fire bank transfer reminder event (24h delay handled by Inngest)
+      inngest.send({
+        name: 'order/transfer.created',
+        data: {
+          orderId: (order as any).id,
+          orderNumber: (order as any).order_number,
+          customerEmail: customer.email ?? null,
+          customerName: customer.name,
+          total: finalTotal,
+          currency: paymentCurrency,
+        },
+      }).catch(() => {});
 
       return NextResponse.json({
         success: true,
