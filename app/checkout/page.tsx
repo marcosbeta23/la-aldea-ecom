@@ -24,9 +24,6 @@ import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONF
 import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
 import { Turnstile } from '@marsidev/react-turnstile';
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
 
 interface CouponData {
   code: string;

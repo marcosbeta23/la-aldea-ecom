@@ -7,9 +7,6 @@ import Header from '@/components/Header';
 import { Clock, Building2, MessageCircle, Copy, Check, Phone, Home, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
 
 function PendienteContent() {
   const searchParams = useSearchParams();

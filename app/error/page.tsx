@@ -4,9 +4,6 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
 
 function ErrorContent() {
   const searchParams = useSearchParams();

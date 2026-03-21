@@ -11,11 +11,13 @@ interface CategoryAnalysis {
 async function detectKeywords() {
   console.log('🔍 Analizando categorías y keywords...\n');
 
-  const { data: products, error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('products')
     .select('name, category, brand, sold_count, description')
     .eq('is_active', true)
     .order('sold_count', { ascending: false });
+
+  const products = data as any[] | null;
 
   if (error || !products) {
     console.error('Error:', error);

@@ -8,9 +8,6 @@ import { useCartStore } from '@/stores/cartStore';
 import { trackRemoveFromCart } from '@/lib/analytics';
 import Header from '@/components/Header';
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getSubtotalByCurrency, getCartCurrency } = useCartStore();

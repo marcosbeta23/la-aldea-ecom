@@ -9,9 +9,6 @@ import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 import { Product } from '@/types/database';
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
 
 export default function WishlistPage() {
   const { items: wishlistIds, removeItem } = useWishlistStore();

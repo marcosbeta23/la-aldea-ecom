@@ -6,9 +6,6 @@ import Link from 'next/link';
 import { Download, CheckCircle, Package, Mail, Home, ShoppingBag, AlertTriangle } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
 
 interface OrderItem {
   id: string;
