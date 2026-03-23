@@ -85,22 +85,44 @@ function dbRowToArticle(data: any): FaqArticle {
       } catch {
         // Quick fallback for comma-separated or postgres array syntax
         const cleaned = val.replace(/^\{|\}$/g, '');
-        return cleaned.split(',').map(s => s.trim()).filter(Boolean);
+        // Correctly handle quoted strings in postgres arrays if they exist
+        return cleaned.split(',')
+          .map(s => s.trim().replace(/^"|"$/g, ''))
+          .filter(Boolean);
       }
     }
     return [];
   };
 
+  const sections = safeArray(data.sections).map(s => ({
+    title: String(s?.title || ''),
+    content: String(s?.content || ''),
+    type: String(s?.type || 'text') as any
+  }));
+
+  const relatedCategories = safeArray(data.related_categories)
+    .map(c => {
+      if (typeof c === 'string') return { label: c, value: c };
+      if (c && typeof c === 'object') {
+        return { 
+          label: String(c.label || c.value || ''), 
+          value: String(c.value || c.label || '') 
+        };
+      }
+      return null;
+    })
+    .filter((c): c is { label: string; value: string } => !!c && !!c.label);
+
   return {
-    slug: data.slug,
-    title: data.title,
-    description: data.description || '',
-    breadcrumbLabel: data.breadcrumb_label || data.title,
-    category: data.category || '',
-    keywords: safeArray(data.keywords),
-    relatedCategories: safeArray(data.related_categories),
-    relatedArticles: safeArray(data.related_articles),
-    sections: safeArray(data.sections),
+    slug: String(data.slug),
+    title: String(data.title),
+    description: String(data.description || ''),
+    breadcrumbLabel: String(data.breadcrumb_label || data.title),
+    category: String(data.category || ''),
+    keywords: safeArray(data.keywords).map(k => String(k)),
+    relatedCategories,
+    relatedArticles: safeArray(data.related_articles).map(a => String(a)),
+    sections,
     datePublished: data.date_published || undefined,
     dateModified: data.date_modified || undefined,
   };
@@ -156,7 +178,7 @@ export async function generateMetadata({ params }: GuiaPageProps): Promise<Metad
       description: article.description,
     },
     alternates: { canonical: url },
-    keywords: [...article.keywords, 'La Aldea', 'Tala', 'Uruguay'],
+    keywords: [...article.keywords.filter(k => typeof k === 'string'), 'La Aldea', 'Tala', 'Uruguay'],
     robots: { index: true, follow: true },
   };
 }
@@ -261,20 +283,20 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
 
 // HowTo — fix the fragile regex with proper section content parsing
 const stepsSection = article.sections.find(s => s.type === "steps");
-const howToJsonLd = stepsSection ? {
+const howToJsonLd = (stepsSection && typeof stepsSection.content === 'string') ? {
   "@context": "https://schema.org",
   "@type": "HowTo",
   name: article.title,
   description: article.description,
   image: `${siteUrl}/assets/images/og-image.webp`,
   // Parse steps from content — handle both <li> and numbered text strictly
-  step: ((stepsSection.content ?? '').match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [])
+  step: (stepsSection.content.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [])
     .map(li => li.replace(/<[^>]*>/g, '').trim())
     .filter(text => text.length > 5)
     .map((text, i) => ({
       "@type": "HowToStep",
       position: i + 1,
-      name: text.split(".")[0].trim().slice(0, 60),
+      name: String(text.split(".")[0]).trim().slice(0, 60),
       text: text,
     })),
 } : null;

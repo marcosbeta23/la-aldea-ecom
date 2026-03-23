@@ -21,75 +21,110 @@ export function autoLinkContent(
     excludePaths = [],
   } = options;
 
-  const allKeywords: Array<{ url: string; keywords: string[] }> = [];
+  // 1. Filter and prepare clusters
+  const clustersToUse = SEO_CLUSTERS.filter(
+    c => !excludePaths.some(p => c.url.includes(p))
+  ).map(c => ({
+    url: c.url,
+    keywords: [...c.keywords].sort((a, b) => b.term.length - a.term.length).map(k => k.term),
+  }));
 
-  for (const cluster of SEO_CLUSTERS) {
-    if (excludePaths.some(p => cluster.url.includes(p))) continue;
+  // 2. Tokenize HTML into chunks
+  type Chunk = { type: 'tag' | 'text'; content: string; isLinked?: boolean };
+  const chunks: Chunk[] = [];
+  const tagRegex = /<[^>]+>/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
 
-    allKeywords.push({
-      url: cluster.url,
-      keywords: [...cluster.keywords].sort((a, b) => b.term.length - a.term.length).map(k => k.term),
-    });
+  while ((match = tagRegex.exec(html)) !== null) {
+    if (match.index > lastIndex) {
+      chunks.push({ type: 'text', content: html.slice(lastIndex, match.index) });
+    }
+    chunks.push({ type: 'tag', content: match[0] });
+    lastIndex = tagRegex.lastIndex;
+  }
+  if (lastIndex < html.length) {
+    chunks.push({ type: 'text', content: html.slice(lastIndex) });
   }
 
+  // 3. Process blocks and replace keywords
+  const BLOCKED_TAGS = new Set(['a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'code', 'pre', 'button', 'script', 'style']);
   let linksAdded = 0;
   const usedUrls = new Set<string>();
-  let result = html;
 
-  for (const { url, keywords } of allKeywords) {
+  for (const { url, keywords } of clustersToUse) {
     if (linksAdded >= maxLinks) break;
     if (usedUrls.has(url)) continue;
 
+    let urlLinked = false;
+
     for (const keyword of keywords) {
-      if (linksAdded >= maxLinks) break;
+      if (urlLinked || linksAdded >= maxLinks) break;
 
       const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(
-        `(?<!<[^>]*)\\b(${escapedKeyword}(?:es|s)?)\\b(?![^<]*>)`,
-        'i'
-      );
+      const regex = new RegExp(`\\b(${escapedKeyword}(?:es|s)?)\\b`, 'i');
 
-      if (!isInsideBlockedTag(result, regex)) {
-        const match = result.match(regex);
-        if (match) {
-          const displayText = randomizeAnchor
-            ? pickAnchorVariant(keyword, keywords)
-            : match[0];
+      let blockedLevel = 0;
 
-          const linkAttrs = [
-            `href="${url}"`,
-            `class="${linkClass}"`,
-            newTab ? 'target="_blank" rel="noopener"' : '',
-          ].filter(Boolean).join(' ');
+      // Iterate through chunks to find a safe place for the link
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
 
-          result = result.replace(regex, `<a ${linkAttrs}>${displayText}</a>`);
-          linksAdded++;
-          usedUrls.add(url);
-          break;
+        if (chunk.type === 'tag') {
+          const tagNameMatch = chunk.content.match(/^<\/?([a-z0-9]+)/i);
+          if (tagNameMatch) {
+            const tagName = tagNameMatch[1].toLowerCase();
+            if (BLOCKED_TAGS.has(tagName)) {
+              if (chunk.content.startsWith('</')) {
+                blockedLevel = Math.max(0, blockedLevel - 1);
+              } else if (!chunk.content.endsWith('/>')) {
+                blockedLevel++;
+              }
+            }
+          }
+          continue;
+        }
+
+        // Only process text chunks NOT inside blocked tags and NOT already containing a link
+        if (blockedLevel === 0 && !chunk.isLinked) {
+          const m = chunk.content.match(regex);
+          if (m) {
+            const index = m.index!;
+            const fullMatchText = m[0];
+            const displayText = randomizeAnchor
+              ? pickAnchorVariant(keyword, keywords)
+              : fullMatchText;
+
+            const linkAttrs = [
+              `href="${url}"`,
+              `class="${linkClass}"`,
+              newTab ? 'target="_blank" rel="noopener"' : '',
+            ].filter(Boolean).join(' ');
+
+            const linkHtml = `<a ${linkAttrs}>${displayText}</a>`;
+
+            // Split the chunk
+            const before = chunk.content.slice(0, index);
+            const after = chunk.content.slice(index + fullMatchText.length);
+
+            // Replace current chunk and insert new ones
+            chunks[i] = { type: 'text', content: before };
+            const linkChunk: Chunk = { type: 'tag', content: linkHtml, isLinked: true };
+            const afterChunk: Chunk = { type: 'text', content: after };
+
+            chunks.splice(i + 1, 0, linkChunk, afterChunk);
+
+            linksAdded++;
+            usedUrls.add(url);
+            urlLinked = true;
+            break;
+          }
         }
       }
     }
   }
 
-  return result;
-}
-
-function isInsideBlockedTag(html: string, regex: RegExp): boolean {
-  const BLOCKED_TAGS = ['a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'code', 'pre', 'button'];
-
-  for (const tag of BLOCKED_TAGS) {
-    const blockRegex = new RegExp(
-      `<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`,
-      'gi'
-    );
-    const blocked = html.replace(blockRegex, (match) => {
-      return match.replace(/\S/g, '_');
-    });
-
-    if (!blocked.match(regex)) return true;
-  }
-
-  return false;
+  return chunks.map(c => c.content).join('');
 }
 
 function pickAnchorVariant(primary: string, allVariants: string[]): string {
