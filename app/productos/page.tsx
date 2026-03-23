@@ -369,39 +369,6 @@ async function getFilterOptions(currentCategory?: string) {
   return { categories, subcategories, brands };
 }
 
-// SEO intro text per category — shown below hero when a category is active
-const CATEGORY_SEO_TEXT: Record<string, { heading: string; text: string; bullets: string[] }> = {
-  Riego: {
-    heading: '¿Por que elegir Sistemas de Riego en La Aldea?',
-    text: 'En La Aldea encontras sistemas de riego por goteo, aspersion y automatico para huerta, jardin y campo. Trabajamos con las mejores marcas del mercado y ofrecemos instalacion profesional con cobertura en Canelones, Montevideo y todo Uruguay. Nuestro equipo tecnico te asesora sin costo para diseñar el sistema mas eficiente segun tu terreno y cultivo, ya sea una huerta familiar de 20m2 o una explotacion agricola de 100 hectareas.',
-    bullets: ['Stock permanente con envio a todo Uruguay', 'Instalacion profesional con garantia', 'Asesoramiento tecnico sin costo'],
-  },
-  Bombas: {
-    heading: '¿Por que elegir Bombas de Agua en La Aldea?',
-    text: 'Ofrecemos bombas de agua sumergibles, perifericas, centrifugas, multietapa, presurizadoras y solares de marcas lideres como Gianni, DIU y Lusqtoff. Ya sea para pozo, cisterna, riego agricola o uso domestico, en La Aldea te ayudamos a elegir la bomba correcta segun profundidad, caudal y presion requerida. Contamos con servicio tecnico especializado y envio seguro a todo Uruguay.',
-    bullets: ['Todas las marcas: Gianni, DIU, Lusqtoff y mas', 'Servicio tecnico y repuestos disponibles', 'Envio a todo Uruguay con embalaje seguro'],
-  },
-  Quimicos: {
-    heading: '¿Por que elegir Agroquimicos en La Aldea?',
-    text: 'Vendemos herbicidas, fungicidas, insecticidas y fertilizantes para soja, papa, hortalizas, frutales y praderas. Asesoramos sobre dosis, momentos de aplicacion y compatibilidad de productos para cada cultivo. Contamos con stock permanente de los principios activos mas demandados en Uruguay y realizamos envios con embalaje adecuado para transporte seguro de productos quimicos.',
-    bullets: ['Asesoramiento tecnico sin costo sobre dosis y aplicacion', 'Stock de las marcas mas confiables', 'Envio con embalaje certificado para quimicos'],
-  },
-  Piscinas: {
-    heading: '¿Por que elegir Productos para Piscinas en La Aldea?',
-    text: 'Todo lo que necesitas para mantener tu piscina cristalina: cloro granulado y en pastillas, algicidas, clarificantes, floculantes, reguladores de pH y kits de analisis. Atendemos la temporada de verano uruguaya (noviembre a marzo) con stock reforzado y envio rapido a todo el pais. Te orientamos sobre dosis exactas segun el volumen de tu piscina.',
-    bullets: ['Stock reforzado en temporada de verano', 'Asesoramiento personalizado por volumen de piscina', 'Envio rapido a todo Uruguay'],
-  },
-  Drogueria: {
-    heading: '¿Por que elegir Drogueria en La Aldea?',
-    text: 'Somos drogueria industrial y de consumo. Vendemos productos de limpieza profesional, desinfectantes, detergentes y desengrasantes en presentaciones domesticas e industriales (bidones de 5, 20 y 200 litros). Ideal para tambos, galpones, frigorificos y uso agropecuario intensivo. Productos que no se consiguen en supermercados, con ficha tecnica y de seguridad disponible.',
-    bullets: ['Presentaciones en volumen industrial', 'Fichas tecnicas y SDS disponibles', 'Productos no disponibles en supermercados'],
-  },
-  'Energia Solar': {
-    heading: '¿Por que elegir Energia Solar en La Aldea?',
-    text: 'Paneles solares, inversores, baterias y bombas solares para independizarte de la red electrica. Las bombas solares son ideales para riego agricola en zonas rurales sin acceso a la red. Te asesoramos sobre dimensionamiento segun tu consumo y necesidad, con instalacion profesional y garantia en todos los equipos.',
-    bullets: ['Bombas solares para riego sin red electrica', 'Dimensionamiento personalizado', 'Instalacion profesional con garantia'],
-  },
-};
 
 /** Check if the user has any active browsing filters */
 function hasActiveFilters(params: Record<string, string | undefined>): boolean {
@@ -428,7 +395,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       <Header />
       <FilterPersistence />
 
-      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
+      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24 overflow-x-hidden">
         {/* Hero Banner — compact */}
         <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-8 lg:py-10">
           <div className="container mx-auto px-4">
@@ -505,23 +472,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </section>
         )}
 
-        {/* SEO intro text — shown when a category is selected */}
-        {params.categoria && CATEGORY_SEO_TEXT[params.categoria] && (
-          <section className="container mx-auto px-4 pt-6 lg:pt-8">
-            <div className="bg-white rounded-xl border border-slate-200 p-5 lg:p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-2">{CATEGORY_SEO_TEXT[params.categoria].heading}</h2>
-              <p className="text-sm text-slate-600 leading-relaxed mb-3">{CATEGORY_SEO_TEXT[params.categoria].text}</p>
-              <ul className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                {CATEGORY_SEO_TEXT[params.categoria].bullets.map((b, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
-                    <span className="w-1.5 h-1.5 bg-blue-600 rounded-full shrink-0" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )}
 
         {/* Products Section */}
         <section className="container mx-auto px-4 py-6 lg:py-8">
@@ -657,23 +607,23 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           ];
           if (allGuides.length === 0) return null;
           return (
-            <section className="container mx-auto px-4 pb-8">
-              <div className="bg-white rounded-xl border border-slate-200 p-5">
-                <h2 className="text-lg font-bold text-slate-900 mb-3">Guias relacionadas</h2>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <section className="container mx-auto px-4 pb-8 overflow-hidden">
+              <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-3">Guías relacionadas</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                   {allGuides.map((g) => (
                     <Link
                       key={g.slug}
                       href={`/guias/${g.slug}`}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-blue-50 transition-colors group"
+                      className="flex items-center justify-between p-2.5 sm:p-3 bg-slate-50 rounded-lg border border-transparent hover:border-blue-200 hover:bg-blue-50 transition-all group"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
+                        <p className="text-xs sm:text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
                           {g.title}
                         </p>
-                        <p className="text-xs text-slate-400">{g.category}</p>
+                        <p className="text-[10px] sm:text-xs text-slate-400">{g.category}</p>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 shrink-0 ml-2" />
+                      <ChevronRight className="h-3.5 w-3.5 sm:h-4 w-4 text-slate-400 group-hover:text-blue-600 shrink-0 ml-2" />
                     </Link>
                   ))}
                 </div>
