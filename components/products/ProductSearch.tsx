@@ -277,7 +277,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
                         {suggestion.type === 'category' && 'Categoría'}
                         {suggestion.type === 'brand' && 'Marca'}
                         {suggestion.type === 'product' && (
-                          suggestion.availability_type === 'on_request' 
+                          (suggestion.availability_type === 'on_request' || suggestion.price === 0 || suggestion.price === 9999)
                             ? 'Consulta' 
                             : suggestion.price && formatPrice(suggestion.price, suggestion.currency)
                         )}

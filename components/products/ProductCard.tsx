@@ -20,7 +20,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   
   const inCart = isInCart(product.id);
   const inStock = product.stock > 0;
-  const isOnRequest = product.availability_type === 'on_request';
+  const isOnRequest = product.availability_type === 'on_request' || product.price_numeric === 0 || product.price_numeric === 9999;
   // lowStock removed — most products have 1-10 stock, making the alert appear everywhere
 
   const handleAddToCart = (e: React.MouseEvent) => {

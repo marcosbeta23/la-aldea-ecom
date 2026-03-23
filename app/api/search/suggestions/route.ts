@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Cache keyed on raw query — synonym resolution is inside the cache miss
-    const cacheKey = `search:${rawQuery.toLowerCase()}`;
+    const cacheKey = `search:v2:${rawQuery.toLowerCase()}`;
     const cached = await cacheGet<{ suggestions: unknown[]; query: string }>(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
@@ -205,6 +205,11 @@ export async function GET(request: NextRequest) {
     });
 
     products?.forEach(product => {
+      // Safety override: if price is 0 or 9999, it MUST be on_request
+      const effectiveAvailabilityType = (product.price_numeric === 0 || product.price_numeric === 9999)
+        ? 'on_request'
+        : product.availability_type;
+
       suggestions.push({
         type: 'product',
         id: product.id,
@@ -214,7 +219,7 @@ export async function GET(request: NextRequest) {
         image: product.images?.[0] || undefined,
         price: product.price_numeric,
         currency: product.currency,
-        availability_type: product.availability_type,
+        availability_type: effectiveAvailabilityType,
       });
     });
 
