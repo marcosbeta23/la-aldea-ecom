@@ -6,7 +6,9 @@ interface Message { role: 'user' | 'assistant'; content: string }
 
 const STARTERS = [
   '¿Cómo vamos hoy?',
-  '¿Qué pedidos están en paid_pending_verification?',
+  '¿Qué pedidos están esperando confirmación de pago?',
+  '¿Qué pedidos están esperando confirmación facturación?',
+  '¿Qué pedidos están esperando confirmación de envío/retiro o preparación?',
   '¿Qué productos tienen poco stock?',
   '¿Qué se busca y no encontramos esta semana?',
   '¿Cuántos carritos abandonados hay en las últimas 24h?',
@@ -69,7 +71,7 @@ export function AssistantChat() {
 
   return (
     <div className="flex flex-col border rounded-xl bg-white shadow-sm overflow-hidden"
-         style={{ height: '400px' }}>
+      style={{ height: '400px' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-slate-50 shrink-0">
         <div className="flex items-center gap-2">
@@ -121,11 +123,10 @@ export function AssistantChat() {
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[90%] rounded-xl px-3 py-2 text-xs whitespace-pre-wrap leading-relaxed ${
-                m.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-800'
-              }`}
+              className={`max-w-[90%] rounded-xl px-3 py-2 text-xs whitespace-pre-wrap leading-relaxed ${m.role === 'user'
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 text-slate-800'
+                }`}
             >
               {m.content}
             </div>
