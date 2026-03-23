@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
@@ -7,10 +8,11 @@ import ArticleSectionBlock from '@/components/faq/ArticleSection';
 import RelatedLinks from '@/components/faq/RelatedLinks';
 import { getArticleBySlug, getAllSlugs } from '@/lib/faq-articles';
 import type { FaqArticle } from '@/lib/faq-articles';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { BookOpen, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { FAQ_BY_GUIDE } from '@/lib/faq-by-guide';
+import AuthorImage from '@/components/common/AuthorImage';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -28,14 +30,19 @@ async function resolveArticle(slug: string): Promise<FaqArticle | null> {
   if (staticArticle) return staticArticle;
 
   // 2. Check Supabase guides table
-  const { data, error } = await (supabaseAdmin as any)
+  const { data, error } = await supabase
     .from('guides')
     .select('*')
     .eq('slug', slug)
     .eq('is_published', true)
     .single();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error(`[Guide SSR] Error fetching article "${slug}":`, error.message);
+    return null;
+  }
+  
+  if (!data) return null;
 
   return dbRowToArticle(data);
 }
@@ -58,12 +65,16 @@ async function resolveArticlesBySlugs(slugs: string[]): Promise<FaqArticle[]> {
   const remainingSlugs = slugs.filter((s) => !resolvedSlugs.has(s));
 
   if (remainingSlugs.length > 0) {
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabase
       .from('guides')
       .select('*')
       .in('slug', remainingSlugs)
       .eq('is_published', true);
 
+    if (error) {
+      console.error(`[Guide SSR] Error fetching related articles for "${remainingSlugs.join(', ')}":`, error.message);
+    }
+    
     if (!error && data && Array.isArray(data)) {
       for (const row of data) {
         resolved.push(dbRowToArticle(row));
@@ -135,7 +146,7 @@ export async function generateStaticParams() {
   // Also include DB-published slugs for build-time pre-rendering
   let dbSlugs: string[] = [];
   try {
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabase
       .from('guides')
       .select('slug')
       .eq('is_published', true);
@@ -143,8 +154,8 @@ export async function generateStaticParams() {
     if (!error && data && Array.isArray(data)) {
       dbSlugs = data.map((g: { slug: string }) => g.slug);
     }
-  } catch {
-    // Continue with static only
+  } catch (err) {
+    console.error('[Guide build] Error in generateStaticParams:', err);
   }
 
   const allSlugs = [...new Set([...staticSlugs, ...dbSlugs])];
@@ -185,6 +196,7 @@ export async function generateMetadata({ params }: GuiaPageProps): Promise<Metad
 
 export default async function GuiaPage({ params }: GuiaPageProps) {
   const { slug } = await params;
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   const article = await resolveArticle(slug);
 
   if (!article) {
@@ -277,7 +289,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
   itemListElement: [
     { "@type": "ListItem", position: 1, name: "Inicio", item: siteUrl },
     { "@type": "ListItem", position: 2, name: "Blog", item: `${siteUrl}/blog` },
-    { "@type": "ListItem", position: 3, name: article.breadcrumbLabel },
+    { "@type": "ListItem", position: 3, name: article.breadcrumbLabel, item: `${siteUrl}/guias/${slug}` },
   ],
 };
 
@@ -319,21 +331,29 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
     <>
       <script
         type="application/ld+json"
+        nonce={nonce}
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <script
         type="application/ld+json"
+        nonce={nonce}
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       {howToJsonLd && (
         <script
           type="application/ld+json"
+          nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
         />
       )}
       {faqJsonLd && (
         <script
           type="application/ld+json"
+          nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
@@ -364,16 +384,9 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
             
             <div className="mt-6 flex items-center gap-3 border-b border-blue-500/30 pb-4">
               <div className="h-10 w-10 overflow-hidden rounded-full bg-blue-100 flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <AuthorImage
                   src="/assets/images/martin-betancor.webp"
                   alt="Martín Betancor Peregalli"
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    // Fallback to logo if author image missing
-                    (e.target as HTMLImageElement).src = "/logo.svg";
-                    (e.target as HTMLImageElement).className = "h-full w-full object-contain p-2";
-                  }}
                 />
               </div>
               <div>

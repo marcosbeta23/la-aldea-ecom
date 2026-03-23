@@ -267,18 +267,24 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
         <link rel="preconnect" href="https://us.i.posthog.com" />
 
-
-
         {/* Cloudflare Web Analytics */}
-        <script defer nonce={nonce} src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}'></script>
+        <Script
+          strategy="afterInteractive"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}'
+          nonce={nonce}
+        />
         {/* End Cloudflare Web Analytics */}
 
+        {/* Nonce-aware Partytown */}
         <Partytown forward={['dataLayer.push', 'gtag']} nonce={nonce} />
       </head>
       <body className={`${inter.variable} ${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
         <script
           type="application/ld+json"
+          nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         <PostHogProvider>
