@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { normalizeCategory } from '@/lib/validators';
+import { normalizeCategory, normalizeBrand } from '@/lib/validators';
 import { alertOutOfStock, alertLowStock } from '@/lib/telegram';
 import { inngest } from '@/lib/inngest';
 
@@ -108,7 +108,7 @@ export async function PUT(
         name,
         description: description || null,
         category: Array.isArray(category) ? category.map((c: string) => c.trim()).filter(Boolean).map((c: string) => normalizeCategory(c)) : (category ? [normalizeCategory(category.trim())] : []),
-        brand: brand?.trim() || null,
+        brand: brand ? normalizeBrand(brand) : null,
         price_numeric,
         currency,
         stock,

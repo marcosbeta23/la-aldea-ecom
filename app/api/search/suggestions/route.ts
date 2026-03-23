@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
       price_numeric: number;
       currency: string;
       images: string[] | null;
+      availability_type: string;
     };
 
     let products: ProductResult[] | null = null;
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
     // ── Step 1: Full-text search (accent-insensitive via 'simple' config + unaccent) ──
     const { data: ftsProducts, error: ftsError } = await supabaseAdmin
       .from('products')
-        .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
+        .select('id, sku, slug, name, category, brand, price_numeric, currency, images, availability_type')
         .eq('is_active', true)
         .textSearch('search_vector', normalizedQuery, {
           type: 'websearch',
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
     if (!products || products.length === 0) {
       const { data: ilikeProducts } = await supabaseAdmin
         .from('products')
-        .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
+        .select('id, sku, slug, name, category, brand, price_numeric, currency, images, availability_type')
         .eq('is_active', true)
         .or(
           `name.ilike.%${normalizedQuery}%,` +
@@ -192,6 +193,7 @@ export async function GET(request: NextRequest) {
       image?: string;
       price?: number;
       currency?: string;
+      availability_type?: string;
     }> = [];
 
     matchingCategories.forEach(cat => {
@@ -212,6 +214,7 @@ export async function GET(request: NextRequest) {
         image: product.images?.[0] || undefined,
         price: product.price_numeric,
         currency: product.currency,
+        availability_type: product.availability_type,
       });
     });
 

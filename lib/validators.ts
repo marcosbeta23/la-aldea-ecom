@@ -144,3 +144,11 @@ export function normalizeCategory(cat: string): string {
   if (match) return match;
   return trimmed.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
+
+/** Normalize a brand string: trim and title-case it for deduplication */
+export function normalizeBrand(brand: string): string {
+  const trimmed = brand.trim();
+  if (!trimmed) return '';
+  // Simple title casing for brands to deduplicate "Makita" and "makita"
+  return trimmed.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}

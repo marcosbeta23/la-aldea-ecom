@@ -7,6 +7,7 @@ import ImageUpload from '@/components/admin/ImageUpload';
 
 import { SHIPPING_TYPE_LABELS } from '@/lib/shipping';
 import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
+import { normalizeCategory, normalizeBrand } from '@/lib/validators';
 import type { ProductShippingType, ProductAvailabilityType } from '@/types/database';
 
 interface Product {
@@ -48,16 +49,6 @@ function generateSlug(name: string, sku: string): string {
 }
 
 const KNOWN_CATEGORIES = CATEGORY_HIERARCHY.map(c => c.value);
-
-/** Normalize a category string: match known categories case-insensitively, or title-case it */
-const normalizeCategory = (cat: string): string => {
-  const trimmed = cat.trim();
-  if (!trimmed) return '';
-  const match = KNOWN_CATEGORIES.find(k => k.toLowerCase() === trimmed.toLowerCase());
-  if (match) return match;
-  // Title case: first letter of each word uppercase
-  return trimmed.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-};
 
 export default function ProductForm({ product }: { product?: any }) {
   const router = useRouter();
@@ -209,7 +200,7 @@ export default function ProductForm({ product }: { product?: any }) {
       // Normalize brand before submit
       const submitData = {
         ...formData,
-        brand: formData.brand?.trim() || null,
+        brand: formData.brand ? normalizeBrand(formData.brand) : null,
         category: formData.category.map(c => normalizeCategory(c)).filter(Boolean),
       };
 
@@ -307,10 +298,10 @@ export default function ProductForm({ product }: { product?: any }) {
                       }}
                       onFocus={() => setShowBrandSuggestions(true)}
                       onBlur={() => {
-                        // Trim on blur
-                        const trimmed = brandQuery.trim();
-                        setBrandQuery(trimmed);
-                        setFormData(prev => ({ ...prev, brand: trimmed || null }));
+                        // Normalize brand on blur
+                        const normalized = normalizeBrand(brandQuery);
+                        setBrandQuery(normalized);
+                        setFormData(prev => ({ ...prev, brand: normalized || null }));
                       }}
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Ej: Pedrollo"

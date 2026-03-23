@@ -15,6 +15,7 @@ interface Suggestion {
   image?: string;
   price?: number;
   currency?: string;
+  availability_type?: string;
 }
 
 interface ProductSearchProps {
@@ -275,7 +276,11 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
                       <p className="text-xs text-slate-500">
                         {suggestion.type === 'category' && 'Categoría'}
                         {suggestion.type === 'brand' && 'Marca'}
-                        {suggestion.type === 'product' && suggestion.price && formatPrice(suggestion.price, suggestion.currency)}
+                        {suggestion.type === 'product' && (
+                          suggestion.availability_type === 'on_request' 
+                            ? 'Consulta' 
+                            : suggestion.price && formatPrice(suggestion.price, suggestion.currency)
+                        )}
                       </p>
                     </div>
 
