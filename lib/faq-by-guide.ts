@@ -1,5 +1,5 @@
 export const FAQ_BY_GUIDE: Record<string, Array<{ question: string; answer: string }>> = {
-  'como-elegir-bomba-agua': [
+  'seleccion-bombas': [
     {
       question: '¿Qué diferencia hay entre una bomba sumergible y una bomba de superficie?',
       answer: 'Las bombas sumergibles van dentro del agua (pozos, tanques) y son más eficientes para grandes profundidades. Las de superficie van fuera del agua y son ideales para cisternas, ríos o arroyos poco profundos.',
@@ -9,7 +9,7 @@ export const FAQ_BY_GUIDE: Record<string, Array<{ question: string; answer: stri
       answer: 'Depende de la cantidad de aspersores y la presión requerida. Para 2-4 aspersores una bomba de 1 HP suele ser suficiente. Para 5 o más, necesitas 1.5-2 HP o más.',
     },
   ],
-  'instalacion-riego-goteo': [
+  'instalar-riego-goteo': [
     {
       question: '¿Cuánto cuesta instalar un sistema de riego en Uruguay?',
       answer: 'El costo varía según el tipo de sistema (goteo, aspersión, automático), la superficie a cubrir y el tipo de cultivo. Ofrecemos presupuesto sin cargo con visita técnica incluida.',

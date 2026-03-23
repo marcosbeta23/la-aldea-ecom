@@ -12,6 +12,8 @@ import { supabase } from '@/lib/supabase';
 import { BookOpen, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { FAQ_BY_GUIDE } from '@/lib/faq-by-guide';
+import { autoLinkBlogContent } from '@/lib/auto-link';
+import type { SeoCluster } from '@/lib/seo-clusters';
 import AuthorImage from '@/components/common/AuthorImage';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
@@ -139,6 +141,32 @@ function dbRowToArticle(data: any): FaqArticle {
   };
 }
 
+/** Fetch all published guides to create dynamic SEO clusters */
+async function getDynamicClusters(): Promise<SeoCluster[]> {
+  const { data, error } = await supabase
+    .from('guides')
+    .select('slug, title, keywords, category')
+    .eq('is_published', true);
+
+  if (error || !data) {
+    console.error('[SEO Clusters] Error fetching guides:', error?.message);
+    return [];
+  }
+
+  return (data as any[]).map(guide => ({
+    url: `/guias/${guide.slug}`,
+    cluster: String(guide.category || 'general').toLowerCase(),
+    type: 'guide',
+    keywords: [
+      { term: guide.title, weight: 10 },
+      ...(Array.isArray(guide.keywords) ? guide.keywords : []).map((k: any) => ({
+        term: String(k),
+        weight: 9
+      }))
+    ]
+  }));
+}
+
 export async function generateStaticParams() {
   // Include static slugs
   const staticSlugs = getAllSlugs();
@@ -152,7 +180,7 @@ export async function generateStaticParams() {
       .eq('is_published', true);
 
     if (!error && data && Array.isArray(data)) {
-      dbSlugs = data.map((g: { slug: string }) => g.slug);
+      dbSlugs = (data as { slug: string }[]).map((g) => g.slug);
     }
   } catch (err) {
     console.error('[Guide build] Error in generateStaticParams:', err);
@@ -203,9 +231,20 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
     notFound();
   }
 
-  // Resolve related articles from DB for the sidebar
-  const relatedArticles = await resolveArticlesBySlugs(article.relatedArticles);
-  const relatedFaqs = FAQ_BY_GUIDE[slug] || [];
+  // Resolve related articles and dynamic clusters
+  const [relatedArticles, dynamicClusters] = await Promise.all([
+    resolveArticlesBySlugs(article.relatedArticles),
+    getDynamicClusters()
+  ]);
+
+  const relatedFaqs = (FAQ_BY_GUIDE[slug] || []).map(faq => ({
+    ...faq,
+    answer: autoLinkBlogContent(faq.answer, slug, {
+      maxLinks: 1,
+      linkClass: 'text-blue-600 hover:text-blue-700 hover:underline',
+      additionalClusters: dynamicClusters
+    })
+  }));
 
   // JSON-LD TechArticle schema
   const jsonLd = {
@@ -322,7 +361,7 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
     name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.answer,
+      text: faq.answer.replace(/<[^>]*>/g, ''), // Clean HTML for schema
     },
   })),
 } : null;
@@ -407,7 +446,13 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
             {/* Article body */}
             <article className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 overflow-hidden">
               {article.sections.map((section, i) => (
-                <ArticleSectionBlock key={i} section={section} index={i} currentSlug={slug} />
+                <ArticleSectionBlock 
+                  key={i} 
+                  section={section} 
+                  index={i} 
+                  currentSlug={slug}
+                  additionalClusters={dynamicClusters}
+                />
               ))}
 
               {/* FAQs relacionadas al final del artículo */}
@@ -426,9 +471,10 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
                           {faq.question}
                           <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform shrink-0 ml-2" />
                         </summary>
-                        <div className="px-4 pb-4 text-sm text-slate-700 leading-relaxed">
-                          <p>{faq.answer}</p>
-                        </div>
+                        <div 
+                          className="px-4 pb-4 text-sm text-slate-700 leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: faq.answer }}
+                        />
                       </details>
                     ))}
                   </div>

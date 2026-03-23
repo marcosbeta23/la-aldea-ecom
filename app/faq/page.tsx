@@ -4,6 +4,11 @@ import FAQAccordion from '@/components/faq/FAQAccordion';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
 import { HelpCircle, Phone, MessageCircle, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { autoLinkBlogContent } from '@/lib/auto-link';
+import { supabase } from '@/lib/supabase';
+import type { SeoCluster } from '@/lib/seo-clusters';
+
+const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
 export const metadata: Metadata = {
   title: 'Preguntas Frecuentes',
@@ -89,7 +94,7 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
         question: '¿Que diferencia hay entre una bomba sumergible y una bomba de superficie?',
         answer: 'Las bombas sumergibles van dentro del agua (pozos, tanques) y son mas eficientes para grandes profundidades. Las de superficie van fuera del agua y son ideales para cisternas, rios o arroyos poco profundos. Lee nuestra guia completa de tipos de bombas para una comparacion detallada.',
         relatedGuide: {
-          slug: 'como-elegir-bomba-agua',
+          slug: 'seleccion-bombas',
           label: 'Ver guía completa de selección de bombas'
         }
       },
@@ -97,7 +102,7 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
         question: '¿Como elegir la bomba de agua adecuada?',
         answer: 'Debes considerar: profundidad del agua, caudal necesario (litros/hora), presion requerida, tipo de uso (domestico/agricola) y alimentacion electrica disponible. Consulta nuestra guia de seleccion de bombas para un analisis tecnico completo.',
         relatedGuide: {
-          slug: 'como-elegir-bomba-agua',
+          slug: 'seleccion-bombas',
           label: 'Guía de selección de bombas'
         }
       },
@@ -283,11 +288,53 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
   },
 };
 
-// Flatten FAQs for JSON-LD schema
-const allFaqs = Object.values(faqData).flatMap((category) => category.faqs);
-const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
+/** Fetch all published guides to create dynamic SEO clusters */
+async function getDynamicClusters(): Promise<SeoCluster[]> {
+  const { data, error } = await supabase
+    .from('guides')
+    .select('slug, title, keywords, category')
+    .eq('is_published', true);
 
-export default function FAQPage() {
+  if (error || !data) {
+    console.error('[SEO Clusters] Error fetching guides:', error?.message);
+    return [];
+  }
+
+  return (data as any[]).map(guide => ({
+    url: `/guias/${guide.slug}`,
+    cluster: String(guide.category || 'general').toLowerCase(),
+    type: 'guide',
+    keywords: [
+      { term: guide.title, weight: 10 },
+      ...(Array.isArray(guide.keywords) ? guide.keywords : []).map((k: any) => ({
+        term: String(k),
+        weight: 9
+      }))
+    ]
+  }));
+}
+
+export default async function FAQPage() {
+  const dynamicClusters = await getDynamicClusters();
+
+  // Process all FAQ answers with auto-linking
+  const processedFaqData = Object.entries(faqData).reduce((acc, [key, category]) => {
+    acc[key] = {
+      ...category,
+      faqs: category.faqs.map(faq => ({
+        ...faq,
+        answer: autoLinkBlogContent(faq.answer, 'faq', {
+          maxLinks: 2,
+          additionalClusters: dynamicClusters
+        })
+      }))
+    };
+    return acc;
+  }, {} as typeof faqData);
+
+  // Flatten FAQs for JSON-LD schema
+  const allFaqs = Object.values(processedFaqData).flatMap((category) => category.faqs);
+
   // JSON-LD Schema for FAQPage
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -297,7 +344,7 @@ export default function FAQPage() {
       name: faq.question,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: faq.answer,
+        text: faq.answer.replace(/<[^>]*>/g, ''), // Clean HTML for schema
       },
     })),
   };
@@ -357,7 +404,7 @@ export default function FAQPage() {
               className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 hover:bg-blue-100 transition-colors group"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600">
-                <BookOpen className="h-5 w-5 text-white" />
+                < BookOpen className="h-5 w-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-blue-900 text-sm">¿Buscas guias tecnicas?</p>
@@ -368,7 +415,7 @@ export default function FAQPage() {
 
             {/* Category Navigation */}
             <nav className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide sm:flex-wrap sm:overflow-x-visible sm:pb-0">
-              {Object.entries(faqData).map(([key, category]) => (
+              {Object.entries(processedFaqData).map(([key, category]) => (
                 <a
                   key={key}
                   href={`#${key}`}
@@ -381,7 +428,7 @@ export default function FAQPage() {
 
             {/* FAQ Categories */}
             <div className="space-y-8">
-              {Object.entries(faqData).map(([key, category]) => (
+              {Object.entries(processedFaqData).map(([key, category]) => (
                 <div key={key} id={key} className="scroll-mt-24">
                   <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-3">
                     <span className="text-2xl">{category.icon}</span>

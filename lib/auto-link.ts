@@ -1,4 +1,4 @@
-import { SEO_CLUSTERS, type ClusterKeyword } from './seo-clusters';
+import { SEO_CLUSTERS, type ClusterKeyword, type SeoCluster } from './seo-clusters';
 
 interface AutoLinkOptions {
   maxLinks?: number;
@@ -6,6 +6,7 @@ interface AutoLinkOptions {
   linkClass?: string;
   randomizeAnchor?: boolean;
   excludePaths?: string[];
+  additionalClusters?: SeoCluster[];
 }
 
 export function autoLinkContent(
@@ -19,10 +20,12 @@ export function autoLinkContent(
     linkClass = 'text-blue-600 hover:text-blue-700 hover:underline',
     randomizeAnchor = false,
     excludePaths = [],
+    additionalClusters = [],
   } = options;
 
   // 1. Filter and prepare clusters
-  const clustersToUse = SEO_CLUSTERS.filter(
+  const allClusters = [...SEO_CLUSTERS, ...additionalClusters];
+  const clustersToUse = allClusters.filter(
     c => !excludePaths.some(p => c.url.includes(p))
   ).map(c => ({
     url: c.url,
@@ -143,5 +146,6 @@ export function autoLinkBlogContent(
   return autoLinkContent(html, {
     ...options,
     excludePaths: [currentSlug, ...(options.excludePaths || [])],
+    additionalClusters: options.additionalClusters,
   });
 }

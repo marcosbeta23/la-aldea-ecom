@@ -1,17 +1,25 @@
 import type { ArticleSection } from '@/lib/faq-articles';
 import { autoLinkBlogContent } from '@/lib/auto-link';
+import type { SeoCluster } from '@/lib/seo-clusters';
 
 interface ArticleSectionProps {
   section: ArticleSection;
   index: number;
   currentSlug: string;
+  additionalClusters?: SeoCluster[];
 }
 
-export default function ArticleSectionBlock({ section, index, currentSlug }: ArticleSectionProps) {
+export default function ArticleSectionBlock({ 
+  section, 
+  index, 
+  currentSlug, 
+  additionalClusters 
+}: ArticleSectionProps) {
   const linkedContent = autoLinkBlogContent(section.content, currentSlug, {
     maxLinks: index === 0 ? 3 : 2,
     linkClass: 'text-blue-600 hover:text-blue-700 hover:underline font-medium',
     excludePaths: [currentSlug],
+    additionalClusters: additionalClusters,
   });
 
   // Stats type gets a colored banner

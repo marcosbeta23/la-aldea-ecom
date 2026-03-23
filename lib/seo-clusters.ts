@@ -35,7 +35,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     ],
   },
   {
-    url: '/guias/bombas-solares-riego-agricola',
+    url: '/guias/energias-renovables',
     cluster: 'bombas',
     subCluster: 'solar',
     type: 'guide',
@@ -47,7 +47,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     ],
   },
   {
-    url: '/guias/bomba-sumergible-vs-superficie',
+    url: '/guias/tipos-bombas',
     cluster: 'bombas',
     subCluster: 'tipos',
     type: 'guide',
@@ -85,7 +85,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     ],
   },
   {
-    url: '/guias/riego-por-goteo-instalacion',
+    url: '/guias/instalar-riego-goteo',
     cluster: 'riego',
     subCluster: 'goteo',
     type: 'guide',
@@ -97,7 +97,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     ],
   },
   {
-    url: '/guias/riego-por-goteo-vs-aspersion',
+    url: '/guias/goteo-vs-aspersion',
     cluster: 'riego',
     subCluster: 'comparativa',
     type: 'guide',
@@ -109,7 +109,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     ],
   },
   {
-    url: '/guias/calculo-agua-por-hectarea',
+    url: '/guias/cuanta-agua-por-hectarea',
     cluster: 'riego',
     subCluster: 'cálculo',
     type: 'guide',
@@ -131,11 +131,12 @@ export const SEO_CLUSTERS: SeoCluster[] = [
       { term: 'tanque de agua', weight: 10 },
       { term: 'tanques de agua', weight: 10 },
       { term: 'tanque australiano', weight: 10 },
-      { term: 'cisterna', weight: 9 },
+      { term: 'tanque', weight: 9 },
+      { term: 'tanques', weight: 9 },
       { term: 'depósito de agua', weight: 8 },
       { term: 'reservorio de agua', weight: 8 },
       { term: 'almacenamiento de agua', weight: 7 },
-      { term: 'pileta de agua', weight: 7 },
+      { term: 'cisternas', weight: 7 },
       { term: 'tanque elevado', weight: 8 },
       { term: 'tanque polietileno', weight: 8 },
       { term: 'tanque de fibra', weight: 7 },
@@ -218,7 +219,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     ],
   },
   {
-    url: '/guias/mantenimiento-piscinas-uruguay',
+    url: '/guias/mantenimiento-piscinas',
     cluster: 'piscinas',
     subCluster: 'mantenimiento',
     type: 'pillar',
@@ -325,7 +326,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // GUÍAS PILLAR
   {
-    url: '/guias/sistemas-de-riego-uruguay',
+    url: '/guias/que-es-riego-agricola',
     cluster: 'riego',
     type: 'pillar',
     keywords: [
@@ -336,7 +337,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     ],
   },
   {
-    url: '/guias/guia-completa-bombas-agua',
+    url: '/guias/tipos-bombas', // Combined into types guide
     cluster: 'bombas',
     type: 'pillar',
     keywords: [
