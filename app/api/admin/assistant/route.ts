@@ -141,45 +141,64 @@ export async function POST(req: NextRequest) {
   const MAX_HISTORY = 20;
   const trimmedMessages = messages.slice(-MAX_HISTORY);
 
-  let response = await callClaude({
-    system: SYSTEM_PROMPT,
-    messages: trimmedMessages,
-    tools: TOOLS,
-    max_tokens: 1024,
-  });
-
-  // Agentic loop — keep running until Claude stops using tools
-  let iterations = 0;
-  const MAX_ITERATIONS = 5;
-
-  while (response.stop_reason === 'tool_use' && iterations < MAX_ITERATIONS) {
-    iterations++;
-    const toolUses = response.content.filter((b: any) => b.type === 'tool_use');
-
-    const toolResults = await Promise.all(
-      toolUses.map(async (tu: any) => ({
-        type: 'tool_result' as const,
-        tool_use_id: tu.id,
-        content: JSON.stringify(await executeTool(tu.name, tu.input)),
-      }))
-    );
-
-    response = await callClaude({
+  try {
+    let response = await callClaude({
       system: SYSTEM_PROMPT,
-      messages: [
-        ...trimmedMessages,
-        { role: 'assistant', content: response.content },
-        { role: 'user', content: toolResults },
-      ],
+      messages: trimmedMessages,
       tools: TOOLS,
       max_tokens: 1024,
     });
+
+    // Agentic loop — keep running until Claude stops using tools
+    let iterations = 0;
+    const MAX_ITERATIONS = 5;
+
+    while (response.stop_reason === 'tool_use' && iterations < MAX_ITERATIONS) {
+      iterations++;
+      const toolUses = response.content.filter((b: any) => b.type === 'tool_use');
+
+      const toolResults = await Promise.all(
+        toolUses.map(async (tu: any) => {
+          try {
+            return {
+              type: 'tool_result' as const,
+              tool_use_id: tu.id,
+              content: JSON.stringify(await executeTool(tu.name, tu.input)),
+            };
+          } catch (toolErr: any) {
+            return {
+              type: 'tool_result' as const,
+              tool_use_id: tu.id,
+              content: JSON.stringify({ error: `Tool ${tu.name} failed: ${toolErr.message}` }),
+              is_error: true,
+            };
+          }
+        })
+      );
+
+      response = await callClaude({
+        system: SYSTEM_PROMPT,
+        messages: [
+          ...trimmedMessages,
+          { role: 'assistant', content: response.content },
+          { role: 'user', content: toolResults },
+        ],
+        tools: TOOLS,
+        max_tokens: 1024,
+      });
+    }
+
+    const text = response.content
+      .filter((b: any) => b.type === 'text')
+      .map((b: any) => b.text)
+      .join('');
+
+    return NextResponse.json({ reply: text });
+  } catch (err: any) {
+    console.error('Assistant error:', err);
+    return NextResponse.json(
+      { error: err.message || 'Error al procesar la consulta. Intentá de nuevo.' },
+      { status: 500 }
+    );
   }
-
-  const text = response.content
-    .filter((b: any) => b.type === 'text')
-    .map((b: any) => b.text)
-    .join('');
-
-  return NextResponse.json({ reply: text });
 }

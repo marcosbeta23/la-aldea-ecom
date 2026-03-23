@@ -9,9 +9,10 @@ interface AutoLinkOptions {
 }
 
 export function autoLinkContent(
-  html: string,
+  html: string | null | undefined,
   options: AutoLinkOptions = {}
 ): string {
+  if (!html || typeof html !== 'string' || html.trim() === '') return '';
   const {
     maxLinks = 5,
     newTab = false,
@@ -27,7 +28,7 @@ export function autoLinkContent(
 
     allKeywords.push({
       url: cluster.url,
-      keywords: cluster.keywords.sort((a, b) => b.term.length - a.term.length).map(k => k.term),
+      keywords: [...cluster.keywords].sort((a, b) => b.term.length - a.term.length).map(k => k.term),
     });
   }
 
@@ -82,7 +83,7 @@ function isInsideBlockedTag(html: string, regex: RegExp): boolean {
       'gi'
     );
     const blocked = html.replace(blockRegex, (match) => {
-      return match.replace(/\\S/g, '_');
+      return match.replace(/\S/g, '_');
     });
 
     if (!blocked.match(regex)) return true;
@@ -99,10 +100,11 @@ function pickAnchorVariant(primary: string, allVariants: string[]): string {
 }
 
 export function autoLinkBlogContent(
-  html: string,
+  html: string | null | undefined,
   currentSlug: string,
   options: AutoLinkOptions = {}
 ): string {
+  if (!html) return '';
   return autoLinkContent(html, {
     ...options,
     excludePaths: [currentSlug, ...(options.excludePaths || [])],

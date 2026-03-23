@@ -1,5 +1,3 @@
-import { ReactNode } from 'react';
-
 export const FAQ_BY_GUIDE: Record<string, Array<{ question: string; answer: string }>> = {
   'como-elegir-bomba-agua': [
     {

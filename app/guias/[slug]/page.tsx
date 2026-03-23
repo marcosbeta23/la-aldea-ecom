@@ -252,7 +252,7 @@ const howToJsonLd = stepsSection ? {
   description: article.description,
   image: `${siteUrl}/assets/images/og-image.webp`,
   // Parse steps from content — handle both <li> and numbered text strictly
-  step: (stepsSection.content.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [])
+  step: ((stepsSection.content ?? '').match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [])
     .map(li => li.replace(/<[^>]*>/g, '').trim())
     .filter(text => text.length > 5)
     .map((text, i) => ({

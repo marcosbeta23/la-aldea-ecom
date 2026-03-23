@@ -4,6 +4,22 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 type Input = Record<string, unknown>;
 
+/** Mask email to protect PII before sending to AI: marco@gmail.com → m***o@gmail.com */
+function maskEmail(email: string | null | undefined): string {
+  if (!email || typeof email !== 'string') return '';
+  const [local, domain] = email.split('@');
+  if (!domain || local.length < 2) return '***@' + (domain || 'redacted');
+  return `${local[0]}***${local[local.length - 1]}@${domain}`;
+}
+
+/** Anonymize PII fields in tool results */
+function anonymizeOrders(rows: any[]): any[] {
+  return rows.map(r => ({
+    ...r,
+    customer_email: r.customer_email ? maskEmail(r.customer_email) : undefined,
+  }));
+}
+
 export async function executeTool(name: string, input: Input): Promise<unknown> {
   switch (name) {
     case 'get_orders': {
@@ -24,7 +40,8 @@ export async function executeTool(name: string, input: Input): Promise<unknown> 
       if (input.order_source) query = query.eq('order_source', input.order_source);
 
       const { data, error } = await query;
-      return error ? { error: error.message } : data;
+      if (error) return { error: error.message };
+      return anonymizeOrders(data ?? []);
     }
 
     case 'get_sales_summary': {
@@ -93,7 +110,8 @@ export async function executeTool(name: string, input: Input): Promise<unknown> 
       if (input.name) query = query.ilike('customer_name', `%${input.name}%`);
 
       const { data, error } = await query;
-      return error ? { error: error.message } : data;
+      if (error) return { error: error.message };
+      return anonymizeOrders(data ?? []);
     }
 
     case 'get_abandoned_carts': {
@@ -108,7 +126,11 @@ export async function executeTool(name: string, input: Input): Promise<unknown> 
         .is('order_id', null)
         .order('subtotal', { ascending: false })
         .limit(10);
-      return error ? { error: error.message } : data;
+      if (error) return { error: error.message };
+      return (data ?? []).map((r: any) => ({
+        ...r,
+        email: maskEmail(r.email),
+      }));
     }
 
     case 'get_search_gaps': {
