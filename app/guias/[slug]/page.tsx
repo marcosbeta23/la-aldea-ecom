@@ -426,7 +426,7 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
                           {faq.question}
                           <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform shrink-0 ml-2" />
                         </summary>
-                        <div className="px-4 pb-4 text-sm text-slate-600 leading-relaxed">
+                        <div className="px-4 pb-4 text-sm text-slate-700 leading-relaxed">
                           <p>{faq.answer}</p>
                         </div>
                       </details>
@@ -462,13 +462,13 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
         .faq-table { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
         .faq-table table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 400px; }
         .faq-table th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
-        .faq-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: #475569; }
+        .faq-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: #334155; }
         .faq-table tr:hover td { background: #f8fafc; }
-        .faq-table p { margin-top: 1rem; font-size: 0.875rem; color: #64748b; }
+        .faq-table p { margin-top: 1rem; font-size: 0.875rem; color: #475569; }
         .faq-comparison > div { background: #f8fafc; border-radius: 0.75rem; padding: 1.25rem; }
         .faq-comparison h4 { font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; font-size: 0.95rem; }
         .faq-comparison ul { padding-left: 1.25rem; margin: 0; }
-        .faq-comparison li { margin-bottom: 0.35rem; color: #475569; font-size: 0.875rem; }
+        .faq-comparison li { margin-bottom: 0.35rem; color: #334155; font-size: 0.875rem; }
       `}</style>
     </>
   );

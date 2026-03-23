@@ -24,7 +24,7 @@ export default function RelatedLinks({ article, relatedArticles = [] }: RelatedL
                 href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
                 className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors group"
               >
-                <span className="text-sm font-medium">{cat.label}</span>
+                <span className="text-sm font-medium text-slate-900">{cat.label}</span>
                 <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
               </Link>
             ))}
@@ -46,10 +46,10 @@ export default function RelatedLinks({ article, relatedArticles = [] }: RelatedL
                 href={`/guias/${related.slug}`}
                 className="block p-3 bg-slate-50 rounded-lg hover:bg-green-50 transition-colors group"
               >
-                <p className="text-sm font-medium text-slate-800 group-hover:text-green-700">
+                <p className="text-sm font-medium text-slate-900 group-hover:text-green-700">
                   {related.title}
                 </p>
-                <p className="text-xs text-slate-400 mt-0.5">{related.category}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{related.category}</p>
               </Link>
             ))}
           </div>

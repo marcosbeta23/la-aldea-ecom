@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
             const ids = semanticResults.map((r: any) => r.id);
             const { data: fullProducts } = await supabaseAdmin
               .from('products')
-              .select('id, sku, slug, name, category, brand, price_numeric, currency, images')
+              .select('id, sku, slug, name, category, brand, price_numeric, currency, images, availability_type')
               .in('id', ids)
               .eq('is_active', true) as { data: ProductResult[] | null };
 

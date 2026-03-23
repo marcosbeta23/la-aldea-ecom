@@ -52,12 +52,11 @@ export default function ArticleSectionBlock({ section, index, currentSlug }: Art
     );
   }
 
-  // Default: text, list, steps
   return (
     <section className="my-8">
       <h2 className="text-xl font-bold text-slate-900 mb-4">{section.title}</h2>
       <div
-        className="faq-content text-slate-700 leading-relaxed"
+        className="faq-content text-slate-800 leading-relaxed"
         dangerouslySetInnerHTML={{ __html: linkedContent }}
       />
     </section>
