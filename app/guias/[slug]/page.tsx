@@ -75,16 +75,32 @@ async function resolveArticlesBySlugs(slugs: string[]): Promise<FaqArticle[]> {
 }
 
 function dbRowToArticle(data: any): FaqArticle {
+  const safeArray = (val: any): any[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      try {
+        const parsed = JSON.parse(val);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        // Quick fallback for comma-separated or postgres array syntax
+        const cleaned = val.replace(/^\{|\}$/g, '');
+        return cleaned.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+    return [];
+  };
+
   return {
     slug: data.slug,
     title: data.title,
     description: data.description || '',
     breadcrumbLabel: data.breadcrumb_label || data.title,
     category: data.category || '',
-    keywords: data.keywords || [],
-    relatedCategories: data.related_categories || [],
-    relatedArticles: data.related_articles || [],
-    sections: data.sections || [],
+    keywords: safeArray(data.keywords),
+    relatedCategories: safeArray(data.related_categories),
+    relatedArticles: safeArray(data.related_articles),
+    sections: safeArray(data.sections),
     datePublished: data.date_published || undefined,
     dateModified: data.date_modified || undefined,
   };
