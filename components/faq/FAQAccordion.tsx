@@ -47,7 +47,10 @@ export default function FAQAccordion({ faqs }: FAQAccordionProps) {
             }`}
           >
             <div className="px-6 pb-4 text-slate-600">
-              <p>{faq.answer}</p>
+              <div 
+                className="prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: faq.answer }} 
+              />
               {faq.relatedGuide && (
                 <Link href={`/guias/${faq.relatedGuide.slug}`} className="inline-block mt-2 text-blue-600 hover:text-blue-700 hover:underline font-medium">
                   {faq.relatedGuide.label} →
