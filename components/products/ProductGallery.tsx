@@ -71,6 +71,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
             priority={currentIndex === 0}
             fetchPriority={currentIndex === 0 ? 'high' : undefined}
             sizes="(max-width: 768px) 100vw, 50vw"
+            quality={60}
             onLoad={() => setIsLoading(false)}
             onError={() => handleImageError(currentIndex)}
           />
@@ -134,7 +135,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
                   className="object-cover"
                   sizes="64px"
                   priority={index === 0}
-                  fetchPriority={index === 0 ? 'high' : undefined}
+                  fetchPriority="low"
                   onError={() => handleImageError(index)}
                 />
               )}

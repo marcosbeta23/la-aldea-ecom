@@ -15,7 +15,7 @@ export default function LazyMap() {
           observer.disconnect();
         }
       },
-      { rootMargin: '200px' } // start loading 200px before it's visible
+      { rootMargin: '50px' } // start loading 50px before it's visible
     );
 
     if (ref.current) observer.observe(ref.current);

@@ -111,6 +111,21 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'la-aldea-ecom.vercel.app',
+          },
+        ],
+        destination: 'https://laaldeatala.com.uy/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withBundleAnalyzer(
