@@ -42,7 +42,7 @@ async function resolveArticle(slug: string): Promise<FaqArticle | null> {
     console.error(`[Guide SSR] Error fetching article "${slug}":`, error.message);
     return null;
   }
-  
+
   if (!data) return null;
 
   return dbRowToArticle(data);
@@ -75,7 +75,7 @@ async function resolveArticlesBySlugs(slugs: string[]): Promise<FaqArticle[]> {
     if (error) {
       console.error(`[Guide SSR] Error fetching related articles for "${remainingSlugs.join(', ')}":`, error.message);
     }
-    
+
     if (!error && data && Array.isArray(data)) {
       for (const row of data) {
         resolved.push(dbRowToArticle(row));
@@ -116,9 +116,9 @@ function dbRowToArticle(data: any): FaqArticle {
     .map(c => {
       if (typeof c === 'string') return { label: c, value: c };
       if (c && typeof c === 'object') {
-        return { 
-          label: String(c.label || c.value || ''), 
-          value: String(c.value || c.label || '') 
+        return {
+          label: String(c.label || c.value || ''),
+          value: String(c.value || c.label || '')
         };
       }
       return null;
@@ -247,113 +247,123 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
 
   // JSON-LD TechArticle schema
   const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "@id": `${siteUrl}/guias/${slug}`,
-  headline: article.title,
-  description: article.description,
-  
-  // REQUIRED by Google for Article rich results — use OG image or logo fallback
-  image: {
-    "@type": "ImageObject",
-    url: `${siteUrl}/assets/images/og-image.webp`, // swap for article-specific image when available
-    width: 1200,
-    height: 630,
-  },
-  
-  datePublished: article.datePublished || "2025-01-01",
-  dateModified: article.dateModified || article.datePublished || "2025-01-01",
-  
-  // Person author gets more E-E-A-T weight than Organization
-  author: {
-    "@type": "Person",
-  publisher: {
-    "@type": "Organization",
-    "@id": "https://laaldeatala.com.uy/#business",
-    name: "La Aldea",
-    url: siteUrl,
-    logo: {
-      "@type": "ImageObject",
-      url: `${siteUrl}/assets/images/logo.webp`,
-      width: 260,
-      height: 80,
-    },
-  },
-  
-  mainEntityOfPage: {
-    "@type": "WebPage",
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
     "@id": `${siteUrl}/guias/${slug}`,
-  },
-  
-  // Links article to product categories — GEO/AEO signal
-  about: article.relatedCategories.map(rc => ({
-    "@type": "Thing",
-    name: rc.label,
-    url: `${siteUrl}/productos?category=${encodeURIComponent(rc.value)}`,
-  })),
-  
-  keywords: article.keywords.join(", "),
-  
-  // Speakable — marks content suitable for voice assistants (Google Assistant etc.)
-  speakable: {
-    "@type": "SpeakableSpecification",
-    cssSelector: ["h1", "h2", ".article-description"],
-  },
-  
-  isPartOf: {
-    "@type": "Blog",
-    "@id": `${siteUrl}/blog`,
-    name: "Guías y Artículos — La Aldea",
-    publisher: {
-      "@id": "https://laaldeatala.com.uy/#business",
+    headline: article.title,
+    description: article.description,
+
+    // REQUIRED by Google for Article rich results — use OG image or logo fallback
+    image: {
+      "@type": "ImageObject",
+      url: `${siteUrl}/assets/images/og-image.webp`, // swap for article-specific image when available
+      width: 1200,
+      height: 630,
     },
-  },
-};
+
+    datePublished: article.datePublished || "2025-01-01",
+    dateModified: article.dateModified || article.datePublished || "2025-01-01",
+
+    // Person author gets more E-E-A-T weight than Organization
+    author: {
+      "@type": "Person",
+      name: "Martín Betancor Peregalli",
+      url: `${siteUrl}/nosotros`,
+      jobTitle: "Especialista en Hidráulica y Riego",
+      worksFor: {
+        "@type": "Organization",
+        "@id": "https://laaldeatala.com.uy/#business",
+        name: "La Aldea",
+      },
+    },
+
+    publisher: {
+      "@type": "Organization",
+      "@id": "https://laaldeatala.com.uy/#business",
+      name: "La Aldea",
+      url: siteUrl,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteUrl}/assets/images/logo.webp`,
+        width: 260,
+        height: 80,
+      },
+    },
+
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${siteUrl}/guias/${slug}`,
+    },
+
+    // Links article to product categories — GEO/AEO signal
+    about: article.relatedCategories.map(rc => ({
+      "@type": "Thing",
+      name: rc.label,
+      url: `${siteUrl}/productos?category=${encodeURIComponent(rc.value)}`,
+    })),
+
+    keywords: article.keywords.join(", "),
+
+    // Speakable — marks content suitable for voice assistants (Google Assistant etc.)
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", "h2", ".article-description"],
+    },
+
+    isPartOf: {
+      "@type": "Blog",
+      "@id": `${siteUrl}/blog`,
+      name: "Guías y Artículos — La Aldea",
+      publisher: {
+        "@id": "https://laaldeatala.com.uy/#business",
+      },
+    },
+  };
 
   // Breadcrumb — replaces your current manual construction
   const breadcrumbLd = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    { "@type": "ListItem", position: 1, name: "Inicio", item: siteUrl },
-    { "@type": "ListItem", position: 2, name: "Blog", item: `${siteUrl}/blog` },
-    { "@type": "ListItem", position: 3, name: article.breadcrumbLabel, item: `${siteUrl}/guias/${slug}` },
-  ],
-};
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${siteUrl}/blog` },
+      { "@type": "ListItem", position: 3, name: article.breadcrumbLabel, item: `${siteUrl}/guias/${slug}` },
+    ],
+  };
 
-// HowTo — fix the fragile regex with proper section content parsing
-const stepsSection = article.sections.find(s => s.type === "steps");
-const howToJsonLd = (stepsSection && typeof stepsSection.content === 'string') ? {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: article.title,
-  description: article.description,
-  image: `${siteUrl}/assets/images/og-image.webp`,
-  // Parse steps from content — handle both <li> and numbered text strictly
-  step: (stepsSection.content.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [])
-    .map(li => li.replace(/<[^>]*>/g, '').trim())
-    .filter(text => text.length > 5)
-    .map((text, i) => ({
-      "@type": "HowToStep",
-      position: i + 1,
-      name: String(text.split(".")[0]).trim().slice(0, 60),
-      text: text,
+  // HowTo — fix the fragile regex with proper section content parsing
+  const stepsSection = article.sections.find(s => s.type === "steps");
+  const howToJsonLd = (stepsSection && typeof stepsSection.content === 'string') ? {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: article.title,
+    description: article.description,
+    image: `${siteUrl}/assets/images/og-image.webp`,
+    // Parse steps from content — handle both <li> and numbered text strictly
+    step: (stepsSection.content.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [])
+      .map(li => li.replace(/<[^>]*>/g, '').trim())
+      .filter(text => text.length > 5)
+      .map((text, i) => ({
+        "@type": "HowToStep",
+        position: i + 1,
+        name: String(text.split(".")[0]).trim().slice(0, 60),
+        text: text,
+      })),
+  } : null;
+
+  // FAQPage JSON-LD
+  const faqJsonLd = relatedFaqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: relatedFaqs.map(faq => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer.replace(/<[^>]*>/g, ''), // Clean HTML for schema
+      },
     })),
-} : null;
-
-// FAQPage JSON-LD
-const faqJsonLd = relatedFaqs.length > 0 ? {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: relatedFaqs.map(faq => ({
-    "@type": "Question",
-    name: faq.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: faq.answer.replace(/<[^>]*>/g, ''), // Clean HTML for schema
-    },
-  })),
-} : null;
+  } : null;
 
   return (
     <>
@@ -409,7 +419,7 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
             <h1 className="text-2xl lg:text-3xl font-bold max-w-3xl">
               {article.title}
             </h1>
-            
+
 
             <p className="mt-4 text-blue-100 max-w-2xl text-sm lg:text-base">
               {article.description}
@@ -423,10 +433,10 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
             {/* Article body */}
             <article className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 overflow-hidden">
               {article.sections.map((section, i) => (
-                <ArticleSectionBlock 
-                  key={i} 
-                  section={section} 
-                  index={i} 
+                <ArticleSectionBlock
+                  key={i}
+                  section={section}
+                  index={i}
                   currentSlug={slug}
                   additionalClusters={dynamicClusters}
                 />
@@ -448,7 +458,7 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
                           {faq.question}
                           <ChevronDown className="h-4 w-4 text-slate-400 group-open:rotate-180 transition-transform shrink-0 ml-2" />
                         </summary>
-                        <div 
+                        <div
                           className="px-4 pb-4 text-sm text-slate-700 leading-relaxed"
                           dangerouslySetInnerHTML={{ __html: faq.answer }}
                         />
