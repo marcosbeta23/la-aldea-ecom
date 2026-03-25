@@ -14,7 +14,6 @@ import Link from 'next/link';
 import { FAQ_BY_GUIDE } from '@/lib/faq-by-guide';
 import { autoLinkBlogContent } from '@/lib/auto-link';
 import type { SeoCluster } from '@/lib/seo-clusters';
-import AuthorImage from '@/components/common/AuthorImage';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -268,16 +267,6 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
   // Person author gets more E-E-A-T weight than Organization
   author: {
     "@type": "Person",
-    name: "Martín Betancor Peregalli",
-    url: `${siteUrl}/nosotros`,
-    jobTitle: "Especialista en Hidráulica y Riego",
-    worksFor: {
-      "@type": "Organization",
-      "@id": "https://laaldeatala.com.uy/#business",
-      name: "La Aldea",
-    },
-  },
-  
   publisher: {
     "@type": "Organization",
     "@id": "https://laaldeatala.com.uy/#business",
@@ -421,18 +410,6 @@ const faqJsonLd = relatedFaqs.length > 0 ? {
               {article.title}
             </h1>
             
-            <div className="mt-6 flex items-center gap-3 border-b border-blue-500/30 pb-4">
-              <div className="h-10 w-10 overflow-hidden rounded-full bg-blue-100 flex-shrink-0">
-                <AuthorImage
-                  src="/assets/images/martin-betancor.webp"
-                  alt="Martín Betancor Peregalli"
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">Martín Betancor Peregalli</p>
-                <p className="text-xs text-blue-200">Director Técnico — La Aldea</p>
-              </div>
-            </div>
 
             <p className="mt-4 text-blue-100 max-w-2xl text-sm lg:text-base">
               {article.description}
