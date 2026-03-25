@@ -258,14 +258,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="es">
       <head>
-        {/* Preconnect to external origins */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-
         {/* DNS prefetch for performance */}
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://supabase.co" />
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
-        <link rel="preconnect" href="https://us.i.posthog.com" />
 
         {/* Cloudflare Web Analytics */}
         <Script

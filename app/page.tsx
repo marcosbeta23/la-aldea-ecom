@@ -484,7 +484,7 @@ export default async function Home() {
                       alt={category.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-                      quality={55}
+                      quality={50}
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     {/* Gradient overlay */}
@@ -578,8 +578,8 @@ export default async function Home() {
                     alt="Sistema de riego profesional - La Aldea"
                     width={800}
                     height={500}
-                    sizes="(max-width: 768px) 100vw, 600px"
-                    quality={55}
+                    sizes="(max-width: 768px) 100vw, 800px"
+                    quality={50}
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -710,8 +710,8 @@ export default async function Home() {
                     alt="La Aldea - Local en Tala, Uruguay"
                     width={800}
                     height={600}
-                    sizes="(max-width: 768px) 100vw, 600px"
-                    quality={55}
+                    sizes="(max-width: 768px) 100vw, 800px"
+                    quality={50}
                     className="h-full w-full object-cover"
                   />
                 </div>
