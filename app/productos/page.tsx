@@ -437,8 +437,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               <Link
                 href="/productos"
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!params.categoria
-                    ? 'bg-white text-blue-700'
-                    : 'bg-white/15 text-white hover:bg-white/25'
+                  ? 'bg-white text-blue-700'
+                  : 'bg-white/15 text-white hover:bg-white/25'
                   }`}
               >
                 Todos
@@ -448,8 +448,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   key={cat.value}
                   href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
                   className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${params.categoria === cat.value
-                      ? 'bg-white text-blue-700'
-                      : 'bg-white/15 text-white hover:bg-white/25'
+                    ? 'bg-white text-blue-700'
+                    : 'bg-white/15 text-white hover:bg-white/25'
                     }`}
                 >
                   {cat.value} ({cat.count})

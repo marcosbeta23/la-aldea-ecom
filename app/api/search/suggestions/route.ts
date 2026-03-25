@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cacheGet, cacheSet, searchRatelimit, getClientIp } from '@/lib/redis';
 import { getCachedQueryEmbedding } from '@/lib/search/embedding-cache';
+import { expandQuery } from '@/lib/search/query-expansion';
+import { getSearchFallback } from '@/lib/search/ai-fallback';
+import { CATEGORY_HIERARCHY } from '@/lib/categories';
 
 // ── Synonym resolver ──────────────────────────────────────────────────────────
 async function resolveQuery(query: string): Promise<string> {
@@ -143,6 +146,52 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // ── Step 5: AI Query Expansion Fallback ──
+    if ((!products || products.length === 0) && normalizedQuery.length >= 3) {
+      try {
+        const expandedTerms = await expandQuery(normalizedQuery);
+        // Remove the original query since we already tried it
+        const newTerms = expandedTerms.filter(t => stripAccents(t.toLowerCase()) !== normalizedQuery);
+        
+        if (newTerms.length > 0) {
+          // Try fuzzy search with expanded terms
+          for (const term of newTerms) {
+            const { data: expandedResults } = await (supabaseAdmin as any)
+              .rpc('search_products_fuzzy', {
+                search_query: stripAccents(term),
+                similarity_threshold: 0.3, // Slightly stricter for expansion
+                result_limit: 5,
+              });
+            
+            if (expandedResults?.length) {
+              const ids = expandedResults.map((r: any) => r.id);
+              const { data: fullProducts } = await supabaseAdmin
+                .from('products')
+                .select('id, sku, slug, name, category, brand, price_numeric, currency, images, availability_type')
+                .in('id', ids)
+                .eq('is_active', true) as { data: ProductResult[] | null };
+
+              if (fullProducts?.length) {
+                products = [...(products || []), ...fullProducts];
+                if (products.length >= 8) break;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Expansion error:', err);
+      }
+    }
+
+    // ── Step 6: Final AI Fallback (Category Suggestions) ──
+    let fallbackData: { message: string, suggestions: string[] } | null = null;
+    if (!products || products.length === 0) {
+      try {
+        const availableCats = CATEGORY_HIERARCHY.map(c => c.value);
+        fallbackData = await getSearchFallback(rawQuery, availableCats);
+      } catch { /* silent */ }
+    }
+
     // Boost: products whose name starts with the query come first
     if (products && products.length > 1) {
       const qLower = normalizedQuery.toLowerCase();
@@ -225,12 +274,18 @@ export async function GET(request: NextRequest) {
 
     // Log search analytics (fire-and-forget)
     const productCount = products?.length || 0;
+    const isAiExpanded = productCount > 0 && products?.some(p => !stripAccents(p.name.toLowerCase()).includes(normalizedQuery));
+    
     (supabaseAdmin as any)
       .from('search_analytics')
       .insert({
         query: resolvedQuery.toLowerCase(),
         results_count: productCount,
         source: 'suggestions',
+        metadata: {
+          is_ai_expanded: isAiExpanded,
+          has_fallback: !!fallbackData,
+        }
       })
       .then(() => {})
       .catch(() => {});
@@ -238,6 +293,7 @@ export async function GET(request: NextRequest) {
     const result = {
       suggestions: suggestions.slice(0, 10),
       query: resolvedQuery,
+      fallback: fallbackData,
     };
 
     // Cache for 60 seconds
