@@ -201,10 +201,10 @@ export default function ProductForm({ product }: { product?: any }) {
       category: formData.category,
     });
 
-    if (result?.generated) {
+    if (result) {
       setFormData(prev => ({
         ...prev,
-        description: result.generated.description,
+        description: result.description,
       }));
     }
   }
