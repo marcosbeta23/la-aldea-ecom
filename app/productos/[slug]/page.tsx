@@ -9,6 +9,7 @@ import ProductInfo from '@/components/products/ProductInfo';
 import ProductReviews from '@/components/products/ProductReviews';
 import RelatedProducts from '@/components/products/RelatedProducts';
 import { productBreadcrumb } from '@/lib/schema';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 
 export const dynamicParams = true; // explicitly allow on-demand slugs
 
@@ -208,7 +209,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         "@type": "Organization",
         "@id": "https://laaldeatala.com.uy/#business",
         name: "La Aldea",
-        telephone: "+59892744725",
+        telephone: "+${WHATSAPP_PHONE}",
       },
       shippingDetails: {
         "@type": "OfferShippingDetails",

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Barlow_Condensed, Fraunces, Epilogue, DM_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import dynamic from "next/dynamic";
-// ...existing code...
+import { WHATSAPP_PHONE } from "@/lib/constants";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
@@ -11,7 +11,7 @@ import Script from "next/script";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
-import { Partytown } from '@builder.io/partytown/react';
+import { Partytown } from '@qwik.dev/partytown/react';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -228,7 +228,7 @@ export const metadata: Metadata = {
     "business:contact_data:region": "Canelones",
     "business:contact_data:postal_code": "91800",
     "business:contact_data:country_name": "Uruguay",
-    "business:contact_data:phone_number": "+59892744725",
+    "business:contact_data:phone_number": `+${WHATSAPP_PHONE}`,
   },
 };
 

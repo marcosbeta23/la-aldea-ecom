@@ -1,6 +1,7 @@
 import { Section, Text, Link, Row, Column } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
+import { WHATSAPP_PHONE } from '../lib/constants';
 
 interface StatusUpdateProps {
   orderNumber: string;
@@ -186,7 +187,7 @@ export default function StatusUpdate({
       {/* WhatsApp CTA */}
       <Section style={ctaSection}>
         <Link
-          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
+          href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
           style={whatsappButton}
         >
           Consultas? Escribinos por WhatsApp

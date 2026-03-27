@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BookOpen, ShoppingBag, ArrowRight } from 'lucide-react';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 import type { FaqArticle } from '@/lib/faq-articles';
 
 interface RelatedLinksProps {
@@ -63,7 +64,7 @@ export default function RelatedLinks({ article, relatedArticles = [] }: RelatedL
           Nuestro equipo tecnico te asesora sin costo.
         </p>
         <a
-          href="https://wa.me/59892744725"
+          href="https://wa.me/${WHATSAPP_PHONE}"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Contactar por WhatsApp"

@@ -23,6 +23,7 @@ import {
 import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONFIG, DAC_RATES } from '@/lib/shipping';
 import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 
 
 interface CouponData {
@@ -687,7 +688,7 @@ export default function CheckoutPage() {
                                 Coordiná el envío por WhatsApp
                               </p>
                               <a
-                                href={`https://wa.me/59892744725?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
+                                href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"

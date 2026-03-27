@@ -1,1 +1,1 @@
-declare module '@builder.io/partytown/react';
+declare module '@qwik.dev/partytown/react';

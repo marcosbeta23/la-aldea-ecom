@@ -12,6 +12,7 @@ import {
   Facebook,
   ExternalLink,
 } from 'lucide-react';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -49,7 +50,7 @@ const contactSchema = {
       width: 260,
       height: 80,
     },
-    telephone: "+59892744725",
+    telephone: `+${WHATSAPP_PHONE}`,
     email: "la.aldeamartinbetancor@gmail.com",
     url: "https://laaldeatala.com.uy",
     address: {
@@ -88,7 +89,7 @@ const contactSchema = {
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: "+59892744725",
+        telephone: `+${WHATSAPP_PHONE}`,
         contactType: "customer service",
         availableLanguage: "Spanish",
       },
@@ -141,7 +142,7 @@ export default function ContactoPage() {
                   consulta, presupuesto o lo que necesites.
                 </p>
                 <a
-                  href="https://wa.me/59892744725?text=Hola,%20necesito%20asesoramiento%20sobre..."
+                  href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre..."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-green-700 shadow hover:bg-green-50 transition-colors"
@@ -163,8 +164,8 @@ export default function ContactoPage() {
                   </div>
                   <ul className="space-y-2 text-sm">
                     <li>
-                      <a href="tel:+59892744725" className="text-slate-700 hover:text-blue-600">
-                        +598 92 744 725
+                      <a href="tel:+${WHATSAPP_PHONE}" className="text-slate-700 hover:text-blue-600">
+                        {WHATSAPP_DISPLAY}
                       </a>
                       <span className="text-slate-400 ml-1">(celular)</span>
                     </li>

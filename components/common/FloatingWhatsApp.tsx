@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { MessageCircle } from 'lucide-react';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 
 export default function FloatingWhatsApp() {
   const [visible, setVisible] = useState(false);
@@ -36,7 +37,7 @@ export default function FloatingWhatsApp() {
 
   return (
     <a
-      href="https://wa.me/59892744725"
+      href={`https://wa.me/${WHATSAPP_PHONE}`}
       target="_blank"
       rel="noopener noreferrer"
       className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30 transition-all hover:bg-green-600 hover:scale-110 hover:shadow-xl ${

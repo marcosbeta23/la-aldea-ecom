@@ -4,6 +4,7 @@ import FAQAccordion from '@/components/faq/FAQAccordion';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
 import { HelpCircle, Phone, MessageCircle, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
 import { autoLinkBlogContent } from '@/lib/auto-link';
 import { supabase } from '@/lib/supabase';
 import type { SeoCluster } from '@/lib/seo-clusters';
@@ -278,7 +279,7 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
       },
       {
         question: '¿Como puedo solicitar asesoramiento tecnico?',
-        answer: 'Podes llamarnos al +598 92 744 725, escribirnos por WhatsApp o completar el formulario de contacto en nuestro sitio web. El asesoramiento es sin costo.',
+        answer: 'Podes llamarnos al +${WHATSAPP_PHONE}, escribirnos por WhatsApp o completar el formulario de contacto en nuestro sitio web. El asesoramiento es sin costo.',
       },
       {
         question: '¿Donde estan ubicados?',
@@ -449,7 +450,7 @@ export default async function FAQPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
-                  href="https://wa.me/59892744725"
+                  href="https://wa.me/${WHATSAPP_PHONE}"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-green-800 font-semibold rounded-xl hover:bg-green-50 transition-colors"
@@ -458,11 +459,11 @@ export default async function FAQPage() {
                   WhatsApp
                 </a>
                 <a
-                  href="tel:+59892744725"
+                  href="tel:+${WHATSAPP_PHONE}"
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-colors"
                 >
                   <Phone className="h-5 w-5" />
-                  +598 92 744 725
+                  {WHATSAPP_DISPLAY}
                 </a>
               </div>
             </div>

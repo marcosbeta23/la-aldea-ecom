@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ShoppingCart, Check, AlertCircle, MessageCircle, CreditCard } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 import WishlistButton from '@/components/common/WishlistButton';
 import { useState } from 'react';
 

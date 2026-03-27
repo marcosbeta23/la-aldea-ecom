@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, Mail, Instagram, Facebook } from 'lucide-react';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
 
 export default function Footer() {
   return (
@@ -87,7 +88,7 @@ export default function Footer() {
             <ul className="mt-4 space-y-3">
               <li className="flex items-center gap-2 text-slate-600">
                 <Phone className="h-4 w-4 shrink-0" />
-                <a href="tel:+59892744725" className="text-sm hover:text-blue-600">+598 92 744 725</a>
+                <a href={`tel:+${WHATSAPP_PHONE}`} className="text-sm hover:text-blue-600">{WHATSAPP_DISPLAY}</a>
               </li>
               <li className="flex items-center gap-2 text-slate-600">
                 <Phone className="h-4 w-4 shrink-0" />

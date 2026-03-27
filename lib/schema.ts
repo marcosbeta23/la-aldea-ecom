@@ -2,6 +2,7 @@
 // Centralized schema.org JSON-LD helpers — import these instead of duplicating
 
 const SITE_URL = process.env.NEXT_PUBLIC_URL || "https://laaldeatala.com.uy";
+import { WHATSAPP_PHONE } from "./constants";
 
 export const BUSINESS_ID = `${SITE_URL}/#business`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
@@ -11,7 +12,7 @@ export const businessEntity = {
   "@type": ["HardwareStore", "HomeAndConstructionBusiness"],
   "@id": BUSINESS_ID,
   name: "La Aldea",
-  telephone: "+59892744725",
+  telephone: `+${WHATSAPP_PHONE}`,
   email: "la.aldeamartinbetancor@gmail.com",
   url: SITE_URL,
   address: {

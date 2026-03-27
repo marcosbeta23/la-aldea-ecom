@@ -1,4 +1,4 @@
-const { copyLibFiles } = require('@builder.io/partytown/utils');
+const { copyLibFiles } = require('@qwik.dev/partytown/utils');
 const path = require('path');
 
 async function main() {

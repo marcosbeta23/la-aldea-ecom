@@ -1,6 +1,7 @@
 import { Section, Text, Link, Row, Column, Hr } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
+import { WHATSAPP_PHONE } from '../lib/constants';
 
 interface OrderItem {
   product_name: string;
@@ -204,7 +205,7 @@ export default function OrderConfirmation({
         </Link>
         <Text style={ctaText}>Tenes alguna consulta sobre tu pedido?</Text>
         <Link
-          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
+          href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(`Hola! Consulto por mi pedido ${orderNumber}`)}`}
           style={whatsappButton}
         >
           Escribinos por WhatsApp

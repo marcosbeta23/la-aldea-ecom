@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { MessageCircle, Menu, X } from 'lucide-react';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 import CartWidget from '@/components/cart/CartWidget';
 import WishlistWidget from '@/components/cart/WishlistWidget';
 
@@ -178,7 +179,7 @@ export default function Header() {
 
           {/* WhatsApp Button */}
           <a
-            href="https://wa.me/59892744725"
+            href="https://wa.me/${WHATSAPP_PHONE}"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Contactar por WhatsApp"
@@ -286,7 +287,7 @@ export default function Header() {
 
           <div className="p-6">
             <a
-              href="https://wa.me/59892744725"
+              href={`https://wa.me/${WHATSAPP_PHONE}`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Contactar por WhatsApp"

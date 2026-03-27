@@ -17,6 +17,7 @@ import {
   ChevronRight,
   MessageCircle,
 } from 'lucide-react';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -96,7 +97,7 @@ const organizationSchema = {
   contactPoint: [
     {
       '@type': 'ContactPoint',
-      telephone: '+59892744725',
+      telephone: '+${WHATSAPP_PHONE}',
       contactType: 'customer service',
       availableLanguage: 'Spanish',
     },
@@ -111,7 +112,7 @@ const organizationSchema = {
     'https://www.facebook.com/profile.php?id=61561171162882',
     'https://www.instagram.com/laaldeatala/',
     'https://maps.app.goo.gl/4oUish4o13iMrJ2c9',
-    'https://wa.me/59892744725',
+    'https://wa.me/${WHATSAPP_PHONE}',
   ],
   areaServed: { '@type': 'Country', name: 'Uruguay' },
   numberOfEmployees: { '@type': 'QuantitativeValue', value: '5-10' },
@@ -331,7 +332,7 @@ export default function NosotrosPage() {
                       <h3 className="font-semibold text-slate-900">Telefonos</h3>
                       <ul className="text-sm text-slate-600 mt-1 space-y-1">
                         <li>
-                          <a href="tel:+59892744725" className="hover:text-blue-600">+598 92 744 725</a>
+                          <a href="tel:+${WHATSAPP_PHONE}" className="hover:text-blue-600">{WHATSAPP_DISPLAY}</a>
                           <span className="text-slate-400 ml-1">(celular / WhatsApp)</span>
                         </li>
                         <li>
@@ -388,7 +389,7 @@ export default function NosotrosPage() {
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <a
-                    href="https://wa.me/59892744725?text=Hola,%20necesito%20asesoramiento%20sobre..."
+                    href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre..."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 font-semibold text-blue-700 shadow-lg hover:bg-blue-50 transition-colors sm:px-8"

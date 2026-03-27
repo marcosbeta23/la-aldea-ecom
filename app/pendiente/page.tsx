@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import { Clock, Building2, MessageCircle, Copy, Check, Phone, Home, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
 
 
 function PendienteContent() {
@@ -40,7 +41,7 @@ function PendienteContent() {
     },
   };
   const bankDetails = bankDetailsByCurrency[currency] || bankDetailsByCurrency.UYU;
-  const whatsapp = '092744725';
+  const whatsapp = WHATSAPP_PHONE;
 
   return (
     <>
@@ -136,7 +137,7 @@ function PendienteContent() {
               {/* Contact */}
               <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-6">
                 <Phone className="h-4 w-4" />
-                <span>Consultas: <a href="tel:+59892744725" className="text-blue-600 hover:underline">+598 92 744 725</a></span>
+                <span>Consultas: <a href={`tel:+${WHATSAPP_PHONE}`} className="text-blue-600 hover:underline">{WHATSAPP_DISPLAY}</a></span>
               </div>
 
               {/* Navigation */}

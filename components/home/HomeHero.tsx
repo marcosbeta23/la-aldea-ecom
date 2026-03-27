@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Search, Phone, ChevronDown } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
+import { WHATSAPP_PHONE } from "@/lib/constants";
 
 export default function HomeHero() {
   const tickerItems = [
@@ -57,7 +58,7 @@ export default function HomeHero() {
 
             <div className="flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
               <a
-                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación"
+                href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Consultar por WhatsApp — La Aldea"
@@ -140,7 +141,7 @@ export default function HomeHero() {
 
               {/* Bottom CTA */}
               <a
-                href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20agendar%20una%20visita%20técnica"
+                href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustaría%20agendar%20una%20visita%20técnica"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Agendar visita técnica por WhatsApp"

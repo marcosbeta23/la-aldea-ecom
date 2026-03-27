@@ -1,6 +1,7 @@
 import { Section, Text, Link, Row, Column, Hr } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
+import { WHATSAPP_PHONE } from '../lib/constants';
 
 interface OrderItem {
   product_name: string;
@@ -73,7 +74,7 @@ export default function TransferOrderConfirmation({
   appUrl = 'https://laaldeatala.com.uy',
 }: TransferOrderConfirmationProps) {
   const bank = BANK_DETAILS[currency] || BANK_DETAILS.UYU;
-  const whatsappNumber = '59892744725';
+  const whatsappNumber = WHATSAPP_PHONE;
   const whatsappText = encodeURIComponent(
     `Hola! Acabo de realizar una transferencia para el pedido ${orderNumber}. Adjunto el comprobante.`
   );

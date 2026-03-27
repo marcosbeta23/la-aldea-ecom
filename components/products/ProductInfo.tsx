@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Heart, Check, Minus, Plus, Truck, Shield, Star, AlertCircle, MessageCircle, Share2, CreditCard, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { trackViewItem, trackAddToCart as trackAddToCartGA4 } from '@/components/Analytics';
 import { trackProductView, trackAddToCart as trackAddToCartPH } from '@/lib/analytics';
@@ -238,7 +239,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
 
         {/* Stock inquiry link */}
         <a
-          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Consulto por la disponibilidad de: ${product.name} (SKU: ${product.sku})`)}`}
+          href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(`Hola! Consulto por la disponibilidad de: ${product.name} (SKU: ${product.sku})`)}`}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Consultar disponibilidad por WhatsApp"
@@ -299,7 +300,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       {isOnRequest ? (
         <div className="mb-4 sm:mb-6">
           <a
-            href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Estoy interesado en: ${product.name} (SKU: ${product.sku}). ¿Lo pueden conseguir?`)}`}
+            href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(`Hola! Estoy interesado en: ${product.name} (SKU: ${product.sku}). ¿Lo pueden conseguir?`)}`}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Consultar por WhatsApp"
@@ -371,7 +372,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
       {/* WhatsApp Buy Button */}
       {inStock && !isOnRequest && (
         <a
-          href={`https://wa.me/59892744725?text=${encodeURIComponent(`Hola! Me interesa comprar: ${product.name} (SKU: ${product.sku}) - ${formatPrice(product.price_numeric, product.currency)}`)}`}
+          href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(`Hola! Me interesa comprar: ${product.name} (SKU: ${product.sku}) - ${formatPrice(product.price_numeric, product.currency)}`)}`}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Comprar por WhatsApp"

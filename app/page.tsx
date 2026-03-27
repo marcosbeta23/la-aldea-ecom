@@ -29,6 +29,7 @@ import {
   Settings
 } from "lucide-react";
 import HomeHero from "@/components/home/HomeHero";
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from "@/lib/constants";
 import ClientHomePageElements from "@/components/home/ClientHomePageElements";
 import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
 import HomeMapSection from "@/components/home/HomeMapSection";
@@ -45,7 +46,7 @@ const localBusinessSchema = {
   alternateName: "La Aldea Tala",
   description: "Especialistas en bombas de agua, sistemas de riego, instalaciones hidráulicas e insumos agrícolas en Tala, Canelones, Uruguay. Más de 25 años de experiencia.",
   url: "https://laaldeatala.com.uy",
-  telephone: "+59892744725",
+  telephone: "+${WHATSAPP_PHONE}",
   email: "contacto@laaldeatala.com.uy",
   image: "https://laaldeatala.com.uy/assets/images/og-image.webp",
   logo: {
@@ -116,7 +117,7 @@ const localBusinessSchema = {
   contactPoint: [
     {
       "@type": "ContactPoint",
-      telephone: "+59892744725",
+      telephone: "+${WHATSAPP_PHONE}",
       contactType: "customer service",
       contactOption: "TollFree",
       availableLanguage: "Spanish",
@@ -124,7 +125,7 @@ const localBusinessSchema = {
     },
     {
       "@type": "ContactPoint",
-      telephone: "+59892744725",
+      telephone: "+${WHATSAPP_PHONE}",
       contactType: "sales",
       availableLanguage: "Spanish",
       areaServed: "UY"
@@ -619,7 +620,7 @@ export default async function Home() {
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <a
-                    href="https://wa.me/59892744725?text=Hola,%20me%20gustaría%20solicitar%20un%20presupuesto%20para..."
+                    href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustaría%20solicitar%20un%20presupuesto%20para..."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-blue-600 shadow-lg transition-all hover:bg-blue-50"
@@ -628,7 +629,7 @@ export default async function Home() {
                     WhatsApp
                   </a>
                   <a
-                    href="tel:+59892744725"
+                    href="tel:+${WHATSAPP_PHONE}"
                     className="flex items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur transition-all hover:bg-white/20"
                   >
                     <Phone className="h-5 w-5" />
@@ -768,13 +769,13 @@ export default async function Home() {
                 </p>
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
                   <a
-                    href="https://wa.me/59892744725?text=Hola,%20necesito%20asesoramiento%20sobre..."
+                    href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre..."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-3 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-blue-600 shadow-xl transition-all hover:bg-blue-50"
                   >
                     <MessageCircle className="h-5 w-5" />
-                    WhatsApp: +598 92 744 725
+                    WhatsApp: {WHATSAPP_DISPLAY}
                   </a>
                   <a
                     href="tel:+59843154393"

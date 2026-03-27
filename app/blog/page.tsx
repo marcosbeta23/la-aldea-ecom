@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import { FAQ_ARTICLES } from '@/lib/faq-articles';
 import { supabase } from '@/lib/supabase';
 import { Calendar, ChevronRight, BookOpen, Tag } from 'lucide-react';
+import { WHATSAPP_PHONE } from '@/lib/constants';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -325,7 +326,7 @@ export default async function BlogPage() {
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <a
-                  href="https://wa.me/59892744725?text=Hola,%20tengo%20una%20consulta%20tecnica%20sobre..."
+                  href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20tengo%20una%20consulta%20tecnica%20sobre..."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-blue-700 hover:bg-blue-50 transition-colors"

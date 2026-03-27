@@ -8,6 +8,7 @@ import {
 } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '../lib/constants';
 
 interface AbandonedCartItem {
   product_name: string;
@@ -107,7 +108,7 @@ export default function AbandonedCart({
 
       <Text style={paragraph}>
         Si tenes alguna duda sobre tu pedido, no dudes en contactarnos por WhatsApp al{' '}
-        <Link href="https://wa.me/59892744725" style={link}>092 744 725</Link>.
+        <Link href={`https://wa.me/${WHATSAPP_PHONE}`} style={link}>{WHATSAPP_DISPLAY}</Link>.
       </Text>
 
       <Text style={footerNote}>
