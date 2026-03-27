@@ -14,7 +14,7 @@ interface StatusUpdateProps {
 
 function formatPrice(price: number, currency = 'UYU'): string {  // ✅ agregar parámetro
   if (currency === 'USD') {
-    return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `U$S ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   return `UYU ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 }

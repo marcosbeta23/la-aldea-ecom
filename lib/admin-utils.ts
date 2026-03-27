@@ -16,7 +16,7 @@ export function formatUYU(v: number) {
 }
 
 export function formatUSD(v: number) {
-  return `US$ ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `U$S ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function formatDate(dateStr: string) {

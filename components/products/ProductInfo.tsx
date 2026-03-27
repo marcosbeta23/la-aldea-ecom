@@ -108,7 +108,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
     if (navigator.share) {
       try {
         await navigator.share({ title: product.name, text, url });
-      } catch {}
+      } catch { }
     } else {
       await navigator.clipboard.writeText(url);
       setError('Enlace copiado al portapapeles');
@@ -118,7 +118,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
 
   const formatPrice = (price: number, currency: string = 'UYU') => {
     if (currency === 'USD') {
-      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return `U$S ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     return `$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
@@ -149,11 +149,10 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                  star <= Math.round(avgRating)
+                className={`h-4 w-4 sm:h-5 sm:w-5 ${star <= Math.round(avgRating)
                     ? 'fill-amber-400 text-amber-400'
                     : 'fill-slate-200 text-slate-200'
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -301,62 +300,62 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
           </a>
         </div>
       ) : (
-      <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
-        <button
-          onClick={handleAddToCart}
-          disabled={!inStock || isAdding || isOnRequest}
-          className={`
+        <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock || isAdding || isOnRequest}
+            className={`
             flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base
             transition-all duration-200
             ${inStock
-              ? isAdding || inCart
-                ? 'bg-green-600 text-white'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-slate-200 text-slate-500 cursor-not-allowed'
-            }
+                ? isAdding || inCart
+                  ? 'bg-green-600 text-white'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+              }
           `}
-        >
-          {isAdding ? (
-            <>
-              <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="hidden xs:inline">¡Agregado!</span>
-              <span className="xs:hidden">Agregado</span>
-            </>
-          ) : inCart ? (
-            <>
-              <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-              En carrito
-            </>
-          ) : (
-            <>
-              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
-              Agregar al carrito
-            </>
-          )}
-        </button>
+          >
+            {isAdding ? (
+              <>
+                <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden xs:inline">¡Agregado!</span>
+                <span className="xs:hidden">Agregado</span>
+              </>
+            ) : inCart ? (
+              <>
+                <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+                En carrito
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+                Agregar al carrito
+              </>
+            )}
+          </button>
 
-        <button
-          onClick={() => toggleItem(product.id)}
-          className={`
+          <button
+            onClick={() => toggleItem(product.id)}
+            className={`
             p-3 sm:p-4 rounded-xl border-2 transition-colors shrink-0
             ${inWishlist
-              ? 'border-red-500 bg-red-50 text-red-500'
-              : 'border-slate-200 text-slate-400 hover:border-red-200 hover:text-red-400'
-            }
+                ? 'border-red-500 bg-red-50 text-red-500'
+                : 'border-slate-200 text-slate-400 hover:border-red-200 hover:text-red-400'
+              }
           `}
-          aria-label={inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-        >
-          <Heart className={`h-5 w-5 sm:h-6 sm:w-6 ${inWishlist ? 'fill-current' : ''}`} />
-        </button>
+            aria-label={inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart className={`h-5 w-5 sm:h-6 sm:w-6 ${inWishlist ? 'fill-current' : ''}`} />
+          </button>
 
-        <button
-          onClick={handleShare}
-          className="p-3 sm:p-4 rounded-xl border-2 border-slate-200 text-slate-400 hover:border-blue-200 hover:text-blue-500 transition-colors shrink-0"
-          aria-label="Compartir producto"
-        >
-          <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
-        </button>
-      </div>
+          <button
+            onClick={handleShare}
+            className="p-3 sm:p-4 rounded-xl border-2 border-slate-200 text-slate-400 hover:border-blue-200 hover:text-blue-500 transition-colors shrink-0"
+            aria-label="Compartir producto"
+          >
+            <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+        </div>
       )}
 
       {/* WhatsApp Buy Button */}
@@ -424,11 +423,10 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             <button
               onClick={handleAddToCart}
               disabled={isAdding}
-              className={`shrink-0 flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all ${
-                isAdding || inCart
+              className={`shrink-0 flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all ${isAdding || inCart
                   ? 'bg-green-600 text-white'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+                }`}
             >
               {isAdding ? (
                 <>

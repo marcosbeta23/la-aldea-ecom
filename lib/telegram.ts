@@ -33,7 +33,7 @@ export async function sendTelegramAlert(message: string): Promise<boolean> {
 // Pre-built alert messages
 
 export function alertNewOrder(orderNumber: string, total: number, customerName: string, currency: string = 'UYU') {
-  const prefix = currency === 'USD' ? 'US$' : '$';
+  const prefix = currency === 'USD' ? 'U$S' : '$';
   return sendTelegramAlert(
     `<b>Nuevo pedido #${orderNumber}</b>\n` +
     `${prefix} ${total.toLocaleString('es-UY')}\n` +
@@ -42,7 +42,7 @@ export function alertNewOrder(orderNumber: string, total: number, customerName: 
 }
 
 export function alertPaymentApproved(orderNumber: string, total: number, customerName: string, currency: string = 'UYU') {
-  const prefix = currency === 'USD' ? 'US$' : '$';
+  const prefix = currency === 'USD' ? 'U$S' : '$';
   return sendTelegramAlert(
     `<b>Pago aprobado #${orderNumber}</b>\n` +
     `${prefix} ${total.toLocaleString('es-UY')}\n` +
@@ -67,7 +67,7 @@ export function alertOutOfStock(productName: string, sku: string) {
 }
 
 export function alertFraudAttempt(orderNumber: string, expected: number, paid: number, currency: string = 'UYU') {
-  const prefix = currency === 'USD' ? 'US$' : '$';
+  const prefix = currency === 'USD' ? 'U$S' : '$';
   return sendTelegramAlert(
     `<b>ALERTA FRAUDE #${orderNumber}</b>\n` +
     `Esperado: ${prefix} ${expected.toLocaleString('es-UY')}\n` +
@@ -77,7 +77,7 @@ export function alertFraudAttempt(orderNumber: string, expected: number, paid: n
 }
 
 export function alertNewTransferOrder(orderNumber: string, total: number, customerName: string, currency: string = 'UYU') {
-  const prefix = currency === 'USD' ? 'US$' : '$';
+  const prefix = currency === 'USD' ? 'U$S' : '$';
   return sendTelegramAlert(
     `<b>Transferencia pendiente #${orderNumber}</b>\n` +
     `${prefix} ${total.toLocaleString('es-UY')}\n` +
@@ -102,7 +102,7 @@ export function alertOrderStatusChanged(orderNumber: string, oldStatus: string, 
 }
 
 export function alertRefundProcessed(orderNumber: string, amount: number, success: boolean, customerName: string, currency: string = 'UYU') {
-  const prefix = currency === 'USD' ? 'US$' : '$';
+  const prefix = currency === 'USD' ? 'U$S' : '$';
   return sendTelegramAlert(
     success
       ? `<b>Reembolso exitoso #${orderNumber}</b>\n${prefix} ${amount.toLocaleString('es-UY')}\n${customerName}`

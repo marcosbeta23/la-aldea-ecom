@@ -32,7 +32,7 @@ export default function AbandonedCart({
 }: AbandonedCartProps) {
   const formatPrice = (price: number) =>
     currency === 'USD'
-      ? `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      ? `U$S ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       : `$ ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 
   return (

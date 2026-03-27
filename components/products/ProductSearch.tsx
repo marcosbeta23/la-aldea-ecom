@@ -76,7 +76,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
-        suggestionsRef.current && 
+        suggestionsRef.current &&
         !suggestionsRef.current.contains(e.target as Node) &&
         inputRef.current &&
         !inputRef.current.contains(e.target as Node)
@@ -119,7 +119,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
     const params = new URLSearchParams(searchParams.toString());
     params.delete('q');
     params.delete('page');
-    
+
     startTransition(() => {
       router.push(`/productos?${params.toString()}`);
     });
@@ -146,13 +146,13 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev < suggestions.length - 1 ? prev + 1 : 0
         );
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev > 0 ? prev - 1 : suggestions.length - 1
         );
         break;
@@ -171,7 +171,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
 
   const formatPrice = (price: number, currency: string = 'UYU') => {
     if (currency === 'USD') {
-      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return `U$S ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     return `$ ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
   };
@@ -234,7 +234,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
 
       {/* Suggestions Dropdown */}
       {showSuggestions && (suggestions.length > 0 || isLoadingSuggestions) && (
-        <div 
+        <div
           ref={suggestionsRef}
           className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50"
         >
@@ -249,9 +249,8 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
                   <button
                     type="button"
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
-                      selectedIndex === index ? 'bg-blue-50' : ''
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors ${selectedIndex === index ? 'bg-blue-50' : ''
+                      }`}
                   >
                     {suggestion.type === 'product' && suggestion.image ? (
                       <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
@@ -268,7 +267,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
                         {getSuggestionIcon(suggestion.type)}
                       </div>
                     )}
-                    
+
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900 truncate">
                         {suggestion.name}
@@ -278,7 +277,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
                         {suggestion.type === 'brand' && 'Marca'}
                         {suggestion.type === 'product' && (
                           (suggestion.availability_type === 'on_request' || suggestion.price === 0 || suggestion.price === 9999)
-                            ? 'Consulta' 
+                            ? 'Consulta'
                             : suggestion.price && formatPrice(suggestion.price, suggestion.currency)
                         )}
                       </p>

@@ -83,7 +83,7 @@ interface Filters {
 // ── Helpers ────────────────────────────────────────────────────────────
 
 const formatCurrency = (value: number, currency: string = 'UYU') => {
-  const prefix = currency === 'USD' ? 'US$' : '$';
+  const prefix = currency === 'USD' ? 'U$S' : '$';
   const decimals = currency === 'USD' ? 2 : 0;
   return `${prefix} ${value.toLocaleString('es-UY', { maximumFractionDigits: decimals })}`;
 };
@@ -103,7 +103,7 @@ export default function ProductsPage() {
       try {
         const saved = sessionStorage.getItem('la-aldea-admin-product-page');
         if (saved) return parseInt(saved, 10) || 1;
-      } catch {}
+      } catch { }
     }
     return 1;
   });
@@ -143,7 +143,7 @@ export default function ProductsPage() {
       try {
         const saved = sessionStorage.getItem('la-aldea-admin-product-filters');
         if (saved) return JSON.parse(saved);
-      } catch {}
+      } catch { }
     }
     return {
       search: '',
@@ -228,7 +228,7 @@ export default function ProductsPage() {
     try {
       sessionStorage.setItem('la-aldea-admin-product-filters', JSON.stringify(filters));
       sessionStorage.setItem('la-aldea-admin-product-page', String(page));
-    } catch {}
+    } catch { }
   }, [filters, page]);
 
   useEffect(() => {
@@ -628,9 +628,8 @@ export default function ProductsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <button
           onClick={() => { clearFilters(); }}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
-            !filters.status && !filters.hasImages ? 'border-blue-300 ring-1 ring-blue-100' : 'border-slate-200'
-          }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${!filters.status && !filters.hasImages ? 'border-blue-300 ring-1 ring-blue-100' : 'border-slate-200'
+            }`}
         >
           <div className="flex items-center justify-between">
             <Package className="h-5 w-5 text-slate-400" />
@@ -641,9 +640,8 @@ export default function ProductsPage() {
 
         <button
           onClick={() => updateFilter('status', filters.status === 'active' ? '' : 'active')}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
-            filters.status === 'active' ? 'border-green-300 ring-1 ring-green-100' : 'border-slate-200'
-          }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${filters.status === 'active' ? 'border-green-300 ring-1 ring-green-100' : 'border-slate-200'
+            }`}
         >
           <div className="flex items-center justify-between">
             <PackageCheck className="h-5 w-5 text-green-500" />
@@ -654,9 +652,8 @@ export default function ProductsPage() {
 
         <button
           onClick={() => updateFilter('status', filters.status === 'inactive' ? '' : 'inactive')}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
-            filters.status === 'inactive' ? 'border-amber-300 ring-1 ring-amber-100' : 'border-slate-200'
-          }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${filters.status === 'inactive' ? 'border-amber-300 ring-1 ring-amber-100' : 'border-slate-200'
+            }`}
         >
           <div className="flex items-center justify-between">
             <PackageX className="h-5 w-5 text-amber-500" />
@@ -667,9 +664,8 @@ export default function ProductsPage() {
 
         <button
           onClick={() => updateFilter('hasImages', filters.hasImages === 'no' ? '' : 'no')}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
-            filters.hasImages === 'no' ? 'border-red-300 ring-1 ring-red-100' : 'border-slate-200'
-          }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${filters.hasImages === 'no' ? 'border-red-300 ring-1 ring-red-100' : 'border-slate-200'
+            }`}
         >
           <div className="flex items-center justify-between">
             <ImageOff className="h-5 w-5 text-red-400" />
@@ -708,11 +704,10 @@ export default function ProductsPage() {
           {/* Filter toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${
-              showFilters || activeFilterCount > 0
+            className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${showFilters || activeFilterCount > 0
                 ? 'border-blue-300 bg-blue-50 text-blue-700'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
+              }`}
           >
             <SlidersHorizontal className="h-4 w-4" />
             <span className="hidden sm:inline">Filtros</span>
@@ -1005,9 +1000,8 @@ export default function ProductsPage() {
                 {products.map((product) => (
                   <tr
                     key={product.id}
-                    className={`hover:bg-slate-50 transition-colors ${
-                      selectedIds.has(product.id) ? 'bg-blue-50/50' : ''
-                    } ${!product.is_active ? 'opacity-60' : ''}`}
+                    className={`hover:bg-slate-50 transition-colors ${selectedIds.has(product.id) ? 'bg-blue-50/50' : ''
+                      } ${!product.is_active ? 'opacity-60' : ''}`}
                   >
                     {/* Checkbox */}
                     <td className="px-3 py-3">
@@ -1114,11 +1108,10 @@ export default function ProductsPage() {
 
                     {/* Status */}
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        product.is_active
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${product.is_active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-slate-100 text-slate-500'
-                      }`}>
+                        }`}>
                         {product.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
@@ -1174,9 +1167,8 @@ export default function ProductsPage() {
             <Link
               key={product.id}
               href={`/admin/products/${product.id}`}
-              className={`bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-all group ${
-                !product.is_active ? 'opacity-60' : ''
-              }`}
+              className={`bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-all group ${!product.is_active ? 'opacity-60' : ''
+                }`}
             >
               {/* Image */}
               <div className="relative aspect-square bg-slate-100">
@@ -1195,9 +1187,8 @@ export default function ProductsPage() {
                 )}
                 {/* Status badge */}
                 <div className="absolute top-2 right-2">
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                    product.is_active ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'
-                  }`}>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${product.is_active ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'
+                    }`}>
                     {product.is_active ? 'ON' : 'OFF'}
                   </span>
                 </div>
@@ -1221,9 +1212,8 @@ export default function ProductsPage() {
                   <span className="text-sm font-bold text-slate-900">
                     {formatCurrency(product.price_numeric, product.currency)}
                   </span>
-                  <span className={`text-xs ${
-                    product.stock === 0 ? 'text-red-500' : 'text-slate-400'
-                  }`}>
+                  <span className={`text-xs ${product.stock === 0 ? 'text-red-500' : 'text-slate-400'
+                    }`}>
                     Stock: {product.stock}
                   </span>
                 </div>
@@ -1262,11 +1252,10 @@ export default function ProductsPage() {
             <button
               onClick={() => setPage(1)}
               disabled={page <= 1}
-              className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                page <= 1
+              className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page <= 1
                   ? 'text-slate-300 cursor-not-allowed'
                   : page === 1 ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-              }`}
+                }`}
             >
               1
             </button>
@@ -1281,11 +1270,10 @@ export default function ProductsPage() {
                 <button
                   key={p}
                   onClick={() => setPage(p)}
-                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    p === page
+                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${p === page
                       ? 'bg-blue-600 text-white'
                       : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>
@@ -1298,11 +1286,10 @@ export default function ProductsPage() {
             {totalPages > 1 && (
               <button
                 onClick={() => setPage(totalPages)}
-                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  page === totalPages
+                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page === totalPages
                     ? 'bg-blue-600 text-white'
                     : 'text-slate-600 hover:bg-slate-100'
-                }`}
+                  }`}
               >
                 {totalPages}
               </button>
@@ -1314,11 +1301,10 @@ export default function ProductsPage() {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
                 title="Página anterior"
-                className={`p-1.5 rounded-lg border transition-colors ${
-                  page <= 1
+                className={`p-1.5 rounded-lg border transition-colors ${page <= 1
                     ? 'border-slate-100 text-slate-300 cursor-not-allowed'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -1326,11 +1312,10 @@ export default function ProductsPage() {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
                 title="Página siguiente"
-                className={`p-1.5 rounded-lg border transition-colors ${
-                  page >= totalPages
+                className={`p-1.5 rounded-lg border transition-colors ${page >= totalPages
                     ? 'border-slate-100 text-slate-300 cursor-not-allowed'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -1373,15 +1358,14 @@ export default function ProductsPage() {
                     <button
                       key={mode.value}
                       onClick={() => setBulkCategoryMode(mode.value)}
-                      className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                        bulkCategoryMode === mode.value
+                      className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${bulkCategoryMode === mode.value
                           ? mode.value === 'remove'
                             ? 'border-red-300 bg-red-50 text-red-700'
                             : mode.value === 'replace'
                               ? 'border-amber-300 bg-amber-50 text-amber-700'
                               : 'border-blue-300 bg-blue-50 text-blue-700'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
+                        }`}
                     >
                       <div>{mode.label}</div>
                       <div className="text-[10px] font-normal opacity-70 mt-0.5">{mode.desc}</div>
@@ -1400,11 +1384,10 @@ export default function ProductsPage() {
                       {bulkCategories.map((cat) => (
                         <span
                           key={cat}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
-                            bulkCategoryMode === 'remove'
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${bulkCategoryMode === 'remove'
                               ? 'bg-red-100 text-red-700'
                               : 'bg-blue-100 text-blue-700'
-                          }`}
+                            }`}
                         >
                           {cat}
                           <button
@@ -1511,11 +1494,10 @@ export default function ProductsPage() {
               <button
                 onClick={bulkEditCategories}
                 disabled={bulkLoading || bulkCategories.length === 0}
-                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
-                  bulkCategoryMode === 'remove'
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${bulkCategoryMode === 'remove'
                     ? 'bg-red-600 hover:bg-red-700'
                     : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                  }`}
               >
                 {bulkLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {bulkCategoryMode === 'add' && 'Agregar categorías'}
@@ -1626,13 +1608,12 @@ export default function ProductsPage() {
                       onDragOver={(e) => handleFeaturedDragOver(e, index)}
                       onDrop={() => handleFeaturedDrop(index)}
                       onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${
-                        dragIndex === index
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${dragIndex === index
                           ? 'opacity-50 border-amber-300 bg-amber-50'
                           : dragOverIndex === index
                             ? 'border-amber-400 bg-amber-50 shadow-sm'
                             : 'border-slate-200 bg-white hover:bg-slate-50'
-                      }`}
+                        }`}
                     >
                       {/* Drag handle */}
                       <GripVertical className="h-4 w-4 text-slate-400 shrink-0" />

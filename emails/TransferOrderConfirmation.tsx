@@ -26,7 +26,7 @@ interface TransferOrderConfirmationProps {
 }
 
 function formatPrice(price: number, currency = 'UYU'): string {
-  const prefix = currency === 'USD' ? 'US$' : 'UYU';
+  const prefix = currency === 'USD' ? 'U$S' : 'UYU';
   return `${prefix} ${price.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
 }
 

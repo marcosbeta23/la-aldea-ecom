@@ -52,7 +52,7 @@ export function RevenueChart({
   const formatAxis = (v: number) =>
     v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`;
   const formatTooltipUYU = (v: number) => `$ ${v.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;
-  const formatTooltipUSD = (v: number) => `US$ ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatTooltipUSD = (v: number) => `U$S ${v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const formattedData = data.map(d => ({
     ...d,
@@ -77,7 +77,7 @@ export function RevenueChart({
               onClick={() => setRevenueType('usd')}
               className={`px-3 py-1.5 transition-colors ${revenueType === 'usd' ? 'bg-green-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
             >
-              US$
+              U$S
             </button>
           </div>
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">

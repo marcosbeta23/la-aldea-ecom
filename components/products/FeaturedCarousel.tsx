@@ -37,7 +37,7 @@ function getCategoryColor(category: string[] | string | null): string {
 
 function formatPrice(price: number, currency: string = 'UYU') {
   if (currency === 'USD') {
-    return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `U$S ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   return `$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
@@ -244,7 +244,7 @@ export default function FeaturedCarousel({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div 
+      <div
         className="overflow-visible rounded-xl"
         style={{
           ['--visible-count' as any]: 2,
@@ -282,11 +282,10 @@ export default function FeaturedCarousel({
 
                   {/* Product Image or Gradient Fallback */}
                   <div
-                    className={`aspect-4/3 overflow-hidden ${
-                      product.images?.[0]
+                    className={`aspect-4/3 overflow-hidden ${product.images?.[0]
                         ? 'bg-white'
                         : `bg-linear-to-br ${getCategoryColor(product.category)}`
-                    } flex items-center justify-center`}
+                      } flex items-center justify-center`}
                   >
                     {product.images?.[0] ? (
                       <Image

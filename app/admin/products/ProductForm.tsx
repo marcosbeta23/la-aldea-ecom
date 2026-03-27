@@ -552,7 +552,7 @@ export default function ProductForm({ product }: { product?: any }) {
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                    {formData.currency === 'USD' ? 'US$' : '$'}
+                    {formData.currency === 'USD' ? 'U$S' : '$'}
                   </span>
                   <input
                     type="number"

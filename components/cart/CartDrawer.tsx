@@ -42,12 +42,12 @@ export default function CartDrawer() {
     fetch('/api/exchange-rate')
       .then(r => r.json())
       .then(data => { if (data.rate) setExchangeRate(data.rate); })
-      .catch(() => {});
+      .catch(() => { });
   }, [isOpen, isMixed]);
 
   const formatPrice = (price: number, currency: string = 'UYU') => {
     if (currency === 'USD') {
-      return `US$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return `U$S ${price.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     return `$ ${price.toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };

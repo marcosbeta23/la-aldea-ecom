@@ -7,7 +7,7 @@ function formatPrice(price: number | undefined, currency: string = 'UYU'): strin
   const safePrice = price ?? 0;
 
   if (currency === 'USD') {
-    return `US$ ${safePrice.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `U$S ${safePrice.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
   return `UYU ${safePrice.toLocaleString('es-UY', { maximumFractionDigits: 0 })}`;

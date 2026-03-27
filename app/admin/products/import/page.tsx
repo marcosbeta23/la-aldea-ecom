@@ -287,12 +287,11 @@ export default function BulkImportPage() {
                     <td className="px-4 py-2">{row.category || '—'}</td>
                     <td className="px-4 py-2">{row.brand || '—'}</td>
                     <td className="px-4 py-2 font-medium">
-                      {(row.currency || 'UYU') === 'USD' ? 'US$' : '$'}{parseFloat(row.price_numeric || '0').toLocaleString()}
+                      {(row.currency || 'UYU') === 'USD' ? 'U$S' : '$'}{parseFloat(row.price_numeric || '0').toLocaleString()}
                     </td>
                     <td className="px-4 py-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        (row.currency || 'UYU') === 'USD' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${(row.currency || 'UYU') === 'USD' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
                         {row.currency || 'UYU'}
                       </span>
                     </td>
