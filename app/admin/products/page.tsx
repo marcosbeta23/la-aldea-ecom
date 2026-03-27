@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeCategory } from '@/lib/validators';
+import { CATEGORY_HIERARCHY } from '@/lib/categories';
 import {
   Plus,
   Search,
@@ -41,11 +42,12 @@ import {
 
 // ── Known Categories ───────────────────────────────────────────────────
 
-const KNOWN_CATEGORIES = [
-  'Bombas', 'Riego', 'Filtros', 'Tanques', 'Piscinas',
-  'Químicos', 'Herramientas', 'Accesorios', 'Hidráulica',
-  'Droguería', 'Energía Solar',
-];
+const KNOWN_CATEGORIES = CATEGORY_HIERARCHY.map(c => c.value);
+// All options including subcategories for the bulk category modal
+const ALL_CATEGORY_OPTIONS = CATEGORY_HIERARCHY.flatMap(c => [
+  c.value,
+  ...c.subcategories.map(s => s.value),
+]);
 
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -67,6 +69,12 @@ interface Product {
   created_at: string;
   updated_at: string;
   is_featured: boolean;
+  availability_type: string;
+  shipping_type?: string;
+  weight_kg?: number | null;
+  requires_quote?: boolean;
+  original_price_numeric?: number | null;
+  discount_percentage?: number | null;
 }
 
 interface Filters {
@@ -327,6 +335,14 @@ export default function ProductsPage() {
             stock: product.stock,
             images: product.images,
             is_active: activate,
+            availability_type: product.availability_type || 'regular',
+            shipping_type: product.shipping_type || 'dac',
+            weight_kg: product.weight_kg ?? null,
+            requires_quote: product.requires_quote ?? false,
+            is_featured: product.is_featured,
+            original_price_numeric: product.original_price_numeric ?? null,
+            discount_percentage: product.discount_percentage ?? null,
+            slug: product.slug,
           }),
         });
       });
@@ -427,6 +443,14 @@ export default function ProductsPage() {
             stock: product.stock,
             images: product.images,
             is_active: product.is_active,
+            availability_type: product.availability_type || 'regular',
+            shipping_type: product.shipping_type || 'dac',
+            weight_kg: product.weight_kg ?? null,
+            requires_quote: product.requires_quote ?? false,
+            is_featured: product.is_featured,
+            original_price_numeric: product.original_price_numeric ?? null,
+            discount_percentage: product.discount_percentage ?? null,
+            slug: product.slug,
           }),
         });
       });
@@ -440,6 +464,49 @@ export default function ProductsPage() {
       console.error('Bulk category edit error:', err);
     } finally {
       setBulkLoading(false);
+    }
+  };
+
+  // ── Quick availability toggle ──────────────────────────────────────
+
+  const quickToggleAvailability = async (product: Product) => {
+    const newType = product.availability_type === 'on_request' ? 'regular' : 'on_request';
+    // Optimistically update UI
+    setProducts(prev => prev.map(p =>
+      p.id === product.id ? { ...p, availability_type: newType } : p
+    ));
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sku: product.sku,
+          name: product.name,
+          description: product.description,
+          category: product.category,
+          brand: product.brand,
+          price_numeric: product.price_numeric,
+          currency: product.currency,
+          stock: product.stock,
+          images: product.images,
+          is_active: product.is_active,
+          availability_type: newType,
+          shipping_type: product.shipping_type || 'dac',
+          weight_kg: product.weight_kg ?? null,
+          requires_quote: product.requires_quote ?? false,
+          is_featured: product.is_featured,
+          original_price_numeric: product.original_price_numeric ?? null,
+          discount_percentage: product.discount_percentage ?? null,
+          slug: product.slug,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch (err) {
+      console.error('Toggle availability error:', err);
+      // Revert on error
+      setProducts(prev => prev.map(p =>
+        p.id === product.id ? { ...p, availability_type: product.availability_type } : p
+      ));
     }
   };
 
@@ -584,7 +651,7 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-4">
-      {/* ── Header ───────────────────────────────────────────────── */}
+      {/* ── Header ────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Productos</h1>
@@ -624,12 +691,13 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* ── Stats Cards ──────────────────────────────────────── */}
+      {/* ── Stats Cards ──────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <button
           onClick={() => { clearFilters(); }}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${!filters.status && !filters.hasImages ? 'border-blue-300 ring-1 ring-blue-100' : 'border-slate-200'
-            }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
+            !filters.status && !filters.hasImages ? 'border-blue-300 ring-1 ring-blue-100' : 'border-slate-200'
+          }`}
         >
           <div className="flex items-center justify-between">
             <Package className="h-5 w-5 text-slate-400" />
@@ -640,8 +708,9 @@ export default function ProductsPage() {
 
         <button
           onClick={() => updateFilter('status', filters.status === 'active' ? '' : 'active')}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${filters.status === 'active' ? 'border-green-300 ring-1 ring-green-100' : 'border-slate-200'
-            }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
+            filters.status === 'active' ? 'border-green-300 ring-1 ring-green-100' : 'border-slate-200'
+          }`}
         >
           <div className="flex items-center justify-between">
             <PackageCheck className="h-5 w-5 text-green-500" />
@@ -652,8 +721,9 @@ export default function ProductsPage() {
 
         <button
           onClick={() => updateFilter('status', filters.status === 'inactive' ? '' : 'inactive')}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${filters.status === 'inactive' ? 'border-amber-300 ring-1 ring-amber-100' : 'border-slate-200'
-            }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
+            filters.status === 'inactive' ? 'border-amber-300 ring-1 ring-amber-100' : 'border-slate-200'
+          }`}
         >
           <div className="flex items-center justify-between">
             <PackageX className="h-5 w-5 text-amber-500" />
@@ -664,8 +734,9 @@ export default function ProductsPage() {
 
         <button
           onClick={() => updateFilter('hasImages', filters.hasImages === 'no' ? '' : 'no')}
-          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${filters.hasImages === 'no' ? 'border-red-300 ring-1 ring-red-100' : 'border-slate-200'
-            }`}
+          className={`bg-white rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
+            filters.hasImages === 'no' ? 'border-red-300 ring-1 ring-red-100' : 'border-slate-200'
+          }`}
         >
           <div className="flex items-center justify-between">
             <ImageOff className="h-5 w-5 text-red-400" />
@@ -704,10 +775,11 @@ export default function ProductsPage() {
           {/* Filter toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${showFilters || activeFilterCount > 0
+            className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${
+              showFilters || activeFilterCount > 0
                 ? 'border-blue-300 bg-blue-50 text-blue-700'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
+            }`}
           >
             <SlidersHorizontal className="h-4 w-4" />
             <span className="hidden sm:inline">Filtros</span>
@@ -746,7 +818,7 @@ export default function ProductsPage() {
           </button>
         </div>
 
-        {/* ── Expanded Filters ──────────────────────────────── */}
+        {/* ── Expanded Filters ──────────────────────────── */}
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-slate-100">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -861,7 +933,7 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* ── Active filter tags ────────────────────────────── */}
+        {/* ── Active filter tags ──────────────────────────── */}
         {hasActiveFilters && !showFilters && (
           <div className="flex flex-wrap items-center gap-2 mt-2">
             {filters.search && (
@@ -886,7 +958,7 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {/* ── Bulk Actions Bar ───────────────────────────────── */}
+      {/* ── Bulk Actions Bar ───────────────────────────── */}
       {selectedIds.size > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in slide-in-from-top-2">
           <span className="text-sm font-medium text-blue-800">
@@ -943,7 +1015,7 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* ── Table View ─────────────────────────────────────── */}
+      {/* ── Table View ───────────────────────────────────────── */}
       {!loading && viewMode === 'table' && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -956,7 +1028,7 @@ export default function ProductsPage() {
                 <col className="w-28" />
                 <col className="w-16" />
                 <col className="w-14" />
-                <col className="w-24" />
+                <col className="w-28" />
                 <col className="w-20" />
               </colgroup>
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -1000,8 +1072,9 @@ export default function ProductsPage() {
                 {products.map((product) => (
                   <tr
                     key={product.id}
-                    className={`hover:bg-slate-50 transition-colors ${selectedIds.has(product.id) ? 'bg-blue-50/50' : ''
-                      } ${!product.is_active ? 'opacity-60' : ''}`}
+                    className={`hover:bg-slate-50 transition-colors ${
+                      selectedIds.has(product.id) ? 'bg-blue-50/50' : ''
+                    } ${!product.is_active ? 'opacity-60' : ''}`}
                   >
                     {/* Checkbox */}
                     <td className="px-3 py-3">
@@ -1075,7 +1148,10 @@ export default function ProductsPage() {
                     {/* Price */}
                     <td className="px-4 py-3">
                       <span className="text-sm font-medium text-slate-900">
-                        {formatCurrency(product.price_numeric, product.currency)}
+                        {product.availability_type === 'on_request'
+                          ? <span className="text-purple-600 text-xs font-semibold">Consultar</span>
+                          : formatCurrency(product.price_numeric, product.currency)
+                        }
                       </span>
                     </td>
 
@@ -1106,14 +1182,30 @@ export default function ProductsPage() {
                       )}
                     </td>
 
-                    {/* Status */}
+                    {/* Status + Availability */}
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${product.is_active
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        product.is_active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-slate-100 text-slate-500'
-                        }`}>
+                      }`}>
                         {product.is_active ? 'Activo' : 'Inactivo'}
                       </span>
+                      {/* Availability toggle — clic to switch between Consultar and regular */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); quickToggleAvailability(product); }}
+                        title={product.availability_type === 'on_request'
+                          ? 'Modo Consultar — clic para habilitar compra directa'
+                          : 'Modo compra directa — clic para cambiar a Consultar'
+                        }
+                        className={`mt-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-colors w-full justify-center ${
+                          product.availability_type === 'on_request'
+                            ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                        }`}
+                      >
+                        {product.availability_type === 'on_request' ? 'Consultar' : 'Comprable'}
+                      </button>
                     </td>
 
                     {/* Actions */}
@@ -1160,15 +1252,16 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* ── Grid View ──────────────────────────────────────── */}
+      {/* ── Grid View ────────────────────────────────────────── */}
       {!loading && viewMode === 'grid' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {products.map((product) => (
             <Link
               key={product.id}
               href={`/admin/products/${product.id}`}
-              className={`bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-all group ${!product.is_active ? 'opacity-60' : ''
-                }`}
+              className={`bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-all group ${
+                !product.is_active ? 'opacity-60' : ''
+              }`}
             >
               {/* Image */}
               <div className="relative aspect-square bg-slate-100">
@@ -1186,11 +1279,17 @@ export default function ProductsPage() {
                   </div>
                 )}
                 {/* Status badge */}
-                <div className="absolute top-2 right-2">
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${product.is_active ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'
-                    }`}>
+                <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    product.is_active ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'
+                  }`}>
                     {product.is_active ? 'ON' : 'OFF'}
                   </span>
+                  {product.availability_type === 'on_request' && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500 text-white">
+                      C
+                    </span>
+                  )}
                 </div>
                 {/* Image count */}
                 {product.images && product.images.length > 1 && (
@@ -1210,10 +1309,14 @@ export default function ProductsPage() {
                 )}
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-sm font-bold text-slate-900">
-                    {formatCurrency(product.price_numeric, product.currency)}
+                    {product.availability_type === 'on_request'
+                      ? <span className="text-purple-600 text-xs">Consultar</span>
+                      : formatCurrency(product.price_numeric, product.currency)
+                    }
                   </span>
-                  <span className={`text-xs ${product.stock === 0 ? 'text-red-500' : 'text-slate-400'
-                    }`}>
+                  <span className={`text-xs ${
+                    product.stock === 0 ? 'text-red-500' : 'text-slate-400'
+                  }`}>
                     Stock: {product.stock}
                   </span>
                 </div>
@@ -1237,7 +1340,7 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* ── Pagination ─────────────────────────────────────── */}
+      {/* ── Pagination ────────────────────────────────────────── */}
       {!loading && totalPages > 1 && (
         <div className="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center justify-between">
           <p className="text-sm text-slate-500">
@@ -1252,10 +1355,11 @@ export default function ProductsPage() {
             <button
               onClick={() => setPage(1)}
               disabled={page <= 1}
-              className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page <= 1
+              className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                page <= 1
                   ? 'text-slate-300 cursor-not-allowed'
                   : page === 1 ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-                }`}
+              }`}
             >
               1
             </button>
@@ -1270,10 +1374,11 @@ export default function ProductsPage() {
                 <button
                   key={p}
                   onClick={() => setPage(p)}
-                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${p === page
+                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    p === page
                       ? 'bg-blue-600 text-white'
                       : 'text-slate-600 hover:bg-slate-100'
-                    }`}
+                  }`}
                 >
                   {p}
                 </button>
@@ -1286,10 +1391,11 @@ export default function ProductsPage() {
             {totalPages > 1 && (
               <button
                 onClick={() => setPage(totalPages)}
-                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page === totalPages
+                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  page === totalPages
                     ? 'bg-blue-600 text-white'
                     : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                }`}
               >
                 {totalPages}
               </button>
@@ -1301,10 +1407,11 @@ export default function ProductsPage() {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
                 title="Página anterior"
-                className={`p-1.5 rounded-lg border transition-colors ${page <= 1
+                className={`p-1.5 rounded-lg border transition-colors ${
+                  page <= 1
                     ? 'border-slate-100 text-slate-300 cursor-not-allowed'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
+                }`}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -1312,10 +1419,11 @@ export default function ProductsPage() {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
                 title="Página siguiente"
-                className={`p-1.5 rounded-lg border transition-colors ${page >= totalPages
+                className={`p-1.5 rounded-lg border transition-colors ${
+                  page >= totalPages
                     ? 'border-slate-100 text-slate-300 cursor-not-allowed'
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
+                }`}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -1323,7 +1431,7 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
-      {/* ── Bulk Category Edit Modal ────────────────────────── */}
+      {/* ── Bulk Category Edit Modal ──────────────────────────── */}
       {showBulkCategoryModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
@@ -1358,14 +1466,15 @@ export default function ProductsPage() {
                     <button
                       key={mode.value}
                       onClick={() => setBulkCategoryMode(mode.value)}
-                      className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${bulkCategoryMode === mode.value
+                      className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        bulkCategoryMode === mode.value
                           ? mode.value === 'remove'
                             ? 'border-red-300 bg-red-50 text-red-700'
                             : mode.value === 'replace'
                               ? 'border-amber-300 bg-amber-50 text-amber-700'
                               : 'border-blue-300 bg-blue-50 text-blue-700'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
+                      }`}
                     >
                       <div>{mode.label}</div>
                       <div className="text-[10px] font-normal opacity-70 mt-0.5">{mode.desc}</div>
@@ -1384,10 +1493,11 @@ export default function ProductsPage() {
                       {bulkCategories.map((cat) => (
                         <span
                           key={cat}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${bulkCategoryMode === 'remove'
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                            bulkCategoryMode === 'remove'
                               ? 'bg-red-100 text-red-700'
                               : 'bg-blue-100 text-blue-700'
-                            }`}
+                          }`}
                         >
                           {cat}
                           <button
@@ -1433,30 +1543,37 @@ export default function ProductsPage() {
                       className="w-full text-sm border-0 outline-none focus:ring-0 p-1 bg-transparent placeholder:text-slate-400"
                     />
 
-                    {/* Suggestions dropdown */}
+                    {/* Suggestions dropdown — includes main categories AND all subcategories */}
                     {showBulkCatSuggestions && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                        {KNOWN_CATEGORIES
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-56 overflow-y-auto">
+                        {ALL_CATEGORY_OPTIONS
                           .filter(c =>
                             !bulkCategories.some(bc => bc.toLowerCase() === c.toLowerCase()) &&
                             (!bulkCategoryInput || c.toLowerCase().includes(bulkCategoryInput.toLowerCase()))
                           )
-                          .map((cat) => (
-                            <button
-                              key={cat}
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                addBulkCategory(cat);
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                            >
-                              {cat}
-                            </button>
-                          ))}
+                          .map((cat) => {
+                            const isSub = !KNOWN_CATEGORIES.includes(cat);
+                            return (
+                              <button
+                                key={cat}
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  addBulkCategory(cat);
+                                }}
+                                className={`w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors ${
+                                  isSub ? 'pl-7' : 'font-medium'
+                                }`}
+                              >
+                                {isSub && <span className="text-slate-400 mr-1">↳</span>}
+                                {cat}
+                              </button>
+                            );
+                          })
+                        }
                         {bulkCategoryInput.trim() &&
-                          !KNOWN_CATEGORIES.some(c => c.toLowerCase() === bulkCategoryInput.trim().toLowerCase()) &&
-                          !bulkCategories.includes(bulkCategoryInput.trim()) && (
+                          !ALL_CATEGORY_OPTIONS.some(c => c.toLowerCase() === bulkCategoryInput.trim().toLowerCase()) &&
+                          !bulkCategories.some(c => c.toLowerCase() === bulkCategoryInput.trim().toLowerCase()) && (
                             <button
                               type="button"
                               onMouseDown={(e) => {
@@ -1494,10 +1611,11 @@ export default function ProductsPage() {
               <button
                 onClick={bulkEditCategories}
                 disabled={bulkLoading || bulkCategories.length === 0}
-                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${bulkCategoryMode === 'remove'
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
+                  bulkCategoryMode === 'remove'
                     ? 'bg-red-600 hover:bg-red-700'
                     : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
+                }`}
               >
                 {bulkLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {bulkCategoryMode === 'add' && 'Agregar categorías'}
@@ -1509,7 +1627,7 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* ── Featured Products Modal ────────────────────────── */}
+      {/* ── Featured Products Modal ──────────────────────────── */}
       {showFeaturedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -1608,12 +1726,13 @@ export default function ProductsPage() {
                       onDragOver={(e) => handleFeaturedDragOver(e, index)}
                       onDrop={() => handleFeaturedDrop(index)}
                       onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${dragIndex === index
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${
+                        dragIndex === index
                           ? 'opacity-50 border-amber-300 bg-amber-50'
                           : dragOverIndex === index
                             ? 'border-amber-400 bg-amber-50 shadow-sm'
                             : 'border-slate-200 bg-white hover:bg-slate-50'
-                        }`}
+                      }`}
                     >
                       {/* Drag handle */}
                       <GripVertical className="h-4 w-4 text-slate-400 shrink-0" />
@@ -1701,7 +1820,7 @@ export default function ProductsPage() {
   );
 }
 
-// ── Filter Tag Component ────────────────────────────────────────────
+// ── Filter Tag Component ──────────────────────────────────────────────────
 
 function FilterTag({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
