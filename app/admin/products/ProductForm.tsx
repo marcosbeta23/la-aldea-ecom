@@ -294,7 +294,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     name="sku"
                     value={formData.sku}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
                     required
                     placeholder="BOMBA-001"
                   />
@@ -319,7 +319,7 @@ export default function ProductForm({ product }: { product?: any }) {
                         setBrandQuery(normalized);
                         setFormData(prev => ({ ...prev, brand: normalized || null }));
                       }}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
                       placeholder="Ej: Pedrollo"
                       autoComplete="off"
                     />
@@ -335,7 +335,7 @@ export default function ProductForm({ product }: { product?: any }) {
                               setFormData(prev => ({ ...prev, brand }));
                               setShowBrandSuggestions(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700"
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-black placeholder:text-black"
                           >
                             {brand}
                           </button>
@@ -347,7 +347,7 @@ export default function ProductForm({ product }: { product?: any }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Nombre *
                 </label>
                 <input
@@ -355,14 +355,14 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="name"
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
                   required
                   placeholder="Bomba Centrífuga 1HP"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium  text-black mb-1">
                   Slug URL
                 </label>
                 <input
@@ -370,7 +370,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="slug"
                   value={formData.slug || ''}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm placeholder:text-black"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
                   placeholder="slug-del-producto-sku001"
                 />
                 <p className="text-xs text-slate-500 mt-1">
@@ -381,7 +381,7 @@ export default function ProductForm({ product }: { product?: any }) {
               {/* Description + AI button */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-slate-700">Descripción</label>
+                  <label className="block text-sm font-medium  text-black">Descripción</label>
                   <button
                     type="button"
                     onClick={handleAIGenerate}
@@ -413,7 +413,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   value={formData.description || ''}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
                   placeholder="Descripción detallada del producto..."
                 />
               </div>
@@ -427,11 +427,10 @@ export default function ProductForm({ product }: { product?: any }) {
                   {formData.category.map(cat => (
                     <span
                       key={cat}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${
-                        isMainCategory(cat)
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${isMainCategory(cat)
                           ? 'bg-blue-50 text-blue-700'
                           : 'bg-purple-50 text-purple-700'
-                      }`}
+                        }`}
                     >
                       {!isMainCategory(cat) && <span className="opacity-60">↳</span>}
                       {cat}
@@ -462,7 +461,7 @@ export default function ProductForm({ product }: { product?: any }) {
                           if (categoryInput.trim()) addCategory(categoryInput);
                         }
                       }}
-                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm placeholder:text-slate-400"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
                       placeholder="Escribí para buscar o agregar..."
                     />
                     {categoryInput.trim() && (
@@ -485,11 +484,10 @@ export default function ProductForm({ product }: { product?: any }) {
                             type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => addCategory(cat)}
-                            className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700 ${
-                              isSub ? 'pl-8 text-slate-600' : 'font-medium'
-                            }`}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700 ${isSub ? 'pl-8 text-black' : 'font-medium'
+                              }`}
                           >
-                            {isSub && <span className="text-slate-400 mr-1">↳</span>}
+                            {isSub && <span className="text-black mr-1">↳</span>}
                             {cat}
                           </button>
                         );
@@ -530,22 +528,20 @@ export default function ProductForm({ product }: { product?: any }) {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, currency: 'UYU' }))}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                      formData.currency === 'UYU'
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${formData.currency === 'UYU'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     🇺🇾 UYU
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, currency: 'USD' }))}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-slate-300 ${
-                      formData.currency === 'USD'
+                    className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-slate-300 ${formData.currency === 'USD'
                         ? 'bg-green-600 text-white'
                         : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     🇺🇸 USD
                   </button>
@@ -774,7 +770,7 @@ export default function ProductForm({ product }: { product?: any }) {
                       ...prev,
                       weight_kg: e.target.value ? parseFloat(e.target.value) : null
                     }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
                     min="0"
                     step="0.1"
                     placeholder="Ej: 2.5"
