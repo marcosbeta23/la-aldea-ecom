@@ -24,6 +24,7 @@ export interface Product {
   updated_at: string;
   // Availability
   availability_type: ProductAvailabilityType; // 'regular' = normal, 'on_request' = consultar
+  show_price_on_request: boolean; // Show price even if availability_type is 'on_request'
   // Shipping configuration
   shipping_type: ProductShippingType; // 'dac' = standard courier, 'freight' = large items, 'pickup_only' = no shipping
   weight_kg: number | null; // For shipping calculation

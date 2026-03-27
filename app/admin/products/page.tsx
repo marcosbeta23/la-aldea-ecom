@@ -75,6 +75,7 @@ interface Product {
   requires_quote?: boolean;
   original_price_numeric?: number | null;
   discount_percentage?: number | null;
+  show_price_on_request?: boolean;
 }
 
 interface Filters {
@@ -376,6 +377,51 @@ export default function ProductsPage() {
       fetchStats();
     } catch (err) {
       console.error('Bulk delete error:', err);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkTogglePriceOnRequest = async (showPrice: boolean) => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+
+    try {
+      const promises = [...selectedIds].map(id => {
+        const product = products.find(p => p.id === id);
+        if (!product) return Promise.resolve();
+        return fetch(`/api/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sku: product.sku,
+            name: product.name,
+            description: product.description,
+            category: product.category,
+            brand: product.brand,
+            price_numeric: product.price_numeric,
+            currency: product.currency,
+            stock: product.stock,
+            images: product.images,
+            is_active: product.is_active,
+            availability_type: product.availability_type || 'regular',
+            show_price_on_request: showPrice,
+            shipping_type: product.shipping_type || 'dac',
+            weight_kg: product.weight_kg ?? null,
+            requires_quote: product.requires_quote ?? false,
+            is_featured: product.is_featured,
+            original_price_numeric: product.original_price_numeric ?? null,
+            discount_percentage: product.discount_percentage ?? null,
+            slug: product.slug,
+          }),
+        });
+      });
+      await Promise.all(promises);
+      setSelectedIds(new Set());
+      fetchProducts(filters, page, true);
+      fetchStats();
+    } catch (err) {
+      console.error('Bulk price toggle error:', err);
     } finally {
       setBulkLoading(false);
     }
@@ -997,6 +1043,28 @@ export default function ProductsPage() {
               {bulkLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               Eliminar
             </button>
+ 
+            <div className="h-6 w-px bg-blue-200 mx-1" />
+ 
+            <button
+              onClick={() => bulkTogglePriceOnRequest(true)}
+              disabled={bulkLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white text-blue-700 border border-blue-200 rounded-lg hover:bg-white/80 transition-colors disabled:opacity-50"
+              title="Mostrar precio aunque esté en modo Consulta"
+            >
+              {bulkLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+              Mostrar Precio
+            </button>
+            <button
+              onClick={() => bulkTogglePriceOnRequest(false)}
+              disabled={bulkLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              title="Ocultar precio en modo Consulta"
+            >
+              {bulkLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" opacity={0.5} />}
+              Ocultar Precio
+            </button>
+ 
             <button
               onClick={() => setSelectedIds(new Set())}
               className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"

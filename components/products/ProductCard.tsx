@@ -172,7 +172,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Price & Stock */}
         <div className="mt-auto flex items-end justify-between">
-          {isOnRequest ? (
+          {isOnRequest && !product.show_price_on_request ? (
             <div className="flex items-center gap-1.5 text-purple-600">
               <MessageCircle className="h-4 w-4" />
               <span className="text-sm font-semibold">Consultar</span>
@@ -184,14 +184,24 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                   <span className="text-xs text-slate-400 line-through">
                     {formatPrice(product.original_price_numeric, product.currency)}
                   </span>
-                  <span className="text-lg font-bold text-green-600">
-                    {formatPrice(product.price_numeric, product.currency)}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-lg font-bold text-green-600">
+                      {formatPrice(product.price_numeric, product.currency)}
+                    </span>
+                    {isOnRequest && (
+                      <span className="text-[10px] font-bold text-purple-600 uppercase">Consulta</span>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-slate-900">
-                  {formatPrice(product.price_numeric, product.currency)}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold text-slate-900">
+                    {formatPrice(product.price_numeric, product.currency)}
+                  </span>
+                  {isOnRequest && (
+                    <span className="text-[10px] font-bold text-purple-600 uppercase leading-none">Consulta</span>
+                  )}
+                </div>
               )}
             </div>
           )}

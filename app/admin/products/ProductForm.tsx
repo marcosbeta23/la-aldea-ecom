@@ -25,6 +25,7 @@ interface Product {
   is_active: boolean;
   // Availability
   availability_type: ProductAvailabilityType;
+  show_price_on_request: boolean;
   // Shipping fields
   shipping_type: ProductShippingType;
   weight_kg: number | null;
@@ -72,6 +73,7 @@ export default function ProductForm({ product }: { product?: any }) {
     is_active: product?.is_active ?? true,
     // Availability
     availability_type: product?.availability_type || 'regular',
+    show_price_on_request: product?.show_price_on_request ?? false,
     // Shipping defaults
     shipping_type: product?.shipping_type || 'dac',
     weight_kg: product?.weight_kg || null,
@@ -633,10 +635,28 @@ export default function ProductForm({ product }: { product?: any }) {
               </select>
               <p className="text-xs text-slate-500 mt-1">
                 {formData.availability_type === 'on_request'
-                  ? 'Se muestra "Consultar" en vez del precio. El cliente contacta por WhatsApp.'
+                  ? 'Se muestra "Consultar" en vez del precio (a menos que se active la opción de abajo). El cliente contacta por WhatsApp.'
                   : 'El producto se vende normalmente con precio y stock.'}
               </p>
             </div>
+
+            {formData.availability_type === 'on_request' && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="show_price_on_request"
+                    checked={formData.show_price_on_request}
+                    onChange={handleCheckbox}
+                    className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-slate-700">Mostrar precio en consulta</span>
+                    <span className="text-xs text-slate-500">Muestra el precio aunque el producto no se pueda comprar online</span>
+                  </div>
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Featured & Discount */}

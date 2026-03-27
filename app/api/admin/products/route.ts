@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
       is_active = true,
       // Availability
       availability_type = 'regular',
+      show_price_on_request = false,
       // Shipping fields
       shipping_type = 'dac',
       weight_kg = null,
@@ -146,6 +147,7 @@ export async function POST(request: NextRequest) {
         is_active,
         // Availability
         availability_type,
+        show_price_on_request,
         // Shipping fields
         shipping_type,
         weight_kg,

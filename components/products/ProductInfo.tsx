@@ -164,7 +164,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
 
       {/* Price */}
       <div className="mb-4 sm:mb-6">
-        {isOnRequest ? (
+        {isOnRequest && !product.show_price_on_request ? (
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 sm:p-4">
             <p className="text-base sm:text-lg font-bold text-purple-700 mb-1">Consultar por este producto</p>
             <p className="text-xs sm:text-sm text-purple-600">
@@ -172,21 +172,31 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             </p>
           </div>
         ) : product.original_price_numeric && product.discount_percentage ? (
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <span className="text-lg sm:text-2xl text-slate-400 line-through">
-              {formatPrice(product.original_price_numeric, product.currency)}
-            </span>
-            <span className="text-2xl sm:text-4xl font-bold text-green-600">
-              {formatPrice(product.price_numeric, product.currency)}
-            </span>
-            <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-green-600 text-white text-xs sm:text-sm font-bold rounded-full">
-              -{product.discount_percentage}% OFF
-            </span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <span className="text-lg sm:text-2xl text-slate-400 line-through">
+                {formatPrice(product.original_price_numeric, product.currency)}
+              </span>
+              <span className="text-2xl sm:text-4xl font-bold text-green-600">
+                {formatPrice(product.price_numeric, product.currency)}
+              </span>
+              <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-green-600 text-white text-xs sm:text-sm font-bold rounded-full">
+                -{product.discount_percentage}% OFF
+              </span>
+            </div>
+            {isOnRequest && (
+              <span className="text-sm font-bold text-purple-600 uppercase tracking-wide">Disponible a pedido</span>
+            )}
           </div>
         ) : (
-          <span className="text-2xl sm:text-4xl font-bold text-slate-900">
-            {formatPrice(product.price_numeric, product.currency)}
-          </span>
+          <div className="flex flex-col gap-1">
+            <span className="text-2xl sm:text-4xl font-bold text-slate-900">
+              {formatPrice(product.price_numeric, product.currency)}
+            </span>
+            {isOnRequest && (
+              <span className="text-sm font-bold text-purple-600 uppercase tracking-wide">Disponible a pedido</span>
+            )}
+          </div>
         )}
       </div>
 
