@@ -71,7 +71,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
             priority={currentIndex === 0}
             fetchPriority={currentIndex === 0 ? 'high' : undefined}
             sizes="(max-width: 768px) 100vw, 50vw"
-            quality={60}
+            quality={85}
             onLoad={() => setIsLoading(false)}
             onError={() => handleImageError(currentIndex)}
           />
@@ -118,8 +118,8 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
               key={`thumb-${index}-${image}`}
               onClick={() => handleThumbnailClick(index)}
               className={`relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${index === currentIndex
-                  ? 'border-blue-600'
-                  : 'border-transparent hover:border-slate-300'
+                ? 'border-blue-600'
+                : 'border-transparent hover:border-slate-300'
                 }`}
             >
               {imageErrors.has(index) ? (
