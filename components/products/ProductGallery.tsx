@@ -53,7 +53,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
   return (
     <div className="relative">
       {/* Main Image */}
-      <div 
+      <div
         className="relative aspect-square bg-slate-100 cursor-zoom-in overflow-hidden"
         onClick={() => setIsZoomed(!isZoomed)}
       >
@@ -83,7 +83,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
             <div className="h-8 w-8 border-4 border-slate-300 border-t-blue-600 rounded-full animate-spin" />
           </div>
         )}
-        
+
         {/* Zoom indicator */}
         <div className="absolute top-4 right-4 p-2 bg-white/80 rounded-lg">
           <ZoomIn className="h-5 w-5 text-slate-600" />
@@ -117,11 +117,10 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
             <button
               key={`thumb-${index}-${image}`}
               onClick={() => handleThumbnailClick(index)}
-              className={`relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
-                index === currentIndex
+              className={`relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${index === currentIndex
                   ? 'border-blue-600'
                   : 'border-transparent hover:border-slate-300'
-              }`}
+                }`}
             >
               {imageErrors.has(index) ? (
                 <div className="flex items-center justify-center h-full bg-slate-100">

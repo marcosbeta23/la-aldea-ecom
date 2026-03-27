@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
       'recharts',
       '@clerk/nextjs',
     ],
-    nextScriptWorkers: true,
   },
   images: {
     dangerouslyAllowSVG: true,
