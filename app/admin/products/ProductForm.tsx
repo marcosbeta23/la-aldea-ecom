@@ -6,7 +6,7 @@ import { Save, Loader2, Trash2, X, Plus, Truck, Star, Tag, Sparkles } from 'luci
 import ImageUpload from '@/components/admin/ImageUpload';
 import { useProductGenerator } from '@/hooks/useProductGenerator';
 import { SHIPPING_TYPE_LABELS } from '@/lib/shipping';
-import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
+import { CATEGORY_HIERARCHY, isMainCategory } from '@/lib/categories';
 import { normalizeCategory, normalizeBrand } from '@/lib/validators';
 import type { ProductShippingType, ProductAvailabilityType } from '@/types/database';
 
@@ -48,7 +48,11 @@ function generateSlug(name: string, sku: string): string {
   return `${base}-${sku.slice(0, 6).toLowerCase()}`;
 }
 
-const KNOWN_CATEGORIES = CATEGORY_HIERARCHY.map(c => c.value);
+// All category options: main categories + all subcategories, hierarchically ordered
+const ALL_CATEGORY_OPTIONS = CATEGORY_HIERARCHY.flatMap(cat => [
+  cat.value,
+  ...cat.subcategories.map(sub => sub.value),
+]);
 
 export default function ProductForm({ product }: { product?: any }) {
   const router = useRouter();
@@ -129,16 +133,9 @@ export default function ProductForm({ product }: { product?: any }) {
     b.toLowerCase().includes(brandQuery.toLowerCase().trim()) && b.toLowerCase() !== brandQuery.toLowerCase().trim()
   );
 
-  // Get subcategory suggestions based on selected main categories
-  const selectedMainCats = formData.category.filter(c => isMainCategory(c));
-  const subcategorySuggestions = selectedMainCats.flatMap(mc =>
-    getSubcategories(mc).map(s => s.value)
-  ).filter(s => !formData.category.some(fc => fc.toLowerCase() === s.toLowerCase()));
-
-  // Combine main categories + subcategory suggestions for the dropdown
-  const allSuggestions = [...KNOWN_CATEGORIES, ...subcategorySuggestions];
-
-  const filteredCategories = allSuggestions.filter(c =>
+  // Show ALL category options (main categories + all subcategories) for suggestions.
+  // Filter out already-selected ones and match search input.
+  const filteredCategories = ALL_CATEGORY_OPTIONS.filter(c =>
     c.toLowerCase().includes(categoryInput.toLowerCase().trim()) &&
     !formData.category.some(fc => fc.toLowerCase() === c.toLowerCase())
   );
@@ -297,7 +294,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     name="sku"
                     value={formData.sku}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                     required
                     placeholder="BOMBA-001"
                   />
@@ -322,7 +319,7 @@ export default function ProductForm({ product }: { product?: any }) {
                         setBrandQuery(normalized);
                         setFormData(prev => ({ ...prev, brand: normalized || null }));
                       }}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                       placeholder="Ej: Pedrollo"
                       autoComplete="off"
                     />
@@ -358,7 +355,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="name"
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   required
                   placeholder="Bomba Centrífuga 1HP"
                 />
@@ -373,7 +370,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="slug"
                   value={formData.slug || ''}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm placeholder:text-slate-400"
                   placeholder="slug-del-producto-sku001"
                 />
                 <p className="text-xs text-slate-500 mt-1">
@@ -416,7 +413,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   value={formData.description || ''}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   placeholder="Descripción detallada del producto..."
                 />
               </div>
@@ -430,13 +427,18 @@ export default function ProductForm({ product }: { product?: any }) {
                   {formData.category.map(cat => (
                     <span
                       key={cat}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full"
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${
+                        isMainCategory(cat)
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-purple-50 text-purple-700'
+                      }`}
                     >
+                      {!isMainCategory(cat) && <span className="opacity-60">↳</span>}
                       {cat}
                       <button
                         type="button"
                         onClick={() => removeCategory(cat)}
-                        className="hover:text-blue-900"
+                        className="hover:opacity-70"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -460,7 +462,7 @@ export default function ProductForm({ product }: { product?: any }) {
                           if (categoryInput.trim()) addCategory(categoryInput);
                         }
                       }}
-                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm placeholder:text-slate-400"
                       placeholder="Escribí para buscar o agregar..."
                     />
                     {categoryInput.trim() && (
@@ -474,7 +476,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     )}
                   </div>
                   {showCategorySuggestions && filteredCategories.length > 0 && (
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
                       {filteredCategories.map(cat => {
                         const isSub = !isMainCategory(cat);
                         return (
@@ -483,7 +485,9 @@ export default function ProductForm({ product }: { product?: any }) {
                             type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => addCategory(cat)}
-                            className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700 ${isSub ? 'pl-8' : 'font-medium'}`}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-slate-700 ${
+                              isSub ? 'pl-8 text-slate-600' : 'font-medium'
+                            }`}
                           >
                             {isSub && <span className="text-slate-400 mr-1">↳</span>}
                             {cat}
@@ -494,7 +498,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1.5">
-                  Categoría principal + subcategoría. Ej: Bombas + Sumergibles. Las subcategorías aparecen al seleccionar una categoría principal.
+                  Categoría principal (azul) + subcategoría (violeta). Ej: Bombas → Sumergibles. Las subcategorías están siempre disponibles en la lista.
                 </p>
               </div>
             </div>
@@ -526,20 +530,22 @@ export default function ProductForm({ product }: { product?: any }) {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, currency: 'UYU' }))}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${formData.currency === 'UYU'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-slate-600 hover:bg-slate-50'
-                      }`}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                      formData.currency === 'UYU'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
                   >
                     🇺🇾 UYU
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, currency: 'USD' }))}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-slate-300 ${formData.currency === 'USD'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-white text-slate-600 hover:bg-slate-50'
-                      }`}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-slate-300 ${
+                      formData.currency === 'USD'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
                   >
                     🇺🇸 USD
                   </button>
@@ -559,7 +565,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     name="price_numeric"
                     value={formData.price_numeric}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                     required
                     min="0"
                     step="0.01"
@@ -576,7 +582,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="stock"
                   value={formData.stock}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   required
                   min="0"
                 />
@@ -592,7 +598,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     name="sold_count"
                     value={formData.sold_count}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 placeholder:text-slate-400"
                     min="0"
                     disabled
                   />
@@ -679,7 +685,7 @@ export default function ProductForm({ product }: { product?: any }) {
                         ...prev,
                         original_price_numeric: e.target.value ? parseFloat(e.target.value) : null
                       }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-slate-400"
                       min="0"
                       step="0.01"
                       placeholder="Ej: 1500"
@@ -696,7 +702,7 @@ export default function ProductForm({ product }: { product?: any }) {
                         ...prev,
                         discount_percentage: e.target.value ? parseInt(e.target.value) : null
                       }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-slate-400"
                       min="0"
                       max="100"
                       placeholder="Ej: 20"
@@ -768,7 +774,7 @@ export default function ProductForm({ product }: { product?: any }) {
                       ...prev,
                       weight_kg: e.target.value ? parseFloat(e.target.value) : null
                     }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                     min="0"
                     step="0.1"
                     placeholder="Ej: 2.5"
