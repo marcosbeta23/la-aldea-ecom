@@ -319,7 +319,7 @@ export default function ProductForm({ product }: { product?: any }) {
                         setBrandQuery(normalized);
                         setFormData(prev => ({ ...prev, brand: normalized || null }));
                       }}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
                       placeholder="Ej: Pedrollo"
                       autoComplete="off"
                     />
@@ -355,7 +355,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="name"
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
                   required
                   placeholder="Bomba Centrífuga 1HP"
                 />
@@ -370,7 +370,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="slug"
                   value={formData.slug || ''}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm placeholder:text-slate-400"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm placeholder:text-black"
                   placeholder="slug-del-producto-sku001"
                 />
                 <p className="text-xs text-slate-500 mt-1">
@@ -413,7 +413,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   value={formData.description || ''}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
                   placeholder="Descripción detallada del producto..."
                 />
               </div>
@@ -565,7 +565,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     name="price_numeric"
                     value={formData.price_numeric}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
                     required
                     min="0"
                     step="0.01"
@@ -582,7 +582,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="stock"
                   value={formData.stock}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black"
                   required
                   min="0"
                 />
@@ -598,7 +598,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     name="sold_count"
                     value={formData.sold_count}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 placeholder:text-slate-400"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 placeholder:text-black"
                     min="0"
                     disabled
                   />
@@ -702,7 +702,7 @@ export default function ProductForm({ product }: { product?: any }) {
                         ...prev,
                         discount_percentage: e.target.value ? parseInt(e.target.value) : null
                       }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-slate-400"
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-black"
                       min="0"
                       max="100"
                       placeholder="Ej: 20"
