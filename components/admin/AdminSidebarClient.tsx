@@ -25,7 +25,7 @@ const ALL_NAV_ITEMS = [
   { href: '/admin/reviews', label: 'Reseñas', icon: Star, roles: ['owner'] },
   { href: '/admin/partners', label: 'Marcas', icon: Building2, roles: ['owner'] },
   { href: '/admin/guides', label: 'Guias', icon: BookOpen, roles: ['owner'] },
-  { href: '/admin/reports', label: 'Reportes', icon: FileText, roles: ['owner', 'staff'] },
+  { href: '/admin/reports', label: 'Reportes', icon: FileText, roles: ['owner'] },
 ];
 
 export default function AdminSidebarClient({
@@ -103,8 +103,8 @@ export default function AdminSidebarClient({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   }`}
               >
                 <item.icon className="h-5 w-5" />
