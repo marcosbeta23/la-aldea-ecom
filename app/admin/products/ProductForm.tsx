@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, Loader2, Trash2, X, Plus, Truck, Star, Tag } from 'lucide-react';
+import { Save, Loader2, Trash2, X, Plus, Truck, Star, Tag, Sparkles } from 'lucide-react';
 import ImageUpload from '@/components/admin/ImageUpload';
-
+import { useProductGenerator } from '@/hooks/useProductGenerator';
 import { SHIPPING_TYPE_LABELS } from '@/lib/shipping';
 import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
 import { normalizeCategory, normalizeBrand } from '@/lib/validators';
@@ -53,7 +53,7 @@ const KNOWN_CATEGORIES = CATEGORY_HIERARCHY.map(c => c.value);
 export default function ProductForm({ product }: { product?: any }) {
   const router = useRouter();
   const isEditing = !!product;
-  
+
   const [formData, setFormData] = useState<Product>({
     sku: product?.sku || '',
     name: product?.name || '',
@@ -78,12 +78,14 @@ export default function ProductForm({ product }: { product?: any }) {
     discount_percentage: product?.discount_percentage || null,
     slug: product?.slug || null,
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
+  const { generate: generateAI, loading: aiLoading, error: aiError, clearError: clearAiError } = useProductGenerator();
+
   // Brand autocomplete
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [brandQuery, setBrandQuery] = useState(formData.brand || '');
@@ -106,7 +108,7 @@ export default function ProductForm({ product }: { product?: any }) {
         });
         setAvailableBrands([...brands].sort());
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Close dropdowns on outside click
@@ -153,7 +155,7 @@ export default function ProductForm({ product }: { product?: any }) {
   const removeCategory = (cat: string) => {
     setFormData(prev => ({ ...prev, category: prev.category.filter(c => c !== cat) }));
   };
-  
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -172,7 +174,7 @@ export default function ProductForm({ product }: { product?: any }) {
       }));
     }
   };
-  
+
   const handleNameChange = (name: string) => {
     setFormData(prev => ({
       ...prev,
@@ -189,13 +191,30 @@ export default function ProductForm({ product }: { product?: any }) {
       [name]: checked,
     }));
   };
-  
+
+  const handleAIGenerate = async () => {
+    clearAiError();
+    const result = await generateAI({
+      name: formData.name,
+      brand: formData.brand,
+      sku: formData.sku,
+      category: formData.category,
+    });
+
+    if (result?.generated) {
+      setFormData(prev => ({
+        ...prev,
+        description: result.generated.description,
+      }));
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setIsSubmitting(true);
-    
+
     try {
       // Normalize brand before submit
       const submitData = {
@@ -204,55 +223,55 @@ export default function ProductForm({ product }: { product?: any }) {
         category: formData.category.map(c => normalizeCategory(c)).filter(Boolean),
       };
 
-      const url = isEditing 
-        ? `/api/admin/products/${product.id}` 
+      const url = isEditing
+        ? `/api/admin/products/${product.id}`
         : '/api/admin/products';
-      
+
       const res = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),
       });
-      
+
       const data = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(data.error || 'Error al guardar');
       }
-      
+
       setSuccess(isEditing ? 'Producto actualizado' : 'Producto creado');
-      
+
       if (!isEditing) {
         // Redirect to edit page for new products
         router.push(`/admin/products/${data.product.id}`);
       } else {
         router.refresh();
       }
-      
+
     } catch (err: any) {
       setError(err.message || 'Error al guardar');
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleDelete = async () => {
     if (!confirm('¿Estás seguro de eliminar este producto?')) return;
-    
+
     setIsDeleting(true);
-    
+
     try {
       const res = await fetch(`/api/admin/products/${product.id}`, {
         method: 'DELETE',
       });
-      
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || 'Error al eliminar');
       }
-      
+
       router.push('/admin/products');
-      
+
     } catch (err: any) {
       setError(err.message || 'Error al eliminar');
       setIsDeleting(false);
@@ -266,7 +285,7 @@ export default function ProductForm({ product }: { product?: any }) {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Información básica</h2>
-            
+
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -329,7 +348,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Nombre *
@@ -344,7 +363,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   placeholder="Bomba Centrífuga 1HP"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Slug URL
@@ -362,10 +381,36 @@ export default function ProductForm({ product }: { product?: any }) {
                 </p>
               </div>
 
+              {/* Description + AI button */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Descripción
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-slate-700">Descripción</label>
+                  <button
+                    type="button"
+                    onClick={handleAIGenerate}
+                    disabled={aiLoading || !formData.name.trim() || !formData.sku.trim()}
+                    title={
+                      !formData.name.trim() || !formData.sku.trim()
+                        ? 'Completá el nombre y SKU primero'
+                        : 'Generar descripción con IA'
+                    }
+                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {aiLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    {aiLoading ? 'Generando...' : 'Completar con IA'}
+                  </button>
+                </div>
+
+                {aiError && (
+                  <p className="text-xs text-red-600 mb-1.5 flex items-center gap-1">
+                    <span>⚠</span> {aiError}
+                  </p>
+                )}
+
                 <textarea
                   name="description"
                   value={formData.description || ''}
@@ -375,7 +420,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   placeholder="Descripción detallada del producto..."
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Categorías
@@ -454,7 +499,7 @@ export default function ProductForm({ product }: { product?: any }) {
               </div>
             </div>
           </div>
-          
+
           {/* Images */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Imágenes</h2>
@@ -464,13 +509,13 @@ export default function ProductForm({ product }: { product?: any }) {
             />
           </div>
         </div>
-        
+
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Price & Stock */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Precio y Stock</h2>
-            
+
             <div className="space-y-4">
               {/* Currency selector */}
               <div>
@@ -481,22 +526,20 @@ export default function ProductForm({ product }: { product?: any }) {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, currency: 'UYU' }))}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                      formData.currency === 'UYU'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${formData.currency === 'UYU'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-slate-600 hover:bg-slate-50'
+                      }`}
                   >
                     🇺🇾 UYU
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, currency: 'USD' }))}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-slate-300 ${
-                      formData.currency === 'USD'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-white text-slate-600 hover:bg-slate-50'
-                    }`}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-slate-300 ${formData.currency === 'USD'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-slate-600 hover:bg-slate-50'
+                      }`}
                   >
                     🇺🇸 USD
                   </button>
@@ -523,7 +566,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Stock *
@@ -538,7 +581,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   min="0"
                 />
               </div>
-              
+
               {isEditing && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -557,11 +600,11 @@ export default function ProductForm({ product }: { product?: any }) {
               )}
             </div>
           </div>
-          
+
           {/* Status */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Estado</h2>
-            
+
             <label className="flex items-center gap-3 cursor-pointer mb-4">
               <input
                 type="checkbox"
@@ -593,14 +636,14 @@ export default function ProductForm({ product }: { product?: any }) {
               </p>
             </div>
           </div>
-          
+
           {/* Featured & Discount */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
               <Star className="h-5 w-5 text-amber-500" />
               Destacado y Ofertas
             </h2>
-            
+
             <div className="space-y-4">
               {/* Featured checkbox */}
               <label className="flex items-center gap-3 cursor-pointer">
@@ -616,14 +659,14 @@ export default function ProductForm({ product }: { product?: any }) {
               <p className="text-xs text-slate-500 -mt-2">
                 Aparece en la sección de destacados del homepage
               </p>
-              
+
               {/* Discount section */}
               <div className="pt-3 border-t border-slate-200">
                 <div className="flex items-center gap-2 mb-3">
                   <Tag className="h-4 w-4 text-green-600" />
                   <span className="text-sm font-medium text-slate-700">Descuento</span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">
@@ -660,7 +703,7 @@ export default function ProductForm({ product }: { product?: any }) {
                     />
                   </div>
                 </div>
-                
+
                 {formData.original_price_numeric && formData.discount_percentage && (
                   <div className="mt-3 p-2 bg-green-50 rounded-lg">
                     <p className="text-xs text-green-700">
@@ -673,21 +716,21 @@ export default function ProductForm({ product }: { product?: any }) {
                     </p>
                   </div>
                 )}
-                
+
                 <p className="text-xs text-slate-500 mt-2">
                   Dejá vacío si no hay descuento. El precio actual es el precio de venta.
                 </p>
               </div>
             </div>
           </div>
-          
+
           {/* Shipping */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
               <Truck className="h-5 w-5 text-blue-600" />
               Envío
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label htmlFor="shipping_type" className="block text-sm font-medium text-slate-700 mb-1">
@@ -710,7 +753,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   {formData.shipping_type === 'pickup_only' && 'Solo disponible para retiro en local'}
                 </p>
               </div>
-              
+
               {formData.shipping_type !== 'pickup_only' && (
                 <div>
                   <label htmlFor="weight_kg" className="block text-sm font-medium text-slate-700 mb-1">
@@ -732,7 +775,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   />
                 </div>
               )}
-              
+
               {formData.shipping_type === 'freight' && (
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -747,7 +790,7 @@ export default function ProductForm({ product }: { product?: any }) {
               )}
             </div>
           </div>
-          
+
           {/* Actions */}
           <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-3">
             {error && (
@@ -755,13 +798,13 @@ export default function ProductForm({ product }: { product?: any }) {
                 {error}
               </div>
             )}
-            
+
             {success && (
               <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg">
                 {success}
               </div>
             )}
-            
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -779,7 +822,7 @@ export default function ProductForm({ product }: { product?: any }) {
                 </>
               )}
             </button>
-            
+
             {isEditing && (
               <button
                 type="button"

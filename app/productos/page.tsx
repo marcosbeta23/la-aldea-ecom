@@ -13,7 +13,9 @@ import FilterPersistence from '@/components/products/FilterPersistence';
 import { SubcategoryChips } from '@/components/products/SubcategoryChips';
 import Header from '@/components/Header';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { expandQuery } from '@/lib/search/query-expansion';
+import { getSearchFallback } from '@/lib/search/ai-fallback';
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -252,6 +254,52 @@ const cachedGetProducts = cache(async function getProducts(searchParams: {
     return { products: [], total: 0, page, perPage: PER_PAGE };
   }
 
+  // Step 4: AI Query Expansion — only fires when all 3 search steps return zero results
+  if ((count === 0 || !data?.length) && searchParams.q) {
+    try {
+      const rawQ = searchParams.q;
+      const resolvedQ = await resolveQuery(rawQ);
+      const normQ = stripAccents(resolvedQ.trim());
+
+      if (normQ.length >= 3) {
+        const expandedTerms = await expandQuery(normQ);
+        const newTerms = expandedTerms
+          .filter(t => stripAccents(t.toLowerCase()) !== normQ)
+          .slice(0, 3);
+
+        for (const term of newTerms) {
+          const { data: expIds } = await (supabaseAdmin as any)
+            .rpc('search_products_fuzzy', {
+              search_query: stripAccents(term),
+              similarity_threshold: 0.3,
+              result_limit: PER_PAGE,
+            });
+
+          if (expIds?.length) {
+            const { data: expProds } = await supabaseAdmin
+              .from('products')
+              .select('*')
+              .in('id', expIds.map((r: any) => r.id))
+              .eq('is_active', true)
+              .order('is_featured', { ascending: false })
+              .order('sold_count', { ascending: false });
+
+            if (expProds?.length) {
+              return {
+                products: expProds,
+                total: expProds.length,
+                page: 1,
+                perPage: PER_PAGE,
+              };
+            }
+          }
+        }
+      }
+    } catch {
+      // Expansion is non-critical — fail silently
+    }
+  }
+
   return {
     products: data || [],
     total: count || 0,
@@ -390,6 +438,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const { categories, subcategories, brands } = filterResult;
   const totalPages = Math.ceil(total / perPage);
 
+  // Step 5: AI Fallback — category suggestions when expansion also yields zero results
+  let searchFallback: { message: string; suggestions: string[] } | null = null;
+  if (total === 0 && params.q) {
+    try {
+      const availableCats = CATEGORY_HIERARCHY.map(c => c.value);
+      searchFallback = await getSearchFallback(params.q, availableCats);
+    } catch { /* silent */ }
+  }
+
   return (
     <>
       <Header />
@@ -495,7 +552,46 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               {params.q && (
                 <SearchAnalytics query={params.q} resultCount={total} />
               )}
-              <ProductGrid products={products} />
+
+              {params.q && total === 0 && searchFallback ? (
+                <div className="py-16 text-center space-y-5">
+                  <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
+                    <Search className="h-7 w-7 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-700 text-lg">
+                      Sin resultados para &ldquo;{params.q}&rdquo;
+                    </p>
+                    <p className="text-sm text-slate-500 mt-1">{searchFallback.message}</p>
+                  </div>
+                  {searchFallback.suggestions.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">
+                        Probá con estas categorías
+                      </p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {searchFallback.suggestions.map(cat => (
+                          <Link
+                            key={cat}
+                            href={`/productos?categoria=${encodeURIComponent(cat)}`}
+                            className="px-4 py-2 bg-blue-50 text-blue-700 text-sm rounded-full border border-blue-100 hover:bg-blue-100 transition-colors font-medium"
+                          >
+                            {cat}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <Link
+                    href="/productos"
+                    className="inline-block text-sm text-slate-500 hover:text-blue-600 transition-colors"
+                  >
+                    Ver todos los productos →
+                  </Link>
+                </div>
+              ) : (
+                <ProductGrid products={products} />
+              )}
 
               {/* Pagination */}
               {totalPages > 1 && (
