@@ -10,6 +10,16 @@ export const WHATSAPP_PHONE = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || '5989274
  * WhatsApp display number (formatted for UI)
  */
 export const WHATSAPP_DISPLAY = '+598 92 744 725';
+
+/**
+ * Google Business Profile aggregate rating
+ * Update NEXT_PUBLIC_GOOGLE_RATING and NEXT_PUBLIC_GOOGLE_REVIEW_COUNT
+ * in your .env.local (and Vercel env vars) whenever you get new reviews.
+ * No code changes needed.
+ */
+export const GOOGLE_RATING = process.env.NEXT_PUBLIC_GOOGLE_RATING || '4.3';
+export const GOOGLE_REVIEW_COUNT = process.env.NEXT_PUBLIC_GOOGLE_REVIEW_COUNT || '7';
+
 /**
  * Bank Account Details Switcher
  * Returns the correct account based on currency

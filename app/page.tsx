@@ -29,7 +29,7 @@ import {
   Settings
 } from "lucide-react";
 import HomeHero from "@/components/home/HomeHero";
-import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from "@/lib/constants";
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY, GOOGLE_RATING, GOOGLE_REVIEW_COUNT } from "@/lib/constants";
 import ClientHomePageElements from "@/components/home/ClientHomePageElements";
 import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
 import HomeMapSection from "@/components/home/HomeMapSection";
@@ -215,7 +215,8 @@ const localBusinessSchema = {
   },
   aggregateRating: {
     "@type": "AggregateRating",
-    ratingValue: "4.8",
+    ratingValue: GOOGLE_RATING,
+    reviewCount: GOOGLE_REVIEW_COUNT,
     bestRating: "5",
     worstRating: "1"
   }
