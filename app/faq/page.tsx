@@ -9,6 +9,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import { autoLinkBlogContent } from '@/lib/auto-link';
 import { supabase } from '@/lib/supabase';
 import type { SeoCluster } from '@/lib/seo-clusters';
+import FAQNav from '@/components/faq/FAQNav';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -406,18 +407,14 @@ export default async function FAQPage() {
               <span className="text-blue-600 font-medium text-sm shrink-0 group-hover:underline">Ver guias →</span>
             </Link>
 
-            {/* Category Navigation */}
-            <nav className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide sm:flex-wrap sm:overflow-x-visible sm:pb-0">
-              {Object.entries(processedFaqData).map(([key, category]) => (
-                <a
-                  key={key}
-                  href={`#${key}`}
-                  className="shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 bg-white rounded-full text-xs sm:text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-slate-200"
-                >
-                  {category.icon} {category.title}
-                </a>
-              ))}
-            </nav>
+            {/* Category Navigation (Client Side Tracking) */}
+            <FAQNav 
+              categories={Object.entries(processedFaqData).map(([key, cat]) => ({
+                id: key,
+                title: cat.title,
+                icon: cat.icon
+              }))} 
+            />
 
             {/* FAQ Categories */}
             <div className="space-y-8">
@@ -435,28 +432,33 @@ export default async function FAQPage() {
             </div>
 
             {/* Still have questions? */}
-            <div className="mt-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 md:p-8 text-white text-center">
-              <h3 className="text-2xl font-bold mb-4">¿No encontraste lo que buscabas?</h3>
-              <p className="text-green-100 mb-6 max-w-lg mx-auto">
-                Nuestro equipo esta listo para ayudarte. Contactanos por WhatsApp o telefono y te respondemos al instante.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="mt-12 relative overflow-hidden bg-gradient-to-br from-green-500 to-green-600 rounded-3xl p-8 md:p-12 text-white text-center shadow-xl ring-1 ring-black/5">
+              <div className="absolute -top-24 -right-24 w-72 h-72 bg-white/20 blur-[80px] rounded-full pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-white/10 blur-[60px] rounded-full pointer-events-none" />
+              
+              <div className="relative z-10">
+                <h3 className="text-2xl md:text-3xl font-bold mb-4 tracking-tight">¿No encontraste lo que buscabas?</h3>
+                <p className="text-green-50 text-[16px] mb-8 max-w-xl mx-auto leading-relaxed">
+                  Nuestro equipo está listo para ayudarte en lo que necesites. Contactanos por WhatsApp o teléfono y te respondemos al instante.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
                   href="https://wa.me/${WHATSAPP_PHONE}"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-green-800 font-semibold rounded-xl hover:bg-green-50 transition-colors"
+                  className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-white text-green-700 font-bold rounded-2xl hover:bg-green-50 hover:-translate-y-0.5 hover:shadow-lg transition-all shadow-md"
                 >
                   <MessageCircle className="h-5 w-5" />
-                  WhatsApp
+                  Abrir WhatsApp
                 </a>
                 <a
                   href="tel:+${WHATSAPP_PHONE}"
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-colors"
+                  className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-white/10 text-white font-bold rounded-2xl border border-white/20 backdrop-blur-sm hover:bg-white/20 transition-all"
                 >
                   <Phone className="h-5 w-5" />
-                  {WHATSAPP_DISPLAY}
+                  Llamar: {WHATSAPP_DISPLAY}
                 </a>
+                </div>
               </div>
             </div>
           </div>

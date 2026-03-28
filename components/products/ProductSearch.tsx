@@ -20,9 +20,10 @@ interface Suggestion {
 
 interface ProductSearchProps {
   initialQuery?: string;
+  theme?: 'light' | 'dark';
 }
 
-export default function ProductSearch({ initialQuery = '' }: ProductSearchProps) {
+export default function ProductSearch({ initialQuery = '', theme = 'dark' }: ProductSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(initialQuery);
@@ -191,7 +192,7 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
     <div className="relative max-w-xl">
       <form onSubmit={handleSearch}>
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${theme === 'light' ? 'text-slate-400' : 'text-white/50'}`} />
           <input
             ref={inputRef}
             type="text"
@@ -204,14 +205,22 @@ export default function ProductSearch({ initialQuery = '' }: ProductSearchProps)
             onFocus={() => setShowSuggestions(true)}
             onKeyDown={handleKeyDown}
             placeholder="Buscar productos, marcas o categorías..."
-            className="w-full pl-12 pr-24 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15"
+            className={`w-full pl-12 pr-24 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
+              theme === 'light'
+                ? 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20 shadow-sm'
+                : 'bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/60 focus:ring-white/30 focus:bg-white/15'
+            }`}
             autoComplete="off"
           />
           {query && (
             <button
               type="button"
               onClick={clearSearch}
-              className="absolute right-16 top-1/2 -translate-y-1/2 p-1 text-white/60 hover:text-white"
+              className={`absolute right-24 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-colors ${
+                theme === 'light' 
+                  ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`}
               aria-label="Limpiar búsqueda"
             >
               <X className="h-4 w-4" />

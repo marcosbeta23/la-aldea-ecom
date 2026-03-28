@@ -125,35 +125,43 @@ export default function ContactoPage() {
             {/* Main CTA — WhatsApp */}
             <div className="lg:col-span-2 space-y-6">
               {/* WhatsApp card */}
-              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 md:p-8 text-white shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
+              <div className="group relative overflow-hidden bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 rounded-[2.5rem] p-8 md:p-12 text-white shadow-[0_20px_50px_rgba(34,197,94,0.15)] hover:shadow-[0_30px_60px_rgba(34,197,94,0.3)] transition-all duration-500 hover:-translate-y-1 ring-1 ring-white/20">
+                {/* Glow effects inside the panel */}
+                <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/20 blur-[100px] rounded-full pointer-events-none group-hover:bg-white/30 transition-colors duration-700" />
+                <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-400/20 blur-[80px] rounded-full pointer-events-none" />
+                
+                <div className="relative z-10 flex flex-col items-start h-full">
+                  <div className="flex items-center gap-5 mb-8">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-white/10 backdrop-blur-xl shadow-2xl border border-white/30 ring-4 ring-white/10">
+                      <MessageCircle className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold tracking-tight">WhatsApp</h2>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="flex h-2 w-2 rounded-full bg-green-300 animate-pulse" />
+                        <p className="text-green-50/90 text-[15px] font-medium uppercase tracking-wider">Asistencia Inmediata</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-green-50 text-lg md:text-xl mb-10 leading-relaxed max-w-xl font-medium opacity-90">
+                    ¿Buscás una solución específica? Respondemos en minutos. Manda tu consulta, planos o presupuesto y te asesoramos personalmente.
+                  </p>
+                  <a
+                    href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre...`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-auto inline-flex items-center gap-3 rounded-2xl bg-white px-10 py-4.5 font-bold text-green-700 shadow-xl hover:bg-green-50 hover:gap-5 transition-all duration-300 active:scale-[0.98]"
+                  >
                     <MessageCircle className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">WhatsApp</h2>
-                    <p className="text-green-100 text-sm">La forma mas rapida de contactarnos</p>
-                  </div>
+                    Abrir WhatsApp directo
+                  </a>
                 </div>
-                <p className="text-green-50 mb-6">
-                  Respondemos en minutos durante horario comercial. Manda foto de tu proyecto,
-                  consulta, presupuesto o lo que necesites.
-                </p>
-                <a
-                  href="https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre..."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-green-700 shadow hover:bg-green-50 transition-colors"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  Abrir WhatsApp
-                </a>
               </div>
 
               {/* Contact cards grid */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 {/* Phone */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="bg-white rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
                       <Phone className="h-5 w-5 text-blue-600" />
@@ -177,7 +185,7 @@ export default function ContactoPage() {
                 </div>
 
                 {/* Email */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="bg-white rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
                       <Mail className="h-5 w-5 text-blue-600" />
@@ -194,7 +202,7 @@ export default function ContactoPage() {
                 </div>
 
                 {/* Hours */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="bg-white rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
                       <Clock className="h-5 w-5 text-blue-600" />
@@ -273,7 +281,7 @@ export default function ContactoPage() {
                 </a>
               </div>
 
-              <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+              <div className="rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-sm">
                 <iframe
                   title="Ubicacion de La Aldea"
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3275.458!2d-55.76359424741334!3d-34.346943768995686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zLTM0LjM0Njk0NCwtNTUuNzYzNTk0!5e0!3m2!1ses!2suy!4v1"

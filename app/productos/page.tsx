@@ -14,6 +14,7 @@ import { SubcategoryChips } from '@/components/products/SubcategoryChips';
 import Header from '@/components/Header';
 import PageHeader from '@/components/layout/PageHeader';
 import Link from 'next/link';
+import CategoryPills from '@/components/products/CategoryPills';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { expandQuery } from '@/lib/search/query-expansion';
 import { getSearchFallback } from '@/lib/search/ai-fallback';
@@ -472,11 +473,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           className="pb-0 lg:pb-0"
         >
           <div className="-mt-4 mb-4 flex items-center gap-3 text-sm flex-wrap">
-            <span className="bg-white/10 backdrop-blur-sm border border-white/10 px-3 py-1 text-blue-100 rounded-full">
+            <span className="bg-slate-200/50 border border-slate-200 px-3 py-1 text-slate-700 rounded-full font-medium">
               {total.toLocaleString()} productos
             </span>
             {params.marca && (
-              <span className="bg-blue-500/20 text-blue-300 border border-blue-500/20 px-3 py-1 rounded-full font-medium">
+              <span className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full font-medium shadow-sm">
                 {params.marca}
               </span>
             )}
@@ -484,33 +485,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
           {/* Search Bar */}
           <div className="mt-5 relative z-20">
-            <ProductSearch initialQuery={params.q || ''} />
+            <ProductSearch initialQuery={params.q || ''} theme="light" />
           </div>
 
           {/* Quick category pills */}
-          <div className="mt-6 mb-2 flex flex-nowrap gap-2 overflow-x-auto pb-3 pl-1 pr-10 scrollbar-hide relative z-10 w-full snap-x">
-            <Link
-              href="/productos"
-              className={`shrink-0 whitespace-nowrap snap-start px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${!params.categoria
-                ? 'bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.5)]'
-                : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white'
-                }`}
-            >
-              Todos
-            </Link>
-            {categories.map(cat => (
-              <Link
-                key={cat.value}
-                href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
-                className={`shrink-0 whitespace-nowrap snap-start px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${params.categoria === cat.value
-                  ? 'bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.5)]'
-                  : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white'
-                  }`}
-              >
-                {cat.value} ({cat.count})
-              </Link>
-            ))}
-          </div>
+          <CategoryPills categories={categories} currentCategory={params.categoria} />
         </PageHeader>
 
         {/* Subcategory chips — shown when a main category is selected */}

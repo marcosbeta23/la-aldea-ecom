@@ -90,11 +90,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               AGOTADO
             </span>
           )}
-          {isOnRequest && (
-            <span className="px-2.5 py-0.5 text-[10px] font-bold tracking-wide bg-purple-600/90 backdrop-blur-md text-white rounded-full shadow-sm">
-              CONSULTAR
-            </span>
-          )}
         </div>
 
         {/* Wishlist Button */}
