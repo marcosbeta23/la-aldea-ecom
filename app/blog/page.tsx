@@ -5,6 +5,7 @@ import { FAQ_ARTICLES } from '@/lib/faq-articles';
 import { supabase } from '@/lib/supabase';
 import { Calendar, ChevronRight, BookOpen, Tag } from 'lucide-react';
 import { WHATSAPP_PHONE } from '@/lib/constants';
+import PageHeader from '@/components/layout/PageHeader';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -171,22 +172,12 @@ export default async function BlogPage() {
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-12 lg:py-16">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-3xl text-center">
-              <span className="inline-block rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
-                Guias y Articulos
-              </span>
-              <h1 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-                Blog de La Aldea
-              </h1>
-              <p className="mt-3 text-blue-100 max-w-xl mx-auto">
-                Guias tecnicas, consejos practicos y novedades sobre riego, bombas de agua,
-                agroquimicos, piscinas y mas. Contenido creado por nuestro equipo tecnico.
-              </p>
-            </div>
-          </div>
-        </section>
+        <PageHeader
+          badge="Guías y Artículos"
+          title="Blog de La Aldea"
+          description="Guías técnicas, consejos prácticos y novedades sobre riego, bombas de agua, agroquímicos, piscinas y más. Contenido creado por nuestro equipo técnico."
+          className="text-center [&_div.max-w-4xl]:mx-auto [&_.inline-flex]:mx-auto [&_p]:mx-auto"
+        />
 
         {/* Featured Articles */}
         <section className="container mx-auto px-4 -mt-6 relative z-10">

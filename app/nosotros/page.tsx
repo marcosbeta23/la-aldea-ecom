@@ -14,10 +14,11 @@ import {
   Shield,
   Truck,
   Sparkles,
-  ChevronRight,
   MessageCircle,
+  ChevronRight,
 } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
+import PageHeader from '@/components/layout/PageHeader';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -130,23 +131,12 @@ export default function NosotrosPage() {
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 text-white py-16 lg:py-24">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
-          <div className="container relative mx-auto px-4">
-            <div className="mx-auto max-w-3xl text-center">
-              <span className="inline-block rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
-                Desde el 2000 en Tala, Canelones
-              </span>
-              <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-5xl">
-                Conoce La Aldea
-              </h1>
-              <p className="mt-4 text-lg text-blue-100 md:text-xl">
-                Mas de 25 años ofreciendo soluciones en riego, bombas de agua, agroquimicos y
-                productos hidricos para productores, hogares y empresas de todo Uruguay.
-              </p>
-            </div>
-          </div>
-        </section>
+        <PageHeader
+          badge="Desde el 2000 en Tala, Canelones"
+          title="Conocé La Aldea"
+          description="Más de 25 años ofreciendo soluciones en riego, bombas de agua, agroquímicos y productos hídricos para productores, hogares y empresas de todo Uruguay."
+          className="text-center [&_div.max-w-4xl]:mx-auto [&_.inline-flex]:mx-auto [&_p]:mx-auto"
+        />
 
         {/* Stats bar */}
         <section className="bg-white border-b border-slate-200">

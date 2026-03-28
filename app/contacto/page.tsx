@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
+import PageHeader from '@/components/layout/PageHeader';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -113,14 +114,11 @@ export default function ContactoPage() {
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-12 lg:py-16">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Contactanos</h1>
-            <p className="mt-3 text-blue-100 max-w-xl mx-auto">
-              Asesoramiento tecnico sin costo. Escribinos por WhatsApp, llamanos o visitanos en Tala.
-            </p>
-          </div>
-        </section>
+        <PageHeader 
+          title="Contactanos" 
+          description="Asesoramiento técnico sin costo. Escribinos por WhatsApp, llamanos o visitanos en nuestro local en Tala."
+          className="text-center [&_div.max-w-4xl]:mx-auto"
+        />
 
         <section className="container mx-auto px-4 py-10 lg:py-14">
           <div className="grid gap-8 lg:grid-cols-3">

@@ -101,18 +101,26 @@ export default function ProductForm({ product }: { product?: any }) {
   // Category tag input
   const [categoryInput, setCategoryInput] = useState('');
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
   const categoryRef = useRef<HTMLDivElement>(null);
 
-  // Fetch existing brands for autocomplete
+  // Fetch existing brands and categories for autocomplete
   useEffect(() => {
-    fetch('/api/admin/products?perPage=100&sort=brand&order=asc')
+    fetch('/api/admin/products?perPage=1000') // Fetch enough to gather most tags
       .then(res => res.json())
       .then(data => {
         const brands = new Set<string>();
+        const categories = new Set<string>();
+        
         (data.products || []).forEach((p: any) => {
           if (p.brand) brands.add(p.brand.trim());
+          if (p.category && Array.isArray(p.category)) {
+            p.category.forEach((c: string) => categories.add(c.trim()));
+          }
         });
+        
         setAvailableBrands([...brands].sort());
+        setDynamicCategories([...categories].sort());
       })
       .catch(() => { });
   }, []);
@@ -135,9 +143,15 @@ export default function ProductForm({ product }: { product?: any }) {
     b.toLowerCase().includes(brandQuery.toLowerCase().trim()) && b.toLowerCase() !== brandQuery.toLowerCase().trim()
   );
 
-  // Show ALL category options (main categories + all subcategories) for suggestions.
+  // Combine static options with dynamic ones found in the DB (deduplicating case-insensitively)
+  const combinedCategoryOptions = Array.from(new Map(
+    [...ALL_CATEGORY_OPTIONS, ...dynamicCategories]
+      .map(c => [c.toLowerCase(), c])
+  ).values()).sort();
+
+  // Show ALL category options for suggestions.
   // Filter out already-selected ones and match search input.
-  const filteredCategories = ALL_CATEGORY_OPTIONS.filter(c =>
+  const filteredCategories = combinedCategoryOptions.filter(c =>
     c.toLowerCase().includes(categoryInput.toLowerCase().trim()) &&
     !formData.category.some(fc => fc.toLowerCase() === c.toLowerCase())
   );

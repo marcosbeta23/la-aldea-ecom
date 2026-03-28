@@ -12,6 +12,7 @@ import ProductSearch from '@/components/products/ProductSearch';
 import FilterPersistence from '@/components/products/FilterPersistence';
 import { SubcategoryChips } from '@/components/products/SubcategoryChips';
 import Header from '@/components/Header';
+import PageHeader from '@/components/layout/PageHeader';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { expandQuery } from '@/lib/search/query-expansion';
@@ -454,67 +455,63 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24 overflow-x-hidden">
         {/* Hero Banner — compact */}
-        <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-8 lg:py-10">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-bold">
-                  {params.categoria
-                    ? params.sub
-                      ? `${params.categoria} — ${params.sub}`
-                      : params.categoria
-                    : 'Nuestros Productos'}
-                </h1>
-                <p className="text-blue-100 text-sm mt-1 max-w-xl">
-                  {params.categoria
-                    ? CATEGORY_HIERARCHY.find(c => c.value === params.categoria)?.description ||
-                    `Todos los productos de ${params.categoria}`
-                    : 'Bombas de agua, riego, insumos agrícolas, herramientas y más. Envíos a todo Uruguay.'}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 text-sm flex-wrap">
-                <span className="bg-white/15 backdrop-blur px-3 py-1 rounded-full">
-                  {total.toLocaleString()} productos
-                </span>
-                {params.marca && (
-                  <span className="bg-white/25 px-3 py-1 rounded-full font-medium">
-                    {params.marca}
-                  </span>
-                )}
-              </div>
-            </div>
+        <PageHeader
+          title={
+            params.categoria
+              ? params.sub
+                ? `${params.categoria} — ${params.sub}`
+                : params.categoria
+              : 'Nuestros Productos'
+          }
+          description={
+            params.categoria
+              ? CATEGORY_HIERARCHY.find(c => c.value === params.categoria)?.description ||
+              `Todos los productos de ${params.categoria}`
+              : 'Bombas de agua, riego, insumos agrícolas, herramientas y más. Envíos a todo Uruguay.'
+          }
+          className="pb-0 lg:pb-0"
+        >
+          <div className="-mt-4 mb-4 flex items-center gap-3 text-sm flex-wrap">
+            <span className="bg-white/10 backdrop-blur-sm border border-white/10 px-3 py-1 text-blue-100 rounded-full">
+              {total.toLocaleString()} productos
+            </span>
+            {params.marca && (
+              <span className="bg-blue-500/20 text-blue-300 border border-blue-500/20 px-3 py-1 rounded-full font-medium">
+                {params.marca}
+              </span>
+            )}
+          </div>
 
-            {/* Search Bar */}
-            <div className="mt-5">
-              <ProductSearch initialQuery={params.q || ''} />
-            </div>
+          {/* Search Bar */}
+          <div className="mt-5 relative z-20">
+            <ProductSearch initialQuery={params.q || ''} />
+          </div>
 
-            {/* Quick category pills */}
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {/* Quick category pills */}
+          <div className="mt-6 mb-2 flex gap-2 overflow-x-auto pb-2 scrollbar-hide relative z-10">
+            <Link
+              href="/productos"
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${!params.categoria
+                ? 'bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.5)]'
+                : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white'
+                }`}
+            >
+              Todos
+            </Link>
+            {categories.map(cat => (
               <Link
-                href="/productos"
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!params.categoria
-                  ? 'bg-white text-blue-700'
-                  : 'bg-white/15 text-white hover:bg-white/25'
+                key={cat.value}
+                href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${params.categoria === cat.value
+                  ? 'bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.5)]'
+                  : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white'
                   }`}
               >
-                Todos
+                {cat.value} ({cat.count})
               </Link>
-              {categories.map(cat => (
-                <Link
-                  key={cat.value}
-                  href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${params.categoria === cat.value
-                    ? 'bg-white text-blue-700'
-                    : 'bg-white/15 text-white hover:bg-white/25'
-                    }`}
-                >
-                  {cat.value} ({cat.count})
-                </Link>
-              ))}
-            </div>
+            ))}
           </div>
-        </section>
+        </PageHeader>
 
         {/* Subcategory chips — shown when a main category is selected */}
         {params.categoria && subcategories.length > 0 && (

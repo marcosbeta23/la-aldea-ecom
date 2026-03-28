@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { BookOpen, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { FAQ_BY_GUIDE } from '@/lib/faq-by-guide';
+import PageHeader from '@/components/layout/PageHeader';
 import { autoLinkBlogContent } from '@/lib/auto-link';
 import type { SeoCluster } from '@/lib/seo-clusters';
 
@@ -400,32 +401,20 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-10 lg:py-14">
-          <div className="container mx-auto px-4">
-            <Breadcrumbs
-              items={[
-                { name: 'Inicio', url: '/' },
-                { name: 'Blog', url: '/blog' },
-                { name: article.breadcrumbLabel },
-              ]}
-              className="mb-6 text-blue-200"
-            />
-
-            <div className="flex items-center gap-3 mb-3">
-              <span className="px-3 py-1 bg-white/15 rounded-full text-xs font-medium">
-                {article.category}
-              </span>
-            </div>
-            <h1 className="text-2xl lg:text-3xl font-bold max-w-3xl">
-              {article.title}
-            </h1>
-
-
-            <p className="mt-4 text-blue-100 max-w-2xl text-sm lg:text-base">
-              {article.description}
-            </p>
-          </div>
-        </section>
+        <PageHeader
+          badge={article.category}
+          title={article.title}
+          description={article.description}
+        >
+          <Breadcrumbs
+            items={[
+              { name: 'Inicio', url: '/' },
+              { name: 'Blog', url: '/blog' },
+              { name: article.breadcrumbLabel },
+            ]}
+            className="text-blue-200"
+          />
+        </PageHeader>
 
         {/* Content */}
         <section className="container mx-auto px-4 py-8 lg:py-12">

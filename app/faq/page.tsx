@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import FAQAccordion from '@/components/faq/FAQAccordion';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
-import { HelpCircle, Phone, MessageCircle, BookOpen } from 'lucide-react';
+import { Phone, MessageCircle, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
+import PageHeader from '@/components/layout/PageHeader';
 import { autoLinkBlogContent } from '@/lib/auto-link';
 import { supabase } from '@/lib/supabase';
 import type { SeoCluster } from '@/lib/seo-clusters';
@@ -374,27 +375,18 @@ export default async function FAQPage() {
 
       <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-12 lg:py-16">
-          <div className="container mx-auto px-4">
-            <Breadcrumbs
-              items={[
-                { name: 'Inicio', url: '/' },
-                { name: 'Preguntas Frecuentes' },
-              ]}
-              className="mb-6 text-blue-200"
-            />
-
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-white/10 rounded-2xl">
-                <HelpCircle className="h-8 w-8" />
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Preguntas Frecuentes</h1>
-            </div>
-            <p className="text-blue-100 text-base lg:text-lg max-w-2xl">
-              Respuestas rapidas a las dudas mas comunes sobre nuestros productos, envios, pagos y servicios.
-            </p>
-          </div>
-        </section>
+        <PageHeader
+          title="Preguntas Frecuentes"
+          description="Respuestas rápidas a las dudas más comunes sobre nuestros productos, envíos, pagos y servicios."
+        >
+          <Breadcrumbs
+            items={[
+              { name: 'Inicio', url: '/' },
+              { name: 'Preguntas Frecuentes' },
+            ]}
+            className="text-blue-200"
+          />
+        </PageHeader>
 
         {/* FAQ Section */}
         <section className="container mx-auto px-4 py-8 lg:py-12">

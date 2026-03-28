@@ -1,6 +1,7 @@
 import Image from "next/image";
-import { Search, Phone, ChevronDown } from "lucide-react";
+import { Phone, ChevronDown } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
+import ProductSearch from "@/components/products/ProductSearch";
 import { WHATSAPP_PHONE } from "@/lib/constants";
 
 export default function HomeHero() {
@@ -99,12 +100,10 @@ export default function HomeHero() {
               <div className="absolute -top-20 -right-20 w-56 h-56 bg-blue-500/20 blur-[80px] rounded-full pointer-events-none" />
               <div className="absolute -bottom-20 -left-10 w-48 h-48 bg-sky-400/10 blur-[60px] rounded-full pointer-events-none" />
 
-              {/* Search Preview Element */}
-              <a href="/productos" className="hidden lg:flex items-center gap-2.5 px-3 py-2.5 bg-black/20 border border-white/10 rounded-2xl transition-all duration-300 relative z-10 hover:border-blue-500/50 hover:bg-black/40 no-underline cursor-pointer group">
-                <Search className="w-3.5 h-3.5 text-white/40 shrink-0 group-hover:text-blue-400 transition-colors" />
-                <div className="text-[12px] md:text-[13px] text-white/50 flex-1 font-epilogue font-light group-hover:text-white/70 transition-colors">Buscar bombas, filtros...</div>
-                <div className="font-dm-mono text-[8px] md:text-[9px] text-blue-400 border border-blue-400/30 bg-blue-400/10 rounded px-1.5 py-0.5 tracking-wider shrink-0 transition-colors group-hover:bg-blue-400 group-hover:text-[#050b14] font-semibold">Tienda</div>
-              </a>
+              {/* Search Element (Now Functional) */}
+              <div className="relative z-20">
+                <ProductSearch />
+              </div>
 
               {/* Service Statement */}
               <div className="relative z-10">
