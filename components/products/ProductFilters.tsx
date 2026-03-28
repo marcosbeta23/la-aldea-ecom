@@ -151,17 +151,17 @@ export default function ProductFilters({ categories, brands, className = '' }: P
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-1.5 mb-4 pb-4 border-b border-slate-100">
             {currentCategory && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50/80 border border-blue-100 text-blue-700 rounded-lg text-xs font-semibold shadow-sm">
                 {currentCategory}
-                <button onClick={() => updateFilter('categoria', '')} className="hover:text-blue-900" aria-label="Quitar filtro categoría">
+                <button onClick={() => updateFilter('categoria', '')} className="hover:text-blue-900 ml-0.5" aria-label="Quitar filtro categoría">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
             {currentBrand && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50/80 border border-blue-100 text-blue-700 rounded-lg text-xs font-semibold shadow-sm">
                 {currentBrand}
-                <button onClick={() => updateFilter('marca', '')} className="hover:text-blue-900" aria-label="Quitar filtro marca">
+                <button onClick={() => updateFilter('marca', '')} className="hover:text-blue-900 ml-0.5" aria-label="Quitar filtro marca">
                   <X className="h-3 w-3" />
                 </button>
               </span>
@@ -215,7 +215,7 @@ export default function ProductFilters({ categories, brands, className = '' }: P
               <select
                 value={currentSort}
                 onChange={(e) => updateFilter('orden', e.target.value)}
-                className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200/60 shadow-sm text-sm bg-slate-50/50 hover:bg-white transition-colors focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer"
                 aria-label="Ordenar productos"
               >
                 <option value="popular">Más populares</option>
@@ -241,10 +241,10 @@ export default function ProductFilters({ categories, brands, className = '' }: P
               <div className="mt-2 space-y-0.5">
                 <button
                   onClick={() => updateFilter('categoria', '')}
-                  className={`block w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
+                  className={`block w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-200 border ${
                     !currentCategory
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-slate-600 hover:bg-slate-50'
+                      ? 'bg-blue-50/80 border-blue-100 text-blue-700 font-semibold shadow-sm'
+                      : 'border-transparent text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   Todas
@@ -253,10 +253,10 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                   <button
                     key={cat.value}
                     onClick={() => updateFilter('categoria', cat.value)}
-                    className={`flex items-center justify-between w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
+                    className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-200 border ${
                       currentCategory === cat.value
-                        ? 'bg-blue-50 text-blue-700 font-medium'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        ? 'bg-blue-50/80 border-blue-100 text-blue-700 font-semibold shadow-sm'
+                        : 'border-transparent text-slate-600 hover:bg-slate-50'
                     }`}
                   >
                     <span>{cat.label}</span>
@@ -282,10 +282,10 @@ export default function ProductFilters({ categories, brands, className = '' }: P
               <div className="mt-2 space-y-0.5">
                 <button
                   onClick={() => updateFilter('marca', '')}
-                  className={`block w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
+                  className={`block w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-200 border ${
                     !currentBrand
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-slate-600 hover:bg-slate-50'
+                      ? 'bg-blue-50/80 border-blue-100 text-blue-700 font-semibold shadow-sm'
+                      : 'border-transparent text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   Todas
@@ -294,10 +294,10 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                   <button
                     key={brand.value}
                     onClick={() => updateFilter('marca', brand.value)}
-                    className={`flex items-center justify-between w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
+                    className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-200 border ${
                       currentBrand === brand.value
-                        ? 'bg-blue-50 text-blue-700 font-medium'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        ? 'bg-blue-50/80 border-blue-100 text-blue-700 font-semibold shadow-sm'
+                        : 'border-transparent text-slate-600 hover:bg-slate-50'
                     }`}
                   >
                     <span className="truncate mr-2">{brand.label}</span>
@@ -337,7 +337,7 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                     value={priceMin}
                     onChange={(e) => setPriceMin(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyPriceFilter()}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200/60 shadow-sm text-sm bg-slate-50/50 hover:bg-white transition-colors focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                     aria-label="Precio mínimo"
                   />
                   <span className="text-slate-400 self-center text-xs shrink-0">—</span>
@@ -348,7 +348,7 @@ export default function ProductFilters({ categories, brands, className = '' }: P
                     value={priceMax}
                     onChange={(e) => setPriceMax(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyPriceFilter()}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200/60 shadow-sm text-sm bg-slate-50/50 hover:bg-white transition-colors focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                     aria-label="Precio máximo"
                   />
                 </div>

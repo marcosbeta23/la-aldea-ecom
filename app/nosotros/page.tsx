@@ -129,7 +129,7 @@ export default function NosotrosPage() {
 
       <Header />
 
-      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
+      <main className="min-h-screen bg-slate-50">
         {/* Hero */}
         <PageHeader
           badge="Desde el 2000 en Tala, Canelones"
@@ -141,7 +141,7 @@ export default function NosotrosPage() {
         {/* Stats bar */}
         <section className="bg-white border-b border-slate-200">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200/60 rounded-3xl overflow-hidden shadow-sm border border-slate-200/60">
               {[
                 { value: '25+', label: 'Años de Experiencia' },
                 { value: '500+', label: 'Proyectos Realizados' },
@@ -172,7 +172,7 @@ export default function NosotrosPage() {
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="absolute -bottom-4 right-2 flex h-20 w-20 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-xl sm:h-28 sm:w-28 sm:right-0 lg:-right-4 lg:h-32 lg:w-32">
+                <div className="absolute -bottom-4 right-2 flex h-20 w-20 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-[0_8px_30px_rgba(37,99,235,0.3)] sm:h-28 sm:w-28 sm:right-0 lg:-right-4 lg:h-32 lg:w-32">
                   <span className="text-2xl font-bold sm:text-3xl lg:text-4xl">25+</span>
                   <span className="text-[10px] font-medium sm:text-xs lg:text-sm">Años</span>
                 </div>
@@ -218,7 +218,7 @@ export default function NosotrosPage() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {values.map((value, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-slate-200 p-6 text-center hover:shadow-lg transition-shadow">
+                <div key={i} className="bg-white rounded-3xl border border-slate-200 p-8 text-center hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 transition-all duration-300">
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
                     <value.icon className="h-6 w-6 text-blue-600" />
                   </div>
@@ -251,7 +251,7 @@ export default function NosotrosPage() {
                 <Link
                   key={i}
                   href="/productos"
-                  className="group flex flex-col items-center gap-3 rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
+                  className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-300"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
                     <s.icon className="h-5 w-5 text-blue-600" />

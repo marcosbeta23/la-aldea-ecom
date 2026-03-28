@@ -10,7 +10,7 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, badge, children, className = '' }: PageHeaderProps) {
   return (
-    <section className={`relative overflow-hidden bg-[#050b14] text-white py-12 lg:py-16 ${className}`}>
+    <section className={`relative overflow-hidden bg-[#050b14] text-white pt-28 pb-12 lg:pt-36 lg:pb-16 ${className}`}>
       {/* Background glow effects */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-600/15 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-sky-400/10 blur-[100px] rounded-full pointer-events-none" />

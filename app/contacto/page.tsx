@@ -112,7 +112,7 @@ export default function ContactoPage() {
 
       <Header />
 
-      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
+      <main className="min-h-screen bg-slate-50">
         {/* Hero */}
         <PageHeader 
           title="Contactanos" 

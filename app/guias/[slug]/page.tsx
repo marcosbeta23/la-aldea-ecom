@@ -399,7 +399,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
 
       <Header />
 
-      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
+      <main className="min-h-screen bg-slate-50">
         {/* Hero */}
         <PageHeader
           badge={article.category}

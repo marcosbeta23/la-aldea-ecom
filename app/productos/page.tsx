@@ -453,7 +453,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       <Header />
       <FilterPersistence />
 
-      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24 overflow-x-hidden">
+      <main className="min-h-screen bg-slate-50 overflow-x-hidden">
         {/* Hero Banner — compact */}
         <PageHeader
           title={
@@ -488,10 +488,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </div>
 
           {/* Quick category pills */}
-          <div className="mt-6 mb-2 flex gap-2 overflow-x-auto pb-2 scrollbar-hide relative z-10">
+          <div className="mt-6 mb-2 flex flex-nowrap gap-2 overflow-x-auto pb-3 pl-1 pr-10 scrollbar-hide relative z-10 w-full snap-x">
             <Link
               href="/productos"
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${!params.categoria
+              className={`shrink-0 whitespace-nowrap snap-start px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${!params.categoria
                 ? 'bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.5)]'
                 : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white'
                 }`}
@@ -502,7 +502,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               <Link
                 key={cat.value}
                 href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${params.categoria === cat.value
+                className={`shrink-0 whitespace-nowrap snap-start px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${params.categoria === cat.value
                   ? 'bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.5)]'
                   : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white'
                   }`}
@@ -531,11 +531,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <section className="container mx-auto px-4 py-6 lg:py-8">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar Filters — mobile: sticky toggle, desktop: sidebar with scroll */}
-            <aside className="lg:w-60 shrink-0">
+            <aside className="lg:w-64 shrink-0">
               <div className="sticky top-18 z-30 lg:relative lg:top-0 lg:z-auto">
-                <div className="lg:bg-white lg:rounded-2xl lg:shadow-sm lg:border lg:border-slate-200 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:overflow-x-hidden">
-                  <div className="lg:p-5">
-                    <Suspense fallback={<div className="animate-pulse h-64 bg-slate-100 rounded-lg" />}>
+                <div className="lg:bg-white lg:rounded-2xl lg:shadow-lg lg:shadow-slate-200/40 lg:border lg:border-slate-200/60 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:overflow-x-hidden">
+                  <div className="lg:p-6 lg:pb-8">
+                    <Suspense fallback={<div className="animate-pulse h-64 bg-slate-50/50 rounded-lg" />}>
                       <ProductFilters categories={categories} brands={brands} />
                     </Suspense>
                   </div>
