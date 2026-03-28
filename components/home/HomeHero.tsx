@@ -19,7 +19,7 @@ export default function HomeHero() {
   ];
 
   return (
-    <HeroSection className="relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-hidden touch-pan-y">
+    <HeroSection className="relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-visible touch-pan-y">
 
       {/* BACKGROUND IMAGE - Full Width */}
       <div className="absolute inset-0 z-0">
@@ -95,10 +95,12 @@ export default function HomeHero() {
 
           {/* RIGHT PANEL - Floating Glassmorphism (Hidden on Mobile) */}
           <div className="hidden lg:flex flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
-            <div className="relative bg-[#050b14]/50 backdrop-blur-2xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-hidden">
-              {/* Glow effects inside the panel */}
-              <div className="absolute -top-20 -right-20 w-56 h-56 bg-blue-500/20 blur-[80px] rounded-full pointer-events-none" />
-              <div className="absolute -bottom-20 -left-10 w-48 h-48 bg-sky-400/10 blur-[60px] rounded-full pointer-events-none" />
+            <div className="relative bg-[#050b14]/50 backdrop-blur-2xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-visible">
+              {/* Glow effects - Wrap in hidden container to allow search dropdown overflow */}
+              <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+                <div className="absolute -top-20 -right-20 w-56 h-56 bg-blue-500/20 blur-[80px] rounded-full" />
+                <div className="absolute -bottom-20 -left-10 w-48 h-48 bg-sky-400/10 blur-[60px] rounded-full" />
+              </div>
 
               {/* Search Element (Now Functional) */}
               <div className="relative z-20">

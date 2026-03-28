@@ -484,7 +484,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </div>
 
           {/* Search Bar */}
-          <div className="mt-5 relative z-20">
+          <div className="mt-5 relative z-40">
             <ProductSearch initialQuery={params.q || ''} theme="light" />
           </div>
 
