@@ -245,20 +245,30 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
       {showSuggestions && (suggestions.length > 0 || isLoadingSuggestions) && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50"
+          className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top"
         >
-          {isLoadingSuggestions && suggestions.length === 0 ? (
-            <div className="p-4 text-center text-slate-500">
-              <Loader2 className="h-5 w-5 animate-spin mx-auto" />
-            </div>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {suggestions.map((suggestion, index) => (
+          <div className="max-h-[420px] overflow-y-auto custom-scrollbar">
+            {isLoadingSuggestions && suggestions.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
+                <p className="text-sm font-medium">Buscando...</p>
+              </div>
+            ) : suggestions.length === 0 && query.length >= 2 ? (
+              <div className="p-8 text-center">
+                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Search className="h-6 w-6 text-slate-300" />
+                </div>
+                <p className="text-sm font-bold text-slate-900 mb-1">No se encontraron resultados</p>
+                <p className="text-xs text-slate-500">Probá con otros términos o revisá la ortografía.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-slate-50">
+                {suggestions.map((suggestion, index) => (
                 <li key={`${suggestion.type}-${suggestion.name}-${index}`}>
                   <button
                     type="button"
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors ${selectedIndex === index ? 'bg-blue-50' : ''
+                    className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-all duration-200 ${selectedIndex === index ? 'bg-blue-50/80 pl-7' : 'hover:bg-slate-50'
                       }`}
                   >
                     {suggestion.type === 'product' && suggestion.image ? (
@@ -300,7 +310,16 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
                   </button>
                 </li>
               ))}
-            </ul>
+              </ul>
+            )}
+          </div>
+          
+          {query.trim() && (
+            <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                Presiona <span className="text-blue-600 px-1">Enter</span> para buscar todo
+              </p>
+            </div>
           )}
         </div>
       )}
