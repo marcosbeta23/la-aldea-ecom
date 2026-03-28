@@ -147,7 +147,10 @@ Ubicación: Uruguay (es-UY)
 - Inicio: https://laaldeatala.com.uy/
 - Catálogo de Productos: https://laaldeatala.com.uy/productos
 - Preguntas Frecuentes: https://laaldeatala.com.uy/faq
-- Guias Tecnicas: https://laaldeatala.com.uy/faq/[tema]
+- Guías Técnicas: https://laaldeatala.com.uy/guias/[slug]
+- Blog y Artículos: https://laaldeatala.com.uy/blog
+- Nosotros: https://laaldeatala.com.uy/nosotros
+- Contacto: https://laaldeatala.com.uy/contacto
 - Política de Privacidad: https://laaldeatala.com.uy/privacidad
 - Términos y Condiciones: https://laaldeatala.com.uy/terminos
 
@@ -169,4 +172,4 @@ Se puede buscar productos por nombre, descripción o marca:
 https://laaldeatala.com.uy/productos?q={término_de_búsqueda}
 
 ## Última Actualización
-Marzo 2026
+Marzo 2026 - Plataforma e-commerce completa con IA, pagos MercadoPago, transferencia bancaria multicuenta, checkout multistep, panel admin completo y tienda online en producción.

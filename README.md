@@ -13,27 +13,31 @@ Full-stack e-commerce platform for [La Aldea](https://laaldeatala.com.uy), a har
 | **Framework** | Next.js 16 (App Router) · React 19 · TypeScript |
 | **Database** | Supabase — PostgreSQL with pgvector, pg_trgm, unaccent |
 | **Auth** | Clerk |
-| **Payments** | MercadoPago Uruguay |
+| **Payments** | MercadoPago Uruguay · Bank Transfer (UYU + USD) |
 | **Background Jobs** | Inngest — event-driven and scheduled functions |
 | **Cache / Rate Limiting** | Upstash Redis |
 | **Email** | Brevo (transactional, React Email templates) |
 | **Notifications** | Telegram Bot · WhatsApp Business API |
 | **Error Monitoring** | Sentry (browser + server + Edge, with session replay) |
-| **Analytics** | PostHog · Google Analytics 4 (via Partytown worker) · Vercel Analytics |
-| **CDN / Security** | Cloudflare — WAF, Bot Fight Mode, Email Routing, Workers |
+| **Analytics** | PostHog · Google Analytics 4 (via Partytown worker) · Vercel Analytics · Cloudflare Web Analytics |
+| **CDN / Security** | Cloudflare — WAF, Bot Fight Mode, Turnstile CAPTCHA, Email Routing |
 | **AI — Reasoning** | Claude Sonnet (`claude-sonnet-4-6`) — Anthropic |
 | **AI — Fast Inference** | Groq (`llama-3.3-70b-versatile`) — free tier |
 | **AI — Embeddings** | OpenAI `text-embedding-3-small` |
 | **Hosting** | Vercel (Edge + Serverless) |
-| **Styling** | Tailwind CSS v4 |
+| **Styling** | Tailwind CSS v4 · React Email |
 
 ---
 
 ## Features
 
-### Storefront
+### Storefront & Blog
 
 The product catalog supports 400+ SKUs with category/subcategory taxonomy, brand filtering, price range, stock availability, and sort by popularity, price, or recency.
+
+**Blog** (`/blog`) is a statically rendered article gallery with an editorial layout featuring a full-width hero article and a masonry card grid. Each post supports tags, authorship, and full SEO metadata.
+
+**Static Guide Pages** (`/guias/[slug]`) — structured FAQ articles with JSON-LD, internal cross-links, and `FAQ` schema. Also editable via the admin CMS (`/admin/guides`) with an `is_published` flag, draft preview, and Supabase-managed metadata.
 
 **Search** is a five-layer pipeline:
 
@@ -45,9 +49,11 @@ The product catalog supports 400+ SKUs with category/subcategory taxonomy, brand
 
 Zero-result searches get AI-suggested categories via Groq. Question-intent queries (detected by heuristic + Groq classifier) route to a conversational prompt instead of a product grid.
 
-### Checkout
+### Checkout & Payments
 
 Multi-step flow: personal details → shipping → invoice type → payment. Shipping options: store pickup, DAC courier (24–72h), and freight coordination via WhatsApp. MercadoPago redirect checkout and manual bank transfer are both supported.
+
+**Multi-Currency Bank Transfer**: Bank transfer orders are currency-aware. A `getBankDetails(currency)` helper resolves the correct BROU account — `NEXT_PUBLIC_BANK_ACCOUNT_UYU` for Pesos orders, `NEXT_PUBLIC_BANK_ACCOUNT_USD` for Dollar orders — and injects it into both confirmation emails and the 24h Inngest reminder. All bank data (account numbers, holder name, RUT) is managed via environment variables with no deploys required.
 
 Prices are **never trusted from the frontend** — all totals are recalculated server-side from the database on every order. Products priced in USD are converted at the live BROU sell rate (fetched from DolarAPI, 4h Upstash cache, env var fallback). The exchange rate used is recorded on the order at time of purchase.
 

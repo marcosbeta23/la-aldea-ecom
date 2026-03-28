@@ -199,11 +199,11 @@ export const metadata: Metadata = {
   // Icons
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/assets/images/favicon/favicon.ico", sizes: "any" },
+      { url: "/assets/images/favicon/favicon-96x96.png", sizes: "96x96", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    apple: [{ url: "/assets/images/favicon/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "/assets/images/favicon/favicon.ico",
   },
 
   // Manifest

@@ -87,7 +87,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/favicon.ico',
+        source: '/assets/images/favicon/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -107,6 +107,33 @@ const nextConfig: NextConfig = {
       {
         source: '/ingest/:path*',
         destination: 'https://us.i.posthog.com/:path*',
+      },
+    ];
+  },
+  
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'la-aldea-ecom.vercel.app',
+          },
+        ],
+        destination: 'https://laaldeatala.com.uy/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'laaldeatala.vercel.app',
+          },
+        ],
+        destination: 'https://laaldeatala.com.uy/:path*',
+        permanent: true,
       },
     ];
   },
