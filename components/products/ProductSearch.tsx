@@ -205,22 +205,20 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
             onFocus={() => setShowSuggestions(true)}
             onKeyDown={handleKeyDown}
             placeholder="Buscar productos, marcas o categorías..."
-            className={`w-full pl-12 pr-24 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-              theme === 'light'
+            className={`w-full pl-12 pr-24 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${theme === 'light'
                 ? 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20 shadow-sm'
                 : 'bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/60 focus:ring-white/30 focus:bg-white/15'
-            }`}
+              }`}
             autoComplete="off"
           />
           {query && (
             <button
               type="button"
               onClick={clearSearch}
-              className={`absolute right-24 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-colors ${
-                theme === 'light' 
+              className={`absolute right-24 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-colors ${theme === 'light'
                   ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
-              }`}
+                }`}
               aria-label="Limpiar búsqueda"
             >
               <X className="h-4 w-4" />
@@ -320,8 +318,8 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
               className="w-full p-4 bg-slate-50 border-t border-slate-100 text-center hover:bg-blue-50 transition-colors group"
             >
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">
-                {suggestions.length > 5 
-                  ? `Ver los ${suggestions.length} resultados para "${query}"` 
+                {suggestions.length > 4
+                  ? `Ver los ${suggestions.length} resultados para "${query}"`
                   : `Ver todos los resultados para "${query}"`}
               </p>
               <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">
