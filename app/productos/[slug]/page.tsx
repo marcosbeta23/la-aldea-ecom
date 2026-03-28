@@ -209,7 +209,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         "@type": "Organization",
         "@id": "https://laaldeatala.com.uy/#business",
         name: "La Aldea",
-        telephone: "+${WHATSAPP_PHONE}",
+        telephone: `+${WHATSAPP_PHONE}`,
       },
       shippingDetails: {
         "@type": "OfferShippingDetails",

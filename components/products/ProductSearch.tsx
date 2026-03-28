@@ -21,9 +21,14 @@ interface Suggestion {
 interface ProductSearchProps {
   initialQuery?: string;
   theme?: 'light' | 'dark';
+  compact?: boolean;
 }
 
-export default function ProductSearch({ initialQuery = '', theme = 'dark' }: ProductSearchProps) {
+export default function ProductSearch({ 
+  initialQuery = '', 
+  theme = 'dark',
+  compact = false 
+}: ProductSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(initialQuery);
@@ -243,9 +248,9 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
       {showSuggestions && (suggestions.length > 0 || isLoadingSuggestions) && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top"
+          className={`absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top`}
         >
-          <div className="max-h-[420px] overflow-y-auto custom-scrollbar">
+          <div className={`${compact ? 'max-h-[380px]' : 'max-h-[500px]'} overflow-y-auto custom-scrollbar`}>
             {isLoadingSuggestions && suggestions.length === 0 ? (
               <div className="p-8 text-center text-slate-500">
                 <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
@@ -261,7 +266,7 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
               </div>
             ) : (
               <ul className="divide-y divide-slate-50">
-                {suggestions.slice(0, 5).map((suggestion, index) => (
+                {(compact ? suggestions.slice(0, 5) : suggestions).map((suggestion, index) => (
                   <li key={`${suggestion.type}-${suggestion.name}-${index}`}>
                     <button
                       type="button"
@@ -312,14 +317,14 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
             )}
           </div>
 
-          {query.trim() && (
+          {(compact || suggestions.length > 5) && query.trim() && (
             <button
               type="submit"
               className="w-full p-4 bg-slate-50 border-t border-slate-100 text-center hover:bg-blue-50 transition-colors group"
             >
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">
-                {suggestions.length > 4
-                  ? `Ver los ${suggestions.length} resultados para "${query}"`
+                {suggestions.length > 5 
+                  ? `Ver los ${suggestions.length} resultados para "${query}"` 
                   : `Ver todos los resultados para "${query}"`}
               </p>
               <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">

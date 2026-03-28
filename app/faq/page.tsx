@@ -281,7 +281,7 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
       },
       {
         question: '¿Como puedo solicitar asesoramiento tecnico?',
-        answer: 'Podes llamarnos al +${WHATSAPP_PHONE}, escribirnos por WhatsApp o completar el formulario de contacto en nuestro sitio web. El asesoramiento es sin costo.',
+        answer: `Podes llamarnos al +${WHATSAPP_PHONE}, escribirnos por WhatsApp o completar el formulario de contacto en nuestro sitio web. El asesoramiento es sin costo.`,
       },
       {
         question: '¿Donde estan ubicados?',
@@ -443,7 +443,7 @@ export default async function FAQPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
-                  href="https://wa.me/${WHATSAPP_PHONE}"
+                  href={`https://wa.me/${WHATSAPP_PHONE}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-white text-green-700 font-bold rounded-2xl hover:bg-green-50 hover:-translate-y-0.5 hover:shadow-lg transition-all shadow-md"
@@ -452,7 +452,7 @@ export default async function FAQPage() {
                   Abrir WhatsApp
                 </a>
                 <a
-                  href="tel:+${WHATSAPP_PHONE}"
+                  href={`tel:+${WHATSAPP_PHONE}`}
                   className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-white/10 text-white font-bold rounded-2xl border border-white/20 backdrop-blur-sm hover:bg-white/20 transition-all"
                 >
                   <Phone className="h-5 w-5" />

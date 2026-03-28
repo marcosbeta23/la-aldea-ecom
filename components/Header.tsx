@@ -179,7 +179,7 @@ export default function Header() {
 
           {/* WhatsApp Button */}
           <a
-            href="https://wa.me/${WHATSAPP_PHONE}"
+            href={`https://wa.me/${WHATSAPP_PHONE}`}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Contactar por WhatsApp"

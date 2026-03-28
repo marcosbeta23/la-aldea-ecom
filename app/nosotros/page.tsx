@@ -325,7 +325,7 @@ export default function NosotrosPage() {
                       <h3 className="font-semibold text-slate-900">Telefonos</h3>
                       <ul className="text-sm text-slate-600 mt-1 space-y-1">
                         <li>
-                          <a href="tel:+${WHATSAPP_PHONE}" className="hover:text-blue-600">{WHATSAPP_DISPLAY}</a>
+                          <a href={`tel:+${WHATSAPP_PHONE}`} className="hover:text-blue-600">{WHATSAPP_DISPLAY}</a>
                           <span className="text-slate-400 ml-1">(celular / WhatsApp)</span>
                         </li>
                         <li>

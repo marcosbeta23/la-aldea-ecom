@@ -170,7 +170,7 @@ export default function ContactoPage() {
                   </div>
                   <ul className="space-y-2 text-sm">
                     <li>
-                      <a href="tel:+${WHATSAPP_PHONE}" className="text-slate-700 hover:text-blue-600">
+                      <a href={`tel:+${WHATSAPP_PHONE}`} className="text-slate-700 hover:text-blue-600">
                         {WHATSAPP_DISPLAY}
                       </a>
                       <span className="text-slate-400 ml-1">(celular)</span>
