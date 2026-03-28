@@ -263,63 +263,71 @@ export default function ProductSearch({ initialQuery = '', theme = 'dark' }: Pro
               </div>
             ) : (
               <ul className="divide-y divide-slate-50">
-                {suggestions.map((suggestion, index) => (
-                <li key={`${suggestion.type}-${suggestion.name}-${index}`}>
-                  <button
-                    type="button"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-all duration-200 ${selectedIndex === index ? 'bg-blue-50/80 pl-7' : 'hover:bg-slate-50'
-                      }`}
-                  >
-                    {suggestion.type === 'product' && suggestion.image ? (
-                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                        <Image
-                          src={suggestion.image}
-                          alt={suggestion.name}
-                          width={40}
-                          height={40}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                        {getSuggestionIcon(suggestion.type)}
-                      </div>
-                    )}
+                {suggestions.slice(0, 5).map((suggestion, index) => (
+                  <li key={`${suggestion.type}-${suggestion.name}-${index}`}>
+                    <button
+                      type="button"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-all duration-200 ${selectedIndex === index ? 'bg-blue-50/80 pl-7' : 'hover:bg-slate-50'
+                        }`}
+                    >
+                      {suggestion.type === 'product' && suggestion.image ? (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                          <Image
+                            src={suggestion.image}
+                            alt={suggestion.name}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                          {getSuggestionIcon(suggestion.type)}
+                        </div>
+                      )}
 
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">
-                        {suggestion.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {suggestion.type === 'category' && 'Categoría'}
-                        {suggestion.type === 'brand' && 'Marca'}
-                        {suggestion.type === 'product' && (
-                          (suggestion.availability_type === 'on_request' || suggestion.price === 0 || suggestion.price === 9999)
-                            ? 'Consulta'
-                            : suggestion.price && formatPrice(suggestion.price, suggestion.currency)
-                        )}
-                      </p>
-                    </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {suggestion.name}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {suggestion.type === 'category' && 'Categoría'}
+                          {suggestion.type === 'brand' && 'Marca'}
+                          {suggestion.type === 'product' && (
+                            (suggestion.availability_type === 'on_request' || suggestion.price === 0 || suggestion.price === 9999)
+                              ? 'Consulta'
+                              : suggestion.price && formatPrice(suggestion.price, suggestion.currency)
+                          )}
+                        </p>
+                      </div>
 
-                    {suggestion.type !== 'product' && (
-                      <span className="text-xs text-blue-600 font-medium">
-                        Ver todos →
-                      </span>
-                    )}
-                  </button>
-                </li>
-              ))}
+                      {suggestion.type !== 'product' && (
+                        <span className="text-xs text-blue-600 font-medium">
+                          Ver todos →
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
               </ul>
             )}
           </div>
-          
+
           {query.trim() && (
-            <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                Presiona <span className="text-blue-600 px-1">Enter</span> para buscar todo
+            <button
+              type="submit"
+              className="w-full p-4 bg-slate-50 border-t border-slate-100 text-center hover:bg-blue-50 transition-colors group"
+            >
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">
+                {suggestions.length > 5 
+                  ? `Ver los ${suggestions.length} resultados para "${query}"` 
+                  : `Ver todos los resultados para "${query}"`}
               </p>
-            </div>
+              <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">
+                Presiona <span className="text-blue-600 font-bold">Enter</span>
+              </p>
+            </button>
           )}
         </div>
       )}
