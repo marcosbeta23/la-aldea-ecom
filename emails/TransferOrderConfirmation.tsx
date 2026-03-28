@@ -1,7 +1,7 @@
 import { Section, Text, Link, Row, Column, Hr } from '@react-email/components';
 import * as React from 'react';
 import Layout from './components/Layout';
-import { WHATSAPP_PHONE } from '../lib/constants';
+import { WHATSAPP_PHONE, getBankDetails } from '../lib/constants';
 
 interface OrderItem {
   product_name: string;
@@ -41,22 +41,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-const BANK_DETAILS: Record<string, { banco: string; cuenta: string; titular: string; rut: string; moneda: string }> = {
-  UYU: {
-    banco: 'BROU',
-    cuenta: '001234567-00001',
-    titular: 'La Aldea',
-    rut: '21 123456 0001 19',
-    moneda: 'Pesos Uruguayos (UYU)',
-  },
-  USD: {
-    banco: 'BROU',
-    cuenta: '001234567-00002',
-    titular: 'La Aldea',
-    rut: '21 123456 0001 19',
-    moneda: 'Dólares Americanos (USD)',
-  },
-};
+
 
 export default function TransferOrderConfirmation({
   orderNumber,
@@ -73,7 +58,7 @@ export default function TransferOrderConfirmation({
   orderId,
   appUrl = 'https://laaldeatala.com.uy',
 }: TransferOrderConfirmationProps) {
-  const bank = BANK_DETAILS[currency] || BANK_DETAILS.UYU;
+  const bank = getBankDetails(currency);
   const whatsappNumber = WHATSAPP_PHONE;
   const whatsappText = encodeURIComponent(
     `Hola! Acabo de realizar una transferencia para el pedido ${orderNumber}. Adjunto el comprobante.`
