@@ -9,6 +9,7 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import { ClerkProvider } from "@clerk/nextjs";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
 import { Partytown } from '@qwik.dev/partytown/react';
@@ -284,11 +285,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
-        <PostHogProvider>
-          {children}
-          <ConditionalFooter />
-          <ClientLayoutElements />
-        </PostHogProvider>
+        <ClerkProvider dynamic>
+          <PostHogProvider>
+            {children}
+            <ConditionalFooter />
+            <ClientLayoutElements />
+          </PostHogProvider>
+        </ClerkProvider>
         <Analytics nonce={nonce} />
         <VercelAnalytics />
         <SpeedInsights />

@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          // Content-Security-Policy is set per-request in proxy.ts (middleware)
+          // Content-Security-Policy is set per-request in middleware.ts
           // to support nonces in production. Do not add a static CSP here.
         ],
       },
