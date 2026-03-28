@@ -526,24 +526,8 @@ export default function ProductsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sku: product.sku,
-          name: product.name,
-          description: product.description,
-          category: product.category,
-          brand: product.brand,
-          price_numeric: product.price_numeric,
-          currency: product.currency,
-          stock: product.stock,
-          images: product.images,
-          is_active: product.is_active,
+          ...product,
           availability_type: newType,
-          shipping_type: product.shipping_type || 'dac',
-          weight_kg: product.weight_kg ?? null,
-          requires_quote: product.requires_quote ?? false,
-          is_featured: product.is_featured,
-          original_price_numeric: product.original_price_numeric ?? null,
-          discount_percentage: product.discount_percentage ?? null,
-          slug: product.slug,
         }),
       });
       if (!res.ok) throw new Error('Failed');
@@ -552,6 +536,31 @@ export default function ProductsPage() {
       // Revert on error
       setProducts(prev => prev.map(p =>
         p.id === product.id ? { ...p, availability_type: product.availability_type } : p
+      ));
+    }
+  };
+
+  const quickToggleShowPrice = async (product: Product) => {
+    const newVal = !product.show_price_on_request;
+    // Optimistically update UI
+    setProducts(prev => prev.map(p =>
+      p.id === product.id ? { ...p, show_price_on_request: newVal } : p
+    ));
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...product,
+          show_price_on_request: newVal,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch (err) {
+      console.error('Toggle show price error:', err);
+      // Revert on error
+      setProducts(prev => prev.map(p =>
+        p.id === product.id ? { ...p, show_price_on_request: product.show_price_on_request } : p
       ));
     }
   };
@@ -1215,12 +1224,14 @@ export default function ProductsPage() {
 
                     {/* Price */}
                     <td className="px-4 py-3">
-                      <span className="text-sm font-medium text-slate-900">
-                        {product.availability_type === 'on_request'
-                          ? <span className="text-purple-600 text-xs font-semibold">Consultar</span>
-                          : formatCurrency(product.price_numeric, product.currency)
-                        }
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-slate-900 leading-tight">
+                          {formatCurrency(product.price_numeric, product.currency)}
+                        </span>
+                        {product.availability_type === 'on_request' && !product.show_price_on_request && (
+                          <span className="text-[10px] text-slate-400 mt-0.5 italic leading-none">Oculto al cliente</span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Stock */}
@@ -1252,28 +1263,45 @@ export default function ProductsPage() {
 
                     {/* Status + Availability */}
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        product.is_active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {product.is_active ? 'Activo' : 'Inactivo'}
-                      </span>
-                      {/* Availability toggle — clic to switch between Consultar and regular */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); quickToggleAvailability(product); }}
-                        title={product.availability_type === 'on_request'
-                          ? 'Modo Consultar — clic para habilitar compra directa'
-                          : 'Modo compra directa — clic para cambiar a Consultar'
-                        }
-                        className={`mt-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-colors w-full justify-center ${
-                          product.availability_type === 'on_request'
-                            ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                        }`}
-                      >
-                        {product.availability_type === 'on_request' ? 'Consultar' : 'Comprable'}
-                      </button>
+                      <div className="flex flex-col gap-1 items-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${product.is_active
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-slate-100 text-slate-500'
+                          }`}>
+                          {product.is_active ? 'Activo' : 'Inactivo'}
+                        </span>
+
+                        <div className="flex items-center gap-1 w-full justify-center">
+                          {/* Availability toggle — clickable to switch between Consultar and regular */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); quickToggleAvailability(product); }}
+                            title={product.availability_type === 'on_request'
+                              ? 'Modo Consultar — clic para habilitar venta directa'
+                              : 'Modo venta directa — clic para cambiar a Consultar'
+                            }
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-colors flex-1 ${product.availability_type === 'on_request'
+                                ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                                : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                              }`}
+                          >
+                            {product.availability_type === 'on_request' ? 'Consultar' : 'Venta'}
+                          </button>
+
+                          {/* Price visibility toggle (only for on_request products) */}
+                          {product.availability_type === 'on_request' && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); quickToggleShowPrice(product); }}
+                              title={product.show_price_on_request ? 'Ocultar precio al cliente' : 'Mostrar precio al cliente'}
+                              className={`p-1 rounded transition-colors ${product.show_price_on_request
+                                  ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                                  : 'text-slate-400 bg-slate-100 hover:bg-slate-200'
+                                }`}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Actions */}
