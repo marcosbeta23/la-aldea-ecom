@@ -242,98 +242,98 @@ export default function ProductSearch({
             )}
           </button>
         </div>
-      </form>
-
-      {/* Suggestions Dropdown */}
-      {showSuggestions && (suggestions.length > 0 || isLoadingSuggestions) && (
-        <div
-          ref={suggestionsRef}
-          className={`absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top`}
-        >
-          <div className={`${compact ? 'max-h-[380px]' : 'max-h-[500px]'} overflow-y-auto custom-scrollbar`}>
-            {isLoadingSuggestions && suggestions.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">
-                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
-                <p className="text-sm font-medium">Buscando...</p>
-              </div>
-            ) : suggestions.length === 0 && query.length >= 2 ? (
-              <div className="p-8 text-center">
-                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Search className="h-6 w-6 text-slate-300" />
+        
+        {/* Suggestions Dropdown (Moved inside form so submit button works) */}
+        {showSuggestions && (suggestions.length > 0 || isLoadingSuggestions) && (
+          <div
+            ref={suggestionsRef}
+            className={`absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top`}
+          >
+            <div className={`${compact ? 'max-h-[380px]' : 'max-h-[500px]'} overflow-y-auto custom-scrollbar`}>
+              {isLoadingSuggestions && suggestions.length === 0 ? (
+                <div className="p-8 text-center text-slate-500">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
+                  <p className="text-sm font-medium">Buscando...</p>
                 </div>
-                <p className="text-sm font-bold text-slate-900 mb-1">No se encontraron resultados</p>
-                <p className="text-xs text-slate-500">Probá con otros términos o revisá la ortografía.</p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-slate-50">
-                {(compact ? suggestions.slice(0, 5) : suggestions).map((suggestion, index) => (
-                  <li key={`${suggestion.type}-${suggestion.name}-${index}`}>
-                    <button
-                      type="button"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-all duration-200 ${selectedIndex === index ? 'bg-blue-50/80 pl-7' : 'hover:bg-slate-50'
-                        }`}
-                    >
-                      {suggestion.type === 'product' && suggestion.image ? (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                          <Image
-                            src={suggestion.image}
-                            alt={suggestion.name}
-                            width={40}
-                            height={40}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                          {getSuggestionIcon(suggestion.type)}
-                        </div>
-                      )}
+              ) : suggestions.length === 0 && query.length >= 2 ? (
+                <div className="p-8 text-center">
+                  <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Search className="h-6 w-6 text-slate-300" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 mb-1">No se encontraron resultados</p>
+                  <p className="text-xs text-slate-500">Probá con otros términos o revisá la ortografía.</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-slate-50">
+                  {(compact ? suggestions.slice(0, 4) : suggestions).map((suggestion, index) => (
+                    <li key={`${suggestion.type}-${suggestion.name}-${index}`}>
+                      <button
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-all duration-200 ${selectedIndex === index ? 'bg-blue-50/80 pl-7' : 'hover:bg-slate-50'
+                          }`}
+                      >
+                        {suggestion.type === 'product' && suggestion.image ? (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                            <Image
+                              src={suggestion.image}
+                              alt={suggestion.name}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                            {getSuggestionIcon(suggestion.type)}
+                          </div>
+                        )}
 
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">
-                          {suggestion.name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {suggestion.type === 'category' && 'Categoría'}
-                          {suggestion.type === 'brand' && 'Marca'}
-                          {suggestion.type === 'product' && (
-                            (suggestion.availability_type === 'on_request' || suggestion.price === 0 || suggestion.price === 9999)
-                              ? 'Consulta'
-                              : suggestion.price && formatPrice(suggestion.price, suggestion.currency)
-                          )}
-                        </p>
-                      </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 truncate">
+                            {suggestion.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {suggestion.type === 'category' && 'Categoría'}
+                            {suggestion.type === 'brand' && 'Marca'}
+                            {suggestion.type === 'product' && (
+                              (suggestion.availability_type === 'on_request' || suggestion.price === 0 || suggestion.price === 9999)
+                                ? 'Consulta'
+                                : suggestion.price && formatPrice(suggestion.price, suggestion.currency)
+                            )}
+                          </p>
+                        </div>
 
-                      {suggestion.type !== 'product' && (
-                        <span className="text-xs text-blue-600 font-medium">
-                          Ver todos →
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                        {suggestion.type !== 'product' && (
+                          <span className="text-xs text-blue-600 font-medium">
+                            Ver todos →
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {(compact || suggestions.length > 4) && query.trim() && (
+              <button
+                type="submit"
+                className="w-full p-4 bg-slate-50 border-t border-slate-100 text-center hover:bg-blue-50 transition-colors group"
+              >
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">
+                  {suggestions.length > 4 
+                    ? `Ver los ${suggestions.length} resultados para "${query}"` 
+                    : `Ver todos los resultados para "${query}"`}
+                </p>
+                <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">
+                  Presiona <span className="text-blue-600 font-bold">Enter</span>
+                </p>
+              </button>
             )}
           </div>
-
-          {(compact || suggestions.length > 5) && query.trim() && (
-            <button
-              type="submit"
-              className="w-full p-4 bg-slate-50 border-t border-slate-100 text-center hover:bg-blue-50 transition-colors group"
-            >
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">
-                {suggestions.length > 5 
-                  ? `Ver los ${suggestions.length} resultados para "${query}"` 
-                  : `Ver todos los resultados para "${query}"`}
-              </p>
-              <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">
-                Presiona <span className="text-blue-600 font-bold">Enter</span>
-              </p>
-            </button>
-          )}
-        </div>
-      )}
+        )}
+      </form>
     </div>
   );
 }
