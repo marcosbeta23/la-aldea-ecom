@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import { Phone, ChevronDown } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
@@ -104,7 +105,11 @@ export default function HomeHero() {
 
               {/* Search Element (Now Functional) */}
               <div className="relative z-20">
-                <ProductSearch compact={true} />
+                <Suspense fallback={
+                  <div className="w-full h-[50px] rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 animate-pulse" />
+                }>
+                  <ProductSearch compact={true} />
+                </Suspense>
               </div>
 
               {/* Service Statement */}
