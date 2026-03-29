@@ -94,16 +94,16 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
     initPostHog();
   }, []);
 
-  if (!PHProvider || !client) {
-    return <>{children}</>;
-  }
-
   return (
-    <PHProvider client={client}>
-      <Suspense fallback={null}>
-        <PostHogPageview client={client} />
-      </Suspense>
+    <>
+      {PHProvider && client && (
+        <PHProvider client={client}>
+          <Suspense fallback={null}>
+            <PostHogPageview client={client} />
+          </Suspense>
+        </PHProvider>
+      )}
       {children}
-    </PHProvider>
+    </>
   );
 }
