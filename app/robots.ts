@@ -21,15 +21,22 @@ export default function robots(): MetadataRoute.Robots {
           '/pendiente',
           '/procesando',
           '/error',
-          // Páginas de pedido individual (ya tienen noindex pero reforzar)
+          // Páginas de pedido individual
           '/pedido/',
-          // Parámetros de refinamiento que generan duplicados
-          // Nota: la sintaxis con * varía según el bot,
-          // el noindex en metadata es el mecanismo principal.
-          // Este bloque es refuerzo para bots que lo respetan (Googlebot sí lo hace).
+          // Parámetros de búsqueda — ya tienen noindex en metadata pero esto refuerza
+          // para evitar que Google gaste crawl budget en URLs sin valor SEO
+          '/*?q=',
+          // Parámetro legacy (inglés) de versiones antiguas del código
+          '/*?category=',
+          // Parámetros de refinamiento de filtros — generan URLs duplicadas sin valor
+          '/*?marca=',
+          '/*?stock=',
+          '/*?orden=',
+          '/*?precio_min=',
+          '/*?precio_max=',
         ],
       },
-      // Permitir bots de AI ver contenido público (opcional — algunos lo bloquean todo)
+      // Permitir bots de AI ver contenido público
       {
         userAgent: 'GPTBot',
         allow: ['/', '/productos', '/guias/', '/blog', '/nosotros', '/faq'],
@@ -58,4 +65,4 @@ export default function robots(): MetadataRoute.Robots {
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
   };
-}
+}
