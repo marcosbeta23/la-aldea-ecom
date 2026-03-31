@@ -21,6 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${siteUrl}/servicios`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
       url: `${siteUrl}/contacto`,
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -122,13 +128,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       productPages = products
         .filter((product: { slug: string; updated_at: string | null }) => product.slug && product.slug.length > 0)
         .map((product: { slug: string; updated_at: string | null }) => ({
-        url: `${siteUrl}/productos/${product.slug}`,
-        lastModified: product.updated_at
-          ? new Date(product.updated_at)
-          : new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-      }));
+          url: `${siteUrl}/productos/${product.slug}`,
+          lastModified: product.updated_at
+            ? new Date(product.updated_at)
+            : new Date(),
+          changeFrequency: "weekly" as const,
+          priority: 0.8,
+        }));
     }
   } catch (error) {
     // If Supabase fails, continue with static pages only

@@ -79,8 +79,8 @@ export default function Header() {
             width={180}
             height={52}
             className={`h-12 w-auto transition-all${scrolled || !isHomepage || mobileMenuOpen
-                ? ' drop-shadow-[0_2px_8px_rgba(0,0,0,0.20)]'
-                : ''
+              ? ' drop-shadow-[0_2px_8px_rgba(0,0,0,0.20)]'
+              : ''
               }`}
             style={{ maxWidth: '180px' }}
           />
@@ -91,12 +91,12 @@ export default function Header() {
           <Link
             href="/"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/'
-                ? (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-white bg-white/10')
-                : (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                  : 'text-white/90 hover:bg-white/10')
+              ? (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-white bg-white/10')
+              : (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                : 'text-white/90 hover:bg-white/10')
               }`}
           >
             Inicio
@@ -104,25 +104,38 @@ export default function Header() {
           <Link
             href="/productos"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname.startsWith('/productos')
-                ? (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-white bg-white/10')
-                : (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                  : 'text-white/90 hover:bg-white/10')
+              ? (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-white bg-white/10')
+              : (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                : 'text-white/90 hover:bg-white/10')
               }`}
           >
             Tienda
           </Link>
           <Link
+            href="/servicios"
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname.startsWith('/servicios')
+              ? (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-white bg-white/10')
+              : (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                : 'text-white/90 hover:bg-white/10')
+              }`}
+          >
+            Servicios
+          </Link>
+          <Link
             href="/faq"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/faq'
-                ? (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-white bg-white/10')
-                : (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                  : 'text-white/90 hover:bg-white/10')
+              ? (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-white bg-white/10')
+              : (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                : 'text-white/90 hover:bg-white/10')
               }`}
           >
             FAQ
@@ -130,12 +143,12 @@ export default function Header() {
           <Link
             href="/blog"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/blog' || pathname.startsWith('/guias')
-                ? (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-white bg-white/10')
-                : (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                  : 'text-white/90 hover:bg-white/10')
+              ? (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-white bg-white/10')
+              : (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                : 'text-white/90 hover:bg-white/10')
               }`}
           >
             Blog
@@ -143,12 +156,12 @@ export default function Header() {
           <Link
             href="/contacto"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/contacto'
-                ? (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-white bg-white/10')
-                : (scrolled || !isHomepage || mobileMenuOpen
-                  ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                  : 'text-white/90 hover:bg-white/10')
+              ? (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-white bg-white/10')
+              : (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                : 'text-white/90 hover:bg-white/10')
               }`}
           >
             Contacto
@@ -160,8 +173,8 @@ export default function Header() {
           {/* Wishlist Icon */}
           <WishlistWidget
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
-                ? 'text-slate-600 hover:bg-slate-100'
-                : 'text-white hover:bg-white/10'
+              ? 'text-slate-600 hover:bg-slate-100'
+              : 'text-white hover:bg-white/10'
               }`}
             iconClassName="h-5 w-5"
             scrolled={scrolled || !isHomepage || mobileMenuOpen}
@@ -170,8 +183,8 @@ export default function Header() {
           {/* Cart Icon */}
           <CartWidget
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
-                ? 'text-slate-600 hover:bg-slate-100'
-                : 'text-white hover:bg-white/10'
+              ? 'text-slate-600 hover:bg-slate-100'
+              : 'text-white hover:bg-white/10'
               }`}
             iconClassName="h-5 w-5"
             scrolled={scrolled || !isHomepage || mobileMenuOpen}
@@ -193,8 +206,8 @@ export default function Header() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
-                ? 'text-slate-600 hover:bg-slate-100'
-                : 'text-white hover:bg-white/10'
+              ? 'text-slate-600 hover:bg-slate-100'
+              : 'text-white hover:bg-white/10'
               }`}
             aria-label="Abrir menú de navegación"
           >
@@ -224,8 +237,8 @@ export default function Header() {
           <Link
             href="/"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-900 hover:bg-slate-50'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
               }`}
           >
             Inicio
@@ -233,8 +246,8 @@ export default function Header() {
           <Link
             href="/productos"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname.startsWith('/productos')
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-900 hover:bg-slate-50'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
               }`}
           >
             Tienda
@@ -242,8 +255,8 @@ export default function Header() {
           <Link
             href="/cart"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/cart'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-900 hover:bg-slate-50'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
               }`}
           >
             Carrito
@@ -251,8 +264,8 @@ export default function Header() {
           <Link
             href="/wishlist"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/wishlist'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-900 hover:bg-slate-50'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
               }`}
           >
             Lista de Deseos
@@ -260,8 +273,8 @@ export default function Header() {
           <Link
             href="/blog"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/blog' || pathname.startsWith('/guias')
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-900 hover:bg-slate-50'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
               }`}
           >
             Blog
@@ -269,8 +282,8 @@ export default function Header() {
           <Link
             href="/faq"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/faq'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-900 hover:bg-slate-50'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
               }`}
           >
             Preguntas Frecuentes
@@ -278,8 +291,8 @@ export default function Header() {
           <Link
             href="/contacto"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/contacto'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-900 hover:bg-slate-50'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
               }`}
           >
             Contacto
