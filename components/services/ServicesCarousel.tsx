@@ -249,7 +249,7 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
     const next = () => goTo((displayIndex + 1) % N);
 
     return (
-        <div className="relative">
+        <div className="relative pb-3 sm:pb-4">
             {/* ── Edge fade overlays (visual) ── */}
             <div className="pointer-events-none absolute left-0 top-0 z-10 h-[calc(100%-52px)] w-16 sm:w-20 bg-gradient-to-r from-white to-transparent" />
             <div className="pointer-events-none absolute right-0 top-0 z-10 h-[calc(100%-52px)] w-16 sm:w-20 bg-gradient-to-l from-white to-transparent" />
@@ -282,7 +282,7 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
             <div
                 ref={scrollRef}
                 onScroll={handleScroll}
-                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+                className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
                 style={{ paddingLeft: '3.5rem', paddingRight: '3.5rem' }}
             >
                 {TRIPLED.map((service, i) => {
@@ -295,10 +295,10 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
                             key={i}
                             data-card=""
                             aria-hidden={!isActiveSet}
-                            className="snap-center shrink-0 w-[72vw] sm:w-[280px] lg:w-[310px] bg-white rounded-[1.75rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300 group"
+                            className="snap-center shrink-0 w-[74vw] sm:w-[280px] lg:w-[300px] bg-white rounded-[1.75rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300 group"
                         >
                             {/* ── Image ── */}
-                            <div className="relative h-44 sm:h-48 shrink-0 overflow-hidden">
+                            <div className="relative h-36 sm:h-40 shrink-0 overflow-hidden">
                                 {/*
                  * ─────────────────────────────────────────────────────────────
                  * 📸 IMAGEN REQUERIDA
@@ -310,7 +310,7 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
                  *
                  * import Image from 'next/image';
                  * <Image
-                 *   src={`/assets/images/servicios/${service.imageSlug}.webp`}
+                 *   src={`/assets/images/servicios/${service.imageSlug}.avif`}
                  *   alt={service.title}
                  *   fill
                  *   className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -353,7 +353,7 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
                             </div>
 
                             {/* ── Content ── */}
-                            <div className="flex flex-1 flex-col p-5">
+                            <div className="flex flex-1 flex-col p-4 sm:p-4.5">
                                 <div className="mb-3 flex items-start gap-3">
                                     <div
                                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
@@ -365,13 +365,13 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
                                         <p className="mb-0.5 line-clamp-1 font-dm-mono text-[9px] uppercase tracking-[0.13em] text-slate-400">
                                             {service.overline}
                                         </p>
-                                        <h3 className="font-barlow text-[1rem] font-bold leading-tight text-slate-900 transition-colors duration-200 group-hover:text-blue-700">
+                                        <h3 className="font-barlow text-[0.95rem] font-bold leading-tight text-slate-900 transition-colors duration-200 group-hover:text-blue-700">
                                             {service.title}
                                         </h3>
                                     </div>
                                 </div>
 
-                                <p className="flex-grow text-[12.5px] leading-relaxed text-slate-500 mb-4">
+                                <p className="mb-3 flex-grow line-clamp-5 text-[12px] leading-relaxed text-slate-500">
                                     {service.description}
                                 </p>
 

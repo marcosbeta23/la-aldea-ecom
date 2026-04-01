@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import {
@@ -184,84 +185,31 @@ export default function ServiciosPage() {
 
             <main className="min-h-screen bg-slate-50">
 
-                {/* ══════════════════════════════════════════
-            HERO
-            Uses the same HeroSection component as the homepage.
-            It locks height on mount (window.innerHeight) and only
-            re-measures on orientationchange — so it never resizes
-            when the browser toolbar hides on scroll.
-            ═══════════════════════════════════════ */}
                 <HeroSection className="relative w-full flex flex-col overflow-hidden touch-pan-y bg-slate-900">
-
-                    {/*
-           * ─────────────────────────────────────────────────────────────────
-           * 📸 IMAGEN DE FONDO — HERO PRINCIPAL
-           * Ruta: /public/assets/images/servicios/hero-servicios.webp
-           *
-           * TIPO DE FOTO:
-           * Vista aérea (drone) de campos irrigados en Uruguay al amanecer.
-           * Opciones: viñedo con sistema de riego activo (luz dorada), cultivo
-           * extensivo con aspersores en funcionamiento, o establecimiento rural
-           * con represa visible al fondo. Tono épico, de escala, color cálido.
-           *
-           * Cuando tengas la foto, reemplazá el bloque de placeholder
-           * (el div con id="hero-placeholder-bg") con:
-           *
-           * import Image from 'next/image';
-           * <div className="absolute inset-0 z-0">
-           *   <Image
-           *     src="/assets/images/servicios/hero-servicios.webp"
-           *     alt="Sistemas de riego instalados en campo uruguayo — La Aldea"
-           *     fill
-           *     priority
-           *     fetchPriority="high"
-           *     sizes="100vw"
-           *     quality={55}
-           *     className="object-cover object-center"
-           *   />
-           *   <div className="absolute inset-0 bg-gradient-to-r from-[#050b14]/90 via-[#050b14]/70 to-[#050b14]/25" />
-           * </div>
-           * ─────────────────────────────────────────────────────────────────
-           */}
-
-                    {/* PLACEHOLDER BG — eliminar cuando se agregue la foto real */}
-                    <div id="hero-placeholder-bg" className="absolute inset-0 z-0">
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#050b14] via-blue-950/70 to-[#050b14]" />
-                        <div
-                            className="absolute inset-0 opacity-[0.03]"
-                            style={{
-                                backgroundImage: 'radial-gradient(circle, #60a5fa 1px, transparent 1px)',
-                                backgroundSize: '48px 48px',
-                            }}
+                    <div className="absolute inset-0 z-0">
+                        <Image
+                            src="/assets/images/services/hero-servicios.avif"
+                            alt="Sistemas de riego instalados en campo uruguayo"
+                            fill
+                            priority
+                            fetchPriority="high"
+                            sizes="100vw"
+                            quality={55}
+                            className="object-cover object-center"
                         />
-                        <div className="absolute top-1/3 right-1/4 h-[500px] w-[500px] rounded-full bg-blue-600/8 blur-[120px]" />
-                        <div className="absolute bottom-1/4 left-1/3 h-80 w-80 rounded-full bg-cyan-600/8 blur-[100px]" />
+                        <div className="absolute inset-0 bg-linear-to-r from-[#050b14]/90 via-[#050b14]/70 to-[#050b14]/25" />
                     </div>
 
-                    {/* Photo-pending badge — remove when real image is added */}
-                    <div className="absolute top-[4.5rem] sm:top-20 right-4 z-30 inline-flex items-center gap-1.5 rounded-full border border-slate-700/50 bg-slate-800/60 px-3 py-1.5 backdrop-blur-sm">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
-                        <span className="font-dm-mono text-[9px] uppercase tracking-wider text-slate-400">
-                            foto pendiente — hero
-                        </span>
-                    </div>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/4 bg-linear-to-t from-[#050b14]/95 via-[#050b14]/30 to-transparent" />
 
-                    {/* Gradient ramp for readability */}
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/4 bg-gradient-to-t from-[#050b14]/95 via-[#050b14]/30 to-transparent" />
-
-                    {/* ── Hero content ── */}
                     <div className="relative z-20 flex flex-1 flex-col justify-end pb-10 pt-24 sm:pb-12 sm:pt-28 lg:pb-16 lg:pt-32">
                         <div className="container mx-auto px-4">
-
-                            {/* Overline */}
                             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-1.5 backdrop-blur-sm">
                                 <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
                                 <span className="font-dm-mono text-[10px] font-medium uppercase tracking-[0.2em] text-blue-300">
                                     Instalación · Diseño · Asesoramiento
                                 </span>
                             </div>
-
-                            {/* Headline — professional editorial treatment for services */}
                             <div className="max-w-4xl">
                                 <p className="mb-3 font-dm-mono text-[10px] uppercase tracking-[0.24em] text-slate-300/85 sm:text-[11px]">
                                     Soluciones profesionales en todo Uruguay
@@ -282,7 +230,6 @@ export default function ServiciosPage() {
                                 25 años de trayectoria nos respaldan.
                             </p>
 
-                            {/* CTAs */}
                             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <a
                                     href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
@@ -303,8 +250,6 @@ export default function ServiciosPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Scroll indicator */}
                     <div className="relative z-20 mb-4 flex flex-col items-center gap-1">
                         <span className="font-dm-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
                             Deslizá para descubrir
@@ -357,7 +302,9 @@ export default function ServiciosPage() {
                     </div>
 
                     {/* Carousel — full width, bleeds past container padding */}
-                    <ServicesCarousel whatsappPhone={WHATSAPP_PHONE} />
+                    <div className="pb-6 sm:pb-8 lg:pb-10">
+                        <ServicesCarousel whatsappPhone={WHATSAPP_PHONE} />
+                    </div>
                 </section>
 
                 {/* ══════════════════════════════════════════
