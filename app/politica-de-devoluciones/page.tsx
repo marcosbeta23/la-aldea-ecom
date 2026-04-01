@@ -45,6 +45,17 @@ export default function PoliticaDevolucionesPage() {
             Nos comunicaremos dentro de las <strong>48 horas habiles</strong> para
             coordinar el proceso.
           </p>
+          <p className="mt-2">
+            El producto puede devolverse de las siguientes formas:
+          </p>
+          <ul className="list-disc list-inside mt-2 space-y-1">
+            <li>Personalmente en nuestro local en Tala, Canelones</li>
+            <li>En un punto de entrega habilitado del servicio de mensajeria</li>
+          </ul>
+          <p className="mt-2">
+            Una vez recibido e inspeccionado el producto, el reembolso se procesara
+            dentro de los <strong>7 dias habiles</strong>.
+          </p>
         </div>
 
         <div>
@@ -62,7 +73,32 @@ export default function PoliticaDevolucionesPage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2">4. Garantia legal</h2>
+          <h2 className="text-xl font-semibold mb-2">4. Cambios de producto</h2>
+          <p>
+            Aceptamos cambios de producto siempre que se cumplan los mismos requisitos
+            que para las devoluciones: el producto debe estar{" "}
+            <strong>en su embalaje original, sin abrir y sin uso</strong>, dentro de los{" "}
+            <strong>7 dias corridos</strong> desde la recepcion del pedido.
+          </p>
+          <p className="mt-2">
+            El cliente puede elegir cualquier otro producto disponible en nuestro catalogo.
+            En caso de diferencia de precio:
+          </p>
+          <ul className="list-disc list-inside mt-2 space-y-1">
+            <li>Si el nuevo producto es mas caro, el cliente abona la diferencia.</li>
+            <li>Si el nuevo producto es mas barato, devolvemos la diferencia al cliente.</li>
+          </ul>
+          <p className="mt-2">
+            Para iniciar un cambio, contactenos a{" "}
+            <a href="mailto:ventas@laaldeatala.com.uy" className="underline text-primary">
+              ventas@laaldeatala.com.uy
+            </a>
+            {" "}indicando el numero de pedido y el producto que desea recibir a cambio.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2">5. Garantia legal</h2>
           <p>
             Todos nuestros productos cuentan con la garantia minima legal establecida
             por la legislacion uruguaya vigente. En caso de productos con garantia de
@@ -71,7 +107,7 @@ export default function PoliticaDevolucionesPage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2">5. Costos de envio</h2>
+          <h2 className="text-xl font-semibold mb-2">6. Costos de envio</h2>
           <p>
             En caso de devolucion por defecto de fabricacion o error nuestro, los
             costos de envio de retorno corren por nuestra cuenta. En otros casos,
@@ -80,7 +116,7 @@ export default function PoliticaDevolucionesPage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2">6. Contacto</h2>
+          <h2 className="text-xl font-semibold mb-2">7. Contacto</h2>
           <p>
             Para cualquier consulta sobre devoluciones:{" "}
             <a href="mailto:ventas@laaldeatala.com.uy" className="underline text-primary">
