@@ -17,7 +17,7 @@ import {
     LifeBuoy,
 } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
-import ServicesCarousel from './ServicesCarousel';
+import ServicesCarousel from '@/components/services/ServicesCarousel';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
