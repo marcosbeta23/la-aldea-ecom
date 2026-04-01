@@ -48,12 +48,17 @@ export default function PoliticaDevolucionesPage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2">3. Productos no defectuosos</h2>
-          <p>
-            No aceptamos devoluciones de productos en buen estado por cambio de
-            opinion, salvo en los casos previstos por la{" "}
-            <strong>Ley 17.250 de Defensa del Consumidor</strong>.
-          </p>
+            <h2 className="text-xl font-semibold mb-2">3. Devoluciones por arrepentimiento</h2>
+            <p>
+                Aceptamos devoluciones por arrepentimiento siempre que el producto se encuentre{" "}
+                <strong>en su embalaje original, sin abrir y sin uso</strong>. El cliente debera
+                comunicarse dentro de los <strong>7 dias corridos</strong> desde la recepcion
+                del pedido.
+            </p>
+            <p className="mt-2">
+                No se aceptan devoluciones de productos que hayan sido abiertos, utilizados
+                o que no conserven su embalaje original.
+            </p>
         </div>
 
         <div>
