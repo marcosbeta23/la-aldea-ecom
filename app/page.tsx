@@ -659,8 +659,8 @@ export default async function Home() {
                 <div
                   key={i}
                   className={`rounded-3xl p-6 ${testimonial.featured
-                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white'
-                      : 'bg-slate-800 text-slate-100'
+                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white'
+                    : 'bg-slate-800 text-slate-100'
                     }`}
                 >
                   <Quote className={`h-8 w-8 ${testimonial.featured ? 'text-blue-200' : 'text-slate-600'}`} />

@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ['image/avif', 'image/webp'],
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -110,7 +111,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
+
   async redirects() {
     return [
       {
