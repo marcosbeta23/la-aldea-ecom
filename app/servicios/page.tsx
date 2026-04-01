@@ -191,7 +191,7 @@ export default function ServiciosPage() {
             re-measures on orientationchange — so it never resizes
             when the browser toolbar hides on scroll.
             ═══════════════════════════════════════ */}
-                <HeroSection className="relative w-full flex flex-col pt-14 sm:pt-16 overflow-hidden touch-pan-y bg-slate-900">
+                <HeroSection className="relative w-full flex flex-col overflow-hidden touch-pan-y bg-slate-900">
 
                     {/*
            * ─────────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ export default function ServiciosPage() {
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/4 bg-gradient-to-t from-[#050b14]/95 via-[#050b14]/30 to-transparent" />
 
                     {/* ── Hero content ── */}
-                    <div className="relative z-20 flex flex-1 flex-col justify-end pb-16 pt-28 sm:pb-20 sm:pt-36 lg:pb-24">
+                    <div className="relative z-20 flex flex-1 flex-col justify-end pb-10 pt-24 sm:pb-12 sm:pt-28 lg:pb-16 lg:pt-32">
                         <div className="container mx-auto px-4">
 
                             {/* Overline */}
@@ -261,32 +261,29 @@ export default function ServiciosPage() {
                                 </span>
                             </div>
 
-                            {/* Headline — same Barlow Black uppercase style as homepage */}
-                            <h1 className="font-barlow font-black uppercase leading-[0.85] tracking-tight">
-                                <span className="block text-[clamp(3.5rem,10vw,6.5rem)] text-white">
-                                    Riego.
-                                </span>
-                                <span
-                                    className="block text-[clamp(3.5rem,10vw,6.5rem)] text-blue-500"
-                                    style={{ textShadow: '0 0 40px rgba(59,130,246,0.2)' }}
-                                >
-                                    Bombeo.
-                                </span>
-                                <span
-                                    className="block text-[clamp(3.5rem,10vw,6.5rem)] text-transparent"
-                                    style={{ WebkitTextStroke: '2px rgba(255,255,255,0.45)' }}
-                                >
-                                    Solar.
-                                </span>
-                            </h1>
+                            {/* Headline — professional editorial treatment for services */}
+                            <div className="max-w-4xl">
+                                <p className="mb-3 font-dm-mono text-[10px] uppercase tracking-[0.24em] text-slate-300/85 sm:text-[11px]">
+                                    Soluciones profesionales en todo Uruguay
+                                </p>
+                                <h1 className="font-epilogue text-[clamp(2.2rem,7vw,4.8rem)] font-extrabold leading-[0.95] tracking-[-0.02em] text-white">
+                                    <span className="block">Riego e Ingeniería</span>
+                                    <span className="block bg-linear-to-r from-blue-300 via-cyan-300 to-blue-500 bg-clip-text text-transparent">
+                                        Hidráulica
+                                    </span>
+                                    <span className="mt-1 block text-[clamp(1.15rem,2.9vw,2rem)] font-semibold tracking-[0.02em] text-slate-200">
+                                        Diseño, instalación y puesta en marcha.
+                                    </span>
+                                </h1>
+                            </div>
 
-                            <p className="mt-6 max-w-lg text-[15px] font-light leading-snug text-slate-300 sm:text-[17px]">
+                            <p className="mt-5 max-w-lg text-[15px] font-light leading-snug text-slate-300 sm:text-[17px]">
                                 Instalamos, diseñamos y ponemos en marcha sistemas hídricos en todo Uruguay.
                                 25 años de trayectoria nos respaldan.
                             </p>
 
                             {/* CTAs */}
-                            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <a
                                     href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
                                     target="_blank"
@@ -316,9 +313,6 @@ export default function ServiciosPage() {
                     </div>
                 </HeroSection>
 
-                {/* ══════════════════════════════════════════
-            STATS STRIP
-            ═══════════════════════════════════════ */}
                 <section className="border-b border-slate-200 bg-white">
                     <div className="container mx-auto px-4 py-5">
                         <div className="grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-[1.75rem] border border-slate-200 shadow-sm md:grid-cols-4 md:divide-y-0">
@@ -341,9 +335,6 @@ export default function ServiciosPage() {
                     </div>
                 </section>
 
-                {/* ══════════════════════════════════════════
-            SERVICES CAROUSEL
-            ═══════════════════════════════════════ */}
                 <section id="servicios" className="bg-white py-16 lg:py-20">
                     <div className="container mx-auto px-4 mb-8">
                         <div className="max-w-3xl">
