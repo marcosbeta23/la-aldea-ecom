@@ -79,6 +79,11 @@ export default function Footer() {
                   Términos y Condiciones
                 </Link>
               </li>
+              <li>
+                <Link href="/mapa-del-sitio" className="sr-only">
+                  Mapa del sitio
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -42,14 +42,28 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         ? product.images[0] 
         : `${siteUrl}${product.images[0]}`
       : `${siteUrl}/assets/images/og-image.webp`;
+
+    // Keep room for the global title template suffix: " | La Aldea" (11 chars)
+    const maxNameLength = 49;
+    const seoTitle = product.name.length > maxNameLength
+      ? `${product.name.slice(0, maxNameLength - 3)}...`
+      : product.name;
     
     // Create SEO-optimized description
     const seoDescription = product.description 
       ? product.description.slice(0, 155) + (product.description.length > 155 ? '...' : '')
-      : `Compra ${product.name} en La Aldea, Tala. ${product.brand ? `Marca ${product.brand}. ` : ''}Envíos a todo Uruguay. Precio: UYU ${product.price_numeric?.toLocaleString('es-UY')}`;
+      : [
+          `Comprá ${product.name}`,
+          product.brand ? `marca ${product.brand}` : null,
+          'en La Aldea Agroinsumos, Tala, Canelones.',
+          'Stock disponible, envíos a todo Uruguay.',
+          typeof product.price_numeric === 'number' && product.price_numeric > 0
+            ? `Precio: $${product.price_numeric.toLocaleString('es-UY')} UYU.`
+            : 'Consultá precio y disponibilidad.',
+        ].filter(Boolean).join(' ');
 
     return {
-      title: product.name,
+      title: seoTitle,
       description: seoDescription,
       
       // Open Graph (Facebook, LinkedIn, WhatsApp)

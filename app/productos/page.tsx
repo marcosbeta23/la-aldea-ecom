@@ -82,6 +82,14 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
       description,
       type: 'website',
       url: canonical,
+      images: [
+        {
+          url: `${siteUrl}/assets/images/og-image.webp`,
+          width: 1200,
+          height: 630,
+          alt: 'La Aldea Agroinsumos y Riego — Tala, Uruguay',
+        },
+      ],
     },
     alternates: {
       canonical,
