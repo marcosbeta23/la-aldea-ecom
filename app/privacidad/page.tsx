@@ -5,6 +5,9 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Política de Privacidad | La Aldea',
   description: 'Política de privacidad y protección de datos personales de La Aldea.',
+  alternates: {
+    canonical: '/privacidad',
+  },
 };
 
 export default function PrivacyPolicyPage() {

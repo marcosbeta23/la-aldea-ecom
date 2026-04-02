@@ -1,7 +1,5 @@
 import type { MetadataRoute } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
-
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -21,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
           '/pendiente',
           '/procesando',
           '/error',
+          '/cdn-cgi/',
           // Páginas de pedido individual
           '/pedido/',
           // Parámetros de búsqueda — ya tienen noindex en metadata pero esto refuerza
@@ -62,7 +61,23 @@ export default function robots(): MetadataRoute.Robots {
         allow: ['/', '/productos', '/guias/', '/blog'],
         disallow: ['/admin/', '/api/', '/checkout'],
       },
+      {
+        userAgent: 'SemrushBot',
+        allow: ['/'],
+      },
+      {
+        userAgent: 'AhrefsBot',
+        allow: ['/'],
+      },
+      {
+        userAgent: 'DotBot',
+        allow: ['/'],
+      },
+      {
+        userAgent: 'CCBot',
+        allow: ['/'],
+      },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: 'https://laaldeatala.com.uy/sitemap.xml',
   };
 }

@@ -5,6 +5,9 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Términos y Condiciones | La Aldea',
   description: 'Términos y condiciones de uso y compra en La Aldea Agroinsumos y Riego.',
+  alternates: {
+    canonical: '/terminos',
+  },
 };
 
 export default function TermsPage() {

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useRef, useState, useCallback, useEffect } from 'react';
 import {
     ChevronLeft,
@@ -106,11 +107,11 @@ const SERVICES: ServiceData[] = [
     },
     {
         icon: Leaf,
-        overline: 'Tambos · Feedlots · Establecimientos',
+        overline: 'Ganadería  · Avicultura  · Establecimientos',
         title: 'Instalaciones Ganaderas',
         description:
-            'Redes de distribución, bebederos automáticos y sistemas de bombeo para establecimientos ganaderos y lecheros. Dimensionamos la demanda según carga animal, categoría y tasa de consumo.',
-        tags: ['Bebederos automáticos', 'Redes de distribución', 'Bombeo para tambo'],
+            'Redes de distribución, bebederos automáticos, sistemas de sanitización y agua para establecimientos avícolas, incluyendo control de temperatura y humedad en galpones.',
+        tags: ['Bebederos automáticos', 'Sanitización predial', 'Agua para avícolas', 'Control de temperatura'],
         photoDescription:
             'Bebederos automáticos de calidad con ganado bovino bebiendo. Cañerías de instalación visibles. Campo verde, luz de día.',
         imageSlug: 'instalaciones-ganaderia',
@@ -287,52 +288,22 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
             >
                 {TRIPLED.map((service, i) => {
                     const Icon = service.icon;
-                    // Cards in the first and third copy are aria-hidden to screen readers
-                    const isActiveSet = i >= N && i < N * 2;
 
                     return (
                         <article
                             key={i}
                             data-card=""
-                            aria-hidden={!isActiveSet}
                             className="snap-center shrink-0 w-[74vw] sm:w-[280px] lg:w-[300px] bg-white rounded-[1.75rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300 group"
                         >
                             {/* ── Image ── */}
                             <div className="relative h-36 sm:h-40 shrink-0 overflow-hidden">
-                                {/*
-                 * ─────────────────────────────────────────────────────────────
-                 * 📸 IMAGEN REQUERIDA
-                 * Ruta: /public/assets/images/servicios/{service.imageSlug}.webp
-                 * Descripción para el fotógrafo: {service.photoDescription}
-                 *
-                 * Cuando tengas la foto, eliminá el bloque de placeholder y
-                 * descomentá:
-                 *
-                 * import Image from 'next/image';
-                 * <Image
-                 *   src={`/assets/images/servicios/${service.imageSlug}.avif`}
-                 *   alt={service.title}
-                 *   fill
-                 *   className="object-cover group-hover:scale-105 transition-transform duration-700"
-                 *   sizes="(max-width: 640px) 72vw, 310px"
-                 * />
-                 * ─────────────────────────────────────────────────────────────
-                 */}
-
-                                {/* PLACEHOLDER — remove when real photo is added */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900">
-                                    <div
-                                        className="absolute inset-0 opacity-[0.05]"
-                                        style={{
-                                            backgroundImage:
-                                                'radial-gradient(circle, #94a3b8 1px, transparent 1px)',
-                                            backgroundSize: '20px 20px',
-                                        }}
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.09]">
-                                        <Icon className="h-20 w-20 text-white" />
-                                    </div>
-                                </div>
+                                <Image
+                                    src={`/assets/images/services/${service.imageSlug}.avif`}
+                                    alt={service.title}
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                    sizes="(max-width: 640px) 72vw, 310px"
+                                />
 
                                 {/* Accent strip */}
                                 <div
@@ -342,14 +313,6 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
 
                                 {/* Bottom scrim */}
                                 <div className="absolute inset-x-0 bottom-0 z-10 h-14 bg-gradient-to-t from-black/50 to-transparent" />
-
-                                {/* Placeholder badge — remove when real photo is added */}
-                                <div className="absolute bottom-2.5 left-3 z-20 inline-flex items-center gap-1.5 rounded-full border border-slate-700/50 bg-slate-900/60 px-2 py-0.5 backdrop-blur-sm">
-                                    <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-amber-400" />
-                                    <span className="whitespace-nowrap font-dm-mono text-[8px] uppercase tracking-wider text-slate-400">
-                                        foto pendiente
-                                    </span>
-                                </div>
                             </div>
 
                             {/* ── Content ── */}
@@ -392,12 +355,10 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
             </div>
 
             {/* ── Dots ── */}
-            <div className="mt-5 flex items-center justify-center gap-2" role="tablist" aria-label="Navegación de servicios">
+            <div className="mt-5 flex items-center justify-center gap-2" aria-label="Navegación de servicios">
                 {SERVICES.map((s, i) => (
                     <button
                         key={i}
-                        role="tab"
-                        aria-selected={i === displayIndex}
                         aria-label={`Ir a: ${s.title}`}
                         onClick={() => goTo(i)}
                         className={`rounded-full transition-all duration-300 ${i === displayIndex
