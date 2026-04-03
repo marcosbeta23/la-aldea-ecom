@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
   alternates: {
-    canonical: 'https://laaldeatala.com.uy/blog',
+    canonical: `${siteUrl}/faq`,
   },
   robots: {
     index: false,

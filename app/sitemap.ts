@@ -83,7 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Category landing pages — one per main category
   const categoryPages: MetadataRoute.Sitemap = CATEGORY_HIERARCHY.map((cat) => ({
-    url: `${siteUrl}/productos?categoria=${encodeURIComponent(cat.value)}`,
+    url: `${siteUrl}/productos?${new URLSearchParams({ categoria: cat.value }).toString()}`,
     lastModified: categoryLastModified,
     changeFrequency: "weekly" as const,
     priority: 0.85,

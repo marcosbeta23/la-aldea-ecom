@@ -55,6 +55,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/servicios" className="text-sm text-slate-600 hover:text-blue-600">
+                  Servicios
+                </Link>
+              </li>
+              <li>
                 <Link href="/blog" className="text-sm text-slate-600 hover:text-blue-600">
                   Guías y Blog
                 </Link>
@@ -77,6 +82,11 @@ export default function Footer() {
               <li>
                 <Link href="/terminos" className="text-sm text-slate-600 hover:text-blue-600">
                   Términos y Condiciones
+                </Link>
+              </li>
+              <li>
+                <Link href="/politica-de-devoluciones" className="text-sm text-slate-600 hover:text-blue-600">
+                  Política de Devoluciones
                 </Link>
               </li>
               <li>

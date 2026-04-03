@@ -253,6 +253,15 @@ export default function Header() {
             Tienda
           </Link>
           <Link
+            href="/servicios"
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname.startsWith('/servicios')
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
+              }`}
+          >
+            Servicios
+          </Link>
+          <Link
             href="/cart"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/cart'
               ? 'text-blue-600 bg-blue-50'

@@ -66,7 +66,7 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
 
   const title = cat
     ? sub ? `${sub} — ${cat}` : cat
-    : 'Productos';
+    : 'Tienda — Bombas de Agua, Riego e Insumos';
 
   const description = cat
     ? catConfig?.description

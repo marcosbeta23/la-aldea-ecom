@@ -2,11 +2,27 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Link from 'next/link';
 
+const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
+
 export const metadata: Metadata = {
-  title: 'Política de Privacidad | La Aldea',
-  description: 'Política de privacidad y protección de datos personales de La Aldea.',
+  title: 'Política de Privacidad',
+  description: 'Política de privacidad y protección de datos personales de La Aldea, conforme a la Ley N.° 18.331 de Uruguay.',
   alternates: {
-    canonical: '/privacidad',
+    canonical: `${siteUrl}/privacidad`,
+  },
+  openGraph: {
+    title: 'Política de Privacidad | La Aldea',
+    description: 'Política de privacidad y protección de datos personales de La Aldea.',
+    type: 'website',
+    url: `${siteUrl}/privacidad`,
+    images: [
+      {
+        url: `${siteUrl}/assets/images/og-image.webp`,
+        width: 1200,
+        height: 630,
+        alt: 'La Aldea - Tala, Uruguay',
+      },
+    ],
   },
 };
 

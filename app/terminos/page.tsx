@@ -2,11 +2,27 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Link from 'next/link';
 
+const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
+
 export const metadata: Metadata = {
-  title: 'Términos y Condiciones | La Aldea',
-  description: 'Términos y condiciones de uso y compra en La Aldea Agroinsumos y Riego.',
+  title: 'Términos y Condiciones',
+  description: 'Términos y condiciones de uso y compra en La Aldea. Información sobre envíos, devoluciones, garantías y métodos de pago.',
   alternates: {
-    canonical: '/terminos',
+    canonical: `${siteUrl}/terminos`,
+  },
+  openGraph: {
+    title: 'Términos y Condiciones | La Aldea',
+    description: 'Términos y condiciones de uso y compra en La Aldea Agroinsumos y Riego.',
+    type: 'website',
+    url: `${siteUrl}/terminos`,
+    images: [
+      {
+        url: `${siteUrl}/assets/images/og-image.webp`,
+        width: 1200,
+        height: 630,
+        alt: 'La Aldea - Tala, Uruguay',
+      },
+    ],
   },
 };
 
