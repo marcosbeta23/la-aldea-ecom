@@ -37,16 +37,42 @@ interface Product {
   slug: string | null;
 }
 
-function generateSlug(name: string, sku: string): string {
-  const base = name
+/**
+ * Sanitiza un string para usar como segmento de slug URL.
+ * - Normaliza acentos (NFD → ASCII)
+ * - Reemplaza chars especiales con espacio (para no fundir palabras)
+ * - Convierte espacios a guiones
+ * - Colapsa guiones múltiples
+ * - Elimina guiones del inicio y final
+ */
+function sanitizeSlugPart(str: string): string {
+  return str
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // remove accents
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-  return `${base}-${sku.slice(0, 6).toLowerCase()}`;
+    .replace(/[\u0300-\u036f]/g, '')   // quitar tildes/diacríticos
+    .replace(/[^a-z0-9\s-]/g, ' ')    // chars inválidos → espacio (evita fundir palabras)
+    .replace(/\s+/g, '-')              // espacios → guiones
+    .replace(/-+/g, '-')               // colapsar guiones múltiples
+    .replace(/^-+|-+$/g, '');          // quitar guiones del borde
+}
+
+/**
+ * Genera un slug SEO-friendly a partir del nombre del producto y su SKU.
+ * Formato: {nombre-sanitizado}-{sku-sanitizado}
+ * El base se trunca a 60 chars para que el slug total no supere ~75 chars.
+ */
+function generateSlug(name: string, sku: string): string {
+  const skuPart = sanitizeSlugPart(sku);
+  // Limitar el nombre a 60 chars para dejar espacio al SKU
+  const rawBase = sanitizeSlugPart(name);
+  const base = rawBase.length > 60
+    ? rawBase.slice(0, 60).replace(/-+$/, '') // cortar sin dejar guion final
+    : rawBase;
+
+  if (!base && !skuPart) return '';
+  if (!base) return skuPart;
+  if (!skuPart) return base;
+  return `${base}-${skuPart}`;
 }
 
 // All category options: main categories + all subcategories, hierarchically ordered
@@ -106,7 +132,7 @@ export default function ProductForm({ product }: { product?: any }) {
 
   // Fetch existing brands and categories for autocomplete
   useEffect(() => {
-    fetch('/api/admin/products?perPage=1000') // Fetch enough to gather most tags
+    fetch('/api/admin/products?perPage=1000')
       .then(res => res.json())
       .then(data => {
         const brands = new Set<string>();
@@ -143,14 +169,11 @@ export default function ProductForm({ product }: { product?: any }) {
     b.toLowerCase().includes(brandQuery.toLowerCase().trim()) && b.toLowerCase() !== brandQuery.toLowerCase().trim()
   );
 
-  // Combine static options with dynamic ones found in the DB (deduplicating case-insensitively)
   const combinedCategoryOptions = Array.from(new Map(
     [...ALL_CATEGORY_OPTIONS, ...dynamicCategories]
       .map(c => [c.toLowerCase(), c])
   ).values()).sort();
 
-  // Show ALL category options for suggestions.
-  // Filter out already-selected ones and match search input.
   const filteredCategories = combinedCategoryOptions.filter(c =>
     c.toLowerCase().includes(categoryInput.toLowerCase().trim()) &&
     !formData.category.some(fc => fc.toLowerCase() === c.toLowerCase())
@@ -174,7 +197,6 @@ export default function ProductForm({ product }: { product?: any }) {
   ) => {
     const { name, value, type } = e.target;
     if (type === 'number') {
-      // Allow empty and intermediate decimal input (e.g. "204." while typing "204.54")
       const parsed = value === '' ? 0 : Number(value);
       setFormData(prev => ({
         ...prev,
@@ -192,7 +214,7 @@ export default function ProductForm({ product }: { product?: any }) {
     setFormData(prev => ({
       ...prev,
       name,
-      // Auto-generate slug only for new products (no existing slug in DB)
+      // Auto-generate slug solo para productos nuevos
       slug: !product?.slug ? generateSlug(name, prev.sku) : prev.slug,
     }));
   };
@@ -220,7 +242,7 @@ export default function ProductForm({ product }: { product?: any }) {
         description: result.description,
       }));
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,11 +251,12 @@ export default function ProductForm({ product }: { product?: any }) {
     setIsSubmitting(true);
 
     try {
-      // Normalize brand before submit
       const submitData = {
         ...formData,
         brand: formData.brand ? normalizeBrand(formData.brand) : null,
         category: formData.category.map(c => normalizeCategory(c)).filter(Boolean),
+        // Sanitizar el slug antes de guardar como safety net extra
+        slug: formData.slug ? sanitizeSlugPart(formData.slug) || null : null,
       };
 
       const url = isEditing
@@ -255,7 +278,6 @@ export default function ProductForm({ product }: { product?: any }) {
       setSuccess(isEditing ? 'Producto actualizado' : 'Producto creado');
 
       if (!isEditing) {
-        // Redirect to edit page for new products
         router.push(`/admin/products/${data.product.id}`);
       } else {
         router.refresh();
@@ -330,7 +352,6 @@ export default function ProductForm({ product }: { product?: any }) {
                       }}
                       onFocus={() => setShowBrandSuggestions(true)}
                       onBlur={() => {
-                        // Normalize brand on blur
                         const normalized = normalizeBrand(brandQuery);
                         setBrandQuery(normalized);
                         setFormData(prev => ({ ...prev, brand: normalized || null }));
@@ -378,7 +399,7 @@ export default function ProductForm({ product }: { product?: any }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium  text-black mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Slug URL
                 </label>
                 <input
@@ -386,18 +407,18 @@ export default function ProductForm({ product }: { product?: any }) {
                   name="slug"
                   value={formData.slug || ''}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-black font-mono text-sm"
                   placeholder="slug-del-producto-sku001"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  Generado automáticamente al escribir el nombre. Editá solo si querés personalizar la URL.
+                  Se genera automáticamente al escribir el nombre. Solo letras minúsculas, números y guiones. Máximo 75 caracteres.
                 </p>
               </div>
 
               {/* Description + AI button */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium  text-black">Descripción</label>
+                  <label className="block text-sm font-medium text-black">Descripción</label>
                   <button
                     type="button"
                     onClick={handleAIGenerate}
@@ -438,7 +459,6 @@ export default function ProductForm({ product }: { product?: any }) {
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Categorías
                 </label>
-                {/* Selected tags */}
                 <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
                   {formData.category.map(cat => (
                     <span
@@ -460,7 +480,6 @@ export default function ProductForm({ product }: { product?: any }) {
                     </span>
                   ))}
                 </div>
-                {/* Category input with suggestions */}
                 <div ref={categoryRef} className="relative">
                   <div className="flex gap-2">
                     <input
@@ -512,7 +531,7 @@ export default function ProductForm({ product }: { product?: any }) {
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1.5">
-                  Categoría principal (azul) + subcategoría (violeta). Ej: Bombas → Sumergibles. Las subcategorías están siempre disponibles en la lista.
+                  Categoría principal (azul) + subcategoría (violeta). Ej: Bombas → Sumergibles.
                 </p>
               </div>
             </div>
@@ -535,7 +554,6 @@ export default function ProductForm({ product }: { product?: any }) {
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Precio y Stock</h2>
 
             <div className="space-y-4">
-              {/* Currency selector */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Moneda
@@ -649,7 +667,7 @@ export default function ProductForm({ product }: { product?: any }) {
               </select>
               <p className="text-xs text-slate-500 mt-1">
                 {formData.availability_type === 'on_request'
-                  ? 'Se muestra "Consultar" en vez del precio (a menos que se active la opción de abajo). El cliente contacta por WhatsApp.'
+                  ? 'Se muestra "Consultar" en vez del precio. El cliente contacta por WhatsApp.'
                   : 'El producto se vende normalmente con precio y stock.'}
               </p>
             </div>
@@ -681,7 +699,6 @@ export default function ProductForm({ product }: { product?: any }) {
             </h2>
 
             <div className="space-y-4">
-              {/* Featured checkbox */}
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -696,7 +713,6 @@ export default function ProductForm({ product }: { product?: any }) {
                 Aparece en la sección de destacados del homepage
               </p>
 
-              {/* Discount section */}
               <div className="pt-3 border-t border-slate-200">
                 <div className="flex items-center gap-2 mb-3">
                   <Tag className="h-4 w-4 text-green-600" />
@@ -754,7 +770,7 @@ export default function ProductForm({ product }: { product?: any }) {
                 )}
 
                 <p className="text-xs text-slate-500 mt-2">
-                  Dejá vacío si no hay descuento. El precio actual es el precio de venta.
+                  Dejá vacío si no hay descuento.
                 </p>
               </div>
             </div>
