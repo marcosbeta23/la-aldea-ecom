@@ -307,6 +307,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="es">
       <head>
+        <Script
+          id="crazy-egg"
+          type="text/javascript"
+          src="//script.crazyegg.com/pages/scripts/0132/5723.js"
+          async
+          strategy="beforeInteractive"
+          nonce={nonce}
+        />
+
         {/* DNS prefetch for performance */}
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://supabase.co" />
