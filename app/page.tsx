@@ -1,11 +1,9 @@
-
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Product } from "@/types/database";
-// import FeaturedCarousel from "@/components/products/FeaturedCarousel";
 import {
   Droplets,
   Wrench,
@@ -389,7 +387,9 @@ export default async function Home() {
       .select('*')
       .eq('is_active', true)
       .eq('is_featured', true)
-      .gt('stock', 0)
+      // Include products with stock OR products that are on_request (ordered on demand)
+      // Previously: .gt('stock', 0) — this excluded ALL featured products since they are on_request with stock=0
+      .or('stock.gt.0,availability_type.eq.on_request')
       .order('featured_order', { ascending: true, nullsFirst: false })
       .order('sold_count', { ascending: false })
       .limit(20),
