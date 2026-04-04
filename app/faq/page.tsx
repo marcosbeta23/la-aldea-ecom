@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     canonical: `${siteUrl}/faq`,
   },
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
 };
@@ -33,6 +33,7 @@ export const metadata: Metadata = {
 export interface FAQItem {
   question: string;
   answer: string;
+  answerShort?: string; // max ~29 words, optimized for voice search schema
   relatedGuide?: {
     slug: string;
     label: string;
@@ -47,14 +48,17 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
     faqs: [
       {
         question: '¿Que tipos de instalaciones hidraulicas ofrece La Aldea?',
+        answerShort: 'Instalaciones hidraulicas residenciales, comerciales y agricolas con tanques, cañerias, bombas y automatizacion en todo Uruguay.',
         answer: 'Ofrecemos instalaciones completas de sistemas hidraulicos residenciales, comerciales y agricolas, incluyendo tanques de almacenamiento, cañerias, bombas de agua y sistemas de automatizacion. Lee nuestra guia completa de instalaciones hidraulicas para mas detalles.',
       },
       {
         question: '¿En que zonas realizan instalaciones?',
+        answerShort: 'Realizamos instalaciones en todo Uruguay. Nuestro equipo tecnico se desplaza a cualquier punto del pais.',
         answer: 'Realizamos instalaciones en todo Uruguay. Nuestro equipo tecnico se desplaza a cualquier punto del pais para garantizar una instalacion profesional.',
       },
       {
         question: '¿Ofrecen garantia en las instalaciones?',
+        answerShort: 'Si, todas las instalaciones tienen garantia. El periodo varia segun el tipo de trabajo. Consulta con nuestro equipo.',
         answer: 'Si, todas nuestras instalaciones cuentan con garantia. El periodo de garantia varia segun el tipo de trabajo realizado. Consulta con nuestro equipo para mas detalles.',
       },
     ],
@@ -65,26 +69,32 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
     faqs: [
       {
         question: '¿Como se realiza el diseño e instalacion de un sistema de riego?',
+        answerShort: 'Evaluamos el terreno, diseñamos el sistema mas eficiente y realizamos la instalacion completa con garantia.',
         answer: 'Evaluamos el terreno, determinamos necesidades hidricas, diseñamos el sistema mas eficiente (goteo, aspersion o microaspersion) y realizamos la instalacion completa con garantia. Lee nuestra guia de diseño e instalacion de riego para conocer el proceso completo.',
       },
       {
         question: '¿Que beneficios tiene un sistema de riego bien instalado?',
+        answerShort: 'Ahorro de hasta 50% de agua, distribucion uniforme, automatizacion programable y mejor desarrollo de cultivos.',
         answer: 'Ahorro de hasta 50% de agua, distribucion uniforme, automatizacion programable, reduccion de mano de obra y mejor desarrollo de cultivos. Conoce todos los beneficios del riego en nuestra guia especializada.',
       },
       {
         question: '¿Que tipo de riego es mejor para mi terreno?',
+        answerShort: 'Goteo para huertos y viñedos, aspersion para praderas y extensivos. Depende del cultivo y disponibilidad de agua.',
         answer: 'Depende del cultivo, tamaño del terreno y disponibilidad de agua. El riego por goteo es ideal para huertos y viñedos, mientras que la aspersion es mejor para praderas y cultivos extensivos. Consulta nuestra comparativa de goteo vs aspersion. Te asesoramos sin costo.',
       },
       {
         question: '¿Cuanto cuesta instalar un sistema de riego en Uruguay?',
+        answerShort: 'El costo varia segun el tipo de sistema y la superficie. Ofrecemos presupuesto sin cargo con visita tecnica incluida.',
         answer: 'El costo varia segun el tipo de sistema (goteo, aspersion, automatico), la superficie a cubrir y el tipo de cultivo. Ofrecemos presupuesto sin cargo con visita tecnica incluida. Consulta nuestra guia de instalacion de riego por goteo para entender el proceso.',
       },
       {
         question: '¿Es posible automatizar un sistema de riego existente?',
+        answerShort: 'Si, se puede automatizar con timers, electrovalvulas y controladores. Ofrecemos desde basico hasta sensores de humedad.',
         answer: 'Si, se puede agregar automatizacion a sistemas manuales con timers, electrovalvulas y controladores. Contamos con soluciones desde sistemas basicos hasta automatizacion completa con sensores de humedad. Visita nuestra seccion de sistemas de riego.',
       },
       {
         question: '¿Cada cuanto hay que regar segun el cultivo?',
+        answerShort: 'Huerta familiar en verano: diario o cada 2 dias. Cultivos extensivos: cada 5 a 7 dias segun lluvia.',
         answer: 'Varia segun el tipo de cultivo y la epoca del año. Una huerta familiar en verano necesita riego diario o cada 2 dias, cultivos extensivos como soja cada 5-7 dias dependiendo de la lluvia. Nuestros tecnicos te asesoran segun tu caso. Lee nuestra guia de riego para huerta y jardin.',
       },
     ],
@@ -95,6 +105,7 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
     faqs: [
       {
         question: '¿Que diferencia hay entre una bomba sumergible y una bomba de superficie?',
+        answerShort: 'Las sumergibles van dentro del agua para grandes profundidades. Las de superficie van fuera, ideales para cisternas y arroyos.',
         answer: 'Las bombas sumergibles van dentro del agua (pozos, tanques) y son mas eficientes para grandes profundidades. Las de superficie van fuera del agua y son ideales para cisternas, rios o arroyos poco profundos. Lee nuestra guia completa de tipos de bombas para una comparacion detallada.',
         relatedGuide: {
           slug: 'seleccion-bombas',
@@ -103,6 +114,7 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
       },
       {
         question: '¿Como elegir la bomba de agua adecuada?',
+        answerShort: 'Considera profundidad, caudal necesario, presion requerida, tipo de uso y alimentacion electrica disponible.',
         answer: 'Debes considerar: profundidad del agua, caudal necesario (litros/hora), presion requerida, tipo de uso (domestico/agricola) y alimentacion electrica disponible. Consulta nuestra guia de seleccion de bombas para un analisis tecnico completo.',
         relatedGuide: {
           slug: 'seleccion-bombas',
@@ -111,14 +123,17 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
       },
       {
         question: '¿Ofrecen servicio tecnico para bombas?',
+        answerShort: 'Si, contamos con servicio tecnico especializado para reparacion y mantenimiento de todas las marcas que vendemos.',
         answer: 'Si, contamos con servicio tecnico especializado para reparacion y mantenimiento de bombas de todas las marcas que vendemos.',
       },
       {
         question: '¿Que bomba necesito para alimentar aspersores de riego?',
+        answerShort: 'Para 2 a 4 aspersores, 1 HP suele ser suficiente. Para 5 o mas, necesitas 1.5 a 2 HP o superior.',
         answer: 'Depende de la cantidad de aspersores y la presion requerida. Para 2-4 aspersores una bomba de 1 HP suele ser suficiente. Para 5 o mas, necesitas 1.5-2 HP o mas. Lee nuestra guia completa de bombas para aspersores con tablas de seleccion por HP.',
       },
       {
         question: '¿Las bombas solares sirven para riego agricola?',
+        answerShort: 'Si, son excelentes para zonas sin red electrica. Mueven entre 2.000 y 20.000 litros por hora segun el modelo.',
         answer: 'Si, las bombas solares son una excelente opcion para riego en zonas rurales sin acceso a red electrica. Funcionan con paneles solares y pueden mover entre 2.000 y 20.000 litros por hora segun el modelo. Consulta nuestro catalogo de bombas y sistemas solares.',
       },
     ],
@@ -129,14 +144,17 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
     faqs: [
       {
         question: '¿Hacen envios a todo Uruguay?',
+        answerShort: 'Si, enviamos a todo Uruguay. Montevideo y zona metro: 24 a 48 horas. Interior: 3 a 5 dias habiles.',
         answer: 'Si, enviamos productos a todo el pais. Los tiempos de entrega varian segun la zona. Montevideo y areas cercanas: 24-48 horas. Interior: 3-5 dias habiles.',
       },
       {
         question: '¿Cuanto cuesta el envio?',
+        answerShort: 'Depende del peso, volumen y destino. Productos pequeños por DAC. Equipos pesados con envio especial coordinado.',
         answer: 'El costo de envio depende del peso, volumen y destino. Para productos pequeños usamos DAC o similar. Para equipos pesados (bombas, tanques) coordinamos envios especiales.',
       },
       {
         question: '¿Puedo retirar en el local?',
+        answerShort: 'Si, retiro sin costo en nuestro local de Tala. Te notificamos cuando tu pedido este listo.',
         answer: 'Si, podes retirar tu pedido sin costo en nuestro local de Tala. Te notificamos cuando este listo para retirar.',
       },
     ],
@@ -277,6 +295,7 @@ const faqData: Record<string, { title: string; icon: string; faqs: FAQItem[] }> 
     faqs: [
       {
         question: '¿Cual es el horario de atencion?',
+        answerShort: 'Lunes a viernes de 8 a 18 horas. Sabados de 8:30 a 12. Domingos cerrado.',
         answer: 'Lunes a viernes de 08:00 a 18:00 hs. Sabados de 08:30 a 12:00 hs. Domingos cerrado.',
       },
       {
@@ -338,7 +357,7 @@ export default async function FAQPage() {
   // Flatten FAQs for JSON-LD schema
   const allFaqs = Object.values(processedFaqData).flatMap((category) => category.faqs);
 
-  // JSON-LD Schema for FAQPage
+  // JSON-LD Schema for FAQPage — uses answerShort for voice search when available
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -347,7 +366,7 @@ export default async function FAQPage() {
       name: faq.question,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: faq.answer.replace(/<[^>]*>/g, ''), // Clean HTML for schema
+        text: (faq.answerShort || faq.answer).replace(/<[^>]*>/g, ''), // Prefer short answer for voice search
       },
     })),
   };

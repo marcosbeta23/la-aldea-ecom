@@ -254,6 +254,54 @@ const websiteSchema = {
   },
 };
 
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": ["LocalBusiness", "Store", "HardwareStore"],
+  "@id": "https://laaldeatala.com.uy/#business",
+  name: "La Aldea",
+  description:
+    "Bombas de agua, sistemas de riego, instalaciones hidráulicas, insumos agrícolas y droguería en Tala, Canelones, Uruguay. Más de 25 años de experiencia.",
+  url: "https://laaldeatala.com.uy",
+  telephone: `+${WHATSAPP_PHONE}`,
+  email: "contacto@laaldeatala.com.uy",
+  foundingDate: "1999",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "José Alonso y Trelles y Av Artigas",
+    addressLocality: "Tala",
+    addressRegion: "Canelones",
+    postalCode: "91800",
+    addressCountry: "UY",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: -34.346943768995686,
+    longitude: -55.76359424741334,
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      opens: "08:00",
+      closes: "18:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: "08:30",
+      closes: "12:00",
+    },
+  ],
+  priceRange: "$$",
+  areaServed: { "@type": "Country", name: "Uruguay" },
+  sameAs: [
+    "https://www.facebook.com/laaldeatala",
+    "https://www.instagram.com/laaldeatala/",
+    "https://maps.app.goo.gl/4oUish4o13iMrJ2c9",
+  ],
+  hasMap: "https://www.google.com/maps?q=-34.346943768995686,-55.76359424741334",
+};
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
@@ -284,6 +332,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        {/* LocalBusiness schema — global for Knowledge Panel & Google Maps */}
+        <script
+          type="application/ld+json"
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
         <ClerkProvider dynamic>
           <PostHogProvider>

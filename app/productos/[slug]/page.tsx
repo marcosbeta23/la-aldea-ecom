@@ -126,7 +126,7 @@ export async function generateStaticParams() {
     .select('slug')
     .eq('is_active', true)
     .not('slug', 'is', null)
-    .limit(50);
+    .limit(500);  // cover all active products for full SSG
 
   return (
     (products as { slug: string }[] | null)?.map((product) => ({
@@ -150,7 +150,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const product = data as Product | null;
 
-  if (error || !product) {
+  if (error || !product || !product.is_active) {
     notFound();
   }
 
@@ -183,8 +183,123 @@ export default async function ProductPage({ params }: ProductPageProps) {
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;
 
-  // JSON-LD Schema — Product
-  // JSON-LD Schema — Product (Upgraded for Google Shopping)
+  // ─── Category-based FAQ for AEO (Fix #10) ───
+  const PRODUCT_FAQS: Record<string, Array<{q: string; a: (p: Product) => string}>> = {
+    "Bombas": [
+      {
+        q: "¿Hacen envíos de bombas de agua a todo Uruguay?",
+        a: () => "Sí, enviamos bombas a todo Uruguay. Para bombas grandes coordinamos flete especializado. Consultá disponibilidad por WhatsApp."
+      },
+      {
+        q: "¿Tienen servicio técnico para bombas?",
+        a: () => "Sí, contamos con servicio técnico para reparación y mantenimiento de bombas de todas las marcas que vendemos."
+      },
+      {
+        q: "¿Cómo elijo la bomba adecuada para mi proyecto?",
+        a: () => "Considerá profundidad del agua, caudal necesario, presión requerida y alimentación eléctrica. Ofrecemos asesoramiento técnico sin cargo."
+      }
+    ],
+    "Sumergibles": [
+      {
+        q: "¿Qué profundidad máxima cubre una bomba sumergible?",
+        a: (p) => `La ${p.name} es una bomba sumergible${p.brand ? ` marca ${p.brand}` : ''}. Consultá la ficha técnica o escribinos por WhatsApp para el dimensionamiento exacto según tu pozo.`
+      },
+      {
+        q: "¿Se pueden instalar bombas sumergibles con energía solar?",
+        a: () => "Sí, ofrecemos kits de bombeo solar con bomba sumergible incluida. Es la solución ideal para zonas rurales sin red eléctrica."
+      }
+    ],
+    "Hidráulica": [
+      {
+        q: "¿Qué materiales de cañería manejan?",
+        a: () => "Trabajamos con cañerías PVC Tigre y Nicoll, conectores, válvulas y accesorios hidráulicos para todo tipo de instalación."
+      },
+      {
+        q: "¿Hacen instalaciones hidráulicas a medida?",
+        a: () => "Sí, diseñamos e instalamos sistemas hidráulicos completos para uso doméstico, agrícola e industrial en todo Uruguay."
+      }
+    ],
+    "Piscinas": [
+      {
+        q: "¿Qué productos necesito para el mantenimiento de mi piscina?",
+        a: () => "Los básicos son cloro granulado o en pastillas, algicida, clarificante y un kit de análisis de pH. Te asesoramos según el tamaño de tu piscina."
+      },
+      {
+        q: "¿Cada cuánto hay que tratar el agua de la piscina?",
+        a: () => "En verano con uso frecuente, chequeá cloro y pH cada 2-3 días. En invierno, una vez por semana es suficiente."
+      }
+    ],
+    "Droguería": [
+      {
+        q: "¿Los productos de droguería son aptos para uso agropecuario?",
+        a: () => "Sí, contamos con productos específicos para la industria agropecuaria: desinfectantes, detergentes, hipoclorito y más."
+      },
+      {
+        q: "¿Envían productos al interior del país?",
+        a: () => "Sí, coordinamos envíos especiales con embalaje adecuado para transporte seguro de productos."
+      }
+    ],
+    "Herramientas": [
+      {
+        q: "¿Las herramientas tienen garantía?",
+        a: () => "Sí, todas las herramientas tienen garantía del fabricante. El período varía según la marca y el tipo de herramienta."
+      },
+      {
+        q: "¿Qué marcas de herramientas manejan?",
+        a: () => "Trabajamos con marcas líderes como Lusqtoff y otras marcas profesionales seleccionadas por su calidad y durabilidad."
+      }
+    ],
+    "Filtros": [
+      {
+        q: "¿Cada cuánto hay que cambiar el filtro de agua?",
+        a: () => "Depende del modelo y la calidad del agua. Los filtros Gianni suelen requerir cambio de cartucho cada 3-6 meses. Te asesoramos según tu caso."
+      },
+      {
+        q: "¿Los filtros Gianni sirven para agua de pozo?",
+        a: () => "Sí, los filtros Gianni están diseñados para tratar agua de pozo, red y cisternas. Consultá el modelo adecuado según la dureza de tu agua."
+      }
+    ],
+    "Energía Solar": [
+      {
+        q: "¿Los paneles solares sirven para alimentar bombas de agua?",
+        a: () => "Sí, ofrecemos kits completos de bombeo solar con paneles e inversores. Es la solución ideal para zonas rurales sin conexión a la red."
+      },
+      {
+        q: "¿Cuántos paneles solares necesito para mi bomba?",
+        a: () => "Depende de la potencia de la bomba y las horas solares de tu zona. Hacemos el dimensionamiento exacto sin cargo."
+      }
+    ],
+    "Agroquímicos": [
+      {
+        q: "¿Envían agroquímicos al interior de Uruguay?",
+        a: () => "Sí, enviamos con embalaje adecuado para transporte seguro de productos químicos. Cumplimos con todas las normas de seguridad."
+      },
+      {
+        q: "¿Ofrecen asesoramiento técnico sobre dosis y aplicación?",
+        a: () => "Sí, el asesoramiento es sin costo. Te orientamos sobre dosis, momento de aplicación y compatibilidad según tu cultivo."
+      }
+    ],
+  };
+
+  const categoryFaqs = product.category
+    ?.flatMap(cat => PRODUCT_FAQS[cat] || [])
+    .slice(0, 3) // Max 3 questions per product
+    ?? [];
+
+  const productFaqLd = categoryFaqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: categoryFaqs.map(faq => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a(product),
+      }
+    }))
+  } : null;
+
+  // JSON-LD Schema — Product (consolidated offers, no more duplicate spread)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -203,22 +318,36 @@ export default async function ProductPage({ params }: ProductPageProps) {
       "@id": "https://laaldeatala.com.uy/#business",
       name: "La Aldea",
     },
+    // ✅ Single unified offers object — no more duplicate spread
     offers: {
       "@type": "Offer",
       price: product.price_numeric,
       priceCurrency: product.currency || "UYU",
-      availability: product.stock > 0
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      ...(product.stock > 0 && product.stock <= 3 && {
-        availabilityStarts: new Date().toISOString(),
-        inventoryLevel: {
-          "@type": "QuantitativeValue",
-          value: product.stock,
-        },
-      }),
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
       url: `${siteUrl}/productos/${slug}`,
-      priceValidUntil: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+      priceValidUntil: new Date(Date.now() + 30 * 86400000)
+        .toISOString()
+        .split("T")[0],
+      // ✅ priceSpecification only when there's a discount — inside offers, not overwriting it
+      ...(product.original_price_numeric &&
+        product.discount_percentage && {
+          priceSpecification: {
+            "@type": "PriceSpecification",
+            price: product.price_numeric,
+            priceCurrency: product.currency || "UYU",
+            valueAddedTaxIncluded: true,
+          },
+        }),
+      ...(product.stock > 0 &&
+        product.stock <= 3 && {
+          inventoryLevel: {
+            "@type": "QuantitativeValue",
+            value: product.stock,
+          },
+        }),
       seller: {
         "@type": "Organization",
         "@id": "https://laaldeatala.com.uy/#business",
@@ -266,32 +395,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
         openingHoursSpecification: [
           {
             "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday"],
             opens: "08:00",
-            closes: "18:00"
+            closes: "18:00",
           },
           {
             "@type": "OpeningHoursSpecification",
             dayOfWeek: "Saturday",
             opens: "08:30",
-            closes: "12:00"
-          }
-        ]
+            closes: "12:00",
+          },
+        ],
       },
     },
-    ...(product.original_price_numeric && product.discount_percentage && {
-      offers: {
-        "@type": "Offer",
-        price: product.price_numeric,
-        priceCurrency: product.currency || "UYU",
-        priceSpecification: {
-          "@type": "PriceSpecification",
-          price: product.price_numeric,
-          priceCurrency: product.currency || "UYU",
-          valueAddedTaxIncluded: true,
-        },
-      },
-    }),
     ...(reviews && reviews.length > 0 && {
       aggregateRating: {
         "@type": "AggregateRating",
@@ -327,6 +443,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
+      {productFaqLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productFaqLd) }}
+        />
+      )}
 
       <Header />
 
