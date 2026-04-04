@@ -6,12 +6,12 @@ import Header from '@/components/Header';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Mapa del Sitio | La Aldea',
+  title: 'Mapa del Sitio',
   description: 'Todos los productos y secciones de La Aldea Agroinsumos y Riego.',
   robots: { index: true, follow: true },
 };
 
-export const revalidate = 86400; // revalidar 1 vez por día
+export const revalidate = 3600; // revalidar cada hora — reduce orphan pages
 
 export default async function SitemapPage() {
   const { data: products } = await supabaseAdmin

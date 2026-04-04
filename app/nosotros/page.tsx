@@ -32,6 +32,14 @@ export const metadata: Metadata = {
       'Conoce La Aldea: mas de 25 años en Tala, Canelones, especializados en sistemas de riego, bombas de agua, agroquimicos y soluciones hidricas para Uruguay.',
     type: 'website',
     url: `${siteUrl}/nosotros`,
+    images: [
+      {
+        url: `${siteUrl}/assets/images/og-image.webp`,
+        width: 1200,
+        height: 630,
+        alt: 'La Aldea — Tala, Uruguay',
+      },
+    ],
   },
   alternates: { canonical: `${siteUrl}/nosotros` },
 };
@@ -98,7 +106,7 @@ const organizationSchema = {
   contactPoint: [
     {
       '@type': 'ContactPoint',
-      telephone: '+${WHATSAPP_PHONE}',
+      telephone: `+${WHATSAPP_PHONE}`,
       contactType: 'customer service',
       availableLanguage: 'Spanish',
     },
@@ -113,7 +121,7 @@ const organizationSchema = {
     'https://www.facebook.com/profile.php?id=61561171162882',
     'https://www.instagram.com/laaldeatala/',
     'https://maps.app.goo.gl/4oUish4o13iMrJ2c9',
-    'https://wa.me/${WHATSAPP_PHONE}',
+    `https://wa.me/${WHATSAPP_PHONE}`,
   ],
   areaServed: { '@type': 'Country', name: 'Uruguay' },
   numberOfEmployees: { '@type': 'QuantitativeValue', value: '5-10' },

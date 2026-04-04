@@ -35,6 +35,14 @@ export const metadata: Metadata = {
             'Diseño e instalación de riego por goteo, aspersión, bombeo y energía solar en todo Uruguay. Relevamiento técnico y presupuesto sin cargo.',
         type: 'website',
         url: `${siteUrl}/servicios`,
+        images: [
+            {
+                url: `${siteUrl}/assets/images/og-image.webp`,
+                width: 1200,
+                height: 630,
+                alt: 'La Aldea — Tala, Uruguay',
+            },
+        ],
     },
     alternates: { canonical: `${siteUrl}/servicios` },
     keywords: [

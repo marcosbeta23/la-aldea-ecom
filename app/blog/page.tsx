@@ -23,6 +23,14 @@ export const metadata: Metadata = {
       'Articulos, guias tecnicas y novedades sobre riego, bombas de agua, agroquimicos, piscinas y mas.',
     type: 'website',
     url: `${siteUrl}/blog`,
+    images: [
+      {
+        url: `${siteUrl}/assets/images/og-image.webp`,
+        width: 1200,
+        height: 630,
+        alt: 'La Aldea — Tala, Uruguay',
+      },
+    ],
   },
   alternates: { canonical: `${siteUrl}/blog` },
 };

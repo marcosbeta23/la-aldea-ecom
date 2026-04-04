@@ -27,6 +27,14 @@ export const metadata: Metadata = {
       'Contacta a La Aldea en Tala, Canelones. WhatsApp, telefono, email y direccion. Asesoramiento tecnico sin costo.',
     type: 'website',
     url: `${siteUrl}/contacto`,
+    images: [
+      {
+        url: `${siteUrl}/assets/images/og-image.webp`,
+        width: 1200,
+        height: 630,
+        alt: 'La Aldea — Tala, Uruguay',
+      },
+    ],
   },
   alternates: { canonical: `${siteUrl}/contacto` },
 };
