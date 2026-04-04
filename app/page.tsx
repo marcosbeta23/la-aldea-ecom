@@ -1,4 +1,5 @@
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -36,6 +37,12 @@ import HomeMapSection from "@/components/home/HomeMapSection";
 
 
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
+
+export const metadata: Metadata = {
+  title: "La Aldea Tala | Bombas de Agua y Riego en Uruguay",
+  description:
+    "Bombas de agua, sistemas de riego e instalaciones hidraulicas en Tala. Asesoramiento tecnico, productos de calidad y envios a todo Uruguay.",
+};
 
 // LocalBusiness JSON-LD Schema (Complete)
 const localBusinessSchema = {
@@ -421,6 +428,9 @@ export default async function Home() {
         {/* Hero Section */}
         <HomeHero />
 
+        {/* Featured Products Carousel */}
+        <ClientHomePageElements featuredProducts={featuredProducts} />
+
         {/* Trust / Benefits Bar */}
         <section id="main-content" className="relative z-10 border-b border-slate-100 bg-white py-4">
           <div className="container mx-auto px-4">
@@ -439,9 +449,6 @@ export default async function Home() {
             </div>
           </div>
         </section>
-
-        {/* Client elements (Carousel & Map) */}
-        <ClientHomePageElements featuredProducts={featuredProducts} />
 
         {/* Partners Carousel - Seamless loop */}
         <section className="border-b border-slate-100 bg-white py-6 overflow-hidden">

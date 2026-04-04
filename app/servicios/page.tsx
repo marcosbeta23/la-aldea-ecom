@@ -28,11 +28,11 @@ const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 export const metadata: Metadata = {
     title: 'Servicios de Riego, Bombeo y Soluciones Hídricas',
     description:
-        'Diseño e instalación de sistemas de riego por goteo, aspersión, bombeo, energía solar, almacenamiento de agua, instalaciones ganaderas y arcos sanitarios. Todo Uruguay. Presupuesto sin cargo.',
+        'Diseno e instalacion de riego por goteo, aspersion, bombeo y energia solar en todo Uruguay. Relevamiento tecnico y presupuesto sin cargo.',
     openGraph: {
         title: 'Servicios de Riego, Bombeo y Soluciones Hídricas | La Aldea',
         description:
-            'Diseño e instalación de sistemas de riego por goteo, aspersión, bombeo, energía solar, almacenamiento de agua, instalaciones ganaderas y arcos sanitarios. Todo Uruguay.',
+            'Diseno e instalacion de riego por goteo, aspersion, bombeo y energia solar en todo Uruguay. Relevamiento tecnico y presupuesto sin cargo.',
         type: 'website',
         url: `${siteUrl}/servicios`,
     },
