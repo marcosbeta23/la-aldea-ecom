@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase';
 import { Calendar, ChevronRight, BookOpen, Tag } from 'lucide-react';
 import { WHATSAPP_PHONE } from '@/lib/constants';
 import PageHeader from '@/components/layout/PageHeader';
-import Image from "next/image";
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -160,9 +159,8 @@ export default async function BlogPage() {
   const grouped = groupByCategory(articles);
   const categories = Object.keys(grouped);
 
-  // Pick the latest article as Hero, and next 3 as Featured
-  const heroArticle = articles[0];
-  const featured = articles.slice(1, 4);
+  // Featured block uses a consistent card size to avoid overflow issues
+  const featured = articles.slice(0, 6);
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -189,65 +187,18 @@ export default async function BlogPage() {
           className="text-center [&_div.max-w-4xl]:mx-auto [&_.inline-flex]:mx-auto [&_p]:mx-auto"
         />
 
-        {/* Hero Article */}
-        {heroArticle && (
-          <section className="container mx-auto px-4 -mt-12 mb-12 relative z-10">
-            <Link
-              href={`/guias/${heroArticle.slug}`}
-              className="group block bg-white rounded-[2.5rem] border border-slate-100 p-2 overflow-hidden shadow-2xl hover:shadow-[0_30px_60px_rgba(0,0,0,0.1)] transition-all duration-500 hover:-translate-y-1"
-            >
-              <div className="grid md:grid-cols-[1.1fr_1fr] items-center gap-2 md:gap-0">
-                <div className="aspect-[16/9] md:aspect-auto md:h-[350px] bg-slate-100 rounded-[2rem] overflow-hidden m-2">
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-teal-500/20 flex items-center justify-center relative">
-                    <Image
-                      src="/assets/images/services/irrigation.webp"
-                      alt="Sistema de riego profesional - La Aldea"
-                      width={800}
-                      height={500}
-                      sizes="(max-width: 768px) 100vw, 800px"
-                      quality={80}
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute top-6 left-6 px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm">
-                      <span className="text-xs font-bold text-blue-600 tracking-widest uppercase">Destacado</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6 lg:p-10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${categoryColors[heroArticle.category] || 'bg-slate-100 text-slate-600'}`}>
-                      {heroArticle.category}
-                    </span>
-                    {heroArticle.dateModified && (
-                      <span className="text-sm text-slate-400 font-medium">
-                        {new Date(heroArticle.dateModified).toLocaleDateString('es-UY', { month: 'long', year: 'numeric' })}
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="text-2xl lg:text-4xl font-bold text-slate-900 mb-4 group-hover:text-blue-600 transition-colors leading-[1.2] tracking-tight">
-                    {heroArticle.title}
-                  </h2>
-                  <p className="text-slate-500 text-base lg:text-lg leading-relaxed mb-6 line-clamp-3">
-                    {heroArticle.description}
-                  </p>
-                  <div className="inline-flex items-center gap-2 text-blue-600 font-bold group-hover:gap-4 transition-all">
-                    <span>Leer artículo completo</span>
-                    <ChevronRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </section>
-        )}
-
         {/* Featured Articles */}
-        <section className="container mx-auto px-4 -mt-6 relative z-10">
-          <div className="grid gap-4 md:grid-cols-3">
+        <section className="container mx-auto px-4 py-8 lg:py-10 relative z-10">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">Últimos artículos</h2>
+            <span className="text-sm text-slate-500">{articles.length} publicados</span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {featured.map((article) => (
               <Link
                 key={article.slug}
                 href={`/guias/${article.slug}`}
-                className="group bg-white rounded-3xl border border-slate-100 p-6 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 transition-all duration-300 shadow-sm"
+                className="group bg-white rounded-3xl border border-slate-100 p-6 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 transition-all duration-300 shadow-sm min-h-55"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span
@@ -267,11 +218,11 @@ export default async function BlogPage() {
                     </span>
                   )}
                 </div>
-                <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[3.2rem]">
                   {article.title}
                 </h3>
-                <p className="mt-2 text-sm text-slate-500 line-clamp-2">{article.description}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm text-blue-600 font-medium">
+                <p className="mt-2 text-sm text-slate-500 line-clamp-3 min-h-15">{article.description}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm text-blue-600 font-medium">
                   Leer guia <ChevronRight className="h-3 w-3" />
                 </span>
               </Link>

@@ -48,7 +48,7 @@ export default function FAQNav({ categories }: FAQNavProps) {
   };
 
   return (
-    <nav className="flex gap-2 mb-8 overflow-x-auto pb-4 pt-2 scrollbar-hide sm:flex-wrap sm:overflow-x-visible sm:pb-0 sticky top-16 bg-white/50 backdrop-blur-md z-20 -mx-4 px-4 sm:relative sm:top-0 sm:bg-transparent sm:backdrop-blur-none sm:mx-0 sm:px-0">
+    <nav className="flex gap-2 mb-8 overflow-x-auto pb-4 pt-2 scrollbar-hide sm:flex-wrap sm:overflow-x-visible sm:pb-0 sticky top-0 bg-white/50 backdrop-blur-md z-20 -mx-4 px-4 sm:relative sm:top-0 sm:bg-transparent sm:backdrop-blur-none sm:mx-0 sm:px-0">
       {categories.map((category) => {
         const isActive = activeId === category.id;
         return (
