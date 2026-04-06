@@ -24,6 +24,8 @@ export const metadata: Metadata = {
     description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas. La Aldea Agroinsumos, Tala, Uruguay.',
     type: 'website',
     url: `${siteUrl}/faq`,
+    siteName: 'La Aldea',
+    locale: 'es_UY',
     images: [
       {
         url: `${siteUrl}/assets/images/og-image.webp`,

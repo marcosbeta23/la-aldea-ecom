@@ -164,7 +164,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const reviews = (reviewsData || []) as ProductReview[];
 
-  // Fetch related products (same category)
+  // Fetch related products (same category) — limit 8 for better internal link coverage
   let relatedProducts: Product[] = [];
   if (product.category && product.category.length > 0) {
     const { data: relatedData } = await supabaseAdmin
@@ -173,7 +173,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       .overlaps('category', product.category)
       .eq('is_active', true)
       .neq('id', product.id)
-      .limit(4);
+      .limit(8);
     relatedProducts = (relatedData || []) as Product[];
   }
 

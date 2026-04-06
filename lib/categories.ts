@@ -30,7 +30,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Bombas',
     label: 'Bombas',
-    description: 'Bombas de agua para todo tipo de aplicaciones',
+    description: 'Bombas de agua centrífugas, sumergibles, periféricas y multietapa para riego, piscinas y uso doméstico',
     color: 'from-blue-500 to-blue-600',
     icon: 'Droplets',
     subcategories: [
@@ -47,7 +47,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Riego',
     label: 'Riego',
-    description: 'Sistemas de riego por goteo, aspersión y accesorios',
+    description: 'Sistemas de riego por goteo, aspersión y microaspersión con mangueras, aspersores y automatización',
     color: 'from-green-500 to-green-600',
     icon: 'Sprout',
     subcategories: [
@@ -62,7 +62,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Filtros',
     label: 'Filtros',
-    description: 'Filtros de agua y sistemas de filtración',
+    description: 'Filtros de agua para riego, agua potable y piscinas: de disco, malla, arena y carbón activado',
     color: 'from-teal-500 to-teal-600',
     icon: 'Filter',
     subcategories: [
@@ -76,7 +76,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Tanques',
     label: 'Tanques',
-    description: 'Tanques de almacenamiento y cisternas',
+    description: 'Tanques de polietileno para agua potable, riego agrícola y ganadería, desde 500 hasta 10.000 litros',
     color: 'from-cyan-500 to-cyan-600',
     icon: 'Container',
     subcategories: [
@@ -89,7 +89,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Piscinas',
     label: 'Piscinas',
-    description: 'Productos para piscinas y piletas',
+    description: 'Bombas de calor, filtros de arena, cloro y accesorios para el mantenimiento de tu piscina en Uruguay',
     color: 'from-sky-500 to-sky-600',
     icon: 'Waves',
     subcategories: [
@@ -102,7 +102,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Químicos',
     label: 'Químicos',
-    description: 'Productos químicos para tratamiento y limpieza',
+    description: 'Productos químicos para piscinas y uso agrícola: cloro, algicidas, herbicidas, fungicidas e insecticidas',
     color: 'from-purple-500 to-purple-600',
     icon: 'FlaskConical',
     subcategories: [
@@ -114,7 +114,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Herramientas',
     label: 'Herramientas',
-    description: 'Herramientas manuales y eléctricas',
+    description: 'Herramientas eléctricas y manuales: amoladoras, sierras, taladros, fumigadoras y más para profesionales',
     color: 'from-orange-500 to-orange-600',
     icon: 'Wrench',
     subcategories: [
@@ -127,7 +127,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Accesorios',
     label: 'Accesorios',
-    description: 'Conexiones, válvulas y accesorios varios',
+    description: 'Conexiones PVC, válvulas, caños y accesorios para instalaciones hidráulicas, riego y plomería',
     color: 'from-amber-500 to-amber-600',
     icon: 'Settings',
     subcategories: [
@@ -140,7 +140,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Hidráulica',
     label: 'Hidráulica',
-    description: 'Instalaciones hidráulicas completas',
+    description: 'Instalaciones hidráulicas completas: cañerías, válvulas, conexiones y bombas para uso doméstico y agrícola',
     color: 'from-blue-600 to-blue-700',
     icon: 'Droplets',
     subcategories: [
@@ -153,7 +153,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Droguería',
     label: 'Droguería',
-    description: 'Productos de limpieza y químicos industriales DIU',
+    description: 'Productos de limpieza, desinfectantes e insumos industriales y agropecuarios registrados por DIU',
     color: 'from-violet-500 to-violet-600',
     icon: 'FlaskConical',
     subcategories: [
@@ -165,7 +165,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Energía Solar',
     label: 'Energía Solar',
-    description: 'Paneles solares, bombas solares e inversores',
+    description: 'Paneles solares, bombas solares e inversores para riego y generación de energía eléctrica autónoma en el campo',
     color: 'from-yellow-500 to-yellow-600',
     icon: 'Zap',
     subcategories: [
