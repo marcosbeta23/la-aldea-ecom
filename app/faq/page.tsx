@@ -13,13 +13,25 @@ import FAQNav from '@/components/faq/FAQNav';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+// Cache the FAQ page for 1 hour — reduces Supabase calls for dynamic clusters
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'Preguntas Frecuentes',
   description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas. La Aldea - Tala, Uruguay.',
   openGraph: {
     title: 'Preguntas Frecuentes | La Aldea',
-    description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas.',
+    description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas. La Aldea Agroinsumos, Tala, Uruguay.',
     type: 'website',
+    url: `${siteUrl}/faq`,
+    images: [
+      {
+        url: `${siteUrl}/assets/images/og-image.webp`,
+        width: 1200,
+        height: 630,
+        alt: 'Preguntas Frecuentes — La Aldea, Tala, Uruguay',
+      },
+    ],
   },
   alternates: {
     canonical: `${siteUrl}/faq`,
