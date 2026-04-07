@@ -37,9 +37,9 @@ import HomeMapSection from "@/components/home/HomeMapSection";
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
 
 export const metadata: Metadata = {
-  title: "La Aldea Tala | Bombas de Agua y Riego en Uruguay",
+  title: "La Aldea | Bombas de Agua y Riego en Uruguay",
   description:
-    "Bombas de agua, sistemas de riego e instalaciones hidraulicas en Tala. Asesoramiento tecnico, productos de calidad y envios a todo Uruguay.",
+    "Bombas de agua, sistemas de riego e instalaciones hidráulicas. Asesoramiento técnico y venta especializada desde Tala, con envíos a todo Uruguay.",
 };
 
 // LocalBusiness JSON-LD Schema (Complete)
