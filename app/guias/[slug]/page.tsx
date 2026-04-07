@@ -210,11 +210,20 @@ export async function generateMetadata({ params }: GuiaPageProps): Promise<Metad
       siteName: 'La Aldea Tala',
       locale: 'es_UY',
       type: 'article',
+      images: [
+        {
+          url: `${siteUrl}/assets/images/og-image.webp`,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `${article.title} | La Aldea`,
       description: article.description,
+      images: [`${siteUrl}/assets/images/og-image.webp`],
     },
     alternates: { canonical: url },
     keywords: [...article.keywords.filter(k => typeof k === 'string'), 'La Aldea', 'Tala', 'Uruguay'],

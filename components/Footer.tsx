@@ -65,6 +65,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/faq" className="text-sm text-slate-600 hover:text-blue-600">
+                  Preguntas Frecuentes
+                </Link>
+              </li>
+              <li>
                 <Link href="/nosotros" className="text-sm text-slate-600 hover:text-blue-600">
                   Sobre Nosotros
                 </Link>
@@ -90,8 +95,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/mapa-del-sitio" className="sr-only">
-                  Mapa del sitio
+                <Link href="/mapa-del-sitio" className="text-sm text-slate-600 hover:text-blue-600">
+                  Mapa del Sitio
                 </Link>
               </li>
             </ul>
