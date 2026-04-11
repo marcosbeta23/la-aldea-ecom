@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import ProductsPage from '@/app/productos/page';
 import { CATEGORY_HIERARCHY } from '@/lib/categories';
 import { getCategoryFromSlug, getCategoryPath, getCategorySlug } from '@/lib/category-slugs';
+import AllProductsIndex from '@/components/products/AllProductsIndex';
 
 interface CategoryProductsPageProps {
   params: Promise<{ categoria: string }>;
@@ -29,7 +30,10 @@ export async function generateStaticParams() {
     .map((categoria) => ({ categoria }));
 }
 
-export async function generateMetadata({ params, searchParams }: CategoryProductsPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: CategoryProductsPageProps): Promise<Metadata> {
   const { categoria: slug } = await params;
   const categoryValue = getCategoryFromSlug(slug);
 
@@ -41,7 +45,7 @@ export async function generateMetadata({ params, searchParams }: CategoryProduct
   }
 
   const query = await searchParams;
-  const categoryConfig = CATEGORY_HIERARCHY.find((category) => category.value === categoryValue);
+  const categoryConfig = CATEGORY_HIERARCHY.find((c) => c.value === categoryValue);
 
   const refinementFilters = Boolean(
     query.marca ||
@@ -57,7 +61,9 @@ export async function generateMetadata({ params, searchParams }: CategoryProduct
   if (query.sub) canonicalParams.set('sub', query.sub);
 
   const categoryPath = getCategoryPath(categoryValue);
-  const canonical = `${siteUrl}${categoryPath}${canonicalParams.toString() ? `?${canonicalParams.toString()}` : ''}`;
+  const canonical = `${siteUrl}${categoryPath}${
+    canonicalParams.toString() ? `?${canonicalParams.toString()}` : ''
+  }`;
 
   const title = query.sub ? `${query.sub} — ${categoryValue}` : categoryValue;
   const description = categoryConfig?.description
@@ -88,14 +94,15 @@ export async function generateMetadata({ params, searchParams }: CategoryProduct
   };
 }
 
-export default async function CategoryProductsPage({ params, searchParams }: CategoryProductsPageProps) {
+export default async function CategoryProductsPage({
+  params,
+  searchParams,
+}: CategoryProductsPageProps) {
   const { categoria: slug } = await params;
   const query = await searchParams;
   const categoryValue = getCategoryFromSlug(slug);
 
-  if (!categoryValue) {
-    notFound();
-  }
+  if (!categoryValue) notFound();
 
   const canonicalSlug = getCategorySlug(categoryValue);
   if (canonicalSlug && canonicalSlug !== slug) {
@@ -108,18 +115,36 @@ export default async function CategoryProductsPage({ params, searchParams }: Cat
     if (query.q) redirectParams.set('q', query.q);
     if (query.precio_min) redirectParams.set('precio_min', query.precio_min);
     if (query.precio_max) redirectParams.set('precio_max', query.precio_max);
-
     const qs = redirectParams.toString();
-    permanentRedirect(qs ? `/productos/categoria/${canonicalSlug}?${qs}` : `/productos/categoria/${canonicalSlug}`);
+    permanentRedirect(
+      qs
+        ? `/productos/categoria/${canonicalSlug}?${qs}`
+        : `/productos/categoria/${canonicalSlug}`
+    );
   }
 
+  // Only inject the full index on the canonical, indexed page (page 1).
+  // Page 2+ already has noindex — no point adding the index there.
+  const currentPage = parseInt(query.page || '1', 10);
+
   return (
-    <ProductsPage
-      routeCategory={categoryValue}
-      searchParams={Promise.resolve({
-        ...query,
-        categoria: categoryValue,
-      })}
-    />
+    <>
+      <ProductsPage
+        routeCategory={categoryValue}
+        searchParams={Promise.resolve({
+          ...query,
+          categoria: categoryValue,
+        })}
+      />
+      {/* AllProductsIndex: links every product in this category as plain text.
+          Reason: categories with >24 products paginate. Pages 2+ are noindex,
+          so products that only appear there have zero incoming indexed links —
+          Ahrefs flags them as orphan pages. By listing every product here on
+          page 1 (which IS indexed), every product gets at least one dofollow
+          internal link from a fully crawlable, canonical source. */}
+      {currentPage === 1 && (
+        <AllProductsIndex categoria={categoryValue} currentPage={1} />
+      )}
+    </>
   );
 }
