@@ -4,9 +4,25 @@ import { supabaseAdmin } from '@/lib/supabase';
 import type { Database } from '@/types/database';
 
 type GuideRow = Database['public']['Tables']['guides']['Row'];
+type GuideInsert = Database['public']['Tables']['guides']['Insert'];
 
 const GUIDE_SELECT_COLUMNS =
   'id, slug, title, description, breadcrumb_label, category, keywords, related_categories, related_articles, sections, is_published, date_published, date_modified, created_at, updated_at';
+
+type GuideInsertResponse = {
+  data: GuideRow | null;
+  error: { code?: string; message: string } | null;
+};
+
+const guidesInsertBridge = supabaseAdmin as unknown as {
+  from: (table: 'guides') => {
+    insert: (values: GuideInsert) => {
+      select: (columns: string) => {
+        single: () => Promise<GuideInsertResponse>;
+      };
+    };
+  };
+};
 
 
 // GET all guides (admin sees all, public would see published only)
@@ -67,22 +83,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'slug must be lowercase with hyphens only' }, { status: 400 });
     }
 
-    const { data: guide, error } = await supabaseAdmin
+    const guideInsert: GuideInsert = {
+      slug,
+      title,
+      description: description || '',
+      breadcrumb_label: breadcrumb_label || title,
+      category: category || '',
+      keywords: keywords || [],
+      related_categories: related_categories || [],
+      related_articles: related_articles || [],
+      sections: sections || [],
+      is_published: is_published || false,
+      date_published: new Date().toISOString().split('T')[0],
+      date_modified: new Date().toISOString().split('T')[0],
+    };
+
+    const { data: guide, error } = await guidesInsertBridge
       .from('guides')
-      .insert({
-        slug,
-        title,
-        description: description || '',
-        breadcrumb_label: breadcrumb_label || title,
-        category: category || '',
-        keywords: keywords || [],
-        related_categories: related_categories || [],
-        related_articles: related_articles || [],
-        sections: sections || [],
-        is_published: is_published || false,
-        date_published: new Date().toISOString().split('T')[0],
-        date_modified: new Date().toISOString().split('T')[0],
-      })
+      .insert(guideInsert)
       .select(GUIDE_SELECT_COLUMNS)
       .single();
 

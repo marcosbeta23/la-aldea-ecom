@@ -9,6 +9,23 @@ type GuideUpdate = Database['public']['Tables']['guides']['Update'];
 const GUIDE_SELECT_COLUMNS =
   'id, slug, title, description, breadcrumb_label, category, keywords, related_categories, related_articles, sections, is_published, date_published, date_modified, created_at, updated_at';
 
+type GuideUpdateResponse = {
+  data: GuideRow | null;
+  error: { code?: string; message: string } | null;
+};
+
+const guidesUpdateBridge = supabaseAdmin as unknown as {
+  from: (table: 'guides') => {
+    update: (values: GuideUpdate) => {
+      eq: (column: 'id', value: string) => {
+        select: (columns: string) => {
+          single: () => Promise<GuideUpdateResponse>;
+        };
+      };
+    };
+  };
+};
+
 async function verifyAdmin() {
   const { userId } = await auth();
   return !!userId;
@@ -69,12 +86,12 @@ export async function PATCH(
     if (body.sections !== undefined) updateData.sections = body.sections;
     if (body.is_published !== undefined) updateData.is_published = body.is_published;
 
-    const { data: guide, error } = await supabaseAdmin
+    const { data: guide, error } = await guidesUpdateBridge
       .from('guides')
       .update(updateData)
       .eq('id', id)
       .select(GUIDE_SELECT_COLUMNS)
-      .single<GuideRow>();
+      .single();
 
     if (error) {
       console.error('Error updating guide:', error);

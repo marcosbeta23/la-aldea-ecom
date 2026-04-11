@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
 
 // Unified daily maintenance cron — single cron entry for Vercel Hobby plan.
 // Hobby plans only allow cron jobs that run once per day.
@@ -19,6 +20,34 @@ function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return 'Unknown error';
 }
+
+type OrderUpdate = Database['public']['Tables']['orders']['Update'];
+type CancelledOrderRow = Pick<Database['public']['Tables']['orders']['Row'], 'id' | 'order_number'>;
+type OrderSnapshotRow = Pick<Database['public']['Tables']['orders']['Row'], 'total' | 'currency' | 'status'>;
+type MonthlyRevenueInsert = Database['public']['Tables']['monthly_revenue_snapshots']['Insert'];
+
+const ordersCancelBridge = supabaseAdmin as unknown as {
+  from: (table: 'orders') => {
+    update: (values: OrderUpdate) => {
+      eq: (column: 'payment_method', value: string) => {
+        eq: (column: 'status', value: string) => {
+          lt: (column: 'created_at', value: string) => {
+            select: (columns: 'id, order_number') => Promise<{
+              data: CancelledOrderRow[] | null;
+              error: { message: string } | null;
+            }>;
+          };
+        };
+      };
+    };
+  };
+};
+
+const monthlySnapshotUpsertBridge = supabaseAdmin as unknown as {
+  from: (table: 'monthly_revenue_snapshots') => {
+    upsert: (values: MonthlyRevenueInsert) => Promise<{ error: { message: string } | null }>;
+  };
+};
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
@@ -74,7 +103,7 @@ export async function GET(request: NextRequest) {
   // starts checkout but abandons without paying.
   try {
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-    const { data: cancelledOrders, error: cancelError } = await supabaseAdmin
+    const { data: cancelledOrders, error: cancelError } = await ordersCancelBridge
       .from('orders')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('payment_method', 'mercadopago')
@@ -127,7 +156,8 @@ export async function GET(request: NextRequest) {
           .select('total, currency, status')
           .gte('created_at', startOfMonth)
           .lte('created_at', endOfMonth)
-          .in('status', ['paid', 'invoiced', 'processing', 'shipped', 'delivered']) as { data: Array<{ total: number; currency: string; status: string }> | null };
+          .in('status', ['paid', 'invoiced', 'processing', 'shipped', 'delivered'])
+          .returns<OrderSnapshotRow[]>();
 
         if (snapshotDataError) {
           throw new Error(snapshotDataError.message);
@@ -136,12 +166,16 @@ export async function GET(request: NextRequest) {
         const totalUYU = snapshotData?.filter(o => o.currency === 'UYU').reduce((s, o) => s + (o.total || 0), 0) || 0;
         const totalUSD = snapshotData?.filter(o => o.currency === 'USD').reduce((s, o) => s + (o.total || 0), 0) || 0;
 
-        const { error: upsertSnapshotError } = await supabaseAdmin.from('monthly_revenue_snapshots').upsert({
+        const snapshotInsert: MonthlyRevenueInsert = {
           month: startOfMonth.split('T')[0],
           revenue_uyu: totalUYU,
           revenue_usd: totalUSD,
           order_count: snapshotData?.length || 0,
-        });
+        };
+
+        const { error: upsertSnapshotError } = await monthlySnapshotUpsertBridge
+          .from('monthly_revenue_snapshots')
+          .upsert(snapshotInsert);
 
         if (upsertSnapshotError) {
           throw new Error(upsertSnapshotError.message);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { render } from '@react-email/components';
 import AbandonedCart from '@/emails/AbandonedCart';
+import type { Database } from '@/types/database';
 
 // Abandoned cart recovery — detects and emails customers who left items in checkout
 // Called by /api/cron/maintenance daily, or manually for testing
@@ -29,6 +30,16 @@ type RecoveryEmailItem = {
   product_name: string;
   quantity: number;
   unit_price: number;
+};
+
+type CheckoutAttemptUpdate = Database['public']['Tables']['checkout_attempts']['Update'];
+
+const checkoutAttemptsUpdateBridge = supabaseAdmin as unknown as {
+  from: (table: 'checkout_attempts') => {
+    update: (values: CheckoutAttemptUpdate) => {
+      eq: (column: 'id', value: string) => Promise<{ error: { message: string } | null }>;
+    };
+  };
 };
 
 function getErrorMessage(error: unknown): string {
@@ -85,7 +96,8 @@ export async function GET(request: NextRequest) {
       .eq('recovered', false)
       .is('recovery_email_sent_at', null)
       .order('created_at', { ascending: true })
-      .limit(MAX_PER_RUN);
+      .limit(MAX_PER_RUN)
+      .returns<CheckoutAttemptForRecovery[]>();
 
     if (fetchError) {
       console.error('Error fetching abandoned carts:', fetchError);
@@ -110,7 +122,7 @@ export async function GET(request: NextRequest) {
         .eq('customer_email', attempt.email)
         .gte('created_at', attempt.created_at)
         .limit(1)
-        .maybeSingle();
+        .maybeSingle<{ id: string }>();
 
       if (matchingOrderError) {
         console.error(`Error checking matching order for ${attempt.email}:`, matchingOrderError);
@@ -119,7 +131,7 @@ export async function GET(request: NextRequest) {
 
       if (matchingOrder) {
         // Customer completed the purchase — mark as recovered
-        const { error: markRecoveredError } = await supabaseAdmin
+        const { error: markRecoveredError } = await checkoutAttemptsUpdateBridge
           .from('checkout_attempts')
           .update({
             recovered: true,
@@ -171,7 +183,7 @@ export async function GET(request: NextRequest) {
         });
 
         if (response.ok) {
-          const { error: markSentError } = await supabaseAdmin
+          const { error: markSentError } = await checkoutAttemptsUpdateBridge
             .from('checkout_attempts')
             .update({ recovery_email_sent_at: new Date().toISOString() })
             .eq('id', attempt.id);

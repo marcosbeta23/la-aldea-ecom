@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { inngest } from '@/lib/inngest';
 import { withMinDelay } from '@/lib/utils';
+import type { Database } from '@/types/database';
 
 // POST /api/checkout-attempt
 // Saves a checkout attempt for abandoned cart recovery.
@@ -15,6 +16,54 @@ type CheckoutAttemptPayload = {
   items: unknown[];
   subtotal: number;
   currency?: string | null;
+};
+
+type CheckoutAttemptInsert = Database['public']['Tables']['checkout_attempts']['Insert'];
+type CheckoutAttemptUpdate = Database['public']['Tables']['checkout_attempts']['Update'];
+
+type CheckoutAttemptUpdateValues = CheckoutAttemptUpdate & {
+  created_at?: string;
+};
+
+type CheckoutAttemptUpsertResponse = {
+  data: { id: string } | null;
+  error: { message: string } | null;
+};
+
+const checkoutAttemptsReadBridge = supabaseAdmin as unknown as {
+  from: (table: 'checkout_attempts') => {
+    select: (columns: 'id') => {
+      eq: (column: 'email', value: string) => {
+        gte: (column: 'created_at', value: string) => {
+          eq: (column: 'recovered', value: boolean) => {
+            order: (column: 'created_at', options: { ascending: boolean }) => {
+              limit: (count: number) => {
+                maybeSingle: () => Promise<CheckoutAttemptUpsertResponse>;
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+};
+
+const checkoutAttemptsUpdateBridge = supabaseAdmin as unknown as {
+  from: (table: 'checkout_attempts') => {
+    update: (values: CheckoutAttemptUpdateValues) => {
+      eq: (column: 'id', value: string) => Promise<{ error: { message: string } | null }>;
+    };
+  };
+};
+
+const checkoutAttemptsInsertBridge = supabaseAdmin as unknown as {
+  from: (table: 'checkout_attempts') => {
+    insert: (values: CheckoutAttemptInsert) => {
+      select: (columns: 'id') => {
+        single: () => Promise<CheckoutAttemptUpsertResponse>;
+      };
+    };
+  };
 };
 
 type NormalizedCheckoutItem = {
@@ -68,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     const normalizedItems = normalizeCheckoutItems(items);
 
-    const attemptData = {
+    const attemptData: CheckoutAttemptInsert = {
       email: email.toLowerCase().trim(),
       phone: phone || null,
       customer_name: customer_name || null,
@@ -86,7 +135,7 @@ export async function POST(request: NextRequest) {
         // Check for an existing attempt from this email within the last 2 hours
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
-        const { data: existing, error: existingError } = await supabaseAdmin
+        const { data: existing, error: existingError } = await checkoutAttemptsReadBridge
           .from('checkout_attempts')
           .select('id')
           .eq('email', attemptData.email)
@@ -101,7 +150,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (existing) {
-          const { error: updateError } = await supabaseAdmin
+          const { error: updateError } = await checkoutAttemptsUpdateBridge
             .from('checkout_attempts')
             .update({
               ...attemptData,
@@ -115,7 +164,7 @@ export async function POST(request: NextRequest) {
 
           attemptId = existing.id;
         } else {
-          const { data: inserted, error: insertError } = await supabaseAdmin
+          const { data: inserted, error: insertError } = await checkoutAttemptsInsertBridge
             .from('checkout_attempts')
             .insert(attemptData)
             .select('id')

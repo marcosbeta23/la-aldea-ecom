@@ -38,6 +38,12 @@ export async function POST() {
       continue;
     }
 
+    const sections: Array<Record<string, unknown>> = article.sections.map((section) => ({
+      title: section.title,
+      content: section.content,
+      type: section.type,
+    }));
+
     const guideInsert: GuideInsert = {
       slug: article.slug,
       title: article.title,
@@ -47,7 +53,7 @@ export async function POST() {
       keywords: article.keywords,
       related_categories: article.relatedCategories,
       related_articles: article.relatedArticles,
-      sections: article.sections,
+      sections,
       date_published: article.datePublished || new Date().toISOString().split('T')[0],
       date_modified: article.dateModified || new Date().toISOString().split('T')[0],
       is_published: true,

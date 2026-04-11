@@ -4,9 +4,27 @@ import { supabaseAdmin } from '@/lib/supabase';
 import type { Database } from '@/types/database';
 
 type PartnerRow = Database['public']['Tables']['partners']['Row'];
+type PartnerUpdate = Database['public']['Tables']['partners']['Update'];
 
 const PARTNER_SELECT_COLUMNS =
   'id, name, logo_url, website_url, display_order, is_active, created_at, updated_at';
+
+type PartnerUpdateResponse = {
+  data: PartnerRow | null;
+  error: { message: string } | null;
+};
+
+const partnersUpdateBridge = supabaseAdmin as unknown as {
+  from: (table: 'partners') => {
+    update: (values: PartnerUpdate) => {
+      eq: (column: 'id', value: string) => {
+        select: (columns: string) => {
+          single: () => Promise<PartnerUpdateResponse>;
+        };
+      };
+    };
+  };
+};
 
 async function verifyAdmin() {
   const { userId } = await auth();
@@ -50,9 +68,7 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
+    const updateData: PartnerUpdate = {};
 
     if (body.name !== undefined) updateData.name = body.name;
     if (body.logo_url !== undefined) updateData.logo_url = body.logo_url;
@@ -60,12 +76,12 @@ export async function PATCH(
     if (body.display_order !== undefined) updateData.display_order = Number(body.display_order);
     if (body.is_active !== undefined) updateData.is_active = body.is_active;
 
-    const { data: partner, error } = await supabaseAdmin
+    const { data: partner, error } = await partnersUpdateBridge
       .from('partners')
       .update(updateData)
       .eq('id', id)
       .select(PARTNER_SELECT_COLUMNS)
-      .single<PartnerRow>();
+      .single();
 
     if (error) {
       console.error('Error updating partner:', error);
