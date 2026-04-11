@@ -20,7 +20,7 @@ export default function ClientHomePageElements({ featuredProducts }: { featuredP
   return (
     <>
       {featuredProducts.length > 0 && (
-        <section className="relative z-10 bg-white py-12 md:py-14">
+        <section id="featured-products" className="relative z-10 bg-white py-12 md:py-14">
           <div className="container mx-auto px-4">
              {/* Header matches app/page.tsx logic */}
             <div className="flex items-center justify-between mb-6">

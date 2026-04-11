@@ -1,5 +1,5 @@
 export default function HeroSection({ children, className }: { children: React.ReactNode; className?: string }) {
-  const baseClassName = 'relative overflow-hidden flex items-center touch-pan-y min-h-svh';
+  const baseClassName = 'relative overflow-hidden flex w-full touch-pan-y min-h-svh';
 
   return (
     <section

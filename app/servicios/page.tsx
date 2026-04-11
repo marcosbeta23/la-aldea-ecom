@@ -6,6 +6,7 @@ import HeroSection from '@/components/HeroSection';
 import {
     MessageCircle,
     CheckCircle,
+    ChevronDown,
     ChevronRight,
     Phone,
     ClipboardList,
@@ -16,6 +17,7 @@ import {
     Star,
     Globe,
     LifeBuoy,
+    MapPin,
 } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
 import ServicesCarousel from '@/components/services/ServicesCarousel';
@@ -210,64 +212,123 @@ export default function ServiciosPage() {
 
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/4 bg-linear-to-t from-[#050b14]/95 via-[#050b14]/30 to-transparent" />
 
-                    <div className="services-hero-content relative z-20 flex flex-1 flex-col justify-end pb-10 pt-24 sm:pb-12 sm:pt-28 lg:pb-16 lg:pt-32">
-                        <div className="services-hero-container container mx-auto px-4 lg:px-8 2xl:px-10 max-w-[1450px] 2xl:max-w-[1800px]">
-                            <div className="services-hero-kicker mb-5 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-1.5 backdrop-blur-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
-                                <span className="font-dm-mono text-[10px] font-medium uppercase tracking-[0.2em] text-blue-300">
-                                    Instalación · Diseño · Asesoramiento
-                                </span>
-                            </div>
-                            <div className="services-hero-title-wrap max-w-4xl 2xl:max-w-5xl">
-                                <p className="mb-3 font-dm-mono text-[10px] uppercase tracking-[0.24em] text-slate-300/85 sm:text-[11px]">
-                                    Soluciones profesionales en todo Uruguay
+                    <div className="services-hero-content relative z-20 flex w-full flex-1 flex-col justify-center pb-6 pt-24 sm:pb-8 sm:pt-28 lg:pb-10 lg:pt-32">
+                        <div className="services-hero-grid grid flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_480px] xl:grid-cols-[minmax(0,1fr)_520px] 2xl:grid-cols-[minmax(0,1fr)_580px] items-center w-full mx-0 gap-6 md:gap-10 lg:gap-12 xl:gap-16 px-4 lg:px-8 2xl:px-12">
+                            {/* LEFT PANEL */}
+                            <div className="services-hero-left relative flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                                <div className="services-hero-kicker mb-6 inline-flex items-center gap-2.5 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 backdrop-blur-sm self-start">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                                    <span className="font-dm-mono text-[10.5px] sm:text-[11.5px] font-medium uppercase tracking-[0.2em] text-blue-300">
+                                        Instalación · Diseño · Asesoramiento
+                                    </span>
+                                </div>
+                                <div className="services-hero-title-wrap">
+                                    <p className="mb-4 font-dm-mono text-[11px] sm:text-[12px] md:text-[13px] uppercase tracking-[0.24em] text-slate-300/85">
+                                        Soluciones profesionales en todo Uruguay
+                                    </p>
+                                    <h1 className="services-hero-title font-epilogue text-[clamp(2.5rem,8vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.02em] text-white">
+                                        <span className="block">Riego e Ingeniería</span>
+                                        <span className="block mt-1 bg-linear-to-r from-blue-300 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-sm">
+                                            Hidráulica
+                                        </span>
+                                        <span className="services-hero-subtitle mt-3 sm:mt-5 block text-[clamp(1.2rem,3vw,2.2rem)] font-semibold tracking-[0.02em] text-slate-200">
+                                            Diseño, instalación y puesta en marcha.
+                                        </span>
+                                    </h1>
+                                </div>
+
+                                <p className="services-hero-description mt-6 sm:mt-8 max-w-[540px] text-[16px] sm:text-[18px] md:text-[19px] font-light leading-relaxed text-slate-300">
+                                    Instalamos, diseñamos y ponemos en marcha sistemas hídricos en todo Uruguay.
+                                    25 años de trayectoria nos respaldan para que tu proyecto sea un éxito desde el primer día.
                                 </p>
-                                <h1 className="services-hero-title font-epilogue text-[clamp(2.2rem,7vw,4.8rem)] font-extrabold leading-[0.95] tracking-[-0.02em] text-white">
-                                    <span className="block">Riego e Ingeniería</span>
-                                    <span className="block bg-linear-to-r from-blue-300 via-cyan-300 to-blue-500 bg-clip-text text-transparent">
-                                        Hidráulica
-                                    </span>
-                                    <span className="services-hero-subtitle mt-1 block text-[clamp(1.15rem,2.9vw,2rem)] font-semibold tracking-[0.02em] text-slate-200">
-                                        Diseño, instalación y puesta en marcha.
-                                    </span>
-                                </h1>
+
+                                <div className="services-hero-ctas mt-10 sm:mt-12 flex flex-col sm:flex-row items-stretch gap-4 max-w-[500px]">
+                                    <a
+                                        href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        data-whatsapp-source="services_hero_cta"
+                                        className="flex-1 inline-flex justify-center items-center gap-2.5 rounded-xl bg-blue-600 px-6 py-4 font-epilogue text-[15px] md:text-[16px] font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.35)] transition-all duration-300 hover:bg-blue-500 hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(37,99,235,0.5)] active:scale-[0.98]"
+                                    >
+                                        <MessageCircle className="h-5 w-5" />
+                                        Contactar a un asesor
+                                    </a>
+                                    <a
+                                        href="#servicios"
+                                        className="flex-1 inline-flex justify-center items-center gap-2.5 rounded-xl border border-white/20 bg-white/10 px-6 py-4 font-epilogue text-[15px] md:text-[16px] font-semibold text-white backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-white/15 hover:-translate-y-1"
+                                    >
+                                        Ver servicios disponibles
+                                        <ArrowDown className="h-4 w-4" />
+                                    </a>
+                                </div>
                             </div>
+                            
+                            {/* RIGHT PANEL - Floating Lead Gen Card */}
+                            <div className="services-hero-right hidden lg:flex flex-col justify-center animate-in fade-in slide-in-from-right-8 duration-1000 delay-[250ms] fill-mode-backwards">
+                                <div className="relative bg-[#050b14]/60 backdrop-blur-xl border border-white/10 p-8 xl:p-10 rounded-[2rem] shadow-[0_30px_70px_rgba(0,0,0,0.6)] flex flex-col gap-6 overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
+                                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none" />
+                                    
+                                    <div className="relative z-10">
+                                        <h3 className="font-barlow text-2xl xl:text-3xl font-bold text-white tracking-tight uppercase">
+                                            ¿Tenés un proyecto <span className="text-blue-400">en mente?</span>
+                                        </h3>
+                                        <p className="mt-2 text-slate-300 font-light text-[15px] xl:text-[16px] leading-snug">
+                                            Te asesoramos sin costo ni compromiso. Escribinos para coordinar una evaluación de tus necesidades.
+                                        </p>
+                                    </div>
 
-                            <p className="services-hero-description mt-5 max-w-lg 2xl:max-w-2xl text-[15px] font-light leading-snug text-slate-300 sm:text-[17px]">
-                                Instalamos, diseñamos y ponemos en marcha sistemas hídricos en todo Uruguay.
-                                25 años de trayectoria nos respaldan.
-                            </p>
+                                    <div className="relative z-10 flex flex-col gap-4 mt-2">
+                                        <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 transition-colors hover:bg-white/10">
+                                            <div className="bg-blue-500/20 text-blue-400 p-2.5 rounded-xl shrink-0 mt-0.5">
+                                                <Calculator className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-white font-semibold text-[15px] mb-1">Presupuesto Rápido</h4>
+                                                <p className="text-white/60 text-[13px] leading-relaxed">Dimensionamos equipos y caudales para pasarte un presupuesto exacto y funcional.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 transition-colors hover:bg-white/10">
+                                            <div className="bg-blue-500/20 text-blue-400 p-2.5 rounded-xl shrink-0 mt-0.5">
+                                                <MapPin className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-white font-semibold text-[15px] mb-1">Visita Técnica</h4>
+                                                <p className="text-white/60 text-[13px] leading-relaxed">No importa dónde estés. Coordinamos visita a tu campo o predio en cualquier parte del país.</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            <div className="services-hero-ctas mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <a
-                                    href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    data-whatsapp-source="services_hero_cta"
-                                    className="inline-flex items-center gap-2.5 rounded-xl bg-blue-600 px-6 py-3.5 font-epilogue font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.35)] transition-all duration-300 hover:bg-blue-500 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(37,99,235,0.45)] active:scale-[0.98]"
-                                >
-                                    <MessageCircle className="h-5 w-5" />
-                                    Consultar instalación
-                                </a>
-                                <a
-                                    href="#servicios"
-                                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/8 px-6 py-3.5 font-epilogue font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/12"
-                                >
-                                    Ver servicios
-                                    <ArrowDown className="h-4 w-4" />
-                                </a>
+                                    <a
+                                        href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustar%C3%ADa%20agendar%20una%20visita%20técnica%20o%20solicitar%20presupuesto`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="relative z-10 mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-green-500 px-6 py-4 font-epilogue font-bold text-white shadow-[0_8px_25px_rgba(34,197,94,0.3)] transition-all hover:bg-green-400 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)]"
+                                    >
+                                        <MessageCircle className="w-5 h-5" />
+                                        WhatsApp Directo
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div className="services-hero-scroll relative z-20 mb-4 flex flex-col items-center gap-1">
-                        <span className="font-dm-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
-                            Deslizá para descubrir
+                    <a href="#servicios-scroll" className="services-hero-scroll-mobile absolute bottom-12 inset-x-0 mx-auto w-max z-20 flex flex-col items-center justify-center gap-1 lg:hidden pointer-events-auto transition-opacity hover:opacity-75">
+                        <span className="font-dm-mono text-[10px] uppercase tracking-[0.2em] text-white/70 text-center whitespace-nowrap">
+                            Desliza para ver mas
                         </span>
-                        <ChevronRight className="h-4 w-4 rotate-90 animate-bounce text-white/50" />
-                    </div>
+                        <ChevronDown className="h-4 w-4 animate-bounce text-white/70" />
+                    </a>
+
+                    <a href="#servicios-scroll" className="services-hero-scroll pointer-events-auto absolute bottom-4 inset-x-0 mx-auto w-max z-30 hidden flex-col items-center justify-center gap-1 lg:flex transition-opacity hover:opacity-75">
+                        <span className="font-dm-mono text-[10px] uppercase tracking-[0.2em] text-white/50 text-center whitespace-nowrap">
+                            Desliza para ver mas
+                        </span>
+                        <ChevronDown className="h-4 w-4 animate-bounce text-white/50" />
+                    </a>
                 </HeroSection>
 
-                <section className="border-b border-slate-200 bg-white">
+                <section id="servicios-scroll" className="border-b border-slate-200 bg-white scroll-mt-16">
                     <div className="container mx-auto px-4 py-5">
                         <div className="grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-[1.75rem] border border-slate-200 shadow-sm md:grid-cols-4 md:divide-y-0">
                             {[
@@ -289,7 +350,7 @@ export default function ServiciosPage() {
                     </div>
                 </section>
 
-                <section id="servicios" className="bg-white py-16 lg:py-20">
+                <section id="servicios" className="cv-auto bg-white py-16 lg:py-20">
                     <div className="container mx-auto px-4 mb-8">
                         <div className="max-w-3xl">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5">
@@ -319,7 +380,7 @@ export default function ServiciosPage() {
                 {/* ══════════════════════════════════════════
             HOW WE WORK — dark section
             ═══════════════════════════════════════ */}
-                <section className="bg-slate-900 py-16 lg:py-20">
+                <section className="cv-auto bg-slate-900 py-16 lg:py-20">
                     <div className="container mx-auto px-4">
 
                         <div className="mb-12 text-center">
@@ -384,7 +445,7 @@ export default function ServiciosPage() {
                 {/* ══════════════════════════════════════════
             DIFFERENTIATORS + COVERAGE — two columns
             ═══════════════════════════════════════ */}
-                <section className="bg-slate-50 py-16 lg:py-20">
+                <section className="cv-auto bg-slate-50 py-16 lg:py-20">
                     <div className="container mx-auto px-4">
                         <div className="grid gap-16 lg:grid-cols-2 lg:gap-20">
 
@@ -517,7 +578,7 @@ export default function ServiciosPage() {
                 {/* ══════════════════════════════════════════
             MAIN CTA — WHATSAPP
             ═══════════════════════════════════════ */}
-                <section className="bg-white py-16 lg:py-20">
+                <section className="cv-auto bg-white py-16 lg:py-20">
                     <div className="container mx-auto px-4">
                         <div className="mx-auto max-w-4xl">
                             <div className="group relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 shadow-[0_20px_60px_rgba(34,197,94,0.15)] transition-all duration-500 hover:shadow-[0_30px_70px_rgba(34,197,94,0.25)]">
@@ -574,7 +635,7 @@ export default function ServiciosPage() {
                 {/* ══════════════════════════════════════════
             SECONDARY LINKS
             ═══════════════════════════════════════ */}
-                <section className="border-t border-slate-200 bg-white py-10">
+                <section className="cv-auto border-t border-slate-200 bg-white py-10">
                     <div className="container mx-auto px-4">
                         <p className="mb-5 text-center font-dm-mono text-[10px] uppercase tracking-widest text-slate-400">
                             También puede interesarte

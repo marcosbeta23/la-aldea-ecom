@@ -445,6 +445,8 @@ export default async function Home() {
         {/* Hero Section */}
         <HomeHero />
 
+        <div id="scroll-target" className="scroll-mt-16" />
+
         {/* Featured Products Carousel */}
         <ClientHomePageElements featuredProducts={featuredProducts} />
 
@@ -474,7 +476,7 @@ export default async function Home() {
         </section>
 
         {/* Partners Carousel - Seamless loop */}
-        <section id="marcas" className="border-b border-slate-100 bg-white py-6 overflow-hidden">
+        <section id="marcas" className="cv-auto border-b border-slate-100 bg-white py-6 overflow-hidden">
           <div className="container mx-auto px-4 mb-4">
             <p className="text-center text-sm font-medium text-slate-500 uppercase tracking-wider">
               Marcas que nos respaldan
@@ -488,7 +490,7 @@ export default async function Home() {
 
 
         {/* Product Categories Section */}
-        <section id="categorias" className="bg-slate-50 py-16 md:py-20">
+        <section id="categorias" className="cv-auto bg-slate-50 py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <span className="inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">

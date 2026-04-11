@@ -21,7 +21,7 @@ export default function HomeHero() {
   ];
 
   return (
-    <HeroSection className="home-hero-shell relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-visible touch-pan-y">
+    <HeroSection className="home-hero-shell relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-20 2xl:pt-24 overflow-visible touch-pan-y">
 
       {/* BACKGROUND IMAGE - Full Width */}
       <div className="absolute inset-0 z-0">
@@ -39,8 +39,8 @@ export default function HomeHero() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#050b14]/90 via-[#050b14]/70 to-[#050b14]/20" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col">
-        <div className="home-hero-grid flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] 2xl:grid-cols-[minmax(0,1fr)_540px] items-center max-w-[1400px] 2xl:max-w-[1720px] w-full mx-auto gap-2 md:gap-4 lg:gap-8 xl:gap-12 2xl:gap-16 px-0 lg:px-8 xl:px-8 2xl:px-10">
+      <div className="relative z-10 flex w-full flex-1 flex-col">
+        <div className="home-hero-grid flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_430px] xl:grid-cols-[minmax(0,1fr)_500px] 2xl:grid-cols-[minmax(0,1fr)_580px] items-center w-full mx-0 gap-2 md:gap-4 lg:gap-8 xl:gap-12 2xl:gap-16 px-0 lg:px-8 xl:px-8 2xl:px-10">
           {/* LEFT PANEL */}
           <div className="home-hero-left relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-4 lg:pr-0 xl:pl-0 2xl:pl-6">
             <div className="home-hero-kicker flex items-center gap-3 mb-3 md:mb-5">
@@ -54,12 +54,12 @@ export default function HomeHero() {
               <span className="home-hero-title-line hero-outline-stroke block text-[clamp(3.5rem,10vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-transparent">Campo.</span>
             </h1>
 
-            <p className="home-hero-description text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] 2xl:max-w-[620px] mb-6 md:mb-8 hero-fade-in hero-delay-5">
+            <p className="home-hero-description text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] mb-6 md:mb-8 hero-fade-in hero-delay-5">
               Bombas de agua, sistemas de riego, instalaciones hidráulicas y más.
               Si tenés un proyecto, te asesoramos sin costo.
             </p>
 
-            <div className="home-hero-ctas flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] 2xl:max-w-[560px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
+            <div className="home-hero-ctas flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
               <a
                 href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación`}
                 target="_blank"
@@ -93,11 +93,6 @@ export default function HomeHero() {
               </Suspense>
             </div>
 
-            <div className="lg:hidden mb-3 md:mb-5 flex items-center justify-center gap-1.5 text-white/60 hero-fade-in hero-delay-5">
-              <span className="text-[10px] font-dm-mono uppercase tracking-[0.2em]">Desliza para descubrir</span>
-              <ChevronDown className="w-4 h-4 animate-bounce" />
-            </div>
-
             <div className="hidden lg:flex items-center gap-3 hero-fade-in hero-delay-5">
               <div className="w-6 h-px bg-white/20 shrink-0" />
               <div>
@@ -112,7 +107,7 @@ export default function HomeHero() {
           </div>
 
           {/* RIGHT PANEL - Floating Glassmorphism (Hidden on Mobile) */}
-          <div className="home-hero-right hidden lg:flex flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
+          <div className="home-hero-right hidden lg:flex lg:w-full lg:max-w-[580px] lg:justify-self-end flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
             <div className="home-hero-right-card relative bg-[#050b14]/55 backdrop-blur-lg border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-visible">
               {/* Glow effects - Wrap in hidden container to allow search dropdown overflow */}
               <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
@@ -181,11 +176,16 @@ export default function HomeHero() {
         </div>
       </div>
 
+      <a href="#scroll-target" className="home-hero-scroll-mobile absolute bottom-8 inset-x-0 mx-auto w-max z-20 flex flex-col items-center justify-center gap-1 lg:hidden pointer-events-auto hover:opacity-80 transition-opacity">
+        <span className="text-[10px] font-dm-mono uppercase tracking-[0.2em] text-white/75 whitespace-nowrap text-center">Desliza para ver mas</span>
+        <ChevronDown className="w-4 h-4 animate-bounce text-white/75" />
+      </a>
+
       {/* Ticker Indicator (Bouncing chevron to encourage scrolling) */}
-      <div className="home-hero-scroll-desktop pointer-events-none absolute bottom-16 lg:bottom-20 left-1/2 -translate-x-1/2 z-20 hidden lg:flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-1000 delay-[1000ms] fill-mode-backwards">
-        <span className="text-[10px] sm:text-[11px] font-dm-mono uppercase tracking-[0.2em] text-white/60 whitespace-nowrap text-center">Desliza para descubrir</span>
-        <ChevronDown className="w-5 h-5 text-white/60 animate-bounce" />
-      </div>
+      <a href="#scroll-target" className="home-hero-scroll-desktop absolute bottom-14 lg:bottom-16 inset-x-0 mx-auto w-max z-20 hidden lg:flex flex-col items-center justify-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-1000 delay-1000 fill-mode-backwards pointer-events-auto hover:-translate-y-1 transition-all">
+        <span className="text-[10px] sm:text-[11px] font-dm-mono uppercase tracking-[0.2em] text-white/80 whitespace-nowrap text-center">Desliza para ver mas</span>
+        <ChevronDown className="w-5 h-5 text-white/80 animate-bounce" />
+      </a>
 
       {/* TICKER - Integrated beautifully at the bottom */}
       <div className="relative z-10 mt-auto h-[32px] md:h-[40px] border-t border-white/5 bg-black/35 backdrop-blur-none md:backdrop-blur-sm flex items-center overflow-hidden animate-in fade-in duration-700 delay-[850ms] fill-mode-backwards">

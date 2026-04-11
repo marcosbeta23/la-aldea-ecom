@@ -293,11 +293,67 @@ const localBusinessSchema = {
   hasMap: "https://www.google.com/maps?q=-34.346943768995686,-55.76359424741334",
 };
 
+const viewportBucketsScript = `
+(() => {
+  const root = document.documentElement;
+  let rafId = null;
+
+  const widthBucket = (width) => {
+    if (width >= 2200) return 'ultra';
+    if (width >= 1600) return 'wide';
+    if (width >= 1280) return 'desktop';
+    if (width >= 1024) return 'laptop';
+    if (width >= 768) return 'tablet';
+    return 'mobile';
+  };
+
+  const heightBucket = (height) => {
+    if (height <= 700) return 'short';
+    if (height <= 820) return 'mid';
+    if (height <= 940) return 'tall';
+    return 'xtall';
+  };
+
+  const update = () => {
+    const vv = window.visualViewport;
+    const width = Math.round((vv && vv.width) || window.innerWidth || root.clientWidth || 0);
+    const height = Math.round((vv && vv.height) || window.innerHeight || root.clientHeight || 0);
+
+    root.style.setProperty('--vpw', String(width) + 'px');
+    root.style.setProperty('--vph', String(height) + 'px');
+    root.dataset.vwBucket = widthBucket(width);
+    root.dataset.vhBucket = heightBucket(height);
+    root.dataset.viewportReady = 'true';
+  };
+
+  const onResize = () => {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+    }
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      update();
+    });
+  };
+
+  update();
+  window.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('orientationchange', onResize, { passive: true });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onResize, { passive: true });
+  }
+})();
+`;
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang="es">
       <head>
+        <Script id="viewport-buckets" strategy="beforeInteractive" nonce={nonce}>
+          {viewportBucketsScript}
+        </Script>
+
         <Script
           id="crazy-egg"
           type="text/javascript"
