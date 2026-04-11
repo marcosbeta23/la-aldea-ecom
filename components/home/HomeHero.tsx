@@ -177,7 +177,7 @@ export default function HomeHero() {
       </div>
 
       {/* Ticker Indicator (Bouncing chevron to encourage scrolling) */}
-      <div className="absolute bottom-16 lg:bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-1000 delay-[1000ms] fill-mode-backwards">
+      <div className="pointer-events-none absolute bottom-16 lg:bottom-20 left-1/2 -translate-x-1/2 z-20 hidden md:flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-1000 delay-[1000ms] fill-mode-backwards">
         <span className="text-[10px] sm:text-[11px] font-dm-mono uppercase tracking-[0.2em] text-white/60 whitespace-nowrap text-center">Desliza para descubrir</span>
         <ChevronDown className="w-5 h-5 text-white/60 animate-bounce" />
       </div>
