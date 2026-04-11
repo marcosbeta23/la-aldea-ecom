@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { MessageCircle, Menu, X } from 'lucide-react';
@@ -14,36 +14,40 @@ export default function Header() {
   const isHomepage = pathname === '/';
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [lastScroll, setLastScroll] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const lastScrollRef = useRef(0);
+  const tickingRef = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScroll = window.pageYOffset;
+      if (tickingRef.current) return;
 
-      // Navbar background change
-      setScrolled(currentScroll > 50);
+      tickingRef.current = true;
+      requestAnimationFrame(() => {
+        const currentScroll = window.pageYOffset;
+        const nextScrolled = currentScroll > 50;
+        const nextHidden = currentScroll > lastScrollRef.current && currentScroll > 100;
 
-      // Hide/show logic
-      if (currentScroll > lastScroll && currentScroll > 100) {
-        // Scrolling down & past threshold
-        setHidden(true);
-      } else {
-        // Scrolling up
-        setHidden(false);
-      }
+        setScrolled((prev) => (prev === nextScrolled ? prev : nextScrolled));
+        setHidden((prev) => (prev === nextHidden ? prev : nextHidden));
 
-      setLastScroll(currentScroll);
+        lastScrollRef.current = currentScroll;
+        tickingRef.current = false;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScroll]);
+  }, []);
 
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
+  const handleMobileNavClickCapture = (event: React.MouseEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('a[href]')) {
+      setMobileMenuOpen(false);
+    }
+  };
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -72,17 +76,15 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20">
         {/* Logo */}
         <Link href="/" className="flex items-center transition-opacity hover:opacity-80" aria-label="La Aldea - Ir a página de inicio">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <Image
             src="/logo.svg"
             alt="La Aldea"
             width={180}
             height={52}
-            className={`h-12 w-auto transition-all${scrolled || !isHomepage || mobileMenuOpen
+            className={`h-12 w-auto max-w-[180px] transition-all${scrolled || !isHomepage || mobileMenuOpen
               ? ' drop-shadow-[0_2px_8px_rgba(0,0,0,0.20)]'
               : ''
               }`}
-            style={{ maxWidth: '180px' }}
           />
         </Link>
 
@@ -238,16 +240,15 @@ export default function Header() {
       <div
         className={`
           lg:hidden absolute left-0 right-0 top-full w-full
-          bg-white shadow-lg border-t border-slate-200
+          max-h-0 overflow-hidden bg-white shadow-lg border-t border-slate-200
           transition-all duration-300 ease-in-out
           ${mobileMenuOpen
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            ? 'max-h-[calc(100vh-64px)] opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 -translate-y-4 pointer-events-none'
           }
         `}
-        style={{ maxHeight: mobileMenuOpen ? 'calc(100vh - 64px)' : '0' }}
       >
-        <nav className="flex flex-col overflow-y-auto" style={{ maxHeight: 'calc(100vh - 64px)' }}>
+        <nav className="flex max-h-[calc(100vh-64px)] flex-col overflow-y-auto" onClickCapture={handleMobileNavClickCapture}>
           <Link
             href="/"
             className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/'

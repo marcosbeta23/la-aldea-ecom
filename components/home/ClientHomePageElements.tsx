@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { Product } from "@/types/database";
+import type { FeaturedProduct } from '@/components/products/FeaturedCarousel';
 
 const FeaturedCarousel = dynamic(
   () => import('@/components/products/FeaturedCarousel'),
@@ -16,7 +16,7 @@ const FeaturedCarousel = dynamic(
   }
 );
 
-export default function ClientHomePageElements({ featuredProducts }: { featuredProducts: Product[] }) {
+export default function ClientHomePageElements({ featuredProducts }: { featuredProducts: FeaturedProduct[] }) {
   return (
     <>
       {featuredProducts.length > 0 && (

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
@@ -29,18 +30,46 @@ const WhatsAppClickTracker = dynamic(() => import('@/components/common/WhatsAppC
 
 export default function ClientLayoutElements() {
   const pathname = usePathname();
+  const [enhancementsReady, setEnhancementsReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+
+    const enableEnhancements = () => setEnhancementsReady(true);
+
+    if ('requestIdleCallback' in window) {
+      idleId = (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
+        .requestIdleCallback(enableEnhancements, { timeout: 2500 });
+    } else {
+      timeoutId = setTimeout(enableEnhancements, 1200);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (idleId !== null && 'cancelIdleCallback' in window) {
+        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+      }
+    };
+  }, []);
 
   // None of these belong in the admin panel
   if (pathname?.startsWith('/admin')) return null;
 
   return (
     <>
-      <NavigationProgress />
-      <WhatsAppClickTracker />
       <CartDrawer />
-      <FloatingWhatsApp />
-      <ScrollToTop />
-      <CookieConsent />
+      {enhancementsReady && (
+        <>
+          <NavigationProgress />
+          <WhatsAppClickTracker />
+          <FloatingWhatsApp />
+          <ScrollToTop />
+          <CookieConsent />
+        </>
+      )}
     </>
   );
 }

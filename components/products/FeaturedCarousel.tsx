@@ -6,12 +6,28 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Droplets } from 'lucide-react';
 import type { Product } from '@/types/database';
 
+export type FeaturedProduct = Pick<
+  Product,
+  | 'id'
+  | 'sku'
+  | 'slug'
+  | 'name'
+  | 'category'
+  | 'images'
+  | 'price_numeric'
+  | 'currency'
+  | 'sold_count'
+  | 'availability_type'
+  | 'original_price_numeric'
+  | 'discount_percentage'
+>;
+
 interface FeaturedCarouselProps {
-  products: Product[];
+  products: FeaturedProduct[];
   autoSlideInterval?: number; // ms, default 4000
 }
 
-function getProductBadge(product: Product): string {
+function getProductBadge(product: FeaturedProduct): string {
   if (product.sold_count >= 20) return 'Más Vendido';
   if (product.sold_count >= 10) return 'Popular';
   return 'Destacado';

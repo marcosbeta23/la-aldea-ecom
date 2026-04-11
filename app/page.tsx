@@ -3,13 +3,10 @@ import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
 import { supabaseAdmin } from "@/lib/supabase";
-import type { Product } from "@/types/database";
 import {
   Droplets,
   Wrench,
   Phone,
-  MapPin,
-  Clock,
   ChevronRight,
   Sparkles,
   Shield,
@@ -22,7 +19,6 @@ import {
   MessageCircle,
   Star,
   ExternalLink,
-  TrendingUp,
   Users,
   Award,
   Settings
@@ -33,6 +29,7 @@ import ClientHomePageElements from "@/components/home/ClientHomePageElements";
 import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
 import HomeMapSection from "@/components/home/HomeMapSection";
 import { getCategoryPath } from "@/lib/category-slugs";
+import type { FeaturedProduct } from "@/components/products/FeaturedCarousel";
 
 
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
@@ -391,20 +388,12 @@ const services = [
   },
 ];
 
-// Stats for credibility
-const stats = [
-  { value: "25+", label: "Años de Experiencia" },
-  { value: "500+", label: "Proyectos Realizados" },
-  { value: "12", label: "Marcas Asociadas" },
-  { value: "19", label: "Departamentos Cubiertos" },
-];
-
 export default async function Home() {
   // Fetch featured products and partners in parallel to avoid waterfalls
   const [productsRes, partnersRes] = await Promise.all([
     supabaseAdmin
       .from('products')
-      .select('*')
+      .select('id, sku, slug, name, category, images, price_numeric, currency, sold_count, availability_type, original_price_numeric, discount_percentage')
       .eq('is_active', true)
       .eq('is_featured', true)
       // Include products with stock OR products that are on_request (ordered on demand)
@@ -415,12 +404,12 @@ export default async function Home() {
       .limit(20),
     supabaseAdmin
       .from('partners')
-      .select('*')
+      .select('name, logo_url, website_url, display_order')
       .eq('is_active', true)
       .order('display_order', { ascending: true })
   ]);
 
-  const featuredProducts = (productsRes.data || []) as Product[];
+  const featuredProducts = (productsRes.data || []) as FeaturedProduct[];
   const dbPartners = partnersRes.data;
 
   // Use DB partners with fallback to hardcoded array
@@ -527,9 +516,9 @@ export default async function Home() {
                       alt={category.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-                      quality={55}
+                      quality={45}
                       priority={i === 0} // Prioritize the first image
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     {/* Gradient overlay */}
                     <div className={`absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent`} />
@@ -566,7 +555,7 @@ export default async function Home() {
         </section>
 
         {/* Services Section - with irrigation image */}
-        <section id="servicios-home" className="py-16 md:py-24">
+        <section id="servicios-home" className="cv-auto py-16 md:py-24">
           <div className="container mx-auto px-4">
             {/* Header with image */}
             <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
@@ -639,12 +628,10 @@ export default async function Home() {
                   </div>
                   <h3 className="mt-3 font-semibold text-slate-900">{service.title}</h3>
                   <p className="mt-1 text-sm text-slate-600">{service.description}</p>
-                  <ul className="mt-3 space-y-1">
+                  <ul className="mt-3 space-y-1.5">
                     {service.features.map((feature, j) => (
-                      <li key={j} className="flex items-center gap-2 text-xs text-slate-500">
-                        <svg className="h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
+                      <li key={j} className="relative pl-4 text-xs text-slate-500">
+                        <span className="absolute left-0 top-1.5 h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden="true" />
                         {feature}
                       </li>
                     ))}
@@ -684,7 +671,7 @@ export default async function Home() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="bg-slate-900 py-20 md:py-28">
+        <section className="cv-auto bg-slate-900 py-20 md:py-28">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <span className="inline-block rounded-full bg-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-300">
@@ -713,14 +700,12 @@ export default async function Home() {
                     <p className={`text-sm ${testimonial.featured ? 'text-blue-200' : 'text-slate-400'}`}>
                       {testimonial.role}
                     </p>
-                    {/* Stars */}
-                    <div className="mt-2 flex gap-1">
-                      {[...Array(testimonial.rating)].map((_, j) => (
-                        <svg key={j} className={`h-4 w-4 ${testimonial.featured ? 'text-yellow-300' : 'text-yellow-500'}`} fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
+                    <p
+                      className={`mt-2 text-sm tracking-wide ${testimonial.featured ? 'text-yellow-300' : 'text-yellow-500'}`}
+                      aria-label={`${testimonial.rating} de 5 estrellas`}
+                    >
+                      {'★'.repeat(testimonial.rating)}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -743,7 +728,7 @@ export default async function Home() {
         </section>
 
         {/* About Section - Moved down, more compact */}
-        <section className="py-16 md:py-20">
+        <section className="cv-auto py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
               {/* Image */}
@@ -798,7 +783,7 @@ export default async function Home() {
         </section>
 
         {/* Contact CTA Section */}
-        <section id="contacto" className="py-20 md:py-28">
+        <section id="contacto" className="cv-auto py-20 md:py-28">
           <div className="container mx-auto px-4">
             <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-8 text-center md:p-16">
               <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
@@ -834,7 +819,7 @@ export default async function Home() {
         </section>
 
         {/* Map Section — bottom of page */}
-        <section className="py-12 bg-white">
+        <section className="cv-auto py-12 bg-white">
           <div className="container mx-auto px-4 pb-16">
             <HomeMapSection />
           </div>

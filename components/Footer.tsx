@@ -11,12 +11,12 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2">
             <Link href="/" className="inline-block transition-opacity hover:opacity-80">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/logo.svg"
                 alt="La Aldea"
+                width={200}
+                height={56}
                 className="h-10 w-auto sm:h-12 lg:h-14"
-                style={{ maxWidth: '200px' }}
               />
             </Link>
             <p className="mt-4 max-w-sm text-sm text-slate-600">

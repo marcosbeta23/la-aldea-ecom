@@ -8,7 +8,6 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import { PostHogProvider } from "@/components/PostHogProvider";
-import { ClerkProvider } from "@clerk/nextjs";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
 
@@ -304,7 +303,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           type="text/javascript"
           src="//script.crazyegg.com/pages/scripts/0132/5723.js"
           async
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           nonce={nonce}
         />
 
@@ -316,7 +315,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
         {/* Cloudflare Web Analytics */}
         <Script
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           src="https://static.cloudflareinsights.com/beacon.min.js"
           data-cf-beacon='{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}'
           nonce={nonce}
@@ -339,13 +338,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
-        <ClerkProvider dynamic>
-          <PostHogProvider>
-            {children}
-            <ConditionalFooter />
-            <ClientLayoutElements />
-          </PostHogProvider>
-        </ClerkProvider>
+        {children}
+        <ConditionalFooter />
+        <ClientLayoutElements />
+        <PostHogProvider />
         <Analytics nonce={nonce} />
         <VercelAnalytics />
         <SpeedInsights />

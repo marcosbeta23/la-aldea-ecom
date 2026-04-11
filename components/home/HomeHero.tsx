@@ -33,7 +33,7 @@ export default function HomeHero() {
           priority={true}
           fetchPriority="high"
           sizes="100vw"
-          quality={55}
+          quality={45}
         />
         {/* Dark overlay: lighter gradient to reveal the store image clearly */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#050b14]/90 via-[#050b14]/70 to-[#050b14]/20" />
@@ -51,7 +51,7 @@ export default function HomeHero() {
             <h1 className="font-barlow font-black leading-[0.85] uppercase tracking-tight mb-2 md:mb-5 mt-2 sm:mt-4">
               <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-white">Riego.</span>
               <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)]">Agua.</span>
-              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-transparent" style={{ WebkitTextStroke: '2px rgba(255, 255, 255, 0.5)' }}>Campo.</span>
+              <span className="hero-outline-stroke block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-transparent">Campo.</span>
             </h1>
 
             <p className="text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] mb-6 md:mb-8 hero-fade-in hero-delay-5">
@@ -96,7 +96,7 @@ export default function HomeHero() {
             <div className="hidden lg:flex items-center gap-3 hero-fade-in hero-delay-5">
               <div className="w-6 h-px bg-white/20 shrink-0" />
               <div>
-                <div className="font-fraunces italic font-light text-[15px] md:text-[16px] text-white tracking-wide" style={{ fontVariationSettings: "'opsz' 48" }}>
+                <div className="hero-fraunces-opsz font-fraunces italic font-light text-[15px] md:text-[16px] text-white tracking-wide">
                   Martín Betancor
                 </div>
                 <div className="font-dm-mono text-[8.5px] tracking-[0.15em] uppercase text-slate-400 mt-0.5">
@@ -128,7 +128,7 @@ export default function HomeHero() {
               <div className="relative z-10">
                 <div className="hidden md:block font-dm-mono text-[8.5px] md:text-[9.5px] tracking-[0.2em] uppercase text-blue-300 mb-1.5 font-medium">Nuestro enfoque</div>
                 <div className="font-barlow font-bold text-[18px] md:text-[24px] text-white tracking-wide uppercase leading-[1.05]">
-                  Sistemas que <em className="italic text-blue-400 not-italic">resuelven</em> problemas.
+                  Sistemas que <em className="not-italic text-blue-400">resuelven</em> problemas.
                 </div>
               </div>
 

@@ -64,7 +64,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
             className="object-cover transform-gpu transition-transform duration-500 group-hover:scale-105"
             priority={priority}
-            quality={80}
+            quality={65}
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-slate-100">

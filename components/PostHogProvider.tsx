@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense, useState, useRef, ReactNode, ComponentType } from 'react';
+import { useEffect, Suspense, useState, useRef, ComponentType } from 'react';
 import type { PostHog } from 'posthog-js';
 import { trackPageView } from '@/lib/analytics';
 
@@ -36,16 +36,59 @@ function PostHogPageview({ client }: { client: PostHog }) {
   return null;
 }
 
-export function PostHogProvider({ children }: { children: ReactNode }) {
+function hasAnalyticsConsent(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if (!consent) return false;
+    const parsed = JSON.parse(consent) as { analytics?: boolean };
+    return Boolean(parsed.analytics);
+  } catch {
+    return false;
+  }
+}
+
+export function PostHogProvider() {
   const pathname = usePathname();
-  const [PHProvider, setPHProvider] = useState<ComponentType<{ client: PostHog; children?: ReactNode }> | null>(null);
+  const [PHProvider, setPHProvider] = useState<ComponentType<{ client: PostHog; children?: React.ReactNode }> | null>(null);
   const [client, setClient] = useState<PostHog | null>(null);
+  const [analyticsConsent, setAnalyticsConsent] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const updateConsent = () => {
+      setAnalyticsConsent(hasAnalyticsConsent());
+    };
+
+    updateConsent();
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === COOKIE_CONSENT_KEY) {
+        updateConsent();
+      }
+    };
+
+    const handleConsentGranted = () => updateConsent();
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('laaldea:analytics-consent-granted', handleConsentGranted as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('laaldea:analytics-consent-granted', handleConsentGranted as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !POSTHOG_KEY) return;
 
     // Never initialize tracking on admin routes.
     if (pathname?.startsWith('/admin')) return;
+
+    // Respect cookie consent: avoid loading PostHog runtime before opt-in.
+    if (!analyticsConsent) return;
 
     if (client || PHProvider) return;
 
@@ -57,9 +100,16 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
       if (document.readyState !== 'complete') {
         await new Promise(resolve => window.addEventListener('load', resolve, { once: true }));
       }
-      
-      // Wait another 3s for main thread to settle
-      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Prefer browser idle time so scripts don't compete with first interactions.
+      await new Promise<void>((resolve) => {
+        if ('requestIdleCallback' in window) {
+          (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
+            .requestIdleCallback(() => resolve(), { timeout: 3500 });
+        } else {
+          setTimeout(resolve, 1800);
+        }
+      });
 
       try {
         const [
@@ -70,24 +120,14 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
           import('posthog-js/react')
         ]);
 
-        let persistence: 'localStorage+cookie' | 'memory' = 'memory';
-        try {
-          const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-          if (consent) {
-            const parsed = JSON.parse(consent);
-            if (parsed.analytics) {
-              persistence = 'localStorage+cookie';
-            }
-          }
-        } catch {}
-
         posthogInstance.init(POSTHOG_KEY, {
           api_host: POSTHOG_HOST,
           person_profiles: 'identified_only',
-          capture_pageview: false, 
-          capture_pageleave: true,
-          capture_dead_clicks: true,
-          persistence,
+          capture_pageview: false,
+          capture_pageleave: false,
+          capture_dead_clicks: false,
+          autocapture: false,
+          persistence: 'localStorage+cookie',
           disable_session_recording: true,
           disable_surveys: true,
           before_send: (event) => {
@@ -101,38 +141,25 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
 
             return event;
           },
-          loaded: (ph) => {
-            // Only start recording on user interaction to save bandwidth/CPU
-            const startRecording = () => {
-              ph.startSessionRecording();
-              window.removeEventListener('pointerdown', startRecording);
-              window.removeEventListener('keydown', startRecording);
-            };
-            window.addEventListener('pointerdown', startRecording, { once: true });
-            window.addEventListener('keydown', startRecording, { once: true });
-          },
         });
 
         setClient(posthogInstance);
-        setPHProvider(() => Provider as ComponentType<{ client: PostHog; children?: ReactNode }>);
+        setPHProvider(() => Provider as ComponentType<{ client: PostHog; children?: React.ReactNode }>);
       } catch (err) {
         console.error('Failed to load PostHog async:', err);
       }
     };
 
     initPostHog();
-  }, [pathname, client, PHProvider]);
+  }, [pathname, client, PHProvider, analyticsConsent]);
 
   return (
-    <>
-      {PHProvider && client && (
-        <PHProvider client={client}>
-          <Suspense fallback={null}>
-            <PostHogPageview client={client} />
-          </Suspense>
-        </PHProvider>
-      )}
-      {children}
-    </>
+    PHProvider && client ? (
+      <PHProvider client={client}>
+        <Suspense fallback={null}>
+          <PostHogPageview client={client} />
+        </Suspense>
+      </PHProvider>
+    ) : null
   );
 }

@@ -37,6 +37,21 @@ body {
   font-family: var(--font-epilogue), system-ui, sans-serif;
 }
 
+/* Defer paint/layout work for below-the-fold sections while preserving SEO content. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
+}
+
+/* Hero typography helpers moved from inline styles. */
+.hero-outline-stroke {
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.5);
+}
+
+.hero-fraunces-opsz {
+  font-variation-settings: 'opsz' 48;
+}
+
 /* Hero / full-viewport sections: use svh to lock to smallest viewport */
 /* (toolbars visible = no jump when they hide) */
 .min-h-svh {

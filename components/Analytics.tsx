@@ -1,11 +1,58 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect, useState } from "react";
 
 const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID || "G-K06VE6W4MY";
+const COOKIE_CONSENT_KEY = "laaldea_cookie_consent";
+
+function hasAnalyticsConsent(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if (!consent) return false;
+    const parsed = JSON.parse(consent) as { analytics?: boolean };
+    return Boolean(parsed.analytics);
+  } catch {
+    return false;
+  }
+}
 
 export function Analytics({ nonce }: { nonce?: string }) {
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updateConsent = () => {
+      setAnalyticsEnabled(hasAnalyticsConsent());
+    };
+
+    updateConsent();
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === COOKIE_CONSENT_KEY) {
+        updateConsent();
+      }
+    };
+
+    const handleConsentGranted = () => updateConsent();
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("laaldea:analytics-consent-granted", handleConsentGranted as EventListener);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("laaldea:analytics-consent-granted", handleConsentGranted as EventListener);
+    };
+  }, []);
+
   if (process.env.NODE_ENV !== "production") {
+    return null;
+  }
+
+  if (!analyticsEnabled) {
     return null;
   }
 
@@ -14,10 +61,10 @@ export function Analytics({ nonce }: { nonce?: string }) {
       {/* Google Analytics 4 */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         nonce={nonce}
       />
-      <Script id="google-analytics" strategy="afterInteractive" nonce={nonce}>
+      <Script id="google-analytics" strategy="lazyOnload" nonce={nonce}>
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
+const MAX_GTAG_RETRIES = 8;
 
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
@@ -28,19 +29,23 @@ export default function CookieConsent() {
     setShowBanner(false);
 
     // Enable GA4 analytics storage
-    const fireConsent = () => {
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('consent', 'update', { analytics_storage: 'granted' });
-      } else if (typeof window !== 'undefined') {
-        setTimeout(fireConsent, 500);
+    const fireConsent = (attempt = 0) => {
+      const gtag = (window as Window & {
+        gtag?: (action: string, command: string, params: { analytics_storage: string }) => void;
+      }).gtag;
+
+      if (typeof window !== 'undefined' && typeof gtag === 'function') {
+        gtag('consent', 'update', { analytics_storage: 'granted' });
+      } else if (typeof window !== 'undefined' && attempt < MAX_GTAG_RETRIES) {
+        setTimeout(() => fireConsent(attempt + 1), 500);
       }
     };
     fireConsent();
 
-    // Enable PostHog persistent storage
-    import('posthog-js').then(({ default: ph }) => {
-      ph.set_config({ persistence: 'localStorage+cookie' });
-    });
+    // Notify deferred analytics loaders that consent is now granted.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('laaldea:analytics-consent-granted'));
+    }
   };
 
   if (!showBanner) return null;
