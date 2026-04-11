@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyMPSignature, getMPPayment } from '@/lib/mercadopago';
-import { alertPaymentFailed, alertFraudAttempt, alertOutOfStockAfterPayment } from '@/lib/telegram';
+import { alertPaymentFailed, alertFraudAttempt, alertOutOfStockAfterPayment, sendTelegramAlert } from '@/lib/telegram';
 import { inngest } from '@/lib/inngest';
 
 // 🔒 SECURE MERCADOPAGO WEBHOOK - MVP ORDER FLOW
@@ -9,28 +9,92 @@ import { inngest } from '@/lib/inngest';
 
 const STOCK_RESERVATION_HOURS = 24; // How long to hold stock
 
+type WebhookOrder = {
+  id: string;
+  order_number: string;
+  total: number;
+  currency: string | null;
+  status: string;
+  mp_payment_id: string | null;
+  coupon_code: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
+  customer_phone: string | null;
+};
+
+type ReservationResult = {
+  success: boolean;
+  expires_at?: string;
+  failed_products?: Array<{ name?: string }>;
+};
+
+type OrderUpdateData = {
+  mp_payment_id?: string;
+  payment_method?: string | null;
+  meta?: unknown;
+  paid_at?: string;
+  status?: string;
+  notes?: string;
+  stock_reserved?: boolean;
+  reserved_until?: string;
+};
+
+type OrdersWriteTable = {
+  update: (values: OrderUpdateData) => {
+    eq: (column: 'id', value: string) => Promise<unknown>;
+  };
+};
+
+type CouponsWriteTable = {
+  update: (values: { current_uses: number }) => {
+    eq: (column: 'code', value: string) => Promise<unknown>;
+  };
+};
+
+type OrderLogsWriteTable = {
+  insert: (values: {
+    order_id: string;
+    action: string;
+    old_status: string;
+    new_status: string;
+    details?: Record<string, unknown>;
+    created_by: string;
+  }) => Promise<unknown>;
+};
+
+const rpcClient = supabaseAdmin as unknown as {
+  rpc: (
+    fn: 'reserve_stock_for_order',
+    args: { p_order_id: string; p_reservation_hours: number }
+  ) => Promise<{ data: ReservationResult | null; error: { message: string } | null }>;
+};
+
+const ordersWriteTable = supabaseAdmin.from('orders') as unknown as OrdersWriteTable;
+const couponsWriteTable = supabaseAdmin.from('discount_coupons') as unknown as CouponsWriteTable;
+const orderLogsWriteTable = supabaseAdmin.from('order_logs') as unknown as OrderLogsWriteTable;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
     // 🔐 VERIFY WEBHOOK SIGNATURE
     const webhookSecret = process.env.MP_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const signature = request.headers.get('x-signature');
-      const requestId = request.headers.get('x-request-id');
+    if (!webhookSecret) {
+      console.error('FATAL: MP_WEBHOOK_SECRET not configured');
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
 
-      if (!signature || !requestId) {
-        console.error('Missing signature headers');
-        return NextResponse.json({ received: false }, { status: 401 });
-      }
+    const signature = request.headers.get('x-signature');
+    const requestId = request.headers.get('x-request-id');
 
-      if (!verifyMPSignature(signature, requestId, body)) {
-        console.error('Invalid webhook signature');
-        return NextResponse.json({ received: false }, { status: 401 });
-      }
-    } else if (process.env.NODE_ENV === 'production') {
-      console.error('CRITICAL: MP_WEBHOOK_SECRET not set in production');
-      return NextResponse.json({ received: false }, { status: 500 });
+    if (!signature || !requestId) {
+      console.error('Missing signature headers');
+      return NextResponse.json({ received: false }, { status: 401 });
+    }
+
+    if (!verifyMPSignature(signature, requestId, body)) {
+      console.error('Invalid webhook signature');
+      return NextResponse.json({ received: false }, { status: 401 });
     }
     
     // 1️⃣ EXTRACT PAYMENT ID
@@ -61,16 +125,16 @@ export async function POST(request: NextRequest) {
     // 3️⃣ FETCH ORDER FROM DATABASE
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('*')
+      .select('id, order_number, total, currency, status, mp_payment_id, coupon_code, customer_name, customer_email, customer_phone')
       .eq('id', orderId)
-      .single() as { data: any; error: any };
+      .single() as { data: WebhookOrder | null; error: unknown };
     
     if (orderError || !order) {
       console.error('Order not found:', orderId);
       return NextResponse.json({ received: true });
     }
     
-    const orderData: any = order;
+    const orderData = order;
     
     // 4️⃣ IDEMPOTENCY CHECK - Don't process same payment twice
     const processedStatuses = ['paid', 'invoiced', 'shipped', 'delivered'];
@@ -103,8 +167,7 @@ export async function POST(request: NextRequest) {
       });
       
       // Mark as cancelled and log event
-      await (supabaseAdmin as any)
-        .from('orders')
+      await ordersWriteTable
         .update({
           status: 'cancelled',
           notes: `⚠️ FRAUDE POTENCIAL: Monto esperado ${expectedAmount}, pagado ${paidAmount}`,
@@ -127,7 +190,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 6️⃣ PREPARE BASE UPDATE DATA
-    const updateData: any = {
+    const updateData: OrderUpdateData = {
       mp_payment_id: paymentId,
       payment_method: payment.payment_type_id,
       meta: payment,
@@ -138,11 +201,10 @@ export async function POST(request: NextRequest) {
       updateData.paid_at = new Date().toISOString();
       
       // 🔒 ATOMIC STOCK RESERVATION using RPC function
-      const { data: reservationResult, error: reserveError } = await (supabaseAdmin as any)
-        .rpc('reserve_stock_for_order', {
-          p_order_id: orderData.id,
-          p_reservation_hours: STOCK_RESERVATION_HOURS,
-        });
+      const { data: reservationResult, error: reserveError } = await rpcClient.rpc('reserve_stock_for_order', {
+        p_order_id: orderData.id,
+        p_reservation_hours: STOCK_RESERVATION_HOURS,
+      });
       
       if (reserveError) {
         console.error('Stock reservation RPC error:', reserveError);
@@ -171,7 +233,7 @@ export async function POST(request: NextRequest) {
         updateData.stock_reserved = false;
         
         const failedProducts = reservationResult?.failed_products || [];
-        const failedNames = failedProducts.map((p: any) => p.name).join(', ');
+        const failedNames = failedProducts.map((p) => p.name || 'Producto desconocido').join(', ');
         updateData.notes = `Sin stock suficiente: ${failedNames}. Contactar cliente.`;
         
         console.log(`⚠️ Order ${orderData.order_number} - Insufficient stock:`, failedProducts);
@@ -185,7 +247,7 @@ export async function POST(request: NextRequest) {
         alertOutOfStockAfterPayment(
           orderData.order_number,
           orderData.customer_name || '',
-          failedProducts.map((p: any) => p.name || 'Producto desconocido')
+          failedProducts.map((p) => p.name || 'Producto desconocido')
         ).catch(() => {});
       }
       
@@ -195,14 +257,12 @@ export async function POST(request: NextRequest) {
           .from('discount_coupons')
           .select('current_uses')
           .eq('code', orderData.coupon_code)
-          .single() as { data: any };
+          .single() as { data: { current_uses: number | null } | null };
         
         if (coupon) {
-          const couponData: any = coupon;
-            await (supabaseAdmin as any)
-              .from('discount_coupons')
+            await couponsWriteTable
               .update({ 
-                current_uses: (couponData.current_uses || 0) + 1 
+                current_uses: (coupon.current_uses || 0) + 1 
               })
               .eq('code', orderData.coupon_code);
         }
@@ -236,13 +296,20 @@ export async function POST(request: NextRequest) {
           data: {
             orderId: orderData.id,
             orderNumber: orderData.order_number,
-            reservedUntil: reservationResult.expires_at,
+            reservedUntil: reservationResult.expires_at || new Date().toISOString(),
           },
         });
       }
 
       inngest.send(inngestEvents).catch((err) => {
         console.error('[Inngest] Failed to send payment events:', err);
+        const message = err instanceof Error ? err.message.replace(/[<>]/g, '') : 'Error desconocido';
+        sendTelegramAlert(
+          `<b>Fallo Inngest en webhook MP</b>\n` +
+          `Pedido: #${orderData.order_number}\n` +
+          `Estado pago: ${payment.status}\n` +
+          `Error: ${message}`
+        ).catch(() => {});
       });
 
     } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
@@ -270,8 +337,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 8️⃣ UPDATE ORDER
-    await (supabaseAdmin as any)
-      .from('orders')
+    await ordersWriteTable
       .update(updateData)
       .eq('id', orderData.id);
     
@@ -294,8 +360,7 @@ async function logOrderEvent(
   details?: Record<string, unknown>
 ) {
   try {
-    await (supabaseAdmin as any)
-      .from('order_logs')
+    await orderLogsWriteTable
       .insert({
         order_id: orderId,
         action,

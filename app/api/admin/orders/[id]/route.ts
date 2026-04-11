@@ -4,6 +4,75 @@ import { supabaseAdmin } from '@/lib/supabase';
 import type { OrderStatus } from '@/types/database';
 import { inngest } from '@/lib/inngest';
 
+type AdminOrder = {
+  id: string;
+  order_number: string;
+  status: string;
+  customer_name: string | null;
+  customer_email: string | null;
+  customer_phone: string | null;
+  total: number;
+  subtotal: number;
+  discount_amount: number;
+  coupon_code: string | null;
+  currency: string | null;
+  payment_method: string | null;
+  mp_payment_id: string | null;
+  mp_preference_id: string | null;
+  shipping_address: string | null;
+  shipping_city: string | null;
+  shipping_department: string | null;
+  shipping_type: string | null;
+  shipping_cost: number | null;
+  notes: string | null;
+  stock_reserved: boolean | null;
+  invoice_number: string | null;
+  invoice_type: string | null;
+  invoice_tax_id: string | null;
+  invoice_business_name: string | null;
+  invoiced_at: string | null;
+  invoice_file_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AdminOrderItem = {
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  currency: string;
+  unit_price_converted: number | null;
+  subtotal: number;
+  created_at: string;
+};
+
+type AdminOrderWithItems = AdminOrder & {
+  order_items: AdminOrderItem[];
+};
+
+const ORDER_SELECT_FIELDS = 'id, order_number, status, customer_name, customer_email, customer_phone, total, subtotal, discount_amount, coupon_code, currency, payment_method, mp_payment_id, mp_preference_id, shipping_address, shipping_city, shipping_department, shipping_type, shipping_cost, notes, stock_reserved, invoice_number, invoice_type, invoice_tax_id, invoice_business_name, invoiced_at, invoice_file_url, created_at, updated_at';
+const ORDER_ITEM_SELECT_FIELDS = 'id, order_id, product_id, product_name, quantity, unit_price, currency, unit_price_converted, subtotal, created_at';
+
+const ordersWriteTable = supabaseAdmin.from('orders') as unknown as {
+  update: (values: Record<string, unknown>) => {
+    eq: (column: 'id', value: string) => Promise<{ error: unknown }>;
+  };
+};
+
+const orderLogsWriteTable = supabaseAdmin.from('order_logs') as unknown as {
+  insert: (values: {
+    order_id: string;
+    action: string;
+    old_status: string | undefined;
+    new_status: unknown;
+    details: Record<string, unknown>;
+    created_by: string;
+  }) => Promise<{ error?: unknown }>;
+};
+
 // Verify admin authentication via Clerk
 async function verifyAdmin() {
   const { userId } = await auth();
@@ -83,8 +152,7 @@ export async function PATCH(
     }
     
     // Direct update with type assertion
-    const { error: updateError } = await (supabaseAdmin as any)
-      .from('orders')
+    const { error: updateError } = await ordersWriteTable
       .update(updateData)
       .eq('id', id);
     
@@ -102,9 +170,9 @@ export async function PATCH(
     // Fetch updated order
     const { data: updatedOrder } = await supabaseAdmin
       .from('orders')
-      .select('*')
+      .select(ORDER_SELECT_FIELDS)
       .eq('id', id)
-      .single() as { data: any };
+      .single() as { data: AdminOrder | null };
     
     // Fire Inngest event for background notifications
     if (body.status && updatedOrder && oldStatus !== body.status) {
@@ -164,8 +232,7 @@ export async function PATCH(
 // Helper to log order events
 async function logOrderEvent(orderId: string, action: string, oldStatus: string | undefined, details: Record<string, unknown>) {
   try {
-    await (supabaseAdmin as any)
-      .from('order_logs')
+    await orderLogsWriteTable
       .insert({
         order_id: orderId,
         action,
@@ -196,9 +263,9 @@ export async function GET(
   try {
     const { data: order, error } = await supabaseAdmin
       .from('orders')
-      .select('*, order_items(*)')
+      .select(`${ORDER_SELECT_FIELDS}, order_items(${ORDER_ITEM_SELECT_FIELDS})`)
       .eq('id', id)
-      .single() as { data: any; error: any };
+      .single() as { data: AdminOrderWithItems | null; error: unknown };
     
     if (error || !order) {
       return NextResponse.json(

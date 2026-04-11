@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Barlow_Condensed, Fraunces, Epilogue, DM_Mono } from "next/font/google";
+import { Barlow_Condensed, Fraunces, Epilogue, DM_Mono } from "next/font/google";
 import { headers } from "next/headers";
-import dynamic from "next/dynamic";
 import { WHATSAPP_PHONE } from "@/lib/constants";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
@@ -12,13 +11,6 @@ import { PostHogProvider } from "@/components/PostHogProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import ClientLayoutElements from "@/components/layout/ClientLayoutElements";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
-import { Partytown } from '@qwik.dev/partytown/react';
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const barlowCondensed = Barlow_Condensed({
   variable: "--font-barlow-condensed",
@@ -62,7 +54,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   // Basic metadata
   title: {
-    default: "La Aldea - Bombas de Agua, Riego e Instalaciones Hidráulicas | Tala, Uruguay",
+    default: "La Aldea | Bombas, Riego e Hidráulica Uruguay",
     template: "%s | La Aldea",
   },
   description:
@@ -169,7 +161,7 @@ export const metadata: Metadata = {
     locale: "es_UY",
     url: siteUrl,
     siteName: "La Aldea Tala",
-    title: "La Aldea - Instalaciones Hidráulicas, bombas de agua, insumos agrícolas, Hidraulica, droguería, herramientas y más.",
+    title: "La Aldea Tala — Riego, Bombas e Hidráulica en Uruguay",
     description: "Todo lo que necesitas para tu campo, hogar y piscina en un solo lugar.",
     images: [
       {
@@ -312,7 +304,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           type="text/javascript"
           src="//script.crazyegg.com/pages/scripts/0132/5723.js"
           async
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
           nonce={nonce}
         />
 
@@ -331,10 +323,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         />
         {/* End Cloudflare Web Analytics */}
 
-        {/* Nonce-aware Partytown */}
-        <Partytown forward={['dataLayer.push', 'gtag']} nonce={nonce} />
       </head>
-      <body className={`${inter.variable} ${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
+      <body className={`${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
         <script
           type="application/ld+json"

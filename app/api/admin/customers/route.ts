@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 
 // GET /api/admin/customers?page=1&search=&sort=totalSpent&dir=desc
 // Aggregates customer data from orders table
@@ -7,6 +8,11 @@ import { supabaseAdmin } from '@/lib/supabase';
 const PER_PAGE = 20;
 
 export async function GET(request: NextRequest) {
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) {
+    return authResult.response;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -17,19 +23,21 @@ export async function GET(request: NextRequest) {
     // Fetch all paid/completed orders
     const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'invoiced', 'ready_to_invoice'];
 
-    let query = (supabaseAdmin as any)
+    let query = supabaseAdmin
       .from('orders')
       .select('id, customer_name, customer_email, customer_phone, total, currency, payment_method, status, created_at')
       .in('status', paidStatuses);
 
-    const { data: orders, error } = await query;
+    interface OrderRow { id: string; customer_name: string; customer_email: string; customer_phone: string; total: number; currency: string; payment_method: string; status: string; created_at: string; }
+    const { data, error } = await query;
+    const orders = (data || []) as OrderRow[];
 
     if (error) {
       console.error('Error fetching orders for customers:', error);
       return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
     }
 
-    if (!orders || orders.length === 0) {
+    if (orders.length === 0) {
       return NextResponse.json({
         customers: [],
         pagination: { page: 1, totalPages: 0, totalCustomers: 0 },
@@ -141,8 +149,9 @@ export async function GET(request: NextRequest) {
       customers: paginatedCustomers,
       pagination: { page, totalPages, totalCustomers },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unexpected error';
     console.error('Customers API error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

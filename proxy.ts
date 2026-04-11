@@ -75,15 +75,36 @@ export default clerkMiddleware(async (auth, request) => {
   if (isAdminRoute(request) && !isAdminLogin(request)) {
     await auth.protect();
 
+    const { sessionClaims } = await auth();
+    const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+    // Require explicit admin role for ALL admin routes.
+    if (role !== 'owner' && role !== 'staff') {
+      console.warn('Admin access denied: missing admin role', {
+        path: request.nextUrl.pathname,
+        method: request.method,
+      });
+
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { error: 'Acceso restringido al panel de administración' },
+          { status: 403 }
+        );
+      }
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+
     // 3. Role-based route protection for owner-only admin pages
     const ownerOnlyRoutes = createRouteMatcher([
       '/admin/analytics(.*)',
+      '/admin/customers(.*)',
       '/admin/search-analytics(.*)',
       '/admin/reviews(.*)',
       '/admin/partners(.*)',
       '/admin/guides(.*)',
       '/admin/reports(.*)',
       '/api/admin/analytics(.*)',
+      '/api/admin/customers(.*)',
       '/api/admin/search-analytics(.*)',
       '/api/admin/reviews(.*)',
       '/api/admin/partners(.*)',
@@ -92,9 +113,12 @@ export default clerkMiddleware(async (auth, request) => {
     ]);
 
     if (ownerOnlyRoutes(request)) {
-      const { sessionClaims } = await auth();
-      const role = (sessionClaims?.metadata as { role?: string })?.role;
       if (role !== 'owner') {
+        console.warn('Admin access denied: owner-only route', {
+          path: request.nextUrl.pathname,
+          method: request.method,
+        });
+
         // For API routes return 403, for page routes redirect to dashboard
         if (request.nextUrl.pathname.startsWith('/api/')) {
           return NextResponse.json(

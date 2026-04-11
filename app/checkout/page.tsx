@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote, Receipt, FileText, MessageCircle, Info, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, ShieldCheck, Tag, X, Check, AlertCircle, Building2, Banknote, Receipt, MessageCircle, Info, ArrowRightLeft } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import Header from '@/components/Header';
 import { trackBeginCheckout } from '@/components/Analytics';
@@ -23,7 +23,7 @@ import {
 import { getCartShippingType, getShippingOptions, getShippingZone, SHIPPING_CONFIG, DAC_RATES } from '@/lib/shipping';
 import { CheckoutFormSchema, type CheckoutFormData } from '@/lib/validators';
 import { Turnstile } from '@marsidev/react-turnstile';
-import { WHATSAPP_PHONE } from '@/lib/constants';
+import { WHATSAPP_PHONE, getBankDetails } from '@/lib/constants';
 
 
 interface CouponData {
@@ -43,8 +43,8 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<CouponData | null>(null);
   const [submitError, setSubmitError] = useState('');
-  const [freightConfirmed, setFreightConfirmed] = useState(false);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   // Fix #3 — Turnstile token (undefined if key not configured)
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -89,6 +89,8 @@ export default function CheckoutPage() {
   const watchedEmail = watch('email');
   const watchedName = watch('name');
   const watchedPhone = watch('phone');
+  const bankUYU = useMemo(() => getBankDetails('UYU'), []);
+  const bankUSD = useMemo(() => getBankDetails('USD'), []);
 
   // Track checkout step completed for shipping method
   const prevShipping = useRef<string | null>(null);
@@ -247,14 +249,22 @@ export default function CheckoutPage() {
 
   // Cart currency (may be 'mixed' if multiple currencies)
   const cartCurrency = mounted ? getCartCurrency() : 'UYU';
+  const shouldShowCurrencySelector = paymentMethod === 'transfer' || isMixed;
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (paymentMethod === 'mercadopago' && !isMixed && paymentCurrency !== 'UYU') {
+      setValue('paymentCurrency', 'UYU');
+    }
+  }, [mounted, paymentMethod, isMixed, paymentCurrency, setValue]);
 
   // Auto-reset shipping method when delivery isn't available
   useEffect(() => {
-    const canDeliver = shippingOptions.canDeliver || (cartShippingType !== 'pickup_only' && freightConfirmed);
-    if (mounted && !canDeliver && (shippingMethod === 'delivery' || shippingMethod === 'freight')) {
+    const canDeliver = shippingOptions.canDeliver || cartShippingType !== 'pickup_only';
+    if (mounted && !canDeliver && shippingMethod === 'delivery') {
       setValue('shippingMethod', 'pickup');
     }
-  }, [mounted, shippingOptions.canDeliver, cartShippingType, freightConfirmed, shippingMethod, setValue]);
+  }, [mounted, shippingOptions.canDeliver, cartShippingType, shippingMethod, setValue]);
 
   // Calculate totals — convert to payment currency when needed
   const subtotal = useMemo(() => {
@@ -433,9 +443,10 @@ export default function CheckoutPage() {
         clearCart();
         router.push(`/pedido/${data.order_number}?success=true`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Checkout error:', error);
-      setSubmitError(error.message || 'Error al procesar el pedido. Intentá de nuevo.');
+      const message = error instanceof Error ? error.message : 'Error al procesar el pedido. Intentá de nuevo.';
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -487,7 +498,7 @@ export default function CheckoutPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24">
+      <main className="min-h-screen bg-slate-50 pt-20 lg:pt-24 pb-24 lg:pb-0">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
@@ -646,8 +657,8 @@ export default function CheckoutPage() {
                       </button>
                     )}
 
-                    {/* Freight delivery option — visible after WhatsApp confirmation */}
-                    {cartShippingType !== 'pickup_only' && freightConfirmed && (
+                    {/* Freight delivery option */}
+                    {cartShippingType !== 'pickup_only' && (
                       <button
                         type="button"
                         onClick={() => setValue('shippingMethod', 'freight')}
@@ -658,10 +669,10 @@ export default function CheckoutPage() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-slate-900">Coordinar flete/envío</span>
-                          <span className="text-amber-600 text-sm font-medium">Acordado por WhatsApp</span>
+                          <span className="text-amber-600 text-sm font-medium">Confirmación por WhatsApp</span>
                         </div>
                         <p className="text-sm text-slate-500">
-                          Envío coordinado previamente con La Aldea
+                          Recomendado para productos voluminosos o entregas fuera de ruta DAC.
                         </p>
                       </button>
                     )}
@@ -669,61 +680,27 @@ export default function CheckoutPage() {
 
                   {/* Freight consultation card — always available (except pickup_only) */}
                   {cartShippingType !== 'pickup_only' && (
-                    <div className={`mt-4 p-4 border rounded-xl ${freightConfirmed
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-slate-50 border-slate-200'
-                      }`}>
+                    <div className="mt-4 p-4 border rounded-xl bg-slate-50 border-slate-200">
                       <div className="flex items-start gap-3">
-                        <Truck className={`h-5 w-5 mt-0.5 shrink-0 ${freightConfirmed ? 'text-green-600' : 'text-slate-500'
-                          }`} />
+                        <Truck className="h-5 w-5 mt-0.5 shrink-0 text-slate-500" />
                         <div className="flex-1">
-                          {!freightConfirmed ? (
-                            <>
-                              <p className="text-sm font-medium text-slate-700">
-                                {cartShippingType === 'freight'
-                                  ? 'Tu pedido incluye productos que requieren flete'
-                                  : '¿Necesitás coordinar el envío?'}
-                              </p>
-                              <p className="text-sm text-slate-500 mt-1">
-                                Coordiná el envío por WhatsApp
-                              </p>
-                              <a
-                                href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
-                              >
-                                <MessageCircle className="h-4 w-4" />
-                                Consultar por flete/envío en WhatsApp
-                              </a>
-                            </>
-                          ) : (
-                            <p className="text-sm font-medium text-green-800">
-                              Envío coordinado — ya podés seleccionar &quot;Coordinar flete/envío&quot; como método de entrega.
-                            </p>
-                          )}
-
-                          {/* Confirmation checkbox */}
-                          <label className="flex items-center gap-2 mt-3 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={freightConfirmed}
-                              onChange={(e) => {
-                                setFreightConfirmed(e.target.checked);
-                                if (!e.target.checked && shippingMethod === 'freight') {
-                                  setValue('shippingMethod', 'pickup');
-                                }
-                              }}
-                              className={`h-4 w-4 rounded border-slate-300 focus:ring-2 ${freightConfirmed
-                                  ? 'text-green-600 focus:ring-green-500'
-                                  : 'text-slate-400 focus:ring-slate-400'
-                                }`}
-                            />
-                            <span className={`text-sm font-medium ${freightConfirmed ? 'text-green-700' : 'text-slate-600'
-                              }`}>
-                              Ya coordiné el envío/flete por WhatsApp
-                            </span>
-                          </label>
+                          <p className="text-sm font-medium text-slate-700">
+                            {cartShippingType === 'freight'
+                              ? 'Tu pedido incluye productos que requieren coordinación de flete.'
+                              : 'Si preferís, también podés coordinar el envío por WhatsApp.'}
+                          </p>
+                          <p className="text-sm text-slate-500 mt-1">
+                            Al elegir &quot;Coordinar flete/envío&quot; te contactamos para confirmar costo, plazo y forma de entrega.
+                          </p>
+                          <a
+                            href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola! Quiero consultar por el costo de flete para un pedido.')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Consultar por flete/envío en WhatsApp
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -805,67 +782,48 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {/* Notes */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Notas adicionales (opcional)
-                  </label>
-                  <textarea
-                    {...register('notes')}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400"
-                    placeholder="Instrucciones especiales, horarios de entrega, etc."
-                  />
-                </div>
+                {/* Optional notes */}
+                <details className="bg-white rounded-2xl border border-slate-200 p-6">
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-slate-800">
+                    Agregar notas del pedido (opcional)
+                  </summary>
+                  <div className="mt-4">
+                    <textarea
+                      {...register('notes')}
+                      rows={3}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400"
+                      placeholder="Instrucciones especiales, horarios de entrega, etc."
+                    />
+                  </div>
+                </details>
 
                 {/* Billing / Invoice Type */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6">
                   <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                     <Receipt className="h-5 w-5 text-blue-600" />
-                    Tipo de comprobante
+                    Facturación
                   </h2>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => { setValue('invoiceType', 'consumer_final'); setValue('invoiceTaxId', ''); setValue('invoiceBusinessName', ''); }}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${invoiceType === 'consumer_final'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Receipt className={`h-5 w-5 ${invoiceType === 'consumer_final' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        <div>
-                          <p className="font-medium text-slate-900">Consumidor Final</p>
-                          <p className="text-xs text-slate-500">Sin RUT (boleta/ticket)</p>
-                        </div>
-                      </div>
-                      {invoiceType === 'consumer_final' && (
-                        <Check className="h-5 w-5 text-blue-600 mt-2" />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setValue('invoiceType', 'invoice_rut')}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${invoiceType === 'invoice_rut'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText className={`h-5 w-5 ${invoiceType === 'invoice_rut' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        <div>
-                          <p className="font-medium text-slate-900">Factura con RUT</p>
-                          <p className="text-xs text-slate-500">Con crédito fiscal</p>
-                        </div>
-                      </div>
-                      {invoiceType === 'invoice_rut' && (
-                        <Check className="h-5 w-5 text-blue-600 mt-2" />
-                      )}
-                    </button>
-                  </div>
+                  <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={invoiceType === 'invoice_rut'}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setValue('invoiceType', 'invoice_rut');
+                        } else {
+                          setValue('invoiceType', 'consumer_final');
+                          setValue('invoiceTaxId', '');
+                          setValue('invoiceBusinessName', '');
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <p className="font-medium text-slate-900">Necesito factura con RUT</p>
+                      <p className="text-xs text-slate-500">Si no marcás esta opción, emitimos comprobante consumidor final.</p>
+                    </div>
+                  </label>
 
                   {/* RUT Invoice Fields */}
                   {invoiceType === 'invoice_rut' && (
@@ -1006,10 +964,10 @@ export default function CheckoutPage() {
                         <div className="text-sm">
                           <p className="font-medium text-amber-800 mb-2">Datos para transferencia:</p>
                           <div className="space-y-1 text-amber-700">
-                            <p><span className="font-medium">Banco:</span> BROU</p>
-                            <p><span className="font-medium">Cuenta Pesos:</span> 001532748-00001</p>
-                            <p><span className="font-medium">Cuenta Dolares:</span> 001532748-00002</p>
-                            <p><span className="font-medium">Titular:</span> Martin Betancor</p>
+                            <p><span className="font-medium">Banco:</span> {bankUYU.banco || 'No configurado'}</p>
+                            <p><span className="font-medium">Cuenta Pesos:</span> {bankUYU.cuenta || 'No configurada'}</p>
+                            <p><span className="font-medium">Cuenta Dolares:</span> {bankUSD.cuenta || 'No configurada'}</p>
+                            <p><span className="font-medium">Titular:</span> {bankUYU.titular || 'No configurado'}</p>
                           </div>
                           <p className="mt-3 text-amber-800">
                             Aceptamos transferencias en <span className="font-semibold">UYU o USD</span>. Al pagar por transferencia no hay comisiones ni conversión de moneda.
@@ -1027,7 +985,7 @@ export default function CheckoutPage() {
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 sticky top-24">
+                <div ref={summaryRef} className="bg-white rounded-2xl border border-slate-200 p-6 sticky top-24">
                   <h2 className="text-lg font-semibold text-slate-900 mb-4">Resumen del pedido</h2>
 
                   {/* Items */}
@@ -1141,40 +1099,41 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Currency Selector — always available */}
-                  <div className="mb-6 p-4 bg-slate-50 rounded-xl">
-                    <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5">
-                      <ArrowRightLeft className="h-3.5 w-3.5" />
-                      Moneda de pago
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setValue('paymentCurrency', 'UYU')}
-                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${paymentCurrency === 'UYU'
-                            ? 'border-blue-600 bg-blue-50 text-blue-700'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                          }`}
-                      >
-                        $ UYU
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setValue('paymentCurrency', 'USD')}
-                        className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${paymentCurrency === 'USD'
-                            ? 'border-blue-600 bg-blue-50 text-blue-700'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                          }`}
-                      >
-                        US$ USD
-                      </button>
-                    </div>
-                    {paymentMethod === 'mercadopago' && paymentCurrency === 'USD' && (
-                      <p className="text-xs text-slate-500 mt-2">
-                        MercadoPago procesará el cobro en pesos (UYU) al tipo de cambio del día.
+                  {/* Currency Selector — only when it adds decision value */}
+                  {shouldShowCurrencySelector ? (
+                    <div className="mb-6 p-4 bg-slate-50 rounded-xl">
+                      <p className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5">
+                        <ArrowRightLeft className="h-3.5 w-3.5" />
+                        Moneda de pago
                       </p>
-                    )}
-                  </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setValue('paymentCurrency', 'UYU')}
+                          className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${paymentCurrency === 'UYU'
+                              ? 'border-blue-600 bg-blue-50 text-blue-700'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                            }`}
+                        >
+                          $ UYU
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setValue('paymentCurrency', 'USD')}
+                          className={`py-2 rounded-lg border-2 text-center text-sm font-semibold transition-colors ${paymentCurrency === 'USD'
+                              ? 'border-blue-600 bg-blue-50 text-blue-700'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                            }`}
+                        >
+                          US$ USD
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-6 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
+                      Pago en <span className="font-semibold">pesos uruguayos (UYU)</span> para acelerar el checkout.
+                    </div>
+                  )}
 
                   {/* Terms */}
                   <div className="mb-6">
@@ -1247,6 +1206,23 @@ export default function CheckoutPage() {
               </div>
             </div>
           </form>
+        </div>
+
+        {/* Mobile sticky order total */}
+        <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-4 py-3">
+          <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-slate-500">Total del pedido</p>
+              <p className="text-base font-bold text-slate-900">{formatPrice(total, displayCurrency)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="inline-flex items-center justify-center rounded-lg bg-slate-900 text-white px-4 py-2 text-sm font-semibold"
+            >
+              Ver resumen
+            </button>
+          </div>
         </div>
       </main>
     </>

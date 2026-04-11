@@ -5,18 +5,110 @@ import { getCachedQueryEmbedding } from '@/lib/search/embedding-cache';
 import { expandQuery } from '@/lib/search/query-expansion';
 import { getSearchFallback } from '@/lib/search/ai-fallback';
 import { CATEGORY_HIERARCHY } from '@/lib/categories';
+import type { Database } from '@/types/database';
+
+const MIN_SEARCH_QUERY_LENGTH = 2;
+const MAX_SEARCH_QUERY_LENGTH = 100;
+
+type SearchProductRpcRow = Database['public']['Functions']['search_products_fuzzy']['Returns'][number];
+type SearchSemanticRpcRow = Database['public']['Functions']['search_products_semantic']['Returns'][number];
+type ProductResult = Omit<SearchProductRpcRow, 'similarity'>;
+
+type SynonymLookupResponse = {
+  data: { maps_to: string } | null;
+  error: { message: string } | null;
+};
+
+type FuzzySearchResponse = {
+  data: SearchProductRpcRow[] | null;
+  error: { message: string } | null;
+};
+
+type SemanticSearchResponse = {
+  data: SearchSemanticRpcRow[] | null;
+  error: { message: string } | null;
+};
+
+const synonymBridge = supabaseAdmin as unknown as {
+  from: (table: 'search_synonyms') => {
+    select: (columns: 'maps_to') => {
+      eq: (column: 'is_active', value: boolean) => {
+        ilike: (column: 'term', value: string) => {
+          limit: (count: number) => {
+            maybeSingle: () => Promise<SynonymLookupResponse>;
+          };
+        };
+      };
+    };
+  };
+};
+
+const searchRpcBridge = supabaseAdmin as unknown as {
+  rpc: {
+    (
+      fn: 'search_products_fuzzy',
+      args: {
+        search_query: string;
+        similarity_threshold: number;
+        result_limit: number;
+      }
+    ): Promise<FuzzySearchResponse>;
+    (
+      fn: 'search_products_semantic',
+      args: {
+        query_embedding: string;
+        similarity_threshold: number;
+        result_limit: number;
+      }
+    ): Promise<SemanticSearchResponse>;
+  };
+};
+
+const searchAnalyticsBridge = supabaseAdmin as unknown as {
+  from: (table: 'search_analytics') => {
+    insert: (values: {
+      query: string;
+      results_count: number;
+      source: string;
+      metadata: {
+        is_ai_expanded: boolean;
+        has_fallback: boolean;
+      };
+    }) => Promise<unknown>;
+  };
+};
+
+function toProductResult(product: SearchProductRpcRow): ProductResult {
+  return {
+    id: product.id,
+    slug: product.slug,
+    sku: product.sku,
+    name: product.name,
+    category: product.category,
+    brand: product.brand,
+    price_numeric: product.price_numeric,
+    currency: product.currency,
+    images: product.images,
+    availability_type: product.availability_type,
+  };
+}
 
 // ── Synonym resolver ──────────────────────────────────────────────────────────
 async function resolveQuery(query: string): Promise<string> {
   const normalized = stripAccents(query.toLowerCase().trim());
   // .maybeSingle() returns null (not an error) when no row matches
-  const { data } = await (supabaseAdmin as any)
+  const { data, error } = await synonymBridge
     .from('search_synonyms')
     .select('maps_to')
     .eq('is_active', true)
     .ilike('term', normalized)
     .limit(1)
-    .maybeSingle() as { data: { maps_to: string } | null };
+    .maybeSingle();
+
+  if (error) {
+    return query;
+  }
+
   return data?.maps_to ?? query;
 }
 
@@ -24,9 +116,19 @@ async function resolveQuery(query: string): Promise<string> {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const rawQuery = searchParams.get('q')?.trim();
+    const rawQuery = searchParams.get('q') ?? '';
+    const trimmedQuery = rawQuery.trim();
 
-    if (!rawQuery || rawQuery.length < 2) {
+    if (!trimmedQuery || trimmedQuery.length < MIN_SEARCH_QUERY_LENGTH) {
+      return NextResponse.json({ suggestions: [] });
+    }
+
+    if (trimmedQuery.length > MAX_SEARCH_QUERY_LENGTH) {
+      return NextResponse.json({ suggestions: [] });
+    }
+
+    const sanitizedQuery = sanitizeSearchQuery(trimmedQuery);
+    if (!sanitizedQuery || sanitizedQuery.length < MIN_SEARCH_QUERY_LENGTH) {
       return NextResponse.json({ suggestions: [] });
     }
 
@@ -43,32 +145,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Cache keyed on raw query — synonym resolution is inside the cache miss
-    const cacheKey = `search:v2:${rawQuery.toLowerCase()}`;
+    const cacheKey = `search:v2:${sanitizedQuery.toLowerCase()}`;
     const cached = await cacheGet<{ suggestions: unknown[]; query: string }>(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
     }
 
     // Only hit the DB for synonym + search on cache miss
-    const resolvedQuery = await resolveQuery(rawQuery);
+    const resolvedQuery = sanitizeSearchQuery(await resolveQuery(sanitizedQuery));
     const normalizedQuery = stripAccents(resolvedQuery.trim());
 
-    if (normalizedQuery.length < 2) {
+    if (
+      normalizedQuery.length < MIN_SEARCH_QUERY_LENGTH ||
+      normalizedQuery.length > MAX_SEARCH_QUERY_LENGTH
+    ) {
       return NextResponse.json({ suggestions: [] });
     }
-
-    type ProductResult = {
-      id: string;
-      slug: string;
-      sku: string;
-      name: string;
-      category: string[];
-      brand: string | null;
-      price_numeric: number;
-      currency: string;
-      images: string[] | null;
-      availability_type: string;
-    };
 
     let products: ProductResult[] | null = null;
 
@@ -81,7 +173,7 @@ export async function GET(request: NextRequest) {
           type: 'websearch',
           config: 'simple',
       })
-      .limit(8) as { data: ProductResult[] | null; error: any };
+      .limit(8);
 
     if (!ftsError && ftsProducts && ftsProducts.length > 0) {
       products = ftsProducts;
@@ -89,15 +181,17 @@ export async function GET(request: NextRequest) {
 
     // Fuzzy trigram fallback (handles typos like "pisinas" → "piscinas")
     if (!products || products.length === 0) {
-      const { data: fuzzyProducts, error: fuzzyError } = await (supabaseAdmin as any)
-        .rpc('search_products_fuzzy', {
+      const { data: fuzzyProducts, error: fuzzyError } = await searchRpcBridge.rpc(
+        'search_products_fuzzy',
+        {
           search_query: normalizedQuery,
           similarity_threshold: 0.2,
           result_limit: 8,
-        }) as { data: ProductResult[] | null; error: any };
+        }
+      );
 
       if (!fuzzyError && fuzzyProducts && fuzzyProducts.length > 0) {
-        products = fuzzyProducts;
+        products = fuzzyProducts.map(toProductResult);
       }
     }
 
@@ -113,7 +207,7 @@ export async function GET(request: NextRequest) {
           `sku.ilike.%${normalizedQuery}%,` +
           `slug.ilike.%${normalizedQuery}%`
         )
-        .limit(8) as { data: ProductResult[] | null };
+        .limit(8);
 
       products = ilikeProducts;
     }
@@ -123,20 +217,22 @@ export async function GET(request: NextRequest) {
       try {
         const qEmbed = await getCachedQueryEmbedding(normalizedQuery);
         if (qEmbed) {
-          const { data: semanticResults } = await (supabaseAdmin as any)
-            .rpc('search_products_semantic', {
+          const { data: semanticResults } = await searchRpcBridge.rpc(
+            'search_products_semantic',
+            {
               query_embedding: `[${qEmbed.join(',')}]`,
               similarity_threshold: 0.70,
               result_limit: 8,
-            });
+            }
+          );
 
           if (semanticResults?.length) {
-            const ids = semanticResults.map((r: any) => r.id);
+            const ids = semanticResults.map((result) => result.id);
             const { data: fullProducts } = await supabaseAdmin
               .from('products')
               .select('id, sku, slug, name, category, brand, price_numeric, currency, images, availability_type')
               .in('id', ids)
-              .eq('is_active', true) as { data: ProductResult[] | null };
+              .eq('is_active', true);
 
             if (fullProducts?.length) products = fullProducts;
           }
@@ -156,20 +252,22 @@ export async function GET(request: NextRequest) {
         if (newTerms.length > 0) {
           // Try fuzzy search with expanded terms
           for (const term of newTerms) {
-            const { data: expandedResults } = await (supabaseAdmin as any)
-              .rpc('search_products_fuzzy', {
+            const { data: expandedResults } = await searchRpcBridge.rpc(
+              'search_products_fuzzy',
+              {
                 search_query: stripAccents(term),
                 similarity_threshold: 0.3, // Slightly stricter for expansion
                 result_limit: 5,
-              });
+              }
+            );
             
             if (expandedResults?.length) {
-              const ids = expandedResults.map((r: any) => r.id);
+              const ids = expandedResults.map((result) => result.id);
               const { data: fullProducts } = await supabaseAdmin
                 .from('products')
                 .select('id, sku, slug, name, category, brand, price_numeric, currency, images, availability_type')
                 .in('id', ids)
-                .eq('is_active', true) as { data: ProductResult[] | null };
+                .eq('is_active', true);
 
               if (fullProducts?.length) {
                 products = [...(products || []), ...fullProducts];
@@ -188,7 +286,7 @@ export async function GET(request: NextRequest) {
     if (!products || products.length === 0) {
       try {
         const availableCats = CATEGORY_HIERARCHY.map(c => c.value);
-        fallbackData = await getSearchFallback(rawQuery, availableCats);
+        fallbackData = await getSearchFallback(sanitizedQuery, availableCats);
       } catch { /* silent */ }
     }
 
@@ -237,7 +335,7 @@ export async function GET(request: NextRequest) {
       type: 'product' | 'category' | 'brand';
       id?: string;
       sku?: string;
-      slug?: string;
+      slug?: string | null;
       name: string;
       image?: string;
       price?: number;
@@ -276,19 +374,21 @@ export async function GET(request: NextRequest) {
     const productCount = products?.length || 0;
     const isAiExpanded = productCount > 0 && products?.some(p => !stripAccents(p.name.toLowerCase()).includes(normalizedQuery));
     
-    (supabaseAdmin as any)
-      .from('search_analytics')
-      .insert({
-        query: resolvedQuery.toLowerCase(),
-        results_count: productCount,
-        source: 'suggestions',
-        metadata: {
-          is_ai_expanded: isAiExpanded,
-          has_fallback: !!fallbackData,
-        }
-      })
-      .then(() => {})
-      .catch(() => {});
+    void (async () => {
+      try {
+        await searchAnalyticsBridge.from('search_analytics').insert({
+          query: resolvedQuery.toLowerCase(),
+          results_count: productCount,
+          source: 'suggestions',
+          metadata: {
+            is_ai_expanded: Boolean(isAiExpanded),
+            has_fallback: Boolean(fallbackData),
+          },
+        });
+      } catch {
+        // Analytics write failure should not fail the request.
+      }
+    })();
 
     const result = {
       suggestions: suggestions.slice(0, 10),
@@ -316,4 +416,16 @@ export async function GET(request: NextRequest) {
  */
 function stripAccents(str: string): string {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Remove control/syntax characters that can interfere with PostgREST filters
+ * while preserving readable user terms for search.
+ */
+function sanitizeSearchQuery(query: string): string {
+  return query
+    .normalize('NFKC')
+    .replace(/[<>'"`;%_,(){}\[\]\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

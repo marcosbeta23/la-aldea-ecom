@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { BookOpen, ShoppingBag, ArrowRight } from 'lucide-react';
 import { WHATSAPP_PHONE } from '@/lib/constants';
 import type { FaqArticle } from '@/lib/faq-articles';
+import { getCategoryPath } from '@/lib/category-slugs';
 
 interface RelatedLinksProps {
   article: FaqArticle;
@@ -22,7 +23,7 @@ export default function RelatedLinks({ article, relatedArticles = [] }: RelatedL
             {article.relatedCategories.map((cat) => (
               <Link
                 key={cat.value}
-                href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
+                href={getCategoryPath(cat.value)}
                 className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors group"
               >
                 <span className="text-sm font-medium text-slate-900">{cat.label}</span>

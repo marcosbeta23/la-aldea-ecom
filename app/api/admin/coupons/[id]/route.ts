@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type CouponRow = Database['public']['Tables']['discount_coupons']['Row'];
+type CouponUpdate = Database['public']['Tables']['discount_coupons']['Update'];
+
+const COUPON_SELECT_COLUMNS =
+  'id, code, description, discount_type, discount_value, min_purchase_amount, max_uses, current_uses, valid_from, valid_until, is_active, created_at, updated_at';
+
+type CouponUpdateResponse = {
+  data: CouponRow | null;
+  error: { code?: string; message: string } | null;
+};
+
+const couponsUpdateBridge = supabaseAdmin as unknown as {
+  from: (table: 'discount_coupons') => {
+    update: (values: CouponUpdate) => {
+      eq: (column: 'id', value: string) => {
+        select: (columns: string) => {
+          single: () => Promise<CouponUpdateResponse>;
+        };
+      };
+    };
+  };
+};
 
 // Verify admin authentication via Clerk
 async function verifyAdmin() {
@@ -21,9 +45,9 @@ export async function GET(
 
   const { data: coupon, error } = await supabaseAdmin
     .from('discount_coupons')
-    .select('*')
+    .select(COUPON_SELECT_COLUMNS)
     .eq('id', id)
-    .single() as { data: any; error: any };
+    .single<CouponRow>();
 
   if (error || !coupon) {
     return NextResponse.json({ error: 'Coupon not found' }, { status: 404 });
@@ -46,9 +70,7 @@ export async function PATCH(
   try {
     const body = await request.json();
     
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
+    const updateData: CouponUpdate = {};
 
     // Only update provided fields
     if (body.code !== undefined) updateData.code = body.code.toUpperCase();
@@ -61,11 +83,11 @@ export async function PATCH(
     if (body.valid_until !== undefined) updateData.valid_until = body.valid_until;
     if (body.is_active !== undefined) updateData.is_active = body.is_active;
 
-    const { data: coupon, error } = await (supabaseAdmin as any)
+    const { data: coupon, error } = await couponsUpdateBridge
       .from('discount_coupons')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(COUPON_SELECT_COLUMNS)
       .single();
 
     if (error) {
@@ -93,7 +115,7 @@ export async function DELETE(
   const { error } = await supabaseAdmin
     .from('discount_coupons')
     .delete()
-    .eq('id', id) as { error: any };
+    .eq('id', id);
 
   if (error) {
     console.error('Error deleting coupon:', error);

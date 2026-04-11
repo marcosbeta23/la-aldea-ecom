@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { supabaseAdmin } from '@/lib/supabase';
 import { Product, ProductReview } from '@/types/database';
@@ -10,6 +11,7 @@ import ProductReviews from '@/components/products/ProductReviews';
 import RelatedProducts from '@/components/products/RelatedProducts';
 import { productBreadcrumb } from '@/lib/schema';
 import { WHATSAPP_PHONE } from '@/lib/constants';
+import { getCategoryPath } from '@/lib/category-slugs';
 
 export const dynamicParams = true; // explicitly allow on-demand slugs
 
@@ -458,9 +460,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <nav aria-label="Breadcrumb" className="text-sm">
             <ol className="flex items-center flex-wrap gap-1">
               <li className="flex items-center">
-                <a href="/" className="flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:underline transition-colors">
+                <Link href="/" className="flex items-center gap-1 text-slate-600 hover:text-blue-600 hover:underline transition-colors">
                   Inicio
-                </a>
+                </Link>
               </li>
               <li className="flex items-center">
                 <span className="mx-1 text-slate-400">/</span>
@@ -471,12 +473,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {product.category && product.category.length > 0 && (
                 <li className="flex items-center">
                   <span className="mx-1 text-slate-400">/</span>
-                  <a
-                    href={`/productos?categoria=${encodeURIComponent(product.category[0])}`}
+                  <Link
+                    href={getCategoryPath(product.category[0])}
                     className="text-slate-600 hover:text-blue-600 hover:underline transition-colors"
                   >
                     {product.category[0]}
-                  </a>
+                  </Link>
                 </li>
               )}
               <li className="flex items-center">

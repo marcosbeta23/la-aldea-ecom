@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Phone, ChevronDown } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import ProductSearch from "@/components/products/ProductSearch";
@@ -42,7 +43,7 @@ export default function HomeHero() {
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] items-center max-w-[1300px] w-full mx-auto gap-2 md:gap-4 lg:gap-8 xl:gap-16 px-0 lg:px-8 xl:px-6 2xl:px-0">
           {/* LEFT PANEL */}
           <div className="relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-4 lg:pr-0 xl:pl-0">
-            <div className="hidden md:flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3 mb-3 md:mb-5">
               <div className="w-8 h-0.5 bg-blue-500 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
               <span className="font-dm-mono text-[10px] md:text-[11px] text-blue-300 tracking-[0.2em] uppercase font-medium">Más de 25 años en Tala, Canelones</span>
             </div>
@@ -72,13 +73,24 @@ export default function HomeHero() {
                   <span className="transition-transform duration-300 group-hover:translate-x-1.5">→</span>
                 </span>
               </a>
-              <a href="/productos" className="flex-1 flex flex-col gap-0.5 px-5 py-3.5 bg-white/10 text-white rounded-xl no-underline border border-white/20 cursor-pointer transition-all duration-300 group hover:border-white/40 hover:bg-white/15 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-md">
+              <Link href="/productos" className="flex-1 flex flex-col gap-0.5 px-5 py-3.5 bg-white/10 text-white rounded-xl no-underline border border-white/20 cursor-pointer transition-all duration-300 group hover:border-white/40 hover:bg-white/15 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-none md:backdrop-blur-sm">
                 <span className="font-dm-mono text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-white/80">Compra online</span>
                 <span className="font-epilogue text-[15px] md:text-[16px] font-bold tracking-tight flex items-center gap-2">
                   Ver tienda
                   <span className="transition-transform duration-300 group-hover:translate-x-1.5">→</span>
                 </span>
-              </a>
+              </Link>
+            </div>
+
+            {/* Mobile search — previously hidden behind desktop-only panel */}
+            <div className="lg:hidden max-w-[520px] mb-8 md:mb-10 hero-fade-in hero-delay-5">
+              <Suspense
+                fallback={
+                  <div className="w-full h-[50px] rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 animate-pulse" />
+                }
+              >
+                <ProductSearch compact={true} />
+              </Suspense>
             </div>
 
             <div className="hidden lg:flex items-center gap-3 hero-fade-in hero-delay-5">
@@ -96,11 +108,11 @@ export default function HomeHero() {
 
           {/* RIGHT PANEL - Floating Glassmorphism (Hidden on Mobile) */}
           <div className="hidden lg:flex flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
-            <div className="relative bg-[#050b14]/50 backdrop-blur-2xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-visible">
+            <div className="relative bg-[#050b14]/55 backdrop-blur-lg border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-visible">
               {/* Glow effects - Wrap in hidden container to allow search dropdown overflow */}
               <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
-                <div className="absolute -top-20 -right-20 w-56 h-56 bg-blue-500/20 blur-[80px] rounded-full" />
-                <div className="absolute -bottom-20 -left-10 w-48 h-48 bg-sky-400/10 blur-[60px] rounded-full" />
+                <div className="absolute -top-20 -right-20 w-56 h-56 bg-blue-500/20 blur-[56px] rounded-full" />
+                <div className="absolute -bottom-20 -left-10 w-48 h-48 bg-sky-400/10 blur-[40px] rounded-full" />
               </div>
 
               {/* Search Element (Now Functional) */}
@@ -171,12 +183,12 @@ export default function HomeHero() {
       </div>
 
       {/* TICKER - Integrated beautifully at the bottom */}
-      <div className="relative z-10 mt-auto h-[32px] md:h-[40px] border-t border-white/5 bg-black/40 backdrop-blur-md flex items-center overflow-hidden animate-in fade-in duration-700 delay-[850ms] fill-mode-backwards">
+      <div className="relative z-10 mt-auto h-[32px] md:h-[40px] border-t border-white/5 bg-black/35 backdrop-blur-none md:backdrop-blur-sm flex items-center overflow-hidden animate-in fade-in duration-700 delay-[850ms] fill-mode-backwards">
         <div className="absolute top-0 bottom-0 left-0 w-24 md:w-32 z-10 bg-gradient-to-r from-[#050b14]/90 to-transparent pointer-events-none" />
         <div className="absolute top-0 bottom-0 right-0 w-24 md:w-32 z-10 bg-gradient-to-l from-[#050b14]/90 to-transparent pointer-events-none" />
 
         <div className="flex w-max animate-scroll hover:[animation-play-state:paused]">
-          {[...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems].map((item, i) => (
+          {[...tickerItems, ...tickerItems].map((item, i) => (
             <div key={i} className="flex items-center gap-6 px-8 font-dm-mono text-[11px] tracking-[0.16em] text-white/60 uppercase whitespace-nowrap font-medium">
               {item}
               <span className="text-blue-500/50 text-xl leading-none">·</span>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { verifyOwnerAuth } from '@/lib/admin-auth';
 
 // GET /api/admin/customers/[identifier]
 // Returns full customer profile by email or phone
@@ -8,6 +9,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ identifier: string }> }
 ) {
+  const authResult = await verifyOwnerAuth();
+  if (!authResult.authorized) {
+    return authResult.response;
+  }
+
   try {
     const { identifier } = await params;
     const decoded = decodeURIComponent(identifier);
@@ -16,9 +22,9 @@ export async function GET(
     const isEmail = decoded.includes('@');
 
     // Fetch all orders for this customer
-    let query = (supabaseAdmin as any)
+    let query = supabaseAdmin
       .from('orders')
-      .select('*')
+      .select('id, order_number, status, total, currency, payment_method, created_at, customer_name, customer_email, customer_phone')
       .order('created_at', { ascending: false });
 
     if (isEmail) {
@@ -27,27 +33,31 @@ export async function GET(
       query = query.eq('customer_phone', decoded);
     }
 
-    const { data: orders, error: ordersError } = await query;
+    interface OrderRow { id: string; order_number: string; status: string; total: number; currency: string; payment_method: string; created_at: string; customer_name: string; customer_email: string; customer_phone: string; }
+    const { data, error: ordersError } = await query;
+    const orders = (data || []) as OrderRow[];
 
     if (ordersError) {
       console.error('Error fetching customer orders:', ordersError);
       return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
     }
 
-    if (!orders || orders.length === 0) {
+    if (orders.length === 0) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
     // Get order items for all orders
-    const orderIds = orders.map((o: any) => o.id);
-    const { data: allItems } = await (supabaseAdmin as any)
+    const orderIds = orders.map((o) => o.id);
+    interface OrderItem { order_id: string; product_id: string; product_name: string; quantity: number; subtotal: number; }
+    const { data: allItemsData } = await supabaseAdmin
       .from('order_items')
-      .select('*')
+      .select('order_id, product_id, product_name, quantity, subtotal')
       .in('order_id', orderIds);
+    const allItems = (allItemsData || []) as OrderItem[];
 
     // Aggregate customer stats
     const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'invoiced', 'ready_to_invoice'];
-    const paidOrders = orders.filter((o: any) => paidStatuses.includes(o.status));
+    const paidOrders = orders.filter((o) => paidStatuses.includes(o.status));
 
     let totalSpentUYU = 0;
     let totalSpentUSD = 0;
@@ -62,8 +72,7 @@ export async function GET(
 
     // Most purchased products
     const productCounts = new Map<string, { name: string; quantity: number; revenue: number }>();
-    if (allItems) {
-      for (const item of allItems) {
+    for (const item of allItems) {
         const existing = productCounts.get(item.product_id);
         if (existing) {
           existing.quantity += item.quantity;
@@ -74,7 +83,6 @@ export async function GET(
             quantity: item.quantity,
             revenue: Number(item.subtotal) || 0,
           });
-        }
       }
     }
 
@@ -107,7 +115,7 @@ export async function GET(
       firstOrder: orders[orders.length - 1]?.created_at || null,
       lastOrder: latestOrder.created_at,
       preferredPayment,
-      orders: orders.map((o: any) => ({
+      orders: orders.map((o) => ({
         id: o.id,
         order_number: o.order_number,
         status: o.status,
@@ -115,7 +123,7 @@ export async function GET(
         currency: o.currency || 'UYU',
         payment_method: o.payment_method,
         created_at: o.created_at,
-        items: (allItems || []).filter((i: any) => i.order_id === o.id).map((i: any) => ({
+        items: allItems.filter((i) => i.order_id === o.id).map((i) => ({
           product_name: i.product_name,
           quantity: i.quantity,
           subtotal: i.subtotal,
@@ -125,8 +133,9 @@ export async function GET(
     };
 
     return NextResponse.json(customer);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unexpected error';
     console.error('Customer detail API error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

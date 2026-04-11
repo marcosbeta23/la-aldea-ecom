@@ -27,6 +27,8 @@ export default function robots(): MetadataRoute.Robots {
           '/*?q=',
           // Parámetro legacy (inglés) de versiones antiguas del código
           '/*?category=',
+          // Parámetro legado en español (ahora redirige a /productos/categoria/[slug])
+          '/*?categoria=',
           // Parámetros de refinamiento de filtros — generan URLs duplicadas sin valor
           '/*?marca=',
           '/*?stock=',
@@ -78,6 +80,9 @@ export default function robots(): MetadataRoute.Robots {
         allow: ['/'],
       },
     ],
-    sitemap: 'https://laaldeatala.com.uy/sitemap.xml',
+    sitemap: [
+      'https://laaldeatala.com.uy/sitemap.xml',
+      'https://laaldeatala.com.uy/sitemap-images.xml',
+    ],
   };
 }

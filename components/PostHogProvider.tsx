@@ -1,24 +1,35 @@
 'use client';
 
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense, useState, ReactNode } from 'react';
+import { useEffect, Suspense, useState, useRef, ReactNode, ComponentType } from 'react';
+import type { PostHog } from 'posthog-js';
+import { trackPageView } from '@/lib/analytics';
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
 const POSTHOG_HOST = '/ingest';
 const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
 
-function PostHogPageview({ client }: { client: any }) {
+function PostHogPageview({ client }: { client: PostHog }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lastUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (pathname?.startsWith('/admin')) return;
+
     if (pathname && client) {
       let url = window.origin + pathname;
       const search = searchParams.toString();
       if (search) {
         url += '?' + search;
       }
+
+      // Avoid duplicate captures when React re-renders with the same URL.
+      if (lastUrlRef.current === url) return;
+      lastUrlRef.current = url;
+
       client.capture('$pageview', { $current_url: url });
+      trackPageView(pathname, search);
     }
   }, [pathname, searchParams, client]);
 
@@ -26,11 +37,17 @@ function PostHogPageview({ client }: { client: any }) {
 }
 
 export function PostHogProvider({ children }: { children: ReactNode }) {
-  const [PHProvider, setPHProvider] = useState<any>(null);
-  const [client, setClient] = useState<any>(null);
+  const pathname = usePathname();
+  const [PHProvider, setPHProvider] = useState<ComponentType<{ client: PostHog; children?: ReactNode }> | null>(null);
+  const [client, setClient] = useState<PostHog | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !POSTHOG_KEY) return;
+
+    // Never initialize tracking on admin routes.
+    if (pathname?.startsWith('/admin')) return;
+
+    if (client || PHProvider) return;
 
     // We only load PostHog in production to keep dev bundles light
     if (process.env.NODE_ENV !== 'production') return;
@@ -69,9 +86,21 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
           person_profiles: 'identified_only',
           capture_pageview: false, 
           capture_pageleave: true,
+          capture_dead_clicks: true,
           persistence,
           disable_session_recording: true,
           disable_surveys: true,
+          before_send: (event) => {
+            const maybeUrl =
+              (event?.properties?.$current_url as string | undefined) ||
+              (typeof window !== 'undefined' ? window.location.href : undefined);
+
+            if (maybeUrl?.includes('/admin')) {
+              return null;
+            }
+
+            return event;
+          },
           loaded: (ph) => {
             // Only start recording on user interaction to save bandwidth/CPU
             const startRecording = () => {
@@ -85,14 +114,14 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
         });
 
         setClient(posthogInstance);
-        setPHProvider(() => Provider);
+        setPHProvider(() => Provider as ComponentType<{ client: PostHog; children?: ReactNode }>);
       } catch (err) {
         console.error('Failed to load PostHog async:', err);
       }
     };
 
     initPostHog();
-  }, []);
+  }, [pathname, client, PHProvider]);
 
   return (
     <>

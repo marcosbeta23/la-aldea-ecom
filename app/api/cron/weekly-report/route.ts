@@ -9,9 +9,14 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@laaldeatala.com.uy';
 const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function GET(request: NextRequest) {
-  // Verify cron authentication
   const authHeader = request.headers.get('authorization');
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+
+  if (!CRON_SECRET) {
+    console.error('CRON_SECRET not configured');
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+  }
+
+  if (authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -23,11 +28,15 @@ export async function GET(request: NextRequest) {
     const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'invoiced', 'ready_to_invoice', 'paid_pending_verification'];
 
     // Fetch this week's orders
-    const { data: thisWeekOrders } = await (supabaseAdmin as any)
+    const { data: thisWeekOrders, error: thisWeekOrdersError } = await supabaseAdmin
       .from('orders')
       .select('id, status, total, currency, payment_method, order_source, created_at')
       .gte('created_at', weekStart.toISOString())
       .order('created_at', { ascending: false });
+
+    if (thisWeekOrdersError) {
+      throw new Error(thisWeekOrdersError.message);
+    }
 
     const orders = (thisWeekOrders || []) as Array<{
       id: string; status: string; total: number; currency: string | null;
@@ -35,11 +44,15 @@ export async function GET(request: NextRequest) {
     }>;
 
     // Fetch previous week's orders
-    const { data: prevWeekOrders } = await (supabaseAdmin as any)
+    const { data: prevWeekOrders, error: prevWeekOrdersError } = await supabaseAdmin
       .from('orders')
       .select('id, status, total, currency')
       .gte('created_at', prevWeekStart.toISOString())
       .lt('created_at', weekStart.toISOString());
+
+    if (prevWeekOrdersError) {
+      throw new Error(prevWeekOrdersError.message);
+    }
 
     const prevOrders = (prevWeekOrders || []) as Array<{
       id: string; status: string; total: number; currency: string | null;
@@ -97,7 +110,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 5);
 
     // Low stock alerts
-    const { data: lowStockProducts } = await (supabaseAdmin as any)
+    const { data: lowStockProducts, error: lowStockError } = await supabaseAdmin
       .from('products')
       .select('name, sku, stock')
       .eq('is_active', true)
@@ -106,15 +119,23 @@ export async function GET(request: NextRequest) {
       .order('stock', { ascending: true })
       .limit(10);
 
+    if (lowStockError) {
+      throw new Error(lowStockError.message);
+    }
+
     const lowStock = (lowStockProducts || []) as Array<{ name: string; sku: string; stock: number }>;
 
     // Out of stock
-    const { data: outOfStockProducts } = await (supabaseAdmin as any)
+    const { data: outOfStockProducts, error: outOfStockError } = await supabaseAdmin
       .from('products')
       .select('name, sku')
       .eq('is_active', true)
       .eq('stock', 0)
       .limit(10);
+
+    if (outOfStockError) {
+      throw new Error(outOfStockError.message);
+    }
 
     const outOfStock = (outOfStockProducts || []) as Array<{ name: string; sku: string }>;
 

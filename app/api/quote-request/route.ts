@@ -4,11 +4,31 @@ import { QuoteRequestSchema } from '@/lib/validators';
 import { supabaseAdmin } from '@/lib/supabase';
 import rateLimit from '@/lib/rate-limit';
 import { quoteRatelimit, getClientIp } from '@/lib/redis';
+import { escapeHtml } from '@/lib/sanitize';
 
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500,
 });
+
+type QuoteRequestInsert = {
+  name: string;
+  email: string;
+  phone: string | null | undefined;
+  message: string;
+  category: string;
+  status: 'pending';
+};
+
+type QuoteRequestsWriteTable = {
+  insert: (values: QuoteRequestInsert) => {
+    select: (columns: 'id') => {
+      single: () => Promise<{ data: { id: string } | null; error: unknown }>;
+    };
+  };
+};
+
+const quoteRequestsWriteTable = supabaseAdmin.from('quote_requests') as unknown as QuoteRequestsWriteTable;
 
 export async function POST(request: NextRequest) {
   // Rate limiting - 3 requests per minute per IP
@@ -23,7 +43,7 @@ export async function POST(request: NextRequest) {
         { status: 429 }
       );
     }
-  } else {
+  } else if (process.env.NODE_ENV !== 'production') {
     try {
       await limiter.check(3, ip); // 3 requests per minute
     } catch {
@@ -32,6 +52,12 @@ export async function POST(request: NextRequest) {
         { status: 429 }
       );
     }
+  } else {
+    console.error('quoteRatelimit unavailable in production');
+    return NextResponse.json(
+      { error: 'Servicio temporalmente no disponible.' },
+      { status: 503 }
+    );
   }
 
   try {
@@ -47,10 +73,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, email, phone, message, category } = validation.data;
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safePhone = escapeHtml(phone || '');
+    const safeMessage = escapeHtml(message);
+    const safeCategory = escapeHtml(category || 'General');
+    const safeSubjectName = name.replace(/[\r\n]+/g, ' ').trim() || 'Cliente';
 
     // Store in database
-    const { data: quote, error } = await (supabaseAdmin as any)
-      .from('quote_requests')
+    const { data: quote, error } = await quoteRequestsWriteTable
       .insert({
         name,
         email,
@@ -59,7 +90,7 @@ export async function POST(request: NextRequest) {
         category: category || 'general',
         status: 'pending',
       })
-      .select()
+      .select('id')
       .single();
 
     if (error) {
@@ -87,21 +118,21 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             sender: { name: FROM_NAME, email: FROM_EMAIL },
             to: [{ email: ADMIN_EMAIL }],
-            subject: `Nueva consulta de ${name}`,
+            subject: `Nueva consulta de ${safeSubjectName}`,
             htmlContent: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #166534;">Nueva Consulta - La Aldea</h2>
                 
                 <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <p><strong>Nombre:</strong> ${name}</p>
-                  <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-                  <p><strong>Teléfono:</strong> <a href="tel:${phone}">${phone}</a></p>
-                  <p><strong>Categoría:</strong> ${category || 'General'}</p>
+                  <p><strong>Nombre:</strong> ${safeName}</p>
+                  <p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
+                  <p><strong>Teléfono:</strong> <a href="tel:${safePhone}">${safePhone}</a></p>
+                  <p><strong>Categoría:</strong> ${safeCategory}</p>
                 </div>
                 
                 <div style="background: white; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
                   <h3 style="margin-top: 0;">Mensaje:</h3>
-                  <p style="white-space: pre-wrap;">${message}</p>
+                  <p style="white-space: pre-wrap;">${safeMessage}</p>
                 </div>
                 
                 <p style="color: #64748b; font-size: 12px; margin-top: 20px;">
@@ -133,19 +164,19 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             sender: { name: FROM_NAME, email: FROM_EMAIL },
-            to: [{ email, name }],
+            to: [{ email, name: safeSubjectName }],
             subject: 'Recibimos tu consulta - La Aldea',
             htmlContent: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #166534;">¡Gracias por contactarnos!</h2>
                 
-                <p>Hola ${name},</p>
+                <p>Hola ${safeName},</p>
                 
                 <p>Recibimos tu consulta y te responderemos a la brevedad.</p>
                 
                 <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
                   <h3 style="margin-top: 0; color: #334155;">Tu mensaje:</h3>
-                  <p style="white-space: pre-wrap; color: #64748b;">${message}</p>
+                  <p style="white-space: pre-wrap; color: #64748b;">${safeMessage}</p>
                 </div>
                 
                 <p>Mientras tanto, podés:</p>

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type GuideRow = Database['public']['Tables']['guides']['Row'];
+
+const GUIDE_SELECT_COLUMNS =
+  'id, slug, title, description, breadcrumb_label, category, keywords, related_categories, related_articles, sections, is_published, date_published, date_modified, created_at, updated_at';
 
 
 // GET all guides (admin sees all, public would see published only)
@@ -12,16 +18,16 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const publishedOnly = searchParams.get('published') === 'true';
 
-  let query = (supabaseAdmin as any)
+  let query = supabaseAdmin
     .from('guides')
-    .select('*')
+    .select(GUIDE_SELECT_COLUMNS)
     .order('updated_at', { ascending: false });
 
   if (publishedOnly) {
     query = query.eq('is_published', true);
   }
 
-  const { data: guides, error } = await query;
+  const { data: guides, error } = await query.returns<GuideRow[]>();
 
   if (error) {
     console.error('Error fetching guides:', error);
@@ -61,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'slug must be lowercase with hyphens only' }, { status: 400 });
     }
 
-    const { data: guide, error } = await (supabaseAdmin as any)
+    const { data: guide, error } = await supabaseAdmin
       .from('guides')
       .insert({
         slug,
@@ -77,7 +83,7 @@ export async function POST(request: NextRequest) {
         date_published: new Date().toISOString().split('T')[0],
         date_modified: new Date().toISOString().split('T')[0],
       })
-      .select()
+      .select(GUIDE_SELECT_COLUMNS)
       .single();
 
     if (error) {

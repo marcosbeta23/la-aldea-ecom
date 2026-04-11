@@ -10,7 +10,7 @@ interface SearchAnalyticsProps {
 export default function SearchAnalytics({ query, resultCount }: SearchAnalyticsProps) {
   useEffect(() => {
     if (query) {
-      trackSearch(query, resultCount, false);
+      trackSearch(query, resultCount, false, 'products_listing');
     }
   }, [query, resultCount]);
   return null;

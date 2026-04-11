@@ -5,7 +5,9 @@ import dynamic from 'next/dynamic';
 const LazyMap = dynamic(() => import("@/components/ui/LazyMap"), {
   ssr: false,
   loading: () => (
-    <div className="mt-8 h-[400px] w-full bg-slate-100 animate-pulse rounded-3xl" />
+    <div className="mt-8 h-96 rounded-3xl bg-gradient-to-br from-gray-200 to-gray-100 shadow-lg animate-pulse flex items-center justify-center">
+      <div className="text-gray-500 text-sm">Cargando mapa...</div>
+    </div>
   ),
 });
 

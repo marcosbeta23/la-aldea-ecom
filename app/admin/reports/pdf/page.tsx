@@ -8,10 +8,6 @@ import {
   Package, AlertTriangle, Calendar, Sparkles, Zap, Target,
   ArrowUpRight, ChevronRight, BarChart2, Tag, UserCheck, Truck,
 } from 'lucide-react';
-import {
-  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from 'recharts';
 
 const ChartPlaceholder = ({ height = 200 }: { height?: number }) => (
   <div className="animate-pulse bg-slate-100 rounded-lg w-full" style={{ height }} />
@@ -114,6 +110,13 @@ const ESTADO_COLORES: Record<string, string> = {
   paid_pending_verification: '#f59e0b',
 };
 
+type MonedaDataPoint = {
+  name: 'UYU' | 'USD';
+  value: number;
+  pedidos: number;
+  valorOriginal?: number;
+};
+
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
 function TarjetaKpi({ label, value, sub, change, icon: Icono, color }: {
@@ -163,7 +166,24 @@ export default function ReporteAnalisisPage() {
   const [data, setData] = useState<DatosAnalytics | null>(null);
   const [cargando, setCargando] = useState(false);
   const [generadoEn, setGeneradoEn] = useState('');
-  const [graficosListos, setGraficosListos] = useState(false);
+  const [rechartsLib, setRechartsLib] = useState<typeof import('recharts') | null>(null);
+
+  const {
+    BarChart,
+    Bar,
+    PieChart,
+    Pie,
+    Cell,
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Legend,
+  } = rechartsLib ?? ({} as typeof import('recharts'));
+  const graficosListos = !!rechartsLib;
 
   const [analisisIA, setAnalisisIA] = useState('');
   const [cargandoIA, setCargandoIA] = useState(false);
@@ -172,7 +192,7 @@ export default function ReporteAnalisisPage() {
   const [estadoProveedor, setEstadoProveedor] = useState<{ claude: boolean; groq: boolean } | null>(null);
 
   useEffect(() => {
-    import('recharts').then(() => setGraficosListos(true)).catch(() => { });
+    import('recharts').then(setRechartsLib).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -264,7 +284,7 @@ export default function ReporteAnalisisPage() {
     ];
   }, [data]);
 
-  const dataMoneda = useMemo(() => data ? [
+  const dataMoneda = useMemo<MonedaDataPoint[]>(() => data ? [
     { name: 'UYU', value: data.summary.totalRevenueUYU, pedidos: data.summary.paidOrdersUYU },
     { name: 'USD', value: data.summary.totalRevenueUSD * data.exchangeRate, pedidos: data.summary.paidOrdersUSD, valorOriginal: data.summary.totalRevenueUSD },
   ] : [], [data]);
@@ -740,12 +760,12 @@ export default function ReporteAnalisisPage() {
                         <PieChart>
                           <Pie data={dataMoneda} cx="50%" cy="50%" innerRadius={38} outerRadius={58}
                             paddingAngle={4} dataKey="value"
-                            label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''} ${(((percent ?? 0) * 100).toFixed(0))}%`}
                             labelLine={false}>
                             {dataMoneda.map((_, i) => <Cell key={i} fill={COLORES[i % COLORES.length]} />)}
                           </Pie>
                           <Tooltip
-                            formatter={(value: number | undefined, _name: string | undefined, props: any) => {
+                            formatter={(value: number | undefined, _name: string | undefined, props: { payload?: { name?: string; valorOriginal?: number } }) => {
                               const item = props.payload;
                               const v = value ?? 0;
                               if (item?.name === 'USD') return [`${fmtUSD(item.valorOriginal ?? 0)} (${fmt(v)})`, 'Ingresos'];
@@ -766,7 +786,7 @@ export default function ReporteAnalisisPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-slate-900">
-                            {item.name === 'USD' ? fmtUSD((item as any).valorOriginal || 0) : fmt(item.value)}
+                            {item.name === 'USD' ? fmtUSD(item.valorOriginal ?? 0) : fmt(item.value)}
                           </p>
                           <p className="text-xs text-slate-500">{item.pedidos} pedidos</p>
                         </div>
@@ -818,7 +838,7 @@ export default function ReporteAnalisisPage() {
                           <PieChart>
                             <Pie data={dataPago} dataKey="ingresos" nameKey="name" cx="50%" cy="50%"
                               outerRadius={65} innerRadius={28}
-                              label={({ percent }: any) => `${(percent * 100).toFixed(0)}%`}
+                              label={({ percent }: { percent?: number }) => `${(((percent ?? 0) * 100).toFixed(0))}%`}
                               labelLine={false}>
                               {dataPago.map((_, i) => <Cell key={i} fill={COLORES[i % COLORES.length]} />)}
                             </Pie>

@@ -3,6 +3,27 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { z } from 'zod';
 import type { Database } from '@/types/database';
 
+type AddressRow = Database['public']['Tables']['addresses']['Row'];
+type AddressInsert = Database['public']['Tables']['addresses']['Insert'];
+
+type AddressWriteResponse = {
+  data: AddressRow | null;
+  error: { message: string } | null;
+};
+
+const addressesWriteBridge = supabaseAdmin as unknown as {
+  from: (table: 'addresses') => {
+    update: (values: Pick<AddressRow, 'is_default'>) => {
+      eq: (column: 'customer_email', value: string) => Promise<{ error: { message: string } | null }>;
+    };
+    insert: (values: AddressInsert) => {
+      select: (columns: string) => {
+        single: () => Promise<AddressWriteResponse>;
+      };
+    };
+  };
+};
+
 // Zod schema for address validation
 const AddressSchema = z.object({
   customer_email: z.string().email('Invalid email address'),
@@ -39,10 +60,11 @@ export async function GET(request: NextRequest) {
 
     const { data: addresses, error } = await supabaseAdmin
       .from('addresses')
-      .select('*')
+      .select('id, customer_email, customer_name, street_address, city, department, postal_code, additional_info, is_default, created_at, updated_at')
       .eq('customer_email', email.toLowerCase())
       .order('is_default', { ascending: false })
-      .order('created_at', { ascending: false }) as { data: any[] | null; error: any };
+      .order('created_at', { ascending: false })
+      .returns<AddressRow[]>();
 
     if (error) {
       console.error('Get addresses error:', error);
@@ -94,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     // If setting as default, unset other defaults first
     if (is_default) {
-      const { error: unsetError } = await (supabaseAdmin as any)
+      const { error: unsetError } = await addressesWriteBridge
         .from('addresses')
         .update({ is_default: false })
         .eq('customer_email', customer_email.toLowerCase());
@@ -104,7 +126,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await addressesWriteBridge
       .from('addresses')
       .insert({
         customer_email: customer_email.toLowerCase(),
@@ -116,8 +138,8 @@ export async function POST(request: NextRequest) {
         additional_info: additional_info || null,
         is_default: is_default || false,
       })
-      .select()
-      .single() as { data: any; error: any };
+      .select('id, customer_email, customer_name, street_address, city, department, postal_code, additional_info, is_default, created_at, updated_at')
+      .single();
 
     if (error) {
       console.error('Create address error:', error);

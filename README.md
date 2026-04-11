@@ -19,7 +19,7 @@ Full-stack e-commerce platform for [La Aldea](https://laaldeatala.com.uy), a har
 | **Email** | Brevo (transactional, React Email templates) |
 | **Notifications** | Telegram Bot · WhatsApp Business API |
 | **Error Monitoring** | Sentry (browser + server + Edge, with session replay) |
-| **Analytics** | PostHog · Google Analytics 4 (via Partytown worker) · Vercel Analytics · Cloudflare Web Analytics |
+| **Analytics** | PostHog · Google Analytics 4 · Vercel Analytics · Cloudflare Web Analytics |
 | **CDN / Security** | Cloudflare — WAF, Bot Fight Mode, Turnstile CAPTCHA, Email Routing |
 | **AI — Reasoning** | Claude Sonnet (`claude-sonnet-4-6`) — Anthropic |
 | **AI — Fast Inference** | Groq (`llama-3.3-70b-versatile`) — free tier |

@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getCategoryPath } from '@/lib/category-slugs';
 
 interface CategoryConfig {
   value: string;
@@ -84,7 +85,7 @@ export default function CategoryPills({ categories, currentCategory }: CategoryP
           {categories.map(cat => (
             <Link
               key={cat.value}
-              href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
+              href={getCategoryPath(cat.value)}
               className={`shrink-0 whitespace-nowrap snap-start px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${currentCategory === cat.value
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                 : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm'

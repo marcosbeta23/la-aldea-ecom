@@ -1,6 +1,7 @@
 // app/mapa-del-sitio/page.tsx
 import { supabaseAdmin } from '@/lib/supabase';
 import { CATEGORY_HIERARCHY } from '@/lib/categories';
+import { getCategoryPath } from '@/lib/category-slugs';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import type { Metadata } from 'next';
@@ -23,11 +24,11 @@ export default async function SitemapPage() {
 
   // Agrupar por categoría principal
   const byCategory: Record<string, { name: string; slug: string }[]> = {};
-  (products || []).forEach((p: any) => {
-    const cat = Array.isArray(p.category) ? p.category[0] : p.category;
+  (products || []).forEach((product: { slug: string; name: string; category: string[] | string | null }) => {
+    const cat = Array.isArray(product.category) ? product.category[0] : product.category;
     const key = cat || 'Otros';
     if (!byCategory[key]) byCategory[key] = [];
-    byCategory[key].push({ name: p.name, slug: p.slug });
+    byCategory[key].push({ name: product.name, slug: product.slug });
   });
 
   const staticLinks = [
@@ -74,7 +75,7 @@ export default async function SitemapPage() {
               {CATEGORY_HIERARCHY.map(cat => (
                 <li key={cat.value}>
                   <Link
-                    href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
+                    href={getCategoryPath(cat.value)}
                     className="text-blue-600 hover:underline text-sm"
                   >
                     {cat.value}

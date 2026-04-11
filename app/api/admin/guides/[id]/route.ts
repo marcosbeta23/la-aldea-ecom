@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type GuideRow = Database['public']['Tables']['guides']['Row'];
+type GuideUpdate = Database['public']['Tables']['guides']['Update'];
+
+const GUIDE_SELECT_COLUMNS =
+  'id, slug, title, description, breadcrumb_label, category, keywords, related_categories, related_articles, sections, is_published, date_published, date_modified, created_at, updated_at';
 
 async function verifyAdmin() {
   const { userId } = await auth();
@@ -18,11 +25,11 @@ export async function GET(
 
   const { id } = await params;
 
-  const { data: guide, error } = await (supabaseAdmin as any)
+  const { data: guide, error } = await supabaseAdmin
     .from('guides')
-    .select('*')
+    .select(GUIDE_SELECT_COLUMNS)
     .eq('id', id)
-    .single();
+    .single<GuideRow>();
 
   if (error || !guide) {
     return NextResponse.json({ error: 'Guide not found' }, { status: 404 });
@@ -44,7 +51,7 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const updateData: Record<string, unknown> = {};
+    const updateData: GuideUpdate = {};
 
     if (body.slug !== undefined) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(body.slug)) {
@@ -62,12 +69,12 @@ export async function PATCH(
     if (body.sections !== undefined) updateData.sections = body.sections;
     if (body.is_published !== undefined) updateData.is_published = body.is_published;
 
-    const { data: guide, error } = await (supabaseAdmin as any)
+    const { data: guide, error } = await supabaseAdmin
       .from('guides')
       .update(updateData)
       .eq('id', id)
-      .select()
-      .single();
+      .select(GUIDE_SELECT_COLUMNS)
+      .single<GuideRow>();
 
     if (error) {
       console.error('Error updating guide:', error);
@@ -94,7 +101,7 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const { error } = await (supabaseAdmin as any)
+  const { error } = await supabaseAdmin
     .from('guides')
     .delete()
     .eq('id', id);

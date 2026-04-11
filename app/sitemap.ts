@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
 import { CATEGORY_HIERARCHY } from "@/lib/categories";
 import { FAQ_ARTICLES } from "@/lib/faq-articles";
+import { getCategoryPath } from "@/lib/category-slugs";
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || "https://laaldeatala.com.uy";
 
@@ -63,7 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.3,
     },
     {
-      url: "https://laaldeatala.com.uy/politica-de-devoluciones",
+      url: `${siteUrl}/politica-de-devoluciones`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.2,
@@ -89,7 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Category landing pages — one per main category
   const categoryPages: MetadataRoute.Sitemap = CATEGORY_HIERARCHY.map((cat) => ({
-    url: `${siteUrl}/productos?${new URLSearchParams({ categoria: cat.value }).toString()}`,
+    url: `${siteUrl}${getCategoryPath(cat.value)}`,
     lastModified: categoryLastModified,
     changeFrequency: "weekly" as const,
     priority: 0.85,

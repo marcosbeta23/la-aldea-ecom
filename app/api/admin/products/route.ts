@@ -4,6 +4,36 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory, normalizeBrand } from '@/lib/validators';
 import { inngest } from '@/lib/inngest';
+import type { Database } from '@/types/database';
+
+type ProductRow = Database['public']['Tables']['products']['Row'];
+type ProductInsert = Database['public']['Tables']['products']['Insert'];
+
+type ProductInsertResponse = {
+  data: ProductRow | null;
+  error: { code?: string; message: string } | null;
+};
+
+const productsInsertBridge = supabaseAdmin as unknown as {
+  from: (table: 'products') => {
+    insert: (values: ProductInsert) => {
+      select: (columns: string) => {
+        single: () => Promise<ProductInsertResponse>;
+      };
+    };
+  };
+};
+
+const PRODUCT_SELECT_COLUMNS =
+  'id, sku, slug, name, description, category, brand, price_numeric, currency, stock, sold_count, images, is_active, created_at, updated_at, availability_type, show_price_on_request, shipping_type, weight_kg, requires_quote, is_featured, featured_order, original_price, original_price_numeric, discount_percentage, discount_ends_at';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'object' && error && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -30,11 +60,11 @@ export async function GET(request: NextRequest) {
   const offset = (page - 1) * perPage;
 
   try {
-    let query = (supabaseAdmin
+    let query = supabaseAdmin
       .from('products')
-      .select('*', { count: 'exact' })
+      .select(PRODUCT_SELECT_COLUMNS, { count: 'exact' })
       .order(sort, { ascending: order === 'asc' })
-      .range(offset, offset + perPage - 1)) as any;
+      .range(offset, offset + perPage - 1);
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%`);
@@ -56,11 +86,11 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     // Filter by images client-side (Supabase doesn't support array length filters well)
-    let filtered = products || [];
+    let filtered = (products || []) as ProductRow[];
     if (hasImages === 'yes') {
-      filtered = filtered.filter((p: any) => p.images && p.images.length > 0);
+      filtered = filtered.filter((product) => product.images && product.images.length > 0);
     } else if (hasImages === 'no') {
-      filtered = filtered.filter((p: any) => !p.images || p.images.length === 0);
+      filtered = filtered.filter((product) => !product.images || product.images.length === 0);
     }
 
     return NextResponse.json({ 
@@ -70,7 +100,7 @@ export async function GET(request: NextRequest) {
       perPage,
       totalPages: Math.ceil((count || 0) / perPage),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching products:', error);
     return NextResponse.json({ error: 'Error al cargar productos' }, { status: 500 });
   }
@@ -119,11 +149,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check SKU uniqueness
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: existingError } = await supabaseAdmin
       .from('products')
       .select('id')
       .eq('sku', sku)
-      .single() as { data: { id: string } | null };
+      .maybeSingle();
+
+    if (existingError) throw existingError;
 
     if (existing) {
       return NextResponse.json({ 
@@ -131,38 +163,49 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { data: product, error } = await (supabaseAdmin as any)
+    const normalizedAvailabilityType: ProductRow['availability_type'] =
+      availability_type === 'on_request' ? 'on_request' : 'regular';
+    const normalizedShippingType: ProductRow['shipping_type'] =
+      shipping_type === 'freight' || shipping_type === 'pickup_only' ? shipping_type : 'dac';
+
+    const insertPayload: ProductInsert = {
+      sku,
+      name,
+      description: description || null,
+      category: Array.isArray(category)
+        ? category.map((c: string) => c.trim()).filter(Boolean).map((c: string) => normalizeCategory(c))
+        : (category ? [normalizeCategory(category.trim())] : []),
+      brand: brand ? normalizeBrand(brand) : null,
+      price_numeric,
+      currency,
+      stock,
+      sold_count: 0,
+      images,
+      is_active,
+      availability_type: normalizedAvailabilityType,
+      show_price_on_request,
+      shipping_type: normalizedShippingType,
+      weight_kg,
+      requires_quote,
+      is_featured,
+      featured_order: null,
+      original_price: original_price_numeric ? `$${original_price_numeric.toLocaleString()}` : null,
+      original_price_numeric,
+      discount_percentage,
+      discount_ends_at: null,
+      slug: slug || null,
+    };
+
+    const { data: product, error } = await productsInsertBridge
       .from('products')
-      .insert({
-        sku,
-        name,
-        description: description || null,
-        category: Array.isArray(category) ? category.map((c: string) => c.trim()).filter(Boolean).map((c: string) => normalizeCategory(c)) : (category ? [normalizeCategory(category.trim())] : []),
-        brand: brand ? normalizeBrand(brand) : null,
-        price_numeric,
-        currency,
-        stock,
-        sold_count: 0,
-        images,
-        is_active,
-        // Availability
-        availability_type,
-        show_price_on_request,
-        // Shipping fields
-        shipping_type,
-        weight_kg,
-        requires_quote,
-        // Featured & Discount fields
-        is_featured,
-        original_price: original_price_numeric ? `$${original_price_numeric.toLocaleString()}` : null,
-        original_price_numeric,
-        discount_percentage,
-        slug: slug || null,
-      })
-      .select()
+      .insert(insertPayload)
+      .select(PRODUCT_SELECT_COLUMNS)
       .single();
 
     if (error) throw error;
+    if (!product) {
+      return NextResponse.json({ error: 'No se pudo crear el producto' }, { status: 500 });
+    }
 
     // Bust ISR cache
     revalidatePath('/productos');
@@ -175,10 +218,10 @@ export async function POST(request: NextRequest) {
     }).catch(() => {});
 
     return NextResponse.json({ success: true, product });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating product:', error);
     return NextResponse.json({ 
-      error: error.message || 'Error al crear producto' 
+      error: getErrorMessage(error, 'Error al crear producto') 
     }, { status: 500 });
   }
 }

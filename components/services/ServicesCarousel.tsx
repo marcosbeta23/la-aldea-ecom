@@ -14,6 +14,7 @@ import {
     Leaf,
     Shield,
     Lightbulb,
+    MessageCircle,
 } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────
@@ -348,6 +349,18 @@ export default function ServicesCarousel({ whatsappPhone }: Props) {
                                         </span>
                                     ))}
                                 </div>
+
+                                {/* WhatsApp CTA — eliminates dead clicks */}
+                                <a
+                                    href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(`Hola! Me interesa el servicio de ${service.title}. ¿Podrían darme más información?`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-green-50 border border-green-200 px-3 py-2 text-[12px] font-semibold text-green-700 transition-colors hover:bg-green-100 hover:border-green-300"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <MessageCircle className="h-3.5 w-3.5" />
+                                    Consultar
+                                </a>
                             </div>
                         </article>
                     );

@@ -15,6 +15,18 @@ const CookieConsent = dynamic(() => import('@/components/common/CookieConsent'),
   ssr: false,
 });
 
+const ScrollToTop = dynamic(() => import('@/components/common/ScrollToTop'), {
+  ssr: false,
+});
+
+const NavigationProgress = dynamic(() => import('@/components/common/NavigationProgress'), {
+  ssr: false,
+});
+
+const WhatsAppClickTracker = dynamic(() => import('@/components/common/WhatsAppClickTracker'), {
+  ssr: false,
+});
+
 export default function ClientLayoutElements() {
   const pathname = usePathname();
 
@@ -23,8 +35,11 @@ export default function ClientLayoutElements() {
 
   return (
     <>
+      <NavigationProgress />
+      <WhatsAppClickTracker />
       <CartDrawer />
       <FloatingWhatsApp />
+      <ScrollToTop />
       <CookieConsent />
     </>
   );

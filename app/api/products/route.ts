@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type ProductRow = Database['public']['Tables']['products']['Row'];
+
+const PRODUCT_SELECT_COLUMNS =
+  'id, sku, slug, name, description, category, brand, price_numeric, currency, stock, sold_count, images, is_active, created_at, updated_at, availability_type, show_price_on_request, shipping_type, weight_kg, requires_quote, is_featured, featured_order, original_price, original_price_numeric, discount_percentage, discount_ends_at';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,9 +27,10 @@ export async function GET(request: NextRequest) {
 
     const { data: products, error } = await supabaseAdmin
       .from('products')
-      .select('*')
+      .select(PRODUCT_SELECT_COLUMNS)
       .in('id', productIds)
-      .eq('is_active', true) as { data: any[] | null; error: any };
+      .eq('is_active', true)
+      .returns<ProductRow[]>();
 
     if (error) {
       console.error('Error fetching products:', error);

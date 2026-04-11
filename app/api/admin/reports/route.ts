@@ -1,9 +1,116 @@
-// app/api/admin/reports/route.ts
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyOwnerAuth } from '@/lib/admin-auth';
 
+type ReportType = 'sales' | 'products' | 'customers';
+
+interface SalesOrderRow {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email: string | null;
+  total: number;
+  status: string;
+  payment_method: string | null;
+  order_source: string | null;
+  currency: string | null;
+  shipping_department: string | null;
+  created_at: string;
+}
+
+interface SalesOrderItemRow {
+  order_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+interface ProductReportRow {
+  id: string;
+  sku: string;
+  name: string;
+  category: string[] | null;
+  brand: string | null;
+  price_numeric: number;
+  stock: number;
+  sold_count: number;
+  is_active: boolean;
+}
+
+interface ProductOrderItemRow {
+  product_id: string;
+  quantity: number;
+  subtotal: number;
+}
+
+interface CustomerOrderRow {
+  customer_name: string;
+  customer_email: string | null;
+  customer_phone: string;
+  total: number;
+  status: string;
+  created_at: string;
+}
+
+interface CustomerAggregate {
+  name: string;
+  email: string;
+  phone: string;
+  totalOrders: number;
+  paidOrders: number;
+  totalSpent: number;
+  lastOrder: string;
+}
+
+type SalesReport = {
+  summary: {
+    period: string;
+    startDate: string;
+    endDate: string;
+    totalOrders: number;
+    paidOrders: number;
+    totalRevenue: number;
+    averageOrderValue: number;
+  };
+  orders: Array<SalesOrderRow & { items: SalesOrderItemRow[] }>;
+};
+
+type ProductsReport = {
+  products: Array<ProductReportRow & { totalSales: number; totalRevenue: number; stockValue: number }>;
+};
+
+type CustomersReport = {
+  summary: {
+    totalCustomers: number;
+    totalRevenue: number;
+  };
+  customers: CustomerAggregate[];
+};
+
+type ReportData = SalesReport | ProductsReport | CustomersReport;
+
+const PAID_STATUSES = ['paid', 'processing', 'shipped', 'delivered', 'invoiced', 'ready_to_invoice'];
+
+function isPaidStatus(status: string): boolean {
+  return PAID_STATUSES.includes(status);
+}
+
+function escapeCsvCell(value: string | number): string {
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
+
+function csvFromRows(rows: Array<Array<string | number>>): string {
+  return rows.map((row) => row.map((cell) => escapeCsvCell(cell)).join(',')).join('\n');
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'object' && error && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
 
 export async function GET(request: NextRequest) {
   const authResult = await verifyOwnerAuth();
@@ -18,20 +125,24 @@ export async function GET(request: NextRequest) {
   const source = searchParams.get('source') || ''; // 'online' | '' (all)
 
   try {
-    let data;
+    let data: ReportData;
+    let reportType: ReportType;
     let filename = '';
 
     switch (type) {
       case 'sales':
         data = await generateSalesReport(period, startDate, endDate, source);
+        reportType = 'sales';
         filename = `ventas-${period}${source ? `-${source}` : ''}`;
         break;
       case 'products':
         data = await generateProductsReport();
+        reportType = 'products';
         filename = `productos`;
         break;
       case 'customers':
         data = await generateCustomersReport(period, startDate, endDate);
+        reportType = 'customers';
         filename = `clientes-${period}`;
         break;
       default:
@@ -39,7 +150,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (format === 'csv') {
-      const csv = convertToCSV(data, type);
+      const csv = convertToCSV(data, reportType);
       return new NextResponse(csv, {
         headers: {
           'Content-Type': 'text/csv; charset=utf-8',
@@ -49,10 +160,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data, filename });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Report generation error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate report' },
+      { error: getErrorMessage(error, 'Failed to generate report') },
       { status: 500 }
     );
   }
@@ -90,7 +201,7 @@ function getDateRange(period: string, startDate?: string | null, endDate?: strin
 async function generateSalesReport(period: string, startDate?: string | null, endDate?: string | null, source?: string) {
   const { start, end } = getDateRange(period, startDate, endDate);
 
-  let query = (supabaseAdmin as any)
+  let query = supabaseAdmin
     .from('orders')
     .select('id, order_number, customer_name, customer_email, total, status, payment_method, order_source, currency, shipping_department, created_at')
     .gte('created_at', start.toISOString())
@@ -103,25 +214,25 @@ async function generateSalesReport(period: string, startDate?: string | null, en
 
   const { data: orders } = await query;
 
-  const { data: items } = await (supabaseAdmin as any)
+  const { data: items } = await supabaseAdmin
     .from('order_items')
     .select('order_id, product_name, quantity, unit_price, subtotal');
 
-  const itemsByOrder = (items || []).reduce((acc: Record<string, any[]>, item: any) => {
+  const salesItems = (items || []) as SalesOrderItemRow[];
+
+  const itemsByOrder = salesItems.reduce<Record<string, SalesOrderItemRow[]>>((acc, item) => {
     if (!acc[item.order_id]) acc[item.order_id] = [];
     acc[item.order_id].push(item);
     return acc;
   }, {});
 
-  const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'invoiced', 'ready_to_invoice'];
-  
-  const ordersArray = (orders || []) as any[];
+  const ordersArray = (orders || []) as SalesOrderRow[];
   const totalRevenue = ordersArray
-    .filter((o: any) => paidStatuses.includes(o.status))
-    .reduce((sum: number, o: any) => sum + (o.total || 0), 0);
+    .filter((order) => isPaidStatus(order.status))
+    .reduce((sum, order) => sum + (order.total || 0), 0);
 
   const totalOrders = orders?.length || 0;
-  const paidOrders = ordersArray.filter((o: any) => paidStatuses.includes(o.status)).length;
+  const paidOrders = ordersArray.filter((order) => isPaidStatus(order.status)).length;
 
   return {
     summary: {
@@ -133,7 +244,7 @@ async function generateSalesReport(period: string, startDate?: string | null, en
       totalRevenue,
       averageOrderValue: paidOrders > 0 ? totalRevenue / paidOrders : 0,
     },
-    orders: ordersArray.map((order: any) => ({
+    orders: ordersArray.map((order) => ({
       ...order,
       items: itemsByOrder[order.id] || [],
     })),
@@ -141,16 +252,17 @@ async function generateSalesReport(period: string, startDate?: string | null, en
 }
 
 async function generateProductsReport() {
-  const { data: products } = await (supabaseAdmin as any)
+  const { data: products } = await supabaseAdmin
     .from('products')
     .select('id, sku, name, category, brand, price_numeric, stock, sold_count, is_active')
     .order('sold_count', { ascending: false });
 
-  const { data: orderItems } = await (supabaseAdmin as any)
+  const { data: orderItems } = await supabaseAdmin
     .from('order_items')
     .select('product_id, quantity, subtotal');
 
-  const salesByProduct = ((orderItems || []) as any[]).reduce((acc: Record<string, { quantity: number; revenue: number }>, item: any) => {
+  const productOrderItems = (orderItems || []) as ProductOrderItemRow[];
+  const salesByProduct = productOrderItems.reduce<Record<string, { quantity: number; revenue: number }>>((acc, item) => {
     if (!acc[item.product_id]) {
       acc[item.product_id] = { quantity: 0, revenue: 0 };
     }
@@ -159,8 +271,10 @@ async function generateProductsReport() {
     return acc;
   }, {});
 
+  const productsArray = (products || []) as ProductReportRow[];
+
   return {
-    products: ((products || []) as any[]).map((product: any) => ({
+    products: productsArray.map((product) => ({
       ...product,
       totalSales: salesByProduct[product.id]?.quantity || 0,
       totalRevenue: salesByProduct[product.id]?.revenue || 0,
@@ -172,23 +286,14 @@ async function generateProductsReport() {
 async function generateCustomersReport(period: string, startDate?: string | null, endDate?: string | null) {
   const { start, end } = getDateRange(period, startDate, endDate);
 
-  const { data: orders } = await (supabaseAdmin as any)
+  const { data: orders } = await supabaseAdmin
     .from('orders')
     .select('customer_name, customer_email, customer_phone, total, status, created_at')
     .gte('created_at', start.toISOString())
     .lte('created_at', end.toISOString());
 
-  const paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'invoiced', 'ready_to_invoice'];
-
-  const customerMap = ((orders || []) as any[]).reduce((acc: Record<string, {
-    name: string;
-    email: string;
-    phone: string;
-    totalOrders: number;
-    paidOrders: number;
-    totalSpent: number;
-    lastOrder: string;
-  }>, order: any) => {
+  const ordersArray = (orders || []) as CustomerOrderRow[];
+  const customerMap = ordersArray.reduce<Record<string, CustomerAggregate>>((acc, order) => {
     const key = order.customer_email || order.customer_phone || order.customer_name;
     if (!acc[key]) {
       acc[key] = {
@@ -202,7 +307,7 @@ async function generateCustomersReport(period: string, startDate?: string | null
       };
     }
     acc[key].totalOrders++;
-    if (paidStatuses.includes(order.status)) {
+    if (isPaidStatus(order.status)) {
       acc[key].paidOrders++;
       acc[key].totalSpent += order.total || 0;
     }
@@ -223,10 +328,10 @@ async function generateCustomersReport(period: string, startDate?: string | null
   };
 }
 
-function convertToCSV(data: any, type: string): string {
-  if (type === 'sales' && data.orders) {
+function convertToCSV(data: ReportData, type: ReportType): string {
+  if (type === 'sales' && 'orders' in data) {
     const headers = ['Fecha', 'Nº Pedido', 'Cliente', 'Email', 'Total', 'Moneda', 'Estado', 'Método Pago', 'Canal', 'Departamento'];
-    const rows = (data.orders || []).map((order: any) => [
+    const rows = data.orders.map((order) => [
       new Date(order.created_at).toLocaleDateString('es-UY'),
       order.order_number,
       order.customer_name,
@@ -238,35 +343,35 @@ function convertToCSV(data: any, type: string): string {
       order.order_source === 'online' ? 'Online' : 'Venta',
       order.shipping_department || '',
     ]);
-    return [headers.join(','), ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(','))].join('\n');
+    return csvFromRows([headers, ...rows]);
   }
 
-  if (type === 'products' && data.products) {
+  if (type === 'products' && 'products' in data) {
     const headers = ['SKU', 'Nombre', 'Categoría', 'Marca', 'Precio', 'Stock', 'Vendidos', 'Activo'];
-    const rows = (data.products || []).map((p: any) => [
-      p.sku || '',
-      p.name,
-      Array.isArray(p.category) ? p.category.join(', ') : (p.category || ''),
-      p.brand || '',
-      (p.price_numeric || 0).toFixed(2),
-      p.stock,
-      p.sold_count || 0,
-      p.is_active ? 'Sí' : 'No',
+    const rows = data.products.map((product) => [
+      product.sku || '',
+      product.name,
+      Array.isArray(product.category) ? product.category.join(', ') : (product.category || ''),
+      product.brand || '',
+      (product.price_numeric || 0).toFixed(2),
+      product.stock,
+      product.sold_count || 0,
+      product.is_active ? 'Sí' : 'No',
     ]);
-    return [headers.join(','), ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(','))].join('\n');
+    return csvFromRows([headers, ...rows]);
   }
 
-  if (type === 'customers' && data.customers) {
+  if (type === 'customers' && 'customers' in data) {
     const headers = ['Nombre', 'Email', 'Teléfono', 'Pedidos', 'Total Gastado', 'Último Pedido'];
-    const rows = (data.customers || []).map((c: any) => [
-      c.name,
-      c.email || '',
-      c.phone || '',
-      c.totalOrders,
-      (c.totalSpent || 0).toFixed(2),
-      new Date(c.lastOrder).toLocaleDateString('es-UY'),
+    const rows = data.customers.map((customer) => [
+      customer.name,
+      customer.email || '',
+      customer.phone || '',
+      customer.totalOrders,
+      (customer.totalSpent || 0).toFixed(2),
+      new Date(customer.lastOrder).toLocaleDateString('es-UY'),
     ]);
-    return [headers.join(','), ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(','))].join('\n');
+    return csvFromRows([headers, ...rows]);
   }
 
   return '';

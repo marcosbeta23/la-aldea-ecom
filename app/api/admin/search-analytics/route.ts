@@ -17,12 +17,16 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch all search analytics for the period
-    const { data: searches } = await (supabaseAdmin as any)
+    const { data: searches, error: searchesError } = await supabaseAdmin
       .from('search_analytics')
       .select('query, results_count, clicked_product_id, source, created_at')
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
       .limit(10000);
+
+    if (searchesError) {
+      throw new Error(searchesError.message);
+    }
 
     const searchesArray = (searches || []) as Array<{
       query: string;

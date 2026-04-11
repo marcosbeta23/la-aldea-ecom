@@ -5,6 +5,60 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory, normalizeBrand } from '@/lib/validators';
 import { alertOutOfStock, alertLowStock } from '@/lib/telegram';
 import { inngest } from '@/lib/inngest';
+import type { Database } from '@/types/database';
+
+type ProductRow = Database['public']['Tables']['products']['Row'];
+type ProductUpdate = Database['public']['Tables']['products']['Update'];
+
+type ProductUpdateSelectResponse = {
+  data: ProductRow | null;
+  error: { code?: string; message: string } | null;
+};
+
+type ProductWriteResponse = {
+  error: { code?: string; message: string } | null;
+};
+
+const productsUpdateSelectBridge = supabaseAdmin as unknown as {
+  from: (table: 'products') => {
+    update: (values: ProductUpdate) => {
+      eq: (column: 'id', value: string) => {
+        select: (columns: string) => {
+          single: () => Promise<ProductUpdateSelectResponse>;
+        };
+      };
+    };
+  };
+};
+
+const productsUpdateBridge = supabaseAdmin as unknown as {
+  from: (table: 'products') => {
+    update: (values: ProductUpdate) => {
+      eq: (column: 'id', value: string) => Promise<ProductWriteResponse>;
+    };
+  };
+};
+
+const productsSlugSelectBridge = supabaseAdmin as unknown as {
+  from: (table: 'products') => {
+    select: (columns: 'sku, slug') => {
+      eq: (column: 'id', value: string) => {
+        maybeSingle: () => Promise<{ data: { sku: string; slug: string | null } | null; error: { code?: string; message: string } | null }>;
+      };
+    };
+  };
+};
+
+const PRODUCT_SELECT_COLUMNS =
+  'id, sku, slug, name, description, category, brand, price_numeric, currency, stock, sold_count, images, is_active, created_at, updated_at, availability_type, show_price_on_request, shipping_type, weight_kg, requires_quote, is_featured, featured_order, original_price, original_price_numeric, discount_percentage, discount_ends_at';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'object' && error && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
 
 // Check admin auth via Clerk
 async function checkAdminAuth(): Promise<boolean> {
@@ -26,16 +80,16 @@ export async function GET(
   try {
     const { data: product, error } = await supabaseAdmin
       .from('products')
-      .select('*')
+      .select(PRODUCT_SELECT_COLUMNS)
       .eq('id', id)
-      .single() as { data: any; error: any };
+      .single<ProductRow>();
 
     if (error || !product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
     return NextResponse.json({ product });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching product:', error);
     return NextResponse.json({ error: 'Error al cargar producto' }, { status: 500 });
   }
@@ -89,12 +143,14 @@ export async function PUT(
     }
 
     // Check SKU uniqueness (excluding current product)
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: existingError } = await supabaseAdmin
       .from('products')
       .select('id')
       .eq('sku', sku)
       .neq('id', id)
-      .single() as { data: { id: string } | null };
+      .maybeSingle();
+
+    if (existingError) throw existingError;
 
     if (existing) {
       return NextResponse.json({ 
@@ -102,36 +158,41 @@ export async function PUT(
       }, { status: 400 });
     }
 
-    const { data: product, error } = await (supabaseAdmin as any)
+    const normalizedAvailabilityType: ProductRow['availability_type'] =
+      availability_type === 'on_request' ? 'on_request' : 'regular';
+    const normalizedShippingType: ProductRow['shipping_type'] =
+      shipping_type === 'freight' || shipping_type === 'pickup_only' ? shipping_type : 'dac';
+
+    const updatePayload: ProductUpdate = {
+      sku,
+      name,
+      description: description || null,
+      category: Array.isArray(category)
+        ? category.map((c: string) => c.trim()).filter(Boolean).map((c: string) => normalizeCategory(c))
+        : (category ? [normalizeCategory(category.trim())] : []),
+      brand: brand ? normalizeBrand(brand) : null,
+      price_numeric,
+      currency,
+      stock,
+      images,
+      is_active,
+      availability_type: normalizedAvailabilityType,
+      show_price_on_request,
+      shipping_type: normalizedShippingType,
+      weight_kg,
+      requires_quote,
+      is_featured,
+      original_price: original_price_numeric ? `$${original_price_numeric.toLocaleString()}` : null,
+      original_price_numeric,
+      discount_percentage,
+      slug: slug || null,
+    };
+
+    const { data: product, error } = await productsUpdateSelectBridge
       .from('products')
-      .update({
-        sku,
-        name,
-        description: description || null,
-        category: Array.isArray(category) ? category.map((c: string) => c.trim()).filter(Boolean).map((c: string) => normalizeCategory(c)) : (category ? [normalizeCategory(category.trim())] : []),
-        brand: brand ? normalizeBrand(brand) : null,
-        price_numeric,
-        currency,
-        stock,
-        images,
-        is_active,
-        // Availability
-        availability_type,
-        show_price_on_request,
-        // Shipping fields
-        shipping_type,
-        weight_kg,
-        requires_quote,
-        // Featured & Discount fields
-        is_featured,
-        original_price: original_price_numeric ? `$${original_price_numeric.toLocaleString()}` : null,
-        original_price_numeric,
-        discount_percentage,
-        slug: slug || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', id)
-      .select()
+      .select(PRODUCT_SELECT_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -159,10 +220,10 @@ export async function PUT(
     }).catch(() => {});
 
     return NextResponse.json({ success: true, product });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating product:', error);
     return NextResponse.json({ 
-      error: error.message || 'Error al actualizar producto' 
+      error: getErrorMessage(error, 'Error al actualizar producto') 
     }, { status: 500 });
   }
 }
@@ -184,7 +245,7 @@ export async function DELETE(
       .from('products')
       .select('id')
       .eq('id', id)
-      .single() as { data: { id: string } | null };
+      .maybeSingle();
 
     if (!product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
@@ -195,11 +256,11 @@ export async function DELETE(
       .from('order_items')
       .select('id')
       .eq('product_id', id)
-      .limit(1) as { data: Array<{ id: string }> | null };
+      .limit(1);
 
     if (orderItems && orderItems.length > 0) {
       // Instead of deleting, just deactivate
-      await (supabaseAdmin as any)
+      await productsUpdateBridge
         .from('products')
         .update({ is_active: false })
         .eq('id', id);
@@ -211,14 +272,14 @@ export async function DELETE(
     }
 
     // Get slug/SKU before deletion for cache busting
-    const { data: productData } = await supabaseAdmin
+    const { data: productData } = await productsSlugSelectBridge
       .from('products')
       .select('sku, slug')
       .eq('id', id)
-      .single() as { data: { sku: string; slug: string | null } | null };
+      .maybeSingle();
 
     // Delete product
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await supabaseAdmin
       .from('products')
       .delete()
       .eq('id', id);
@@ -232,10 +293,10 @@ export async function DELETE(
     revalidatePath('/productos');
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting product:', error);
     return NextResponse.json({ 
-      error: error.message || 'Error al eliminar producto' 
+      error: getErrorMessage(error, 'Error al eliminar producto') 
     }, { status: 500 });
   }
 }

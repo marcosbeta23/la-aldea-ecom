@@ -121,16 +121,24 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
-            <div className="mt-6 rounded-xl overflow-hidden shadow-sm border border-slate-200 h-32 brightness-90 hover:brightness-100 transition-all hidden md:block">
-              <iframe
-                title="Ubicacion de La Aldea en Google Maps"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3275.458!2d-55.76359424741334!3d-34.346943768995686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zLTM0LjM0Njk0NCwtNTUuNzYzNTk0!5e0!3m2!1ses!2suy!4v1"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
+            <div className="mt-6 rounded-xl overflow-hidden shadow-sm border border-slate-200 h-32 brightness-90 hover:brightness-100 transition-all">
+              <a
+                href="https://maps.app.goo.gl/4oUish4o13iMrJ2c9"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Ver ubicación de La Aldea en Google Maps"
+                className="block h-full"
+              >
+                <Image
+                  src="/assets/images/mapa-la-aldea.avif"
+                  alt="Ver La Aldea en Google Maps — Tala, Canelones"
+                  width={400}
+                  height={128}
+                  loading="lazy"
+                  sizes="400px"
+                  className="h-full w-full object-cover"
+                />
+              </a>
             </div>
           </div>
         </div>

@@ -141,6 +141,19 @@ export default function Header() {
             FAQ
           </Link>
           <Link
+            href="/nosotros"
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/nosotros'
+              ? (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-white bg-white/10')
+              : (scrolled || !isHomepage || mobileMenuOpen
+                ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                : 'text-white/90 hover:bg-white/10')
+              }`}
+          >
+            Nosotros
+          </Link>
+          <Link
             href="/blog"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/blog' || pathname.startsWith('/guias')
               ? (scrolled || !isHomepage || mobileMenuOpen
@@ -195,7 +208,8 @@ export default function Header() {
             href={`https://wa.me/${WHATSAPP_PHONE}`}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Contactar por WhatsApp"
+            data-whatsapp-source="header_desktop"
+            aria-label="Contactar por WhatsApp desde el header"
             className="hidden sm:flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-green-700/25 transition-all hover:bg-green-800 hover:shadow-xl hover:shadow-green-700/30"
           >
             <MessageCircle className="h-4 w-4" />
@@ -306,13 +320,23 @@ export default function Header() {
           >
             Contacto
           </Link>
+          <Link
+            href="/nosotros"
+            className={`px-6 py-4 text-base font-medium transition-colors border-b border-slate-100 ${pathname === '/nosotros'
+              ? 'text-blue-600 bg-blue-50'
+              : 'text-slate-900 hover:bg-slate-50'
+              }`}
+          >
+            Nosotros
+          </Link>
 
           <div className="p-6">
             <a
               href={`https://wa.me/${WHATSAPP_PHONE}`}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Contactar por WhatsApp"
+              data-whatsapp-source="header_mobile_menu"
+              aria-label="Escribir por WhatsApp desde el menú"
               className="flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 text-base font-medium text-white shadow-lg transition-all hover:bg-green-600"
             >
               <MessageCircle className="h-5 w-5" />

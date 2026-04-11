@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type PartnerRow = Database['public']['Tables']['partners']['Row'];
+
+const PARTNER_SELECT_COLUMNS =
+  'id, name, logo_url, website_url, display_order, is_active, created_at, updated_at';
 
 async function verifyAdmin() {
   const { userId } = await auth();
@@ -20,9 +26,9 @@ export async function GET(
 
   const { data: partner, error } = await supabaseAdmin
     .from('partners')
-    .select('*')
+    .select(PARTNER_SELECT_COLUMNS)
     .eq('id', id)
-    .single() as { data: any; error: any };
+    .single<PartnerRow>();
 
   if (error || !partner) {
     return NextResponse.json({ error: 'Partner not found' }, { status: 404 });
@@ -54,12 +60,12 @@ export async function PATCH(
     if (body.display_order !== undefined) updateData.display_order = Number(body.display_order);
     if (body.is_active !== undefined) updateData.is_active = body.is_active;
 
-    const { data: partner, error } = await (supabaseAdmin as any)
+    const { data: partner, error } = await supabaseAdmin
       .from('partners')
       .update(updateData)
       .eq('id', id)
-      .select()
-      .single();
+      .select(PARTNER_SELECT_COLUMNS)
+      .single<PartnerRow>();
 
     if (error) {
       console.error('Error updating partner:', error);
@@ -86,7 +92,7 @@ export async function DELETE(
   const { error } = await supabaseAdmin
     .from('partners')
     .delete()
-    .eq('id', id) as { error: any };
+    .eq('id', id);
 
   if (error) {
     console.error('Error deleting partner:', error);

@@ -4,6 +4,66 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { sendInvoiceEmail } from '@/lib/email';
 import type { Order, OrderItem } from '@/types/database';
 
+type InvoiceOrderRow = {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email: string | null;
+  customer_phone: string;
+  shipping_address: string | null;
+  shipping_city: string | null;
+  shipping_department: string | null;
+  shipping_type: string;
+  shipping_cost: number;
+  subtotal: number;
+  discount_amount: number;
+  coupon_code: string | null;
+  total: number;
+  currency: string;
+  payment_method: string | null;
+  status: string;
+  notes: string | null;
+  invoice_type: string;
+  invoice_tax_id: string | null;
+  invoice_business_name: string | null;
+  invoice_number: string | null;
+  invoice_file_url: string | null;
+  invoiced_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type InvoiceOrderItemRow = {
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  currency: string;
+  unit_price_converted: number | null;
+  subtotal: number;
+  created_at: string;
+};
+
+const ORDER_SELECT_FIELDS = 'id, order_number, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_department, shipping_type, shipping_cost, subtotal, discount_amount, coupon_code, total, currency, payment_method, status, notes, invoice_type, invoice_tax_id, invoice_business_name, invoice_number, invoice_file_url, invoiced_at, created_at, updated_at';
+const ORDER_ITEM_SELECT_FIELDS = 'id, order_id, product_id, product_name, quantity, unit_price, currency, unit_price_converted, subtotal, created_at';
+
+const orderLogsWriteTable = supabaseAdmin.from('order_logs') as unknown as {
+  insert: (values: {
+    order_id: string;
+    action: string;
+    details: string;
+    created_by: string;
+  }) => Promise<{ error?: unknown }>;
+};
+
+const ordersWriteTable = supabaseAdmin.from('orders') as unknown as {
+  update: (values: Record<string, unknown>) => {
+    eq: (column: 'id', value: string) => Promise<{ error: unknown }>;
+  };
+};
+
 // Verify admin authentication via Clerk
 async function verifyAdmin() {
   const { userId } = await auth();
@@ -17,7 +77,7 @@ async function logOrderEvent(
   details: Record<string, unknown>
 ) {
   try {
-    await (supabaseAdmin as any).from('order_logs').insert({
+    await orderLogsWriteTable.insert({
       order_id: orderId,
       action,
       details: JSON.stringify(details),
@@ -63,9 +123,9 @@ export async function POST(
     // Fetch the order first
     const { data: orderData, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('*')
+      .select(ORDER_SELECT_FIELDS)
       .eq('id', orderId)
-      .single() as { data: any; error: any };
+      .single() as { data: InvoiceOrderRow | null; error: unknown };
     
     if (orderError || !orderData) {
       return NextResponse.json(
@@ -145,8 +205,7 @@ export async function POST(
       updateData.invoice_file_url = invoiceFileUrl;
     }
     
-    const { error: updateError } = await (supabaseAdmin as any)
-      .from('orders')
+    const { error: updateError } = await ordersWriteTable
       .update(updateData)
       .eq('id', orderId);
     
@@ -172,8 +231,8 @@ export async function POST(
       // Fetch order items for email
       const { data: orderItems } = await supabaseAdmin
         .from('order_items')
-        .select('*')
-        .eq('order_id', orderId) as { data: any[] | null };
+        .select(ORDER_ITEM_SELECT_FIELDS)
+        .eq('order_id', orderId) as { data: InvoiceOrderItemRow[] | null };
       
       emailSent = await sendInvoiceEmail({
         order: { ...order, ...updateData } as Order,
@@ -183,8 +242,7 @@ export async function POST(
       
       if (emailSent) {
         // Update order with email sent timestamp
-        await (supabaseAdmin as any)
-          .from('orders')
+        await ordersWriteTable
           .update({ invoice_email_sent_at: new Date().toISOString() })
           .eq('id', orderId);
         

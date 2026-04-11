@@ -3,6 +3,7 @@
 
 const SITE_URL = process.env.NEXT_PUBLIC_URL || "https://laaldeatala.com.uy";
 import { WHATSAPP_PHONE } from "./constants";
+import { getCategoryPath } from "./category-slugs";
 
 export const BUSINESS_ID = `${SITE_URL}/#business`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
@@ -55,7 +56,7 @@ export function productBreadcrumb(
     { name: "Productos", url: "/productos" },
     ...(mainCategory
       ? [
-          { name: mainCategory, url: `/productos?category=${encodeURIComponent(mainCategory)}` },
+          { name: mainCategory, url: getCategoryPath(mainCategory) },
           { name: productName, url: `/productos/${productSlug}` },
         ]
       : [{ name: productName, url: `/productos/${productSlug}` }]),

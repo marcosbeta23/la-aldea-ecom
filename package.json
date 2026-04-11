@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@qwik.dev/partytown": "^0.11.2",
     "@clerk/localizations": "^3.35.3",
     "@clerk/nextjs": "^6.37.3",
     "@hookform/resolvers": "^5.2.2",

@@ -102,10 +102,11 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
   {
     value: 'Químicos',
     label: 'Químicos',
-    description: 'Productos químicos para piscinas y uso agrícola: cloro, algicidas, herbicidas, fungicidas e insecticidas',
+    description: 'Productos químicos para piscina, tratamiento de agua y uso agrícola: cloro, alguicidas, herbicidas, fungicidas e insecticidas',
     color: 'from-purple-500 to-purple-600',
     icon: 'FlaskConical',
     subcategories: [
+      { value: 'Químicos Piscina', label: 'Químicos para Piscina', keywords: ['cloro', 'alguicida', 'algicida', 'floculante', 'ph', 'clarificador'] },
       { value: 'Tratamiento Agua', label: 'Tratamiento de Agua', keywords: ['tratamiento', 'potabiliz', 'clor'] },
       { value: 'Limpieza Industrial', label: 'Limpieza Industrial', keywords: ['limpi', 'desinf', 'industrial'] },
       { value: 'Agroquímicos', label: 'Agroquímicos', keywords: ['agroquímico', 'agroquimico', 'herbicida', 'fungicida', 'insecticida'] },
@@ -159,6 +160,7 @@ export const CATEGORY_HIERARCHY: CategoryConfig[] = [
     subcategories: [
       { value: 'Limpieza', label: 'Limpieza', keywords: ['limpi', 'detergente', 'lavandina', 'jabón', 'jabon'] },
       { value: 'Desinfectantes', label: 'Desinfectantes', keywords: ['desinfect', 'sanitiz', 'bactericida'] },
+      { value: 'Químicos Piscina Droguería', label: 'Químicos para Piscina', keywords: ['cloro', 'alguicida', 'algicida', 'floculante', 'ph', 'clarificador', 'piscina'] },
       { value: 'Industriales', label: 'Industriales', keywords: ['industrial', 'diu'] },
     ],
   },

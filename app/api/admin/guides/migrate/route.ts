@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { FAQ_ARTICLES } from '@/lib/faq-articles';
+import type { Database } from '@/types/database';
+
+type GuideInsert = Database['public']['Tables']['guides']['Insert'];
+
+const guidesBridge = supabaseAdmin as unknown as {
+  from: (table: 'guides') => {
+    select: (columns: 'id') => {
+      eq: (column: 'slug', value: string) => {
+        maybeSingle: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
+      };
+    };
+    insert: (values: GuideInsert) => Promise<{ error: { message: string } | null }>;
+  };
+};
 
 export async function POST() {
   const { userId } = await auth();
@@ -13,33 +27,35 @@ export async function POST() {
 
   for (const article of FAQ_ARTICLES) {
     // Check if slug already exists
-    const { data: existing } = await (supabaseAdmin as any)
+    const { data: existing } = await guidesBridge
       .from('guides')
       .select('id')
       .eq('slug', article.slug)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       results.push({ slug: article.slug, status: 'skipped' });
       continue;
     }
 
-    const { error } = await (supabaseAdmin as any)
+    const guideInsert: GuideInsert = {
+      slug: article.slug,
+      title: article.title,
+      description: article.description,
+      breadcrumb_label: article.breadcrumbLabel,
+      category: article.category,
+      keywords: article.keywords,
+      related_categories: article.relatedCategories,
+      related_articles: article.relatedArticles,
+      sections: article.sections,
+      date_published: article.datePublished || new Date().toISOString().split('T')[0],
+      date_modified: article.dateModified || new Date().toISOString().split('T')[0],
+      is_published: true,
+    };
+
+    const { error } = await guidesBridge
       .from('guides')
-      .insert({
-        slug: article.slug,
-        title: article.title,
-        description: article.description,
-        breadcrumb_label: article.breadcrumbLabel,
-        category: article.category,
-        keywords: article.keywords,
-        related_categories: article.relatedCategories,
-        related_articles: article.relatedArticles,
-        sections: article.sections,
-        date_published: article.datePublished || new Date().toISOString().split('T')[0],
-        date_modified: article.dateModified || new Date().toISOString().split('T')[0],
-        is_published: true,
-      });
+      .insert(guideInsert);
 
     if (error) {
       results.push({ slug: article.slug, status: 'error', error: error.message });

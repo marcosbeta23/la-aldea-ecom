@@ -14,7 +14,7 @@ export interface SeoCluster {
 export const SEO_CLUSTERS: SeoCluster[] = [
   // BOMBAS
   {
-    url: '/productos?categoria=Bombas',
+    url: '/productos/categoria/bombas',
     cluster: 'bombas',
     type: 'category',
     keywords: [
@@ -60,7 +60,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // RIEGO
   {
-    url: '/productos?categoria=Riego',
+    url: '/productos/categoria/riego',
     cluster: 'riego',
     type: 'category',
     keywords: [
@@ -124,7 +124,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // ALMACENAMIENTO
   {
-    url: '/productos?categoria=Tanques',
+    url: '/productos/categoria/tanques',
     cluster: 'almacenamiento',
     type: 'category',
     keywords: [
@@ -157,7 +157,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // FILTROS
   {
-    url: '/productos?categoria=Filtros',
+    url: '/productos/categoria/filtros',
     cluster: 'filtros',
     type: 'category',
     keywords: [
@@ -175,7 +175,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // ENERGÍA SOLAR
   {
-    url: '/productos?categoria=Energía Solar',
+    url: '/productos/categoria/energia-solar',
     cluster: 'solar',
     type: 'category',
     keywords: [
@@ -195,7 +195,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // PISCINAS
   {
-    url: '/productos?categoria=Piscinas',
+    url: '/productos/categoria/piscinas',
     cluster: 'piscinas',
     type: 'category',
     keywords: [
@@ -246,7 +246,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // AGROQUÍMICOS
   {
-    url: '/productos?categoria=Agroquímicos',
+    url: '/productos/categoria/agroquimicos',
     cluster: 'agroquimicos',
     type: 'category',
     keywords: [
@@ -268,7 +268,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // HIDRÁULICA GENERAL
   {
-    url: '/productos?categoria=Hidráulica',
+    url: '/productos/categoria/hidraulica',
     cluster: 'hidraulica',
     type: 'category',
     keywords: [
@@ -290,7 +290,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // HERRAMIENTAS
   {
-    url: '/productos?categoria=Herramientas',
+    url: '/productos/categoria/herramientas',
     cluster: 'herramientas',
     type: 'category',
     keywords: [
@@ -306,7 +306,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
 
   // DROGUERÍA
   {
-    url: '/productos?categoria=Droguería',
+    url: '/productos/categoria/drogueria',
     cluster: 'drogueria',
     type: 'category',
     keywords: [

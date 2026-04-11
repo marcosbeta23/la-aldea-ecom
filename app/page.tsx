@@ -32,6 +32,7 @@ import { WHATSAPP_PHONE, WHATSAPP_DISPLAY, GOOGLE_RATING, GOOGLE_REVIEW_COUNT } 
 import ClientHomePageElements from "@/components/home/ClientHomePageElements";
 import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
 import HomeMapSection from "@/components/home/HomeMapSection";
+import { getCategoryPath } from "@/lib/category-slugs";
 
 
 export const revalidate = 300; // Cache homepage for 5 minutes at the edge
@@ -233,7 +234,7 @@ const productCategories = [
     icon: Droplets,
     title: "Hidráulica",
     description: "Bombas de riego, tuberías PVC, conectores y automatización",
-    href: "/productos?categoria=Hidráulica",
+    href: getCategoryPath('Hidráulica'),
     color: "from-blue-500 to-blue-600",
     image: "/assets/images/products/agricultural.webp",
   },
@@ -241,7 +242,7 @@ const productCategories = [
     icon: FlaskConical,
     title: "Droguería",
     description: "Productos químicos industriales DIU para limpieza y mantenimiento",
-    href: "/productos?categoria=Droguería",
+    href: getCategoryPath('Droguería'),
     color: "from-purple-500 to-purple-600",
     image: "/assets/images/products/drogueria.webp",
   },
@@ -249,7 +250,7 @@ const productCategories = [
     icon: Wrench,
     title: "Herramientas",
     description: "Herramientas manuales y eléctricas de calidad profesional",
-    href: "/productos?categoria=Herramientas",
+    href: getCategoryPath('Herramientas'),
     color: "from-orange-500 to-orange-600",
     image: "/assets/images/products/tools.webp",
   },
@@ -257,7 +258,7 @@ const productCategories = [
     icon: Waves,
     title: "Piscinas",
     description: "Filtros, bombas, cloro y productos de mantenimiento",
-    href: "/productos?categoria=Piscinas",
+    href: getCategoryPath('Piscinas'),
     color: "from-cyan-500 to-cyan-600",
     image: "/assets/images/products/pool.webp",
   },
@@ -265,7 +266,7 @@ const productCategories = [
     icon: Filter,
     title: "Filtros de Agua",
     description: "Sistemas de filtración Gianni para agua potable segura",
-    href: "/productos?categoria=Filtros",
+    href: getCategoryPath('Filtros'),
     color: "from-teal-500 to-teal-600",
     image: "/assets/images/products/filters.webp",
   },
@@ -273,7 +274,7 @@ const productCategories = [
     icon: Zap,
     title: "Energías Renovables",
     description: "Paneles solares y bombas solares para instalaciones autónomas",
-    href: "/productos?categoria=Energía Solar",
+    href: getCategoryPath('Energía Solar'),
     color: "from-yellow-500 to-yellow-600",
     image: "/assets/images/products/renewable.webp",
   },
@@ -323,6 +324,25 @@ const testimonials = [
     rating: 5,
   },
 ];
+
+const testimonialReviewSchema = {
+  "@context": "https://schema.org",
+  "@graph": testimonials.map((testimonial) => ({
+    "@type": "Review",
+    itemReviewed: { "@id": "https://laaldeatala.com.uy/#business" },
+    author: {
+      "@type": "Person",
+      name: testimonial.name,
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: testimonial.rating,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    reviewBody: testimonial.content,
+  })),
+};
 
 // Features
 const features = [
@@ -405,7 +425,11 @@ export default async function Home() {
 
   // Use DB partners with fallback to hardcoded array
   const activePartners = (dbPartners && dbPartners.length > 0)
-    ? dbPartners.map((p: any) => ({ name: p.name, logo: p.logo_url }))
+    ? dbPartners.map((partner: { name: string; logo_url: string; website_url: string | null }) => ({
+      name: partner.name,
+      logo: partner.logo_url,
+      url: partner.website_url || null,
+    }))
     : partners;
 
   return (
@@ -414,6 +438,10 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(testimonialReviewSchema) }}
       />
 
       <div className="overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -436,22 +464,28 @@ export default async function Home() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {[
-                { icon: Award, text: "25+ Años de Experiencia" },
-                { icon: Truck, text: "Envío a Todo Uruguay" },
-                { icon: Sparkles, text: "Asesoramiento Técnico" },
-                { icon: Shield, text: "Garantía de Calidad" },
+                { icon: Award, text: "25+ Años de Experiencia", href: '/nosotros' },
+                { icon: Truck, text: "Envío a Todo Uruguay", href: '/productos' },
+                { icon: Sparkles, text: "Asesoramiento Técnico", href: '/servicios' },
+                { icon: Shield, text: "Garantía de Calidad", href: '#marcas' },
               ].map((item, i) => (
-                <div key={i} className="flex items-center justify-center gap-2 py-2 text-center">
+                <Link
+                  key={i}
+                  href={item.href}
+                  data-ph-zone="homepage-trust-strip"
+                  data-ph-target={item.text}
+                  className="flex items-center justify-center gap-2 py-2 text-center rounded-lg hover:bg-slate-50 transition-colors"
+                >
                   <item.icon className="h-5 w-5 shrink-0 text-blue-600" />
                   <span className="text-xs font-medium text-slate-700 sm:text-sm">{item.text}</span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
         </section>
 
         {/* Partners Carousel - Seamless loop */}
-        <section className="border-b border-slate-100 bg-white py-6 overflow-hidden">
+        <section id="marcas" className="border-b border-slate-100 bg-white py-6 overflow-hidden">
           <div className="container mx-auto px-4 mb-4">
             <p className="text-center text-sm font-medium text-slate-500 uppercase tracking-wider">
               Marcas que nos respaldan
@@ -465,7 +499,7 @@ export default async function Home() {
 
 
         {/* Product Categories Section */}
-        <section className="bg-slate-50 py-16 md:py-20">
+        <section id="categorias" className="bg-slate-50 py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <span className="inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
@@ -532,7 +566,7 @@ export default async function Home() {
         </section>
 
         {/* Services Section - with irrigation image */}
-        <section className="py-16 md:py-24">
+        <section id="servicios-home" className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             {/* Header with image */}
             <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">

@@ -14,9 +14,17 @@ function capture(event: string, properties?: Record<string, unknown>) {
   });
 }
 
+export function trackPageView(path: string, search: string = "") {
+  capture("page_view", {
+    path,
+    search: search || null,
+    url: `${path}${search ? `?${search}` : ""}`,
+  });
+}
+
 // Checkout funnel
 export function trackCheckoutStarted(itemCount: number, subtotal: number) {
-  capture("checkout_started", { item_count: itemCount, subtotal_uyu: subtotal });
+  capture("checkout_start", { item_count: itemCount, subtotal_uyu: subtotal });
 }
 export function trackCheckoutStepCompleted(
   step: "datos_personales" | "envio" | "facturacion" | "pago",
@@ -31,7 +39,7 @@ export function trackOrderSubmitted(
   currency: "UYU" | "USD",
   itemCount: number
 ) {
-  capture("order_submitted", {
+  capture("purchase", {
     payment_method: paymentMethod,
     shipping_type: shippingType,
     total,
@@ -41,12 +49,32 @@ export function trackOrderSubmitted(
 }
 
 // Search
-export function trackSearch(query: string, resultCount: number, clickedResult: boolean) {
+export function trackSearch(
+  query: string,
+  resultCount: number,
+  clickedResult: boolean,
+  source: string = "catalog"
+) {
   capture("search", {
     query,
     result_count: resultCount,
     zero_results: resultCount === 0,
     clicked_result: clickedResult,
+    source,
+  });
+}
+
+export function trackCategoryView(
+  category: string,
+  subcategory: string | null,
+  resultCount?: number,
+  query?: string
+) {
+  capture("category_view", {
+    category,
+    subcategory,
+    result_count: resultCount,
+    query: query || null,
   });
 }
 
@@ -57,7 +85,12 @@ export function trackProductView(
   price: number,
   category: string
 ) {
-  capture("product_viewed", { productId, productName, price, category });
+  capture("product_view", {
+    product_id: productId,
+    product_name: productName,
+    price,
+    category,
+  });
 }
 export function trackAddToCart(
   productId: string,
@@ -65,10 +98,43 @@ export function trackAddToCart(
   price: number,
   quantity: number
 ) {
-  capture("product_added_to_cart", { productId, productName, price, quantity });
+  capture("add_to_cart", {
+    product_id: productId,
+    product_name: productName,
+    price,
+    quantity,
+  });
 }
 export function trackRemoveFromCart(productId: string, productName: string) {
-  capture("product_removed_from_cart", { productId, productName });
+  capture("remove_from_cart", {
+    product_id: productId,
+    product_name: productName,
+  });
+}
+
+export function trackWhatsAppClick(
+  source: string,
+  page: string,
+  href: string,
+  label: string
+) {
+  capture("whatsapp_click", { source, page, href, label });
+}
+
+export function trackPhoneClick(
+  source: string,
+  page: string,
+  href: string,
+  label: string
+) {
+  capture("phone_click", { source, page, href, label });
+}
+
+export function trackQuoteSubmitted(category: string, source: string = "contact_form") {
+  capture("quote_submitted", {
+    category,
+    source,
+  });
 }
 
 // Payment & shipping
@@ -99,6 +165,11 @@ export function trackAssistantMessage(
   topic?: string
 ) {
   capture("assistant_message", { resolved, message_count: messageCount, topic });
+}
+
+// Generic UI interactions (useful for dead-click analysis by section/target).
+export function trackUiInteraction(event: string, properties?: Record<string, unknown>) {
+  capture(event, properties);
 }
 
 /*

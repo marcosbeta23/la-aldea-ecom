@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CATEGORY_HIERARCHY } from '@/lib/categories';
+import { getCategoryPath } from '@/lib/category-slugs';
 import {
   Droplets,
   Sprout,
@@ -43,7 +44,7 @@ export default function CategoryBrowse({ categoryCounts }: CategoryBrowseProps) 
         return (
           <Link
             key={cat.value}
-            href={`/productos?categoria=${encodeURIComponent(cat.value)}`}
+            href={getCategoryPath(cat.value)}
             className="group relative flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all"
           >
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-white shadow-sm`}>

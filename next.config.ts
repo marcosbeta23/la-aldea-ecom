@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ['image/avif', 'image/webp'],
-    unoptimized: true,
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: 'https',
@@ -114,6 +114,7 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // ── Vercel app → production domain
       {
         source: '/:path*',
         has: [
@@ -131,6 +132,29 @@ const nextConfig: NextConfig = {
           {
             type: 'host',
             value: 'laaldeatala.vercel.app',
+          },
+        ],
+        destination: 'https://laaldeatala.com.uy/:path*',
+        permanent: true,
+      },
+      // ── SEO1: Legacy /faq/ URLs → /guias/ (301)
+      {
+        source: '/faq/:slug.html',
+        destination: '/guias/:slug',
+        permanent: true,
+      },
+      {
+        source: '/faq/:slug',
+        destination: '/guias/:slug',
+        permanent: true,
+      },
+      // ── SEO2: www → non-www (301)
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.laaldeatala.com.uy',
           },
         ],
         destination: 'https://laaldeatala.com.uy/:path*',

@@ -243,6 +243,7 @@ export default function ServiciosPage() {
                                     href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    data-whatsapp-source="services_hero_cta"
                                     className="inline-flex items-center gap-2.5 rounded-xl bg-blue-600 px-6 py-3.5 font-epilogue font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.35)] transition-all duration-300 hover:bg-blue-500 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(37,99,235,0.45)] active:scale-[0.98]"
                                 >
                                     <MessageCircle className="h-5 w-5" />
@@ -370,6 +371,7 @@ export default function ServiciosPage() {
                                 href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                data-whatsapp-source="services_process_cta"
                                 className="inline-flex items-center gap-2.5 rounded-2xl bg-green-500 px-8 py-4 font-bold text-white shadow-[0_8px_30px_rgba(34,197,94,0.2)] hover:bg-green-400 transition-all duration-300"
                             >
                                 <MessageCircle className="h-5 w-5" />
@@ -556,6 +558,7 @@ export default function ServiciosPage() {
                                             href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n%20h%C3%ADdrica...`}
                                             target="_blank"
                                             rel="noopener noreferrer"
+                                            data-whatsapp-source="services_main_cta"
                                             className="inline-flex items-center gap-3 rounded-2xl bg-white px-10 py-4 font-bold text-green-700 shadow-xl transition-all duration-300 hover:bg-green-50 hover:gap-5 active:scale-[0.98] whitespace-nowrap"
                                         >
                                             <MessageCircle className="h-5 w-5" />

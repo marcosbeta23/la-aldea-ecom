@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { ShoppingCart, Check, AlertCircle, MessageCircle, CreditCard } from 'lucide-react';
 import { Product } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
-import { WHATSAPP_PHONE } from '@/lib/constants';
 import WishlistButton from '@/components/common/WishlistButton';
 import { useState } from 'react';
 
@@ -63,7 +62,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="object-cover transform-gpu transition-transform duration-500 group-hover:scale-105"
             priority={priority}
             quality={80}
           />
@@ -92,14 +91,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
         </div>
 
-        {/* Wishlist Button */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full shadow-lg">
+        {/* Wishlist Button — always visible on mobile, hover on desktop */}
+        <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white rounded-full shadow-lg">
           <WishlistButton productId={product.id} size="sm" />
         </div>
 
         {/* Quick Add to Cart - appears on hover (not for on_request) */}
         {!isOnRequest && (
-          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 via-black/40 to-transparent md:opacity-0 md:translate-y-2 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-300">
             {error && (
               <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium tracking-wide bg-red-500/90 backdrop-blur-sm text-white px-2.5 py-1.5 rounded-lg shadow-sm">
                 <AlertCircle className="h-3.5 w-3.5" />
@@ -161,8 +160,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
         </div>
 
-        {/* Name (clamp to 1 line) */}
-        <h3 className="text-[15px] leading-tight font-bold text-slate-800 mb-1.5 truncate group-hover:text-blue-600 transition-colors max-w-full">
+        {/* Name (clamp to 2 lines for technical product names) */}
+        <h3 className="text-[15px] leading-tight font-bold text-slate-800 mb-1.5 line-clamp-2 group-hover:text-blue-600 transition-colors max-w-full">
           {product.name}
         </h3>
 

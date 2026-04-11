@@ -26,6 +26,43 @@ interface HourlyStat {
   orders: number;
 }
 
+interface AnalyticsOrderRow {
+  id: string;
+  status: string;
+  total: number;
+  created_at: string;
+  updated_at: string;
+  paid_at: string | null;
+  customer_email: string | null;
+  order_source: string | null;
+  payment_method: string | null;
+  shipping_department: string | null;
+  shipping_type: string | null;
+  currency: string | null;
+  coupon_code: string | null;
+}
+
+interface PrevOrderRow {
+  id: string;
+  status: string;
+  total: number;
+  currency: string | null;
+  payment_method: string | null;
+}
+
+interface CouponUsageRow {
+  code: string;
+  current_uses: number | null;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'object' && error && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
+
 export async function GET(request: NextRequest) {
 
   const authResult = await verifyOwnerAuth();
@@ -56,12 +93,12 @@ export async function GET(request: NextRequest) {
     const [ordersResult, prevOrdersResult, checkoutAttemptsResult, allCouponsResult] = await Promise.all([
       supabaseAdmin
         .from('orders')
-        .select('id, status, total, created_at, updated_at, customer_email, order_source, payment_method, shipping_department, shipping_type, currency, coupon_code')
+        .select('id, status, total, created_at, updated_at, paid_at, customer_email, order_source, payment_method, shipping_department, shipping_type, currency, coupon_code')
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false }),
       supabaseAdmin
         .from('orders')
-        .select('id, status, total, currency')
+        .select('id, status, total, currency, payment_method')
         .gte('created_at', prevStartDate.toISOString())
         .lt('created_at', startDate.toISOString()),
       supabaseAdmin
@@ -74,10 +111,10 @@ export async function GET(request: NextRequest) {
         .select('code, current_uses')
     ]);
 
-    const orders = (ordersResult.data || []) as any[];
-    const prevOrders = (prevOrdersResult.data || []) as any[];
+    const orders = (ordersResult.data || []) as AnalyticsOrderRow[];
+    const prevOrders = (prevOrdersResult.data || []) as PrevOrderRow[];
     const abandonedCount = checkoutAttemptsResult.count || 0;
-    const allCoupons = (allCouponsResult.data || []) as any[];
+    const allCoupons = (allCouponsResult.data || []) as CouponUsageRow[];
 
     const orderIds = orders.map(o => o.id);
 
@@ -138,7 +175,6 @@ export async function GET(request: NextRequest) {
     const onlineRevenueUYU = totalRevenueUYU;
     const onlineRevenueUSD = totalRevenueUSD;
     const onlineRevenue = totalRevenue;
-    const onlinePaidOrders = paidOrders;
 
     // === Previous Period Comparison (per currency) ===
     const prevPaidOrders = prevOrders.filter(o => paidStatuses.includes(o.status));
@@ -337,7 +373,7 @@ export async function GET(request: NextRequest) {
       .in('customer_email', emails.length > 0 ? [...new Set(emails)] : ['none'])
       .lt('created_at', startDate.toISOString());
 
-    const returningEmails = new Set(((pastOrdersCount || []) as any[]).map(o => o.customer_email));
+    const returningEmails = new Set(((pastOrdersCount || []) as Array<{ customer_email: string | null }>).map((order) => order.customer_email));
     const uniqueEmailsInPeriod = [...new Set(emails)];
     const returningCustomers = uniqueEmailsInPeriod.filter(email => returningEmails.has(email)).length;
     const newCustomers = uniqueEmailsInPeriod.length - returningCustomers;
@@ -408,10 +444,10 @@ export async function GET(request: NextRequest) {
       period,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Analytics error:', error);
     return NextResponse.json({
-      error: error.message || 'Error fetching analytics'
+      error: getErrorMessage(error, 'Error fetching analytics')
     }, { status: 500 });
   }
 }

@@ -31,14 +31,21 @@ export async function getAdminRole(): Promise<AdminRole | null> {
 async function checkIsActive(email: string): Promise<boolean> {
   if (!email) return true; // no email = let Clerk handle it
   try {
-    const { data } = await (supabaseAdmin as any)
-      .from('admin_users')
+    const adminUsersTable = supabaseAdmin.from('admin_users') as unknown as {
+      select: (columns: 'is_active') => {
+        eq: (column: 'email', value: string) => {
+          maybeSingle: () => Promise<{ data: { is_active: boolean | null } | null }>;
+        };
+      };
+    };
+
+    const { data } = await adminUsersTable
       .select('is_active')
       .eq('email', email.toLowerCase().trim())
-      .single();
+      .maybeSingle();
     // If row not found (data is null) allow through — not all admins are in the table
     if (data === null) return true;
-    return (data as any).is_active === true;
+    return data.is_active === true;
   } catch {
     // On DB error, allow through to avoid locking out admins on transient failures
     return true;

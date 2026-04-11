@@ -4,7 +4,8 @@ import { useState, useTransition, useRef, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, X, Loader2, Tag, Layers, Package } from 'lucide-react';
 import Image from 'next/image';
-import { trackSearch } from '@/lib/analytics';
+import { trackUiInteraction } from '@/lib/analytics';
+import { getCategoryPath } from '@/lib/category-slugs';
 
 interface Suggestion {
   type: 'product' | 'category' | 'brand';
@@ -110,8 +111,12 @@ export default function ProductSearch({
 
     params.delete('page');
 
-    // Fire PostHog search event (resultCount unknown here, clickedResult false)
-    trackSearch(trimmed, 0, false);
+    if (trimmed) {
+      trackUiInteraction('search_submitted', {
+        query: trimmed,
+        source: 'search_bar',
+      });
+    }
 
     startTransition(() => {
       router.push(`/productos?${params.toString()}`);
@@ -134,13 +139,16 @@ export default function ProductSearch({
   const handleSuggestionClick = (suggestion: Suggestion) => {
     setShowSuggestions(false);
 
-    // Fire PostHog search event for suggestion click (clickedResult true)
-    trackSearch(query.trim(), 0, true);
+    trackUiInteraction('search_suggestion_click', {
+      query: query.trim(),
+      suggestion_type: suggestion.type,
+      suggestion_name: suggestion.name,
+    });
 
     if (suggestion.type === 'product' && suggestion.sku) {
       router.push(`/productos/${suggestion.slug ?? suggestion.sku}`);
     } else if (suggestion.type === 'category') {
-      router.push(`/productos?categoria=${encodeURIComponent(suggestion.name)}`);
+      router.push(getCategoryPath(suggestion.name));
     } else if (suggestion.type === 'brand') {
       router.push(`/productos?marca=${encodeURIComponent(suggestion.name)}`);
     }

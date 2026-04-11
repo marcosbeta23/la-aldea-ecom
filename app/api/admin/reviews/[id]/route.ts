@@ -2,6 +2,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyOwnerAuth } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type ReviewUpdate = Pick<Database['public']['Tables']['product_reviews']['Row'], 'is_approved'>;
+
+const reviewWriteBridge = supabaseAdmin as unknown as {
+  from: (table: 'product_reviews') => {
+    update: (values: ReviewUpdate) => {
+      eq: (column: 'id', value: string) => Promise<{ error: { message: string } | null }>;
+    };
+    delete: () => {
+      eq: (column: 'id', value: string) => Promise<{ error: { message: string } | null }>;
+    };
+  };
+};
 
 
 // PATCH - Approve/reject review
@@ -26,7 +40,7 @@ export async function PATCH(
       );
     }
 
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await reviewWriteBridge
       .from('product_reviews')
       .update({ is_approved })
       .eq('id', id);
@@ -61,7 +75,7 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await reviewWriteBridge
       .from('product_reviews')
       .delete()
       .eq('id', id);

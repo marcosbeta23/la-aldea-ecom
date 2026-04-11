@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type ProductRow = Database['public']['Tables']['products']['Row'];
+type ProductUpdate = Database['public']['Tables']['products']['Update'];
+
+type ProductWriteResponse = {
+  error: { code?: string; message: string } | null;
+};
+
+const featuredProductsWriteBridge = supabaseAdmin as unknown as {
+  from: (table: 'products') => {
+    update: (values: ProductUpdate) => {
+      eq: (column: 'id', value: string) => Promise<ProductWriteResponse>;
+      in: (column: 'id', values: string[]) => Promise<ProductWriteResponse>;
+    };
+  };
+};
 
 async function checkAdminAuth(): Promise<boolean> {
   const { userId } = await auth();
@@ -25,7 +42,7 @@ export async function GET() {
     if (error) throw error;
 
     return NextResponse.json({ products: data || [] });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching featured products:', error);
     return NextResponse.json({ error: 'Error al cargar productos destacados' }, { status: 500 });
   }
@@ -39,49 +56,56 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { productIds } = await request.json();
+    const body = await request.json();
+    const productIds = body?.productIds;
 
-    if (!Array.isArray(productIds)) {
+    if (!Array.isArray(productIds) || !productIds.every((id) => typeof id === 'string')) {
       return NextResponse.json({ error: 'productIds debe ser un array' }, { status: 400 });
     }
 
+    const normalizedProductIds = productIds as string[];
+
     // Update each product's featured_order
-    const updates: Promise<any>[] = productIds.map((id: string, index: number) =>
-      (supabaseAdmin as any)
+    const updates = normalizedProductIds.map((id, index) =>
+      featuredProductsWriteBridge
         .from('products')
-        .update({ featured_order: index, is_featured: true, updated_at: new Date().toISOString() })
+        .update({ featured_order: index, is_featured: true } satisfies ProductUpdate)
         .eq('id', id)
     );
 
     // Also un-feature products that were removed from the list
     // First get all currently featured products
-    const { data: currentFeatured } = await (supabaseAdmin as any)
+    const { data: currentFeatured, error: currentFeaturedError } = await supabaseAdmin
       .from('products')
       .select('id')
       .eq('is_featured', true);
 
-    const newFeaturedSet = new Set(productIds);
+    if (currentFeaturedError) throw currentFeaturedError;
+
+    const newFeaturedSet = new Set(normalizedProductIds);
     const toUnfeature = (currentFeatured || [])
-      .filter((p: any) => !newFeaturedSet.has(p.id))
-      .map((p: any) => p.id);
+      .filter((product: Pick<ProductRow, 'id'>) => !newFeaturedSet.has(product.id))
+      .map((product: Pick<ProductRow, 'id'>) => product.id);
 
     if (toUnfeature.length > 0) {
       updates.push(
-        (supabaseAdmin as any)
+        featuredProductsWriteBridge
           .from('products')
-          .update({ is_featured: false, featured_order: null, updated_at: new Date().toISOString() })
+          .update({ is_featured: false, featured_order: null } satisfies ProductUpdate)
           .in('id', toUnfeature)
       );
     }
 
-    await Promise.all(updates);
+    const updateResults = await Promise.all(updates);
+    const updateError = updateResults.find((result) => result.error)?.error;
+    if (updateError) throw updateError;
 
     // Bust cache
     revalidatePath('/');
     revalidatePath('/productos');
 
-    return NextResponse.json({ success: true, count: productIds.length });
-  } catch (error: any) {
+    return NextResponse.json({ success: true, count: normalizedProductIds.length });
+  } catch (error: unknown) {
     console.error('Error updating featured products:', error);
     return NextResponse.json({ error: 'Error al actualizar productos destacados' }, { status: 500 });
   }

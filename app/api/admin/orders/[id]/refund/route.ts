@@ -4,6 +4,44 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { inngest } from '@/lib/inngest';
 import { alertRefundProcessed } from '@/lib/telegram';
 
+type RefundOrder = {
+  id: string;
+  order_number: string;
+  status: string;
+  mp_payment_id: string | null;
+  total: number;
+  notes: string | null;
+  stock_reserved: boolean | null;
+  customer_name: string | null;
+  customer_email: string | null;
+  customer_phone: string | null;
+  currency: string | null;
+};
+
+const ordersWriteTable = supabaseAdmin.from('orders') as unknown as {
+  update: (values: Record<string, unknown>) => {
+    eq: (column: 'id', value: string) => Promise<{ error: unknown }>;
+  };
+};
+
+const orderLogsWriteTable = supabaseAdmin.from('order_logs') as unknown as {
+  insert: (values: {
+    order_id: string;
+    action: string;
+    old_status: string;
+    new_status: string;
+    details: Record<string, unknown>;
+    created_by: string;
+  }) => Promise<{ error?: unknown }>;
+};
+
+const rpcClient = supabaseAdmin as unknown as {
+  rpc: (
+    fn: 'restore_stock_for_order',
+    args: { p_order_id: string }
+  ) => Promise<{ error?: unknown }>;
+};
+
 // Verify admin authentication via Clerk
 async function verifyAdmin() {
   const { userId } = await auth();
@@ -72,9 +110,9 @@ export async function POST(
     // Fetch order
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('*')
+      .select('id, order_number, status, mp_payment_id, total, notes, stock_reserved, customer_name, customer_email, customer_phone, currency')
       .eq('id', orderId)
-      .single() as { data: any; error: any };
+      .single() as { data: RefundOrder | null; error: unknown };
 
     if (orderError || !order) {
       return NextResponse.json(
@@ -83,7 +121,7 @@ export async function POST(
       );
     }
 
-    const orderData = order as any;
+    const orderData = order;
 
     // Validate order can be refunded
     if (orderData.status === 'refunded') {
@@ -120,18 +158,18 @@ export async function POST(
       );
       refundStatus = 'completed';
       console.log('MercadoPago refund processed:', mpRefund);
-    } catch (mpError: any) {
+    } catch (mpError: unknown) {
+      const mpMessage = mpError instanceof Error ? mpError.message : 'Unknown MercadoPago refund error';
       console.error('MercadoPago refund failed:', mpError);
       refundStatus = 'failed';
 
       // Still update order with failed refund status so admin can retry
-      await (supabaseAdmin as any)
-        .from('orders')
+      await ordersWriteTable
         .update({
           refund_status: 'failed',
           refund_amount: refundAmount,
           refund_reason: reason,
-          notes: `${orderData.notes || ''}\n\n⚠️ Refund failed: ${mpError.message}`.trim(),
+          notes: `${orderData.notes || ''}\n\n⚠️ Refund failed: ${mpMessage}`.trim(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', orderId);
@@ -140,7 +178,7 @@ export async function POST(
       alertRefundProcessed(orderData.order_number, refundAmount, false, orderData.customer_name || '', orderData.currency || 'UYU').catch(() => { });
 
       return NextResponse.json(
-        { success: false, error: `MercadoPago refund failed: ${mpError.message}` },
+        { success: false, error: `MercadoPago refund failed: ${mpMessage}` },
         { status: 500 }
       );
     }
@@ -148,7 +186,7 @@ export async function POST(
     // Restore stock if requested
     if (restoreStock && orderData.stock_reserved) {
       try {
-        await (supabaseAdmin as any).rpc('restore_stock_for_order', {
+        await rpcClient.rpc('restore_stock_for_order', {
           p_order_id: orderId,
         });
         console.log('Stock restored for order:', orderId);
@@ -159,8 +197,7 @@ export async function POST(
     }
 
     // Update order
-    const { error: updateError } = await (supabaseAdmin as any)
-      .from('orders')
+    const { error: updateError } = await ordersWriteTable
       .update({
         status: 'refunded',
         refund_id: mpRefund?.id?.toString() || null,
@@ -179,8 +216,7 @@ export async function POST(
     }
 
     // Log the event
-    await (supabaseAdmin as any)
-      .from('order_logs')
+    await orderLogsWriteTable
       .insert({
         order_id: orderId,
         action: 'refund_processed',
@@ -222,10 +258,11 @@ export async function POST(
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
     console.error('Refund error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
+      { success: false, error: message },
       { status: 500 }
     );
   }

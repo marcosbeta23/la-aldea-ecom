@@ -15,6 +15,8 @@ import { FAQ_BY_GUIDE } from '@/lib/faq-by-guide';
 import PageHeader from '@/components/layout/PageHeader';
 import { autoLinkBlogContent } from '@/lib/auto-link';
 import type { SeoCluster } from '@/lib/seo-clusters';
+import { getCategoryPath } from '@/lib/category-slugs';
+import GuideInteractionTracker from '@/components/faq/GuideInteractionTracker';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -309,7 +311,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
     about: article.relatedCategories.map(rc => ({
       "@type": "Thing",
       name: rc.label,
-      url: `${siteUrl}/productos?category=${encodeURIComponent(rc.value)}`,
+      url: `${siteUrl}${getCategoryPath(rc.value)}`,
     })),
 
     keywords: article.keywords.join(", "),
@@ -409,6 +411,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
       <Header />
 
       <main className="min-h-screen bg-slate-50">
+        <GuideInteractionTracker slug={slug} />
         {/* Hero */}
         <PageHeader
           badge={article.category}
@@ -429,7 +432,7 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
         <section className="container mx-auto px-4 py-8 lg:py-12">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Article body */}
-            <article className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 overflow-hidden">
+            <article data-guide-content="true" className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 lg:p-8 overflow-hidden">
               {article.sections.map((section, i) => (
                 <ArticleSectionBlock
                   key={i}

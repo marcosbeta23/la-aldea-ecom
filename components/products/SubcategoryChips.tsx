@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { buildCategoryUrl, getCategoryPath } from '@/lib/category-slugs';
 
 interface SubcategoryChipsProps {
   subcategories: { value: string; label: string; count: number }[];
@@ -58,7 +59,7 @@ export function SubcategoryChips({ subcategories, categoria, currentSub }: Subca
         className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth pb-1 px-1 w-full"
       >
         <Link
-          href={`/productos?categoria=${encodeURIComponent(categoria)}`}
+          href={getCategoryPath(categoria)}
           className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
             !currentSub
               ? 'bg-blue-600 text-white'
@@ -70,7 +71,7 @@ export function SubcategoryChips({ subcategories, categoria, currentSub }: Subca
         {subcategories.map(sub => (
           <Link
             key={sub.value}
-            href={`/productos?categoria=${encodeURIComponent(categoria)}&sub=${encodeURIComponent(sub.value)}`}
+            href={buildCategoryUrl(categoria, { sub: sub.value })}
             className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               currentSub === sub.value
                 ? 'bg-blue-600 text-white'

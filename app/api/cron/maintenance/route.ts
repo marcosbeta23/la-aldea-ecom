@@ -15,27 +15,36 @@ import { supabaseAdmin } from '@/lib/supabase';
 //   4. data purge: always (trim search analytics & stale checkouts)
 //   5. monthly snapshots: only on the 1st of each month
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return 'Unknown error';
+}
+
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    console.error('CRON_SECRET not configured');
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+  }
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const results: Record<string, unknown> = {};
   const baseUrl = request.nextUrl.origin;
-  const headers: Record<string, string> = {};
-  if (cronSecret) {
-    headers['authorization'] = `Bearer ${cronSecret}`;
-  }
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${cronSecret}`,
+  };
 
   // 1. Release expired stock — runs every day
   try {
     const res = await fetch(`${baseUrl}/api/cron/release-stock`, { headers });
     results.releaseStock = await res.json();
-  } catch (err: any) {
-    results.releaseStock = { success: false, error: err.message };
+  } catch (err) {
+    results.releaseStock = { success: false, error: getErrorMessage(err) };
   }
 
   // 2. Abandoned cart recovery — runs every day
@@ -43,8 +52,8 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(`${baseUrl}/api/cron/abandoned-carts`, { headers });
     results.abandonedCarts = await res.json();
-  } catch (err: any) {
-    results.abandonedCarts = { success: false, error: err.message };
+  } catch (err) {
+    results.abandonedCarts = { success: false, error: getErrorMessage(err) };
   }
 
   // 3. Weekly report — only on Mondays (UTC)
@@ -53,8 +62,8 @@ export async function GET(request: NextRequest) {
     try {
       const res = await fetch(`${baseUrl}/api/cron/weekly-report`, { headers });
       results.weeklyReport = await res.json();
-    } catch (err: any) {
-      results.weeklyReport = { success: false, error: err.message };
+    } catch (err) {
+      results.weeklyReport = { success: false, error: getErrorMessage(err) };
     }
   } else {
     results.weeklyReport = { skipped: true, reason: 'Not Monday' };
@@ -65,7 +74,7 @@ export async function GET(request: NextRequest) {
   // starts checkout but abandons without paying.
   try {
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-    const { data: cancelledOrders, error: cancelError } = await (supabaseAdmin as any)
+    const { data: cancelledOrders, error: cancelError } = await supabaseAdmin
       .from('orders')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('payment_method', 'mercadopago')
@@ -80,8 +89,8 @@ export async function GET(request: NextRequest) {
       console.log(`🧹 Cancelled ${count} stale MP pending orders`);
       results.cancelAbandonedMp = { success: true, cancelled: count };
     }
-  } catch (err: any) {
-    results.cancelAbandonedMp = { success: false, error: err.message };
+  } catch (err) {
+    results.cancelAbandonedMp = { success: false, error: getErrorMessage(err) };
   }
 
   // 5. Data Purge — trim search_analytics (>90d) and checkout_attempts (>6 months)
@@ -97,8 +106,8 @@ export async function GET(request: NextRequest) {
     } else {
       results.dataPurge = { success: true, method: 'rpc' };
     }
-  } catch (err: any) {
-    results.dataPurge = { success: false, error: err.message };
+  } catch (err) {
+    results.dataPurge = { success: false, error: getErrorMessage(err) };
   }
 
   // 6. Monthly Snapshots — only on the 1st of the month
@@ -113,28 +122,37 @@ export async function GET(request: NextRequest) {
         const startOfMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1).toISOString();
         const endOfMonth = lastMonth.toISOString();
 
-        const { data: snapshotData } = await supabaseAdmin
+        const { data: snapshotData, error: snapshotDataError } = await supabaseAdmin
           .from('orders')
           .select('total, currency, status')
           .gte('created_at', startOfMonth)
           .lte('created_at', endOfMonth)
           .in('status', ['paid', 'invoiced', 'processing', 'shipped', 'delivered']) as { data: Array<{ total: number; currency: string; status: string }> | null };
 
+        if (snapshotDataError) {
+          throw new Error(snapshotDataError.message);
+        }
+
         const totalUYU = snapshotData?.filter(o => o.currency === 'UYU').reduce((s, o) => s + (o.total || 0), 0) || 0;
         const totalUSD = snapshotData?.filter(o => o.currency === 'USD').reduce((s, o) => s + (o.total || 0), 0) || 0;
-        
-        await (supabaseAdmin.from('monthly_revenue_snapshots' as any) as any).upsert({
+
+        const { error: upsertSnapshotError } = await supabaseAdmin.from('monthly_revenue_snapshots').upsert({
           month: startOfMonth.split('T')[0],
           revenue_uyu: totalUYU,
           revenue_usd: totalUSD,
           order_count: snapshotData?.length || 0,
         });
+
+        if (upsertSnapshotError) {
+          throw new Error(upsertSnapshotError.message);
+        }
+
         results.monthlySnapshot = { success: true, method: 'fallback' };
       } else {
         results.monthlySnapshot = { success: true, method: 'rpc' };
       }
-    } catch (err: any) {
-      results.monthlySnapshot = { success: false, error: err.message };
+    } catch (err) {
+      results.monthlySnapshot = { success: false, error: getErrorMessage(err) };
     }
   }
 

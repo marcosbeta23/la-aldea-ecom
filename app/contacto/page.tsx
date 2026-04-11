@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
 import PageHeader from '@/components/layout/PageHeader';
+import QuoteRequestForm from '@/components/contact/QuoteRequestForm';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
@@ -158,6 +159,7 @@ export default function ContactoPage() {
                     href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre...`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-whatsapp-source="contact_whatsapp_card"
                     className="mt-auto inline-flex items-center gap-3 rounded-2xl bg-white px-10 py-4.5 font-bold text-green-700 shadow-xl hover:bg-green-50 hover:gap-5 transition-all duration-300 active:scale-[0.98]"
                   >
                     <MessageCircle className="h-6 w-6" />
@@ -178,13 +180,21 @@ export default function ContactoPage() {
                   </div>
                   <ul className="space-y-2 text-sm">
                     <li>
-                      <a href={`tel:+${WHATSAPP_PHONE}`} className="text-slate-700 hover:text-blue-600">
+                      <a
+                        href={`tel:+${WHATSAPP_PHONE}`}
+                        data-phone-source="contact_mobile_phone"
+                        className="text-slate-700 hover:text-blue-600"
+                      >
                         {WHATSAPP_DISPLAY}
                       </a>
                       <span className="text-slate-400 ml-1">(celular)</span>
                     </li>
                     <li>
-                      <a href="tel:+59843154393" className="text-slate-700 hover:text-blue-600">
+                      <a
+                        href="tel:+59843154393"
+                        data-phone-source="contact_landline_phone"
+                        className="text-slate-700 hover:text-blue-600"
+                      >
                         4315 4393
                       </a>
                       <span className="text-slate-400 ml-1">(fijo)</span>
@@ -263,6 +273,8 @@ export default function ContactoPage() {
                   </div>
                 </div>
               </div>
+
+              <QuoteRequestForm />
             </div>
 
             {/* Sidebar — Address + Map */}

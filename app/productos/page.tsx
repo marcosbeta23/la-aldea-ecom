@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import { Suspense, cache } from 'react';
+import { permanentRedirect } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCategory } from '@/lib/validators';
 import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
+import { getCategoryPath } from '@/lib/category-slugs';
 import { getArticlesForCategory } from '@/lib/faq-articles';
 import { Product } from '@/types/database';
 import ProductGrid from '@/components/products/ProductGrid';
 import SearchAnalytics from '@/components/products/SearchAnalytics';
+import CategoryViewTracker from '@/components/products/CategoryViewTracker';
 import ProductFilters from '@/components/products/ProductFilters';
 import ProductSearch from '@/components/products/ProductSearch';
 import FilterPersistence from '@/components/products/FilterPersistence';
@@ -31,6 +34,7 @@ interface ProductsPageProps {
     precio_min?: string;
     precio_max?: string;
   }>;
+  routeCategory?: string;
 }
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
@@ -433,9 +437,53 @@ function hasActiveFilters(params: Record<string, string | undefined>): boolean {
   return !!(params.categoria || params.sub || params.marca || params.stock || params.q || params.precio_min || params.precio_max || params.orden);
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+export default async function ProductsPage({ searchParams, routeCategory }: ProductsPageProps) {
   const params = await searchParams;
+
+  // Legacy support: /productos?categoria=... -> /productos/categoria/... (server-side permanent redirect)
+  if (!routeCategory && params.categoria) {
+    const categoryPath = getCategoryPath(params.categoria);
+    if (categoryPath !== '/productos') {
+      const redirectParams = new URLSearchParams();
+      if (params.sub) redirectParams.set('sub', params.sub);
+      if (params.marca) redirectParams.set('marca', params.marca);
+      if (params.stock) redirectParams.set('stock', params.stock);
+      if (params.orden) redirectParams.set('orden', params.orden);
+      if (params.page && params.page !== '1') redirectParams.set('page', params.page);
+      if (params.q) redirectParams.set('q', params.q);
+      if (params.precio_min) redirectParams.set('precio_min', params.precio_min);
+      if (params.precio_max) redirectParams.set('precio_max', params.precio_max);
+
+      const qs = redirectParams.toString();
+      permanentRedirect(qs ? `${categoryPath}?${qs}` : categoryPath);
+    }
+  }
+
   const browsing = hasActiveFilters(params);
+
+  const isCategorySlugView = Boolean(routeCategory && params.categoria);
+  const listingBasePath = isCategorySlugView && params.categoria
+    ? getCategoryPath(params.categoria)
+    : '/productos';
+
+  const buildListingHref = (overrides: Partial<typeof params> = {}) => {
+    const merged = { ...params, ...overrides };
+    const query = new URLSearchParams();
+
+    // Category is encoded in pathname for slug routes.
+    if (!isCategorySlugView && merged.categoria) query.set('categoria', merged.categoria);
+    if (merged.sub) query.set('sub', merged.sub);
+    if (merged.marca) query.set('marca', merged.marca);
+    if (merged.stock) query.set('stock', merged.stock);
+    if (merged.orden) query.set('orden', merged.orden);
+    if (merged.page && merged.page !== '1') query.set('page', merged.page);
+    if (merged.q) query.set('q', merged.q);
+    if (merged.precio_min) query.set('precio_min', merged.precio_min);
+    if (merged.precio_max) query.set('precio_max', merged.precio_max);
+
+    const qs = query.toString();
+    return qs ? `${listingBasePath}?${qs}` : listingBasePath;
+  };
 
   // If user is just landing on /productos with no filters, show category browsing
   // Otherwise show filtered product grid
@@ -532,6 +580,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
             {/* Products Grid */}
             <div className="flex-1 min-w-0">
+              <CategoryViewTracker
+                category={params.categoria}
+                subcategory={params.sub}
+                query={params.q}
+                resultCount={total}
+                page={page}
+              />
+
               {/* PostHog search analytics: fire only if search query present */}
               {params.q && (
                 <SearchAnalytics query={params.q} resultCount={total} />
@@ -557,7 +613,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         {searchFallback.suggestions.map(cat => (
                           <Link
                             key={cat}
-                            href={`/productos?categoria=${encodeURIComponent(cat)}`}
+                            href={getCategoryPath(cat)}
                             className="px-4 py-2 bg-blue-50 text-blue-700 text-sm rounded-full border border-blue-100 hover:bg-blue-100 transition-colors font-medium"
                           >
                             {cat}
@@ -584,7 +640,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     {/* Prev */}
                     {page > 1 ? (
                       <Link
-                        href={`/productos?${new URLSearchParams({ ...params, page: String(page - 1) } as Record<string, string>).toString()}`}
+                        href={buildListingHref({ page: String(page - 1) })}
                         className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
                         aria-label="Página anterior"
                       >
@@ -598,7 +654,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
                     {/* Page 1 */}
                     <Link
-                      href={`/productos?${new URLSearchParams({ ...params, page: '1' } as Record<string, string>).toString()}`}
+                      href={buildListingHref({ page: '1' })}
                       className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${page === 1 ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
                         }`}
                     >
@@ -614,7 +670,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       return (
                         <Link
                           key={p}
-                          href={`/productos?${new URLSearchParams({ ...params, page: String(p) } as Record<string, string>).toString()}`}
+                          href={buildListingHref({ page: String(p) })}
                           className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${p === page ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
                             }`}
                         >
@@ -628,7 +684,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     {/* Last page */}
                     {totalPages > 1 && (
                       <Link
-                        href={`/productos?${new URLSearchParams({ ...params, page: String(totalPages) } as Record<string, string>).toString()}`}
+                        href={buildListingHref({ page: String(totalPages) })}
                         className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${page === totalPages ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
                           }`}
                       >
@@ -639,7 +695,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     {/* Next */}
                     {page < totalPages ? (
                       <Link
-                        href={`/productos?${new URLSearchParams({ ...params, page: String(page + 1) } as Record<string, string>).toString()}`}
+                        href={buildListingHref({ page: String(page + 1) })}
                         className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
                         aria-label="Página siguiente"
                       >

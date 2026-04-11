@@ -660,7 +660,7 @@ export default function GuideEditor({ guideId }: { guideId: string | null }) {
                             ? '<ol>\n<li><strong>Paso 1:</strong> Descripcion...</li>\n<li><strong>Paso 2:</strong> Descripcion...</li>\n</ol>'
                             : section.type === 'table'
                             ? '<table>\n<thead><tr><th>Columna 1</th><th>Columna 2</th></tr></thead>\n<tbody>\n<tr><td>Dato 1</td><td>Dato 2</td></tr>\n</tbody>\n</table>'
-                            : '<p>Escribe el contenido aqui. Podes usar <strong>negrita</strong>, <a href="/productos?categoria=Riego">enlaces internos</a> y mas HTML.</p>'
+                            : '<p>Escribe el contenido aqui. Podes usar <strong>negrita</strong>, <a href="/productos/categoria/riego">enlaces internos</a> y mas HTML.</p>'
                         }
                       />
                     )}
@@ -676,7 +676,7 @@ export default function GuideEditor({ guideId }: { guideId: string | null }) {
                       <span><code>&lt;ul&gt;&lt;li&gt;</code> = lista</span>
                     </div>
                     <p className="mt-2">
-                      Para enlaces internos usa: <code>&lt;a href=&quot;/productos?categoria=Riego&quot;&gt;Ver riego&lt;/a&gt;</code>
+                      Para enlaces internos usa: <code>&lt;a href=&quot;/productos/categoria/riego&quot;&gt;Ver riego&lt;/a&gt;</code>
                     </p>
                   </div>
                   
