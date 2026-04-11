@@ -354,32 +354,21 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           {viewportBucketsScript}
         </Script>
 
-        <Script
-          id="crazy-egg"
-          type="text/javascript"
-          src="//script.crazyegg.com/pages/scripts/0132/5723.js"
-          async
-          strategy="lazyOnload"
-          nonce={nonce}
-        />
-
         {/* DNS prefetch for performance */}
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://supabase.co" />
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
 
-        {/* Cloudflare Web Analytics */}
-        <Script
-          strategy="lazyOnload"
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}'
-          nonce={nonce}
-        />
-        {/* End Cloudflare Web Analytics */}
-
       </head>
       <body className={`${barlowCondensed.variable} ${fraunces.variable} ${epilogue.variable} ${dmMono.variable} font-sans antialiased`}>
+        {children}
+        <ConditionalFooter />
+        <ClientLayoutElements />
+        <PostHogProvider />
+        <Analytics nonce={nonce} />
+        <VercelAnalytics />
+        <SpeedInsights />
         {/* WebSite schema with SearchAction for Google sitelinks searchbox */}
         <script
           type="application/ld+json"
@@ -394,13 +383,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
-        {children}
-        <ConditionalFooter />
-        <ClientLayoutElements />
-        <PostHogProvider />
-        <Analytics nonce={nonce} />
-        <VercelAnalytics />
-        <SpeedInsights />
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { useCartStore } from '@/stores/cartStore';
 
 const CartDrawer = dynamic(() => import('@/components/cart/CartDrawer'), {
   ssr: false,
@@ -31,6 +32,8 @@ const WhatsAppClickTracker = dynamic(() => import('@/components/common/WhatsAppC
 export default function ClientLayoutElements() {
   const pathname = usePathname();
   const [enhancementsReady, setEnhancementsReady] = useState(false);
+  const [cartDrawerReady, setCartDrawerReady] = useState(false);
+  const isCartOpen = useCartStore((state) => state.isOpen);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -55,12 +58,32 @@ export default function ClientLayoutElements() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!enhancementsReady || cartDrawerReady) return;
+
+    let cancelled = false;
+
+    import('@/components/cart/CartDrawer')
+      .then(() => {
+        if (!cancelled) {
+          setCartDrawerReady(true);
+        }
+      })
+      .catch(() => {
+        // Keep silent; dynamic component import has its own retry path on render.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enhancementsReady, cartDrawerReady]);
+
   // None of these belong in the admin panel
   if (pathname?.startsWith('/admin')) return null;
 
   return (
     <>
-      <CartDrawer />
+      {(isCartOpen || cartDrawerReady) && <CartDrawer />}
       {enhancementsReady && (
         <>
           <NavigationProgress />

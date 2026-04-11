@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 
 const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID || "G-K06VE6W4MY";
 const COOKIE_CONSENT_KEY = "laaldea_cookie_consent";
+const CRAZY_EGG_SRC = "//script.crazyegg.com/pages/scripts/0132/5723.js";
+const CLOUDFLARE_BEACON_SRC = "https://static.cloudflareinsights.com/beacon.min.js";
+const CLOUDFLARE_BEACON_DATA = '{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}';
 
 function hasAnalyticsConsent(): boolean {
   if (typeof window === "undefined") return false;
@@ -72,6 +75,22 @@ export function Analytics({ nonce }: { nonce?: string }) {
           gtag('config', '${GA_TRACKING_ID}');
         `}
       </Script>
+
+      {/* Non-essential trackers are consent-gated to avoid extra script cost on first load. */}
+      <Script
+        id="crazy-egg"
+        type="text/javascript"
+        src={CRAZY_EGG_SRC}
+        strategy="lazyOnload"
+        nonce={nonce}
+      />
+      <Script
+        id="cloudflare-web-analytics"
+        strategy="lazyOnload"
+        src={CLOUDFLARE_BEACON_SRC}
+        data-cf-beacon={CLOUDFLARE_BEACON_DATA}
+        nonce={nonce}
+      />
     </>
   );
 }
