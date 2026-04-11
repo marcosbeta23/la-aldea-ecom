@@ -193,7 +193,7 @@ export default function ServiciosPage() {
 
             <main className="min-h-screen bg-slate-50">
 
-                <HeroSection className="relative w-full flex flex-col overflow-hidden touch-pan-y bg-slate-900">
+                <HeroSection className="services-hero-shell relative w-full flex flex-col overflow-hidden touch-pan-y bg-slate-900">
                     <div className="absolute inset-0 z-0">
                         <Image
                             src="/assets/images/services/hero-servicios.avif"
@@ -210,35 +210,35 @@ export default function ServiciosPage() {
 
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/4 bg-linear-to-t from-[#050b14]/95 via-[#050b14]/30 to-transparent" />
 
-                    <div className="relative z-20 flex flex-1 flex-col justify-end pb-10 pt-24 sm:pb-12 sm:pt-28 lg:pb-16 lg:pt-32">
-                        <div className="container mx-auto px-4">
-                            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-1.5 backdrop-blur-sm">
+                    <div className="services-hero-content relative z-20 flex flex-1 flex-col justify-end pb-10 pt-24 sm:pb-12 sm:pt-28 lg:pb-16 lg:pt-32">
+                        <div className="services-hero-container container mx-auto px-4 lg:px-8 2xl:px-10 max-w-[1450px] 2xl:max-w-[1800px]">
+                            <div className="services-hero-kicker mb-5 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-1.5 backdrop-blur-sm">
                                 <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
                                 <span className="font-dm-mono text-[10px] font-medium uppercase tracking-[0.2em] text-blue-300">
                                     Instalación · Diseño · Asesoramiento
                                 </span>
                             </div>
-                            <div className="max-w-4xl">
+                            <div className="services-hero-title-wrap max-w-4xl 2xl:max-w-5xl">
                                 <p className="mb-3 font-dm-mono text-[10px] uppercase tracking-[0.24em] text-slate-300/85 sm:text-[11px]">
                                     Soluciones profesionales en todo Uruguay
                                 </p>
-                                <h1 className="font-epilogue text-[clamp(2.2rem,7vw,4.8rem)] font-extrabold leading-[0.95] tracking-[-0.02em] text-white">
+                                <h1 className="services-hero-title font-epilogue text-[clamp(2.2rem,7vw,4.8rem)] font-extrabold leading-[0.95] tracking-[-0.02em] text-white">
                                     <span className="block">Riego e Ingeniería</span>
                                     <span className="block bg-linear-to-r from-blue-300 via-cyan-300 to-blue-500 bg-clip-text text-transparent">
                                         Hidráulica
                                     </span>
-                                    <span className="mt-1 block text-[clamp(1.15rem,2.9vw,2rem)] font-semibold tracking-[0.02em] text-slate-200">
+                                    <span className="services-hero-subtitle mt-1 block text-[clamp(1.15rem,2.9vw,2rem)] font-semibold tracking-[0.02em] text-slate-200">
                                         Diseño, instalación y puesta en marcha.
                                     </span>
                                 </h1>
                             </div>
 
-                            <p className="mt-5 max-w-lg text-[15px] font-light leading-snug text-slate-300 sm:text-[17px]">
+                            <p className="services-hero-description mt-5 max-w-lg 2xl:max-w-2xl text-[15px] font-light leading-snug text-slate-300 sm:text-[17px]">
                                 Instalamos, diseñamos y ponemos en marcha sistemas hídricos en todo Uruguay.
                                 25 años de trayectoria nos respaldan.
                             </p>
 
-                            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="services-hero-ctas mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <a
                                     href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
                                     target="_blank"
@@ -259,7 +259,7 @@ export default function ServiciosPage() {
                             </div>
                         </div>
                     </div>
-                    <div className="relative z-20 mb-4 flex flex-col items-center gap-1">
+                    <div className="services-hero-scroll relative z-20 mb-4 flex flex-col items-center gap-1">
                         <span className="font-dm-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
                             Deslizá para descubrir
                         </span>

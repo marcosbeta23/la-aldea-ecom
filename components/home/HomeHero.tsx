@@ -21,7 +21,7 @@ export default function HomeHero() {
   ];
 
   return (
-    <HeroSection className="relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-visible touch-pan-y">
+    <HeroSection className="home-hero-shell relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-16 overflow-visible touch-pan-y">
 
       {/* BACKGROUND IMAGE - Full Width */}
       <div className="absolute inset-0 z-0">
@@ -40,26 +40,26 @@ export default function HomeHero() {
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col">
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_420px] items-center max-w-[1300px] w-full mx-auto gap-2 md:gap-4 lg:gap-8 xl:gap-16 px-0 lg:px-8 xl:px-6 2xl:px-0">
+        <div className="home-hero-grid flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] 2xl:grid-cols-[minmax(0,1fr)_540px] items-center max-w-[1400px] 2xl:max-w-[1720px] w-full mx-auto gap-2 md:gap-4 lg:gap-8 xl:gap-12 2xl:gap-16 px-0 lg:px-8 xl:px-8 2xl:px-10">
           {/* LEFT PANEL */}
-          <div className="relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-4 lg:pr-0 xl:pl-0">
-            <div className="flex items-center gap-3 mb-3 md:mb-5">
+          <div className="home-hero-left relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-4 lg:pr-0 xl:pl-0 2xl:pl-6">
+            <div className="home-hero-kicker flex items-center gap-3 mb-3 md:mb-5">
               <div className="w-8 h-0.5 bg-blue-500 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
               <span className="font-dm-mono text-[10px] md:text-[11px] text-blue-300 tracking-[0.2em] uppercase font-medium">Más de 25 años en Tala, Canelones</span>
             </div>
 
-            <h1 className="font-barlow font-black leading-[0.85] uppercase tracking-tight mb-2 md:mb-5 mt-2 sm:mt-4">
-              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-white">Riego.</span>
-              <span className="block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)]">Agua.</span>
-              <span className="hero-outline-stroke block text-[clamp(4rem,11vw,7.5rem)] md:text-[clamp(3.2rem,8vw,7.5rem)] text-transparent">Campo.</span>
+            <h1 className="home-hero-title font-barlow font-black leading-[0.85] uppercase tracking-tight mb-2 md:mb-5 mt-2 sm:mt-4">
+              <span className="home-hero-title-line block text-[clamp(3.5rem,10vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-white">Riego.</span>
+              <span className="home-hero-title-line block text-[clamp(3.5rem,10vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)]">Agua.</span>
+              <span className="home-hero-title-line hero-outline-stroke block text-[clamp(3.5rem,10vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-transparent">Campo.</span>
             </h1>
 
-            <p className="text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] mb-6 md:mb-8 hero-fade-in hero-delay-5">
+            <p className="home-hero-description text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] 2xl:max-w-[620px] mb-6 md:mb-8 hero-fade-in hero-delay-5">
               Bombas de agua, sistemas de riego, instalaciones hidráulicas y más.
               Si tenés un proyecto, te asesoramos sin costo.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
+            <div className="home-hero-ctas flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] 2xl:max-w-[560px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
               <a
                 href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación`}
                 target="_blank"
@@ -83,7 +83,7 @@ export default function HomeHero() {
             </div>
 
             {/* Mobile search — previously hidden behind desktop-only panel */}
-            <div className="lg:hidden max-w-[520px] mb-8 md:mb-10 hero-fade-in hero-delay-5">
+            <div className="lg:hidden max-w-[520px] mb-5 md:mb-8 hero-fade-in hero-delay-5">
               <Suspense
                 fallback={
                   <div className="w-full h-[50px] rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 animate-pulse" />
@@ -91,6 +91,11 @@ export default function HomeHero() {
               >
                 <ProductSearch compact={true} />
               </Suspense>
+            </div>
+
+            <div className="lg:hidden mb-3 md:mb-5 flex items-center justify-center gap-1.5 text-white/60 hero-fade-in hero-delay-5">
+              <span className="text-[10px] font-dm-mono uppercase tracking-[0.2em]">Desliza para descubrir</span>
+              <ChevronDown className="w-4 h-4 animate-bounce" />
             </div>
 
             <div className="hidden lg:flex items-center gap-3 hero-fade-in hero-delay-5">
@@ -107,8 +112,8 @@ export default function HomeHero() {
           </div>
 
           {/* RIGHT PANEL - Floating Glassmorphism (Hidden on Mobile) */}
-          <div className="hidden lg:flex flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
-            <div className="relative bg-[#050b14]/55 backdrop-blur-lg border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-visible">
+          <div className="home-hero-right hidden lg:flex flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-[250ms] fill-mode-backwards">
+            <div className="home-hero-right-card relative bg-[#050b14]/55 backdrop-blur-lg border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 overflow-visible">
               {/* Glow effects - Wrap in hidden container to allow search dropdown overflow */}
               <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
                 <div className="absolute -top-20 -right-20 w-56 h-56 bg-blue-500/20 blur-[56px] rounded-full" />
@@ -133,22 +138,22 @@ export default function HomeHero() {
               </div>
 
               {/* Steps */}
-              <div className="flex flex-col gap-2.5 relative z-10">
-                <div className="flex items-center gap-3 px-3.5 py-3 rounded-2xl border border-white/5 bg-white/5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5">
+              <div className="home-hero-steps flex flex-col gap-2.5 relative z-10">
+                <div className="home-hero-step flex items-center gap-3 px-3.5 py-3 rounded-2xl border border-white/5 bg-white/5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5">
                   <div className="font-dm-mono text-[10px] text-blue-400 w-5 shrink-0 tracking-wider font-semibold">01</div>
                   <div>
                     <div className="text-[13px] font-semibold text-white tracking-tight">Asesoramiento integral</div>
                     <div className="text-[11px] md:text-[12px] font-light text-white/60 mt-0.5 leading-snug">Evaluamos tu necesidad sobre el terreno.</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 px-3.5 py-3 rounded-2xl border border-white/5 bg-white/5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5">
+                <div className="home-hero-step flex items-center gap-3 px-3.5 py-3 rounded-2xl border border-white/5 bg-white/5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5">
                   <div className="font-dm-mono text-[10px] text-blue-400 w-5 shrink-0 tracking-wider font-semibold">02</div>
                   <div>
                     <div className="text-[13px] font-semibold text-white tracking-tight">Presupuesto a medida</div>
                     <div className="text-[11px] md:text-[12px] font-light text-white/60 mt-0.5 leading-snug">Seleccionamos los mejores equipos para vos.</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 px-3.5 py-3 rounded-2xl border border-white/5 bg-white/5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5">
+                <div className="home-hero-step flex items-center gap-3 px-3.5 py-3 rounded-2xl border border-white/5 bg-white/5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5">
                   <div className="font-dm-mono text-[10px] text-blue-400 w-5 shrink-0 tracking-wider font-semibold">03</div>
                   <div>
                     <div className="text-[13px] font-semibold text-white tracking-tight">Instalación garantizada</div>
@@ -177,7 +182,7 @@ export default function HomeHero() {
       </div>
 
       {/* Ticker Indicator (Bouncing chevron to encourage scrolling) */}
-      <div className="pointer-events-none absolute bottom-16 lg:bottom-20 left-1/2 -translate-x-1/2 z-20 hidden md:flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-1000 delay-[1000ms] fill-mode-backwards">
+      <div className="home-hero-scroll-desktop pointer-events-none absolute bottom-16 lg:bottom-20 left-1/2 -translate-x-1/2 z-20 hidden lg:flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-1000 delay-[1000ms] fill-mode-backwards">
         <span className="text-[10px] sm:text-[11px] font-dm-mono uppercase tracking-[0.2em] text-white/60 whitespace-nowrap text-center">Desliza para descubrir</span>
         <ChevronDown className="w-5 h-5 text-white/60 animate-bounce" />
       </div>

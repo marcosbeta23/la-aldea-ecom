@@ -11,10 +11,11 @@ import WishlistWidget from '@/components/cart/WishlistWidget';
 
 export default function Header() {
   const pathname = usePathname();
-  const isHomepage = pathname === '/';
+  const isTransparentHeaderPage = pathname === '/' || pathname.startsWith('/servicios');
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const useSolidHeader = scrolled || !isTransparentHeaderPage || mobileMenuOpen;
   const lastScrollRef = useRef(0);
   const tickingRef = useRef(false);
 
@@ -66,7 +67,7 @@ export default function Header() {
       className={`
         fixed top-0 left-0 right-0 z-50 
         transition-all duration-300 ease-in-out
-        ${scrolled || !isHomepage || mobileMenuOpen
+        ${useSolidHeader
           ? 'bg-white shadow-sm border-b border-slate-200'
           : 'bg-transparent border-b border-transparent'
         }
@@ -81,7 +82,7 @@ export default function Header() {
             alt="La Aldea"
             width={180}
             height={52}
-            className={`h-12 w-auto max-w-[180px] transition-all${scrolled || !isHomepage || mobileMenuOpen
+            className={`h-12 w-auto max-w-[180px] transition-all${useSolidHeader
               ? ' drop-shadow-[0_2px_8px_rgba(0,0,0,0.20)]'
               : ''
               }`}
@@ -93,10 +94,10 @@ export default function Header() {
           <Link
             href="/"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/'
-              ? (scrolled || !isHomepage || mobileMenuOpen
+              ? (useSolidHeader
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-white bg-white/10')
-              : (scrolled || !isHomepage || mobileMenuOpen
+              : (useSolidHeader
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
                 : 'text-white/90 hover:bg-white/10')
               }`}
@@ -106,10 +107,10 @@ export default function Header() {
           <Link
             href="/productos"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname.startsWith('/productos')
-              ? (scrolled || !isHomepage || mobileMenuOpen
+              ? (useSolidHeader
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-white bg-white/10')
-              : (scrolled || !isHomepage || mobileMenuOpen
+              : (useSolidHeader
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
                 : 'text-white/90 hover:bg-white/10')
               }`}
@@ -119,10 +120,10 @@ export default function Header() {
           <Link
             href="/servicios"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname.startsWith('/servicios')
-              ? (scrolled || !isHomepage || mobileMenuOpen
+              ? (useSolidHeader
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-white bg-white/10')
-              : (scrolled || !isHomepage || mobileMenuOpen
+              : (useSolidHeader
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
                 : 'text-white/90 hover:bg-white/10')
               }`}
@@ -132,10 +133,10 @@ export default function Header() {
           <Link
             href="/faq"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/faq'
-              ? (scrolled || !isHomepage || mobileMenuOpen
+              ? (useSolidHeader
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-white bg-white/10')
-              : (scrolled || !isHomepage || mobileMenuOpen
+              : (useSolidHeader
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
                 : 'text-white/90 hover:bg-white/10')
               }`}
@@ -145,10 +146,10 @@ export default function Header() {
           <Link
             href="/nosotros"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/nosotros'
-              ? (scrolled || !isHomepage || mobileMenuOpen
+              ? (useSolidHeader
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-white bg-white/10')
-              : (scrolled || !isHomepage || mobileMenuOpen
+              : (useSolidHeader
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
                 : 'text-white/90 hover:bg-white/10')
               }`}
@@ -158,10 +159,10 @@ export default function Header() {
           <Link
             href="/blog"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/blog' || pathname.startsWith('/guias')
-              ? (scrolled || !isHomepage || mobileMenuOpen
+              ? (useSolidHeader
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-white bg-white/10')
-              : (scrolled || !isHomepage || mobileMenuOpen
+              : (useSolidHeader
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
                 : 'text-white/90 hover:bg-white/10')
               }`}
@@ -171,10 +172,10 @@ export default function Header() {
           <Link
             href="/contacto"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${pathname === '/contacto'
-              ? (scrolled || !isHomepage || mobileMenuOpen
+              ? (useSolidHeader
                 ? 'text-blue-600 bg-blue-50'
                 : 'text-white bg-white/10')
-              : (scrolled || !isHomepage || mobileMenuOpen
+              : (useSolidHeader
                 ? 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
                 : 'text-white/90 hover:bg-white/10')
               }`}
@@ -187,22 +188,22 @@ export default function Header() {
         <div className="flex items-center gap-4 sm:gap-6">
           {/* Wishlist Icon */}
           <WishlistWidget
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${useSolidHeader
               ? 'text-slate-600 hover:bg-slate-100'
               : 'text-white hover:bg-white/10'
               }`}
             iconClassName="h-5 w-5"
-            scrolled={scrolled || !isHomepage || mobileMenuOpen}
+            scrolled={useSolidHeader}
           />
 
           {/* Cart Icon */}
           <CartWidget
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${useSolidHeader
               ? 'text-slate-600 hover:bg-slate-100'
               : 'text-white hover:bg-white/10'
               }`}
             iconClassName="h-5 w-5"
-            scrolled={scrolled || !isHomepage || mobileMenuOpen}
+            scrolled={useSolidHeader}
           />
 
           {/* WhatsApp Button */}
@@ -221,7 +222,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${scrolled || !isHomepage || mobileMenuOpen
+            className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${useSolidHeader
               ? 'text-slate-600 hover:bg-slate-100'
               : 'text-white hover:bg-white/10'
               }`}
