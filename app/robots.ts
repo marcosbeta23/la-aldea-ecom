@@ -80,9 +80,12 @@ export default function robots(): MetadataRoute.Robots {
         allow: ['/'],
       },
     ],
+    // sitemap-images.xml no se declara aquí para evitar que Ahrefs y otros tools
+    // reporten URLs duplicadas ("page in multiple sitemaps").
+    // El image sitemap sigue disponible en /sitemap-images.xml y puede enviarse
+    // manualmente a Google Search Console si se necesita.
     sitemap: [
       'https://laaldeatala.com.uy/sitemap.xml',
-      'https://laaldeatala.com.uy/sitemap-images.xml',
     ],
   };
 }
