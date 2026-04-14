@@ -32,7 +32,7 @@ import { getCategoryPath } from "@/lib/category-slugs";
 import type { FeaturedProduct } from "@/components/products/FeaturedCarousel";
 
 
-export const revalidate = 300; // Cache homepage for 5 minutes at the edge
+export const revalidate = 3600; // Cache homepage for 1 hour at the edge
 
 export const metadata: Metadata = {
   title: "La Aldea | Bombas de Agua y Riego en Uruguay",

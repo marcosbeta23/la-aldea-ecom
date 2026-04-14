@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
@@ -20,8 +19,8 @@ import GuideInteractionTracker from '@/components/faq/GuideInteractionTracker';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
-// Revalidate DB guides every 5 minutes
-export const revalidate = 300;
+// Revalidate DB guides every hour
+export const revalidate = 3600;
 
 interface GuiaPageProps {
   params: Promise<{ slug: string }>;
@@ -235,7 +234,6 @@ export async function generateMetadata({ params }: GuiaPageProps): Promise<Metad
 
 export default async function GuiaPage({ params }: GuiaPageProps) {
   const { slug } = await params;
-  const nonce = (await headers()).get('x-nonce') ?? undefined;
   const article = await resolveArticle(slug);
 
   if (!article) {
@@ -381,20 +379,17 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
     <>
       <script
         type="application/ld+json"
-        nonce={nonce}
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <script
         type="application/ld+json"
-        nonce={nonce}
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       {howToJsonLd && (
         <script
           type="application/ld+json"
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
         />
@@ -402,7 +397,6 @@ export default async function GuiaPage({ params }: GuiaPageProps) {
       {faqJsonLd && (
         <script
           type="application/ld+json"
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
