@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+﻿import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Phone, ChevronDown } from "lucide-react";
@@ -8,7 +8,7 @@ import { WHATSAPP_PHONE } from "@/lib/constants";
 
 export default function HomeHero() {
   const tickerItems = [
-    "Más de 25 años en Tala",
+    "Más de 24 años en Tala",
     "Riego por goteo",
     "Instalaciones hidráulicas",
     "Envíos a todo Uruguay",
@@ -21,7 +21,7 @@ export default function HomeHero() {
   ];
 
   return (
-    <HeroSection className="home-hero-shell relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-20 2xl:pt-24 overflow-visible touch-pan-y">
+    <HeroSection className="home-hero-shell relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-20 2xl:pt-24 touch-pan-y">
 
       {/* BACKGROUND IMAGE - Full Width */}
       <div className="absolute inset-0 z-0">
@@ -43,23 +43,23 @@ export default function HomeHero() {
         <div className="home-hero-grid flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_430px] xl:grid-cols-[minmax(0,1fr)_500px] 2xl:grid-cols-[minmax(0,1fr)_580px] items-center w-full mx-0 gap-2 md:gap-4 lg:gap-8 xl:gap-12 2xl:gap-16 px-0 lg:px-8 xl:px-8 2xl:px-10">
           {/* LEFT PANEL */}
           <div className="home-hero-left relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-4 lg:pr-0 xl:pl-0 2xl:pl-6">
-            <div className="home-hero-kicker flex items-center gap-3 mb-3 md:mb-5">
+            <div className="home-hero-kicker flex items-center gap-3 mb-2 sm:mb-3 md:mb-5">
               <div className="w-8 h-0.5 bg-blue-500 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
-              <span className="font-dm-mono text-[10px] md:text-[11px] text-blue-300 tracking-[0.2em] uppercase font-medium">Más de 25 años en Tala, Canelones</span>
+              <span className="font-dm-mono text-[10px] md:text-[11px] text-blue-300 tracking-[0.2em] uppercase font-medium">Más de 24 años en Tala, Canelones</span>
             </div>
 
             <h1 className="home-hero-title font-barlow font-black leading-[0.85] uppercase tracking-tight mb-2 md:mb-5 mt-2 sm:mt-4">
-              <span className="home-hero-title-line block text-[clamp(3.5rem,10vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-white">Riego.</span>
-              <span className="home-hero-title-line block text-[clamp(3.5rem,10vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)]">Agua.</span>
-              <span className="home-hero-title-line hero-outline-stroke block text-[clamp(3.5rem,10vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-transparent">Campo.</span>
+              <span className="home-hero-title-line block text-[clamp(2.75rem,9vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-white">Riego.</span>
+              <span className="home-hero-title-line block text-[clamp(2.75rem,9vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.25)]">Agua.</span>
+              <span className="home-hero-title-line hero-outline-stroke block text-[clamp(2.75rem,9vw,7rem)] md:text-[clamp(2.9rem,7.2vw,6.7rem)] 2xl:text-[clamp(3.4rem,6.2vw,7.3rem)] text-transparent">Campo.</span>
             </h1>
 
-            <p className="home-hero-description text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] mb-6 md:mb-8 hero-fade-in hero-delay-5">
+            <p className="home-hero-description text-[14px] sm:text-[15px] md:text-[17px] font-light text-slate-300 leading-snug max-w-[500px] mb-4 md:mb-8 hero-fade-in hero-delay-5">
               Bombas de agua, sistemas de riego, instalaciones hidráulicas y más.
               Si tenés un proyecto, te asesoramos sin costo.
             </p>
 
-            <div className="home-hero-ctas flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-6 mb-12 md:mb-8 hero-fade-in hero-delay-5">
+            <div className="home-hero-ctas flex flex-col sm:flex-row items-stretch gap-3 max-w-[480px] mt-4 mb-6 sm:mb-10 md:mb-8 hero-fade-in hero-delay-5">
               <a
                 href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustaría%20consultar%20por%20una%20instalación`}
                 target="_blank"
@@ -83,7 +83,7 @@ export default function HomeHero() {
             </div>
 
             {/* Mobile search — previously hidden behind desktop-only panel */}
-            <div className="lg:hidden max-w-[520px] mb-5 md:mb-8 hero-fade-in hero-delay-5">
+            <div className="lg:hidden max-w-[520px] mb-5 md:mb-8 hero-fade-in hero-delay-5 overflow-visible">
               <Suspense
                 fallback={
                   <div className="w-full h-[50px] rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 animate-pulse" />
@@ -176,7 +176,7 @@ export default function HomeHero() {
         </div>
       </div>
 
-      <a href="#scroll-target" className="home-hero-scroll-mobile absolute bottom-8 inset-x-0 mx-auto w-max z-20 flex flex-col items-center justify-center gap-1 lg:hidden pointer-events-auto hover:opacity-80 transition-opacity">
+      <a href="#scroll-target" className="home-hero-scroll-mobile absolute bottom-[max(2rem,env(safe-area-inset-bottom))] inset-x-0 mx-auto w-max z-20 flex flex-col items-center justify-center gap-1 lg:hidden pointer-events-auto hover:opacity-80 transition-opacity">
         <span className="text-[10px] font-dm-mono uppercase tracking-[0.2em] text-white/75 whitespace-nowrap text-center">Desliza para ver mas</span>
         <ChevronDown className="w-4 h-4 animate-bounce text-white/75" />
       </a>
@@ -204,3 +204,4 @@ export default function HomeHero() {
     </HeroSection>
   );
 }
+

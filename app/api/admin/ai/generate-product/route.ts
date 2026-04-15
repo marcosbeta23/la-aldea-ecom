@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       : '';
 
     const response = await callClaude({
-      system: `Sos redactor de fichas de productos para La Aldea, ferretería e hidráulica en Tala, Uruguay (desde 1999).
+      system: `Sos redactor de fichas de productos para La Aldea, ferretería e hidráulica en Tala, Uruguay (desde 2002).
 Idioma: español rioplatense. Tono: profesional, confiable, sin exagerar.
 REGLA CRÍTICA: Respondé SOLO con JSON válido. Sin markdown, sin texto extra.
 NUNCA inventes especificaciones técnicas que no te proporcionaron.`,

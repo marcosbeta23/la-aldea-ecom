@@ -417,7 +417,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: Product
             <Star className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs sm:text-sm font-medium text-slate-900">25+ Años</p>
+            <p className="text-xs sm:text-sm font-medium text-slate-900">24+ Años</p>
             <p className="text-[10px] sm:text-xs text-slate-500">De experiencia</p>
           </div>
         </div>

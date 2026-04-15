@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Fraunces, Epilogue, DM_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { WHATSAPP_PHONE } from "@/lib/constants";
@@ -251,11 +251,11 @@ const localBusinessSchema = {
   "@id": "https://laaldeatala.com.uy/#business",
   name: "La Aldea",
   description:
-    "Bombas de agua, sistemas de riego, instalaciones hidráulicas, insumos agrícolas y droguería en Tala, Canelones, Uruguay. Más de 25 años de experiencia.",
+    "Bombas de agua, sistemas de riego, instalaciones hidráulicas, insumos agrícolas y droguería en Tala, Canelones, Uruguay. Más de 24 años de experiencia.",
   url: "https://laaldeatala.com.uy",
   telephone: `+${WHATSAPP_PHONE}`,
   email: "contacto@laaldeatala.com.uy",
-  foundingDate: "1999",
+  foundingDate: '2002',
   address: {
     "@type": "PostalAddress",
     streetAddress: "José Alonso y Trelles y Av Artigas",
@@ -332,7 +332,20 @@ const viewportBucketsScript = `
     }
     rafId = requestAnimationFrame(() => {
       rafId = null;
-      update();
+
+      const vv = window.visualViewport;
+      const newW = Math.round((vv && vv.width) || window.innerWidth || root.clientWidth || 0);
+      const newH = Math.round((vv && vv.height) || window.innerHeight || root.clientHeight || 0);
+
+      const prevW = parseFloat(root.style.getPropertyValue('--vpw') || '0');
+      const prevH = parseFloat(root.style.getPropertyValue('--vph') || '0');
+
+      const widthDelta = Math.abs(newW - prevW);
+      const heightDelta = Math.abs(newH - prevH);
+
+      if (widthDelta > 10 || heightDelta > 80) {
+        update();
+      }
     });
   };
 
@@ -387,3 +400,4 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/Header';
@@ -76,7 +76,7 @@ const serviceSchema = {
     image: `${siteUrl}/assets/images/og-image.webp`,
     telephone: `+${WHATSAPP_PHONE}`,
     email: 'contacto@laaldeatala.com.uy',
-    foundingDate: '1999',
+    foundingDate: '2002',
     address: {
         '@type': 'PostalAddress',
         streetAddress: 'José Alonso y Trelles y Av Artigas',
@@ -167,7 +167,7 @@ const differentiators = [
     {
         icon: Globe,
         badge: 'Trayectoria',
-        title: '25 años. Más de 500 proyectos.',
+        title: '24 años. Más de 500 proyectos.',
         description:
             'Agricultura, ganadería, industria y uso doméstico en todo el país. La experiencia acumulada en campo es parte del servicio que entregamos con cada proyecto.',
     },
@@ -212,7 +212,7 @@ export default function ServiciosPage() {
 
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/4 bg-linear-to-t from-[#050b14]/95 via-[#050b14]/30 to-transparent" />
 
-                    <div className="services-hero-content relative z-20 flex w-full flex-1 flex-col justify-center pb-6 pt-24 sm:pb-8 sm:pt-28 lg:pb-10 lg:pt-32">
+                    <div className="services-hero-content relative z-20 flex w-full flex-1 flex-col justify-center pb-6 pt-20 sm:pb-8 sm:pt-26 lg:pb-10 lg:pt-32">
                         <div className="services-hero-grid grid flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_480px] xl:grid-cols-[minmax(0,1fr)_520px] 2xl:grid-cols-[minmax(0,1fr)_580px] items-center w-full mx-0 gap-6 md:gap-10 lg:gap-12 xl:gap-16 px-4 lg:px-8 2xl:px-12">
                             {/* LEFT PANEL */}
                             <div className="services-hero-left relative flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -226,7 +226,7 @@ export default function ServiciosPage() {
                                     <p className="mb-4 font-dm-mono text-[11px] sm:text-[12px] md:text-[13px] uppercase tracking-[0.24em] text-slate-300/85">
                                         Soluciones profesionales en todo Uruguay
                                     </p>
-                                    <h1 className="services-hero-title font-epilogue text-[clamp(2.5rem,8vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.02em] text-white">
+                                    <h1 className="services-hero-title font-epilogue text-[clamp(2rem,8vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.02em] text-white">
                                         <span className="block">Riego e Ingeniería</span>
                                         <span className="block mt-1 bg-linear-to-r from-blue-300 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-sm">
                                             Hidráulica
@@ -237,12 +237,12 @@ export default function ServiciosPage() {
                                     </h1>
                                 </div>
 
-                                <p className="services-hero-description mt-6 sm:mt-8 max-w-[540px] text-[16px] sm:text-[18px] md:text-[19px] font-light leading-relaxed text-slate-300">
+                                <p className="services-hero-description mt-4 sm:mt-8 max-w-[540px] text-[15px] sm:text-[18px] md:text-[19px] font-light leading-relaxed text-slate-300">
                                     Instalamos, diseñamos y ponemos en marcha sistemas hídricos en todo Uruguay.
-                                    25 años de trayectoria nos respaldan para que tu proyecto sea un éxito desde el primer día.
+                                    24 años de trayectoria nos respaldan para que tu proyecto sea un éxito desde el primer día.
                                 </p>
 
-                                <div className="services-hero-ctas mt-10 sm:mt-12 flex flex-col sm:flex-row items-stretch gap-4 max-w-[500px]">
+                                <div className="services-hero-ctas mt-6 sm:mt-10 flex flex-col sm:flex-row items-stretch gap-3 sm:gap-4 max-w-[500px]">
                                     <a
                                         href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
                                         target="_blank"
@@ -313,7 +313,7 @@ export default function ServiciosPage() {
                             </div>
                         </div>
                     </div>
-                    <a href="#servicios-scroll" className="services-hero-scroll-mobile absolute bottom-12 inset-x-0 mx-auto w-max z-20 flex flex-col items-center justify-center gap-1 lg:hidden pointer-events-auto transition-opacity hover:opacity-75">
+                    <a href="#servicios-scroll" className="services-hero-scroll-mobile absolute bottom-[max(3rem,env(safe-area-inset-bottom))] inset-x-0 mx-auto w-max z-20 flex flex-col items-center justify-center gap-1 lg:hidden pointer-events-auto transition-opacity hover:opacity-75">
                         <span className="font-dm-mono text-[10px] uppercase tracking-[0.2em] text-white/70 text-center whitespace-nowrap">
                             Desliza para ver mas
                         </span>
@@ -332,7 +332,7 @@ export default function ServiciosPage() {
                     <div className="container mx-auto px-4 py-5">
                         <div className="grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-[1.75rem] border border-slate-200 shadow-sm md:grid-cols-4 md:divide-y-0">
                             {[
-                                { value: '25+', label: 'Años de experiencia' },
+                                { value: '24+', label: 'Años de experiencia' },
                                 { value: '9', label: 'Tipos de servicio' },
                                 { value: 'Uruguay', label: 'Cobertura completa' },
                                 { value: 'Sin cargo', label: 'Consulta y presupuesto' },
@@ -667,3 +667,4 @@ export default function ServiciosPage() {
         </>
     );
 }
+

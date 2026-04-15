@@ -172,7 +172,7 @@ export default withBundleAnalyzer(
     widenClientFileUpload: true,
     tunnelRoute: "/monitoring",
     webpack: {
-      automaticVercelMonitors: true,
+      automaticVercelMonitors: false,
       treeshake: {
         removeDebugLogging: true,
       },

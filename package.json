@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:png-to-webp": "node scripts/migrate-supabase-pngs.mjs",
+    "cleanup:orphan-pngs": "node scripts/cleanup-orphan-product-pngs.mjs"
   },
   "dependencies": {
     "@clerk/localizations": "^3.35.3",

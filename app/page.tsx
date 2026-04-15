@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -47,7 +47,7 @@ const localBusinessSchema = {
   "@id": "https://laaldeatala.com.uy/#business",
   name: "La Aldea",
   alternateName: "La Aldea Tala",
-  description: "Especialistas en bombas de agua, sistemas de riego, instalaciones hidráulicas e insumos agrícolas en Tala, Canelones, Uruguay. Más de 25 años de experiencia.",
+  description: "Especialistas en bombas de agua, sistemas de riego, instalaciones hidráulicas e insumos agrícolas en Tala, Canelones, Uruguay. Más de 24 años de experiencia.",
   url: "https://laaldeatala.com.uy",
   telephone: `+${WHATSAPP_PHONE}`,
   email: "contacto@laaldeatala.com.uy",
@@ -95,7 +95,7 @@ const localBusinessSchema = {
   priceRange: "$$",
   paymentAccepted: "Cash, Credit Card, Debit Card, Bank Transfer, MercadoPago",
   currenciesAccepted: ["UYU", "USD"],
-  foundingDate: "2000 ",
+  foundingDate: '2002',
   founder: {
     "@type": "Person",
     name: "Martín Betancor Peregalli"
@@ -345,7 +345,7 @@ const testimonialReviewSchema = {
 const features = [
   {
     icon: Sparkles,
-    title: "25+ Años de Experiencia",
+    title: "24+ Años de Experiencia",
     description: "Asesoramiento técnico profesional respaldado por décadas de trabajo en el rubro.",
   },
   {
@@ -455,7 +455,7 @@ export default async function Home() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {[
-                { icon: Award, text: "25+ Años de Experiencia", href: '/nosotros' },
+                { icon: Award, text: "24+ Años de Experiencia", href: '/nosotros' },
                 { icon: Truck, text: "Envío a Todo Uruguay", href: '/productos' },
                 { icon: Sparkles, text: "Asesoramiento Técnico", href: '/servicios' },
                 { icon: Shield, text: "Garantía de Calidad", href: '#marcas' },
@@ -580,7 +580,7 @@ export default async function Home() {
                       <Award className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-slate-900">25+</p>
+                      <p className="text-xl font-bold text-slate-900">24+</p>
                       <p className="text-xs text-slate-500">Años</p>
                     </div>
                   </div>
@@ -748,7 +748,7 @@ export default async function Home() {
                 </div>
                 {/* Experience Badge */}
                 <div className="absolute -bottom-4 right-2 flex h-24 w-24 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-xl sm:right-4 sm:h-28 sm:w-28 md:-bottom-6 md:right-0 lg:-right-4 lg:h-32 lg:w-32">
-                  <span className="text-2xl font-bold sm:text-3xl lg:text-4xl">25+</span>
+                  <span className="text-2xl font-bold sm:text-3xl lg:text-4xl">24+</span>
                   <span className="text-[10px] font-medium sm:text-xs lg:text-sm">Años</span>
                 </div>
               </div>
@@ -759,7 +759,7 @@ export default async function Home() {
                   Nuestra Historia
                 </span>
                 <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-                  Más de 25 años en el rubro
+                  Más de 24 años en el rubro
                 </h2>
                 <p className="mt-6 text-lg text-slate-600">
                   En La Aldea, ubicados en Tala, departamento de Canelones, trabajamos para ofrecer
@@ -832,3 +832,4 @@ export default async function Home() {
     </>
   );
 }
+

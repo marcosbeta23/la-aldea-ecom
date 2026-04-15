@@ -33,7 +33,7 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.mercadopago.com https://*.supabase.co https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.sentry.io https://browser.sentry-cdn.com https://www.google-analytics.com https://www.googletagmanager.com https://*.clerk.accounts.dev https://*.clerk.com https://api.clerk.com https://clerk.laaldeatala.com.uy https://us.i.posthog.com",
+    "connect-src 'self' https://api.mercadopago.com https://*.supabase.co https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.sentry.io https://browser.sentry-cdn.com https://www.google-analytics.com https://google-analytics.com https://*.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://*.clerk.accounts.dev https://*.clerk.com https://api.clerk.com https://clerk.laaldeatala.com.uy https://us.i.posthog.com https://cloudflareinsights.com",
     "worker-src 'self' blob:",
     "frame-src 'self' https://www.google.com https://maps.google.com https://www.mercadopago.com https://*.clerk.accounts.dev https://*.clerk.com",
     "object-src 'none'",
