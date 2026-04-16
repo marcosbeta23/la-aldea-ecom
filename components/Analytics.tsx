@@ -1,16 +1,17 @@
 "use client";
 
-import Script from "next/script";
-import { useEffect, useState } from "react";
+import Script from 'next/script';
+import { useEffect, useState, Suspense } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID || "G-K06VE6W4MY";
-const COOKIE_CONSENT_KEY = "laaldea_cookie_consent";
-const CRAZY_EGG_SRC = "//script.crazyegg.com/pages/scripts/0132/5723.js";
-const CLOUDFLARE_BEACON_SRC = "https://static.cloudflareinsights.com/beacon.min.js";
+const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-K06VE6W4MY';
+const COOKIE_CONSENT_KEY = 'laaldea_cookie_consent';
+const CRAZY_EGG_SRC = '//script.crazyegg.com/pages/scripts/0132/5723.js';
+const CLOUDFLARE_BEACON_SRC = 'https://static.cloudflareinsights.com/beacon.min.js';
 const CLOUDFLARE_BEACON_DATA = '{"token": "21ea1d19b9c54b8c9007050f4de4edc8"}';
 
 function hasAnalyticsConsent(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === 'undefined') return false;
 
   try {
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
@@ -23,10 +24,36 @@ function hasAnalyticsConsent(): boolean {
 }
 
 export function Analytics({ nonce }: { nonce?: string }) {
+  return (
+    <Suspense fallback={null}>
+      <AnalyticsInner nonce={nonce} />
+    </Suspense>
+  );
+}
+
+function AnalyticsInner({ nonce }: { nonce?: string }) {
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
+
+    // Define the dataLayer and gtag function immediately so tracking events
+    // (like add_to_cart, view_item) can queue up in the dataLayer even before 
+    // the external script finishes loading or consent is fully granted.
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+      window.gtag('js', new Date());
+      // We do not immediately call 'config' here so it waits for the script
+      // However, configuring it early with send_page_view: false allows queuing.
+      window.gtag('config', GA_TRACKING_ID, {
+        send_page_view: false, // We'll handle page views manually for Next.js app router
+      });
+    }
 
     const updateConsent = () => {
       setAnalyticsEnabled(hasAnalyticsConsent());
@@ -42,16 +69,34 @@ export function Analytics({ nonce }: { nonce?: string }) {
 
     const handleConsentGranted = () => updateConsent();
 
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("laaldea:analytics-consent-granted", handleConsentGranted as EventListener);
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('laaldea:analytics-consent-granted', handleConsentGranted as EventListener);
 
     return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("laaldea:analytics-consent-granted", handleConsentGranted as EventListener);
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('laaldea:analytics-consent-granted', handleConsentGranted as EventListener);
     };
   }, []);
 
-  if (process.env.NODE_ENV !== "production") {
+  // Track page views on route change when analytics are enabled
+  useEffect(() => {
+    if (analyticsEnabled && pathname && window.gtag) {
+      let url = window.origin + pathname;
+      if (searchParams && searchParams.toString()) {
+        url += `?${searchParams.toString()}`;
+      }
+      window.gtag('config', GA_TRACKING_ID, {
+        page_path: pathname,
+        page_location: url,
+      });
+      window.gtag('event', 'page_view', {
+        page_path: pathname,
+        page_location: url,
+      });
+    }
+  }, [pathname, searchParams, analyticsEnabled]);
+
+  if (process.env.NODE_ENV !== 'production') {
     return null;
   }
 
@@ -61,22 +106,25 @@ export function Analytics({ nonce }: { nonce?: string }) {
 
   return (
     <>
-      {/* Google Analytics 4 */}
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
-        strategy="lazyOnload"
+        id="google-analytics-setup"
+        strategy="afterInteractive"
         nonce={nonce}
-      />
-      <Script id="google-analytics" strategy="lazyOnload" nonce={nonce}>
+      >
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${GA_TRACKING_ID}');
+          gtag('config', '${GA_TRACKING_ID}', {
+            send_page_view: false // We handle page views manually due to App Router
+          });
         `}
       </Script>
-
-      {/* Non-essential trackers are consent-gated to avoid extra script cost on first load. */}
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+        strategy="afterInteractive"
+        nonce={nonce}
+      />
       <Script
         id="crazy-egg"
         type="text/javascript"

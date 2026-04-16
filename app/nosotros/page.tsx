@@ -162,7 +162,7 @@ export default function NosotrosPage() {
         <section className="py-16 md:py-24 px-4 lg:px-8 max-w-7xl mx-auto border-t border-slate-200">
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-20">
             {/* Left: Sticky Image */}
-            <div className="lg:col-span-5 order-2 lg:order-1">
+            <div className="lg:col-span-5 order-1 lg:order-1 mb-6 lg:mb-0">
               <div className="sticky top-28">
                 <div className="aspect-[3/4] w-full overflow-hidden rounded-sm bg-slate-200">
                   <Image
@@ -185,38 +185,34 @@ export default function NosotrosPage() {
             </div>
 
             {/* Right: Flowing Editorial Text */}
-            <div className="lg:col-span-7 lg:pt-8 prose prose-lg prose-slate h-auto text-slate-700 font-light leading-loose order-1 lg:order-2">
-              <p className="first-letter:text-7xl md:first-letter:text-8xl first-letter:font-fraunces first-letter:font-light first-letter:text-slate-900 first-letter:mr-2 first-letter:-mt-2 first-letter:float-left first-letter:leading-[0.8]">
+            <div className="lg:col-span-7 lg:pt-8 prose prose-slate md:prose-lg h-auto text-slate-700 font-light leading-loose order-2 lg:order-2">
+              <p className="first-letter:text-6xl md:first-letter:text-8xl first-letter:font-fraunces first-letter:font-light first-letter:text-slate-900 first-letter:mr-2 first-letter:-mt-2 first-letter:float-left first-letter:leading-[0.8] mb-6">
                 La Aldea nació en el año 2002 en la ciudad de Tala, Canelones, con el impulso de Martín Betancor Peregalli y el objetivo claro de acercar soluciones hídricas concretas a los productores de la zona. Lo que comenzó siendo una clásica barraca de insumos agrícolas fue adaptándose y expandiéndose.
               </p>
-              <br/>
-              <p>
+              <p className="mb-6">
                 El rubro hídrico no tolera la improvisación ni las decisiones a medias. Nos percatamos rápido de que un cliente del campo, el encargado de una planta o aquel que emprende la construcción de su casa, no solo necesita acceder al producto: necesita <strong>certeza sobre qué comprar y cómo dimensionarlo</strong> para no malgastar su dinero.
               </p>
-              <br/>
-              <div className="my-10 bg-white border border-slate-100 p-8 md:p-10 rounded-sm shadow-sm italic text-slate-800 font-fraunces text-xl md:text-2xl leading-normal">
+              <div className="my-8 md:my-10 bg-white border border-slate-100 p-6 md:p-10 rounded-xl md:rounded-sm shadow-sm md:shadow-none italic text-slate-800 font-fraunces text-lg md:text-2xl leading-relaxed">
                 Un equipo que falla en pleno verano o en el medio de una cosecha es un problema enorme. Por eso mantenemos alianzas con marcas de primera línea en bombeo e hidráulica como Gianni, Tigre y Nicoll, junto a insumos y herramientas de confianza para completar cada obra.
               </div>
-              <br/>
-              <p>
+              <p className="mb-6">
                 A lo largo de 24 años, las líneas de riego automatizado, las silenciosas y potentes bombas de agua, la energía solar y los productos para piscinas se fueron sumando progresivamente a nuestro catálogo de forma natural, siempre impulsados por la demanda y confianza de nuestros clientes.
               </p>
-              <br/>
               <p>
-                Hoy nuestra labor atraviesa las fronteras de Tala para alcanzar los 19 departamentos del país. La filosofía es inamovible: escuchar a detalle la necesidad del cliente y prescribirle una solución que, por encima de todo, va a funcionar. Vendemos productos, pero sobre todo brindamos soluciones que perduran. — Martín Betancor, Fundador
+                Hoy nuestra labor atraviesa las fronteras de Tala para alcanzar los 19 departamentos del país. La filosofía es inamovible: escuchar a detalle la necesidad del cliente y prescribirle una solución que, por encima de todo, va a funcionar.
               </p>
 
               {/* Minimal Numbers Layout */}
-              <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-8 gap-y-12 border-y border-slate-200 py-12">
+              <div className="mt-16 md:mt-20 grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-8 gap-y-6 md:gap-y-12 border-y-0 md:border-y border-slate-200 py-6 md:py-12">
                 {[
                   { v: '24+', l: 'Años' },
                   { v: '500+', l: 'Proyectos' },
                   { v: '12+', l: 'Marcas' },
                   { v: '19', l: 'Deptos' },
                 ].map((stat, i) => (
-                  <div key={i} className="text-center md:text-left flex flex-col items-center md:items-start group">
-                    <div className="text-5xl font-fraunces font-light text-slate-900 mb-3 group-hover:text-[#B3A394] transition-colors">{stat.v}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 transition-colors">{stat.l}</div>
+                  <div key={i} className="text-center md:text-left flex flex-col items-center md:items-start group bg-white md:bg-transparent p-6 md:p-0 rounded-2xl md:rounded-none shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] md:shadow-none border border-slate-100 md:border-none">
+                    <div className="text-4xl md:text-5xl font-fraunces font-light text-slate-900 mb-2 md:mb-3 group-hover:text-[#B3A394] transition-colors">{stat.v}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 md:text-slate-400 transition-colors">{stat.l}</div>
                   </div>
                 ))}
               </div>
@@ -239,15 +235,15 @@ export default function NosotrosPage() {
               </div>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-x-12 gap-y-12 lg:gap-x-20 lg:gap-y-16">
+            <div className="grid md:grid-cols-2 gap-6 gap-y-6 md:gap-x-12 md:gap-y-12 lg:gap-x-20 lg:gap-y-16">
               {values.map((val, i) => (
-                <div key={i} className="flex flex-col sm:flex-row gap-6 items-start group">
-                  <div className="flex-shrink-0 transition-transform duration-500 group-hover:scale-110">
-                     <val.icon className="h-8 w-8 text-[#B3A394] opacity-80 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
+                <div key={i} className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start group bg-slate-50 md:bg-transparent p-6 md:p-0 rounded-2xl md:rounded-none border border-slate-100 md:border-none hover:shadow-md md:hover:shadow-none transition-shadow">
+                  <div className="flex-shrink-0 transition-transform duration-500 md:group-hover:scale-110 bg-white md:bg-transparent p-4 md:p-0 rounded-xl md:rounded-none shadow-sm md:shadow-none">
+                     <val.icon className="h-8 w-8 text-[#B3A394] opacity-90 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-fraunces font-light text-slate-900 mb-3">{val.title}</h3>
-                    <p className="text-slate-600 font-light leading-relaxed">{val.description}</p>
+                    <h3 className="text-xl md:text-2xl font-fraunces font-light text-slate-900 mb-2 md:mb-3">{val.title}</h3>
+                    <p className="text-slate-600 font-light leading-relaxed text-sm md:text-base">{val.description}</p>
                   </div>
                 </div>
               ))}

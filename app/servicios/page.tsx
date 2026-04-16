@@ -195,7 +195,7 @@ export default function ServiciosPage() {
 
             <main className="min-h-screen bg-slate-50">
 
-                <HeroSection className="services-hero-shell relative w-full flex flex-col overflow-hidden touch-pan-y bg-slate-900">
+                <HeroSection className="services-hero-shell relative w-full flex flex-col pt-14 sm:pt-16 lg:pt-20 2xl:pt-24 touch-pan-y bg-slate-900 overflow-hidden">
                     <div className="absolute inset-0 z-0">
                         <Image
                             src="/assets/images/services/hero-servicios.avif"
@@ -212,50 +212,50 @@ export default function ServiciosPage() {
 
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/4 bg-linear-to-t from-[#050b14]/95 via-[#050b14]/30 to-transparent" />
 
-                    <div className="services-hero-content relative z-20 flex w-full flex-1 flex-col justify-center pb-6 pt-20 sm:pb-8 sm:pt-26 lg:pb-10 lg:pt-32">
-                        <div className="services-hero-grid grid flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_480px] xl:grid-cols-[minmax(0,1fr)_520px] 2xl:grid-cols-[minmax(0,1fr)_580px] items-center w-full mx-0 gap-6 md:gap-10 lg:gap-12 xl:gap-16 px-4 lg:px-8 2xl:px-12">
+                    <div className="relative z-20 flex w-full flex-1 flex-col">
+                        <div className="services-hero-grid flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_430px] xl:grid-cols-[minmax(0,1fr)_500px] 2xl:grid-cols-[minmax(0,1fr)_580px] items-center w-full mx-0 gap-2 md:gap-4 lg:gap-8 xl:gap-12 2xl:gap-16 px-4 lg:px-8 xl:px-8 2xl:px-10 pb-16 lg:pb-8">
                             {/* LEFT PANEL */}
-                            <div className="services-hero-left relative flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                                <div className="services-hero-kicker mb-6 inline-flex items-center gap-2.5 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 backdrop-blur-sm self-start">
+                            <div className="services-hero-left relative flex flex-col justify-center px-3 pt-2 pb-0 md:px-12 md:py-8 lg:pl-4 lg:pr-0 xl:pl-0 2xl:pl-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                                <div className="services-hero-kicker mb-3 sm:mb-5 inline-flex items-center gap-2.5 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 backdrop-blur-sm self-start">
                                     <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
-                                    <span className="font-dm-mono text-[10.5px] sm:text-[11.5px] font-medium uppercase tracking-[0.2em] text-blue-300">
+                                    <span className="font-dm-mono text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.2em] text-blue-300">
                                         Instalación · Diseño · Asesoramiento
                                     </span>
                                 </div>
                                 <div className="services-hero-title-wrap">
-                                    <p className="mb-4 font-dm-mono text-[11px] sm:text-[12px] md:text-[13px] uppercase tracking-[0.24em] text-slate-300/85">
+                                    <p className="mb-2 sm:mb-4 font-dm-mono text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-[0.24em] text-slate-300/85">
                                         Soluciones profesionales en todo Uruguay
                                     </p>
-                                    <h1 className="services-hero-title font-epilogue text-[clamp(2rem,8vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.02em] text-white">
+                                    <h1 className="services-hero-title font-epilogue text-[clamp(2.5rem,8vw,4.5rem)] 2xl:text-[clamp(3.5rem,7vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.02em] text-white">
                                         <span className="block">Riego e Ingeniería</span>
                                         <span className="block mt-1 bg-linear-to-r from-blue-300 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-sm">
                                             Hidráulica
                                         </span>
-                                        <span className="services-hero-subtitle mt-3 sm:mt-5 block text-[clamp(1.2rem,3vw,2.2rem)] font-semibold tracking-[0.02em] text-slate-200">
+                                        <span className="services-hero-subtitle mt-2 sm:mt-5 block text-[clamp(1.1rem,3vw,1.8rem)] 2xl:text-[clamp(1.3rem,2.5vw,2.2rem)] font-semibold tracking-[0.02em] text-slate-200">
                                             Diseño, instalación y puesta en marcha.
                                         </span>
                                     </h1>
                                 </div>
 
-                                <p className="services-hero-description mt-4 sm:mt-8 max-w-[540px] text-[15px] sm:text-[18px] md:text-[19px] font-light leading-relaxed text-slate-300">
+                                <p className="services-hero-description mt-3 sm:mt-6 max-w-[500px] text-[14px] sm:text-[16px] md:text-[17px] font-light leading-relaxed text-slate-300">
                                     Instalamos, diseñamos y ponemos en marcha sistemas hídricos en todo Uruguay.
                                     24 años de trayectoria nos respaldan para que tu proyecto sea un éxito desde el primer día.
                                 </p>
 
-                                <div className="services-hero-ctas mt-6 sm:mt-10 flex flex-col sm:flex-row items-stretch gap-3 sm:gap-4 max-w-[500px]">
+                                <div className="services-hero-ctas mt-4 sm:mt-8 mb-6 sm:mb-10 flex flex-col sm:flex-row items-stretch gap-3 sm:gap-3 max-w-[480px]">
                                     <a
                                         href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         data-whatsapp-source="services_hero_cta"
-                                        className="flex-1 inline-flex justify-center items-center gap-2.5 rounded-xl bg-blue-600 px-6 py-4 font-epilogue text-[15px] md:text-[16px] font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.35)] transition-all duration-300 hover:bg-blue-500 hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(37,99,235,0.5)] active:scale-[0.98]"
+                                        className="flex-1 inline-flex justify-center items-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 font-epilogue text-[14px] md:text-[15px] font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.35)] transition-all duration-300 hover:bg-blue-500 hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(37,99,235,0.5)] active:scale-[0.98]"
                                     >
                                         <MessageCircle className="h-5 w-5" />
-                                        Contactar a un asesor
+                                        Contactar
                                     </a>
                                     <a
                                         href="#servicios"
-                                        className="flex-1 inline-flex justify-center items-center gap-2.5 rounded-xl border border-white/20 bg-white/10 px-6 py-4 font-epilogue text-[15px] md:text-[16px] font-semibold text-white backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-white/15 hover:-translate-y-1"
+                                        className="flex-1 inline-flex justify-center items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3.5 font-epilogue text-[14px] md:text-[15px] font-semibold text-white backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-white/15 hover:-translate-y-1"
                                     >
                                         Ver servicios disponibles
                                         <ArrowDown className="h-4 w-4" />
@@ -264,38 +264,38 @@ export default function ServiciosPage() {
                             </div>
                             
                             {/* RIGHT PANEL - Floating Lead Gen Card */}
-                            <div className="services-hero-right hidden lg:flex flex-col justify-center animate-in fade-in slide-in-from-right-8 duration-1000 delay-[250ms] fill-mode-backwards">
-                                <div className="relative bg-[#050b14]/60 backdrop-blur-xl border border-white/10 p-8 xl:p-10 rounded-[2rem] shadow-[0_30px_70px_rgba(0,0,0,0.6)] flex flex-col gap-6 overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none" />
-                                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none" />
+                            <div className="services-hero-right hidden lg:flex lg:w-full lg:max-w-[580px] lg:justify-self-end flex-col justify-center px-6 py-4 md:px-12 lg:px-0 lg:pr-4 xl:pr-0 animate-in fade-in slide-in-from-right-8 duration-1000 delay-[250ms] fill-mode-backwards">
+                                <div className="services-hero-right-card relative bg-[#050b14]/55 backdrop-blur-lg border border-white/10 p-6 md:p-8 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-4 2xl:gap-5 overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-56 h-56 bg-blue-500/20 blur-[56px] rounded-full pointer-events-none" />
+                                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 blur-[40px] rounded-full pointer-events-none" />
                                     
                                     <div className="relative z-10">
                                         <h3 className="font-barlow text-2xl xl:text-3xl font-bold text-white tracking-tight uppercase">
                                             ¿Tenés un proyecto <span className="text-blue-400">en mente?</span>
                                         </h3>
-                                        <p className="mt-2 text-slate-300 font-light text-[15px] xl:text-[16px] leading-snug">
+                                        <p className="mt-1.5 text-slate-300 font-light text-[14px] xl:text-[15px] leading-snug">
                                             Te asesoramos sin costo ni compromiso. Escribinos para coordinar una evaluación de tus necesidades.
                                         </p>
                                     </div>
 
-                                    <div className="relative z-10 flex flex-col gap-4 mt-2">
-                                        <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 transition-colors hover:bg-white/10">
-                                            <div className="bg-blue-500/20 text-blue-400 p-2.5 rounded-xl shrink-0 mt-0.5">
-                                                <Calculator className="w-5 h-5" />
+                                    <div className="relative z-10 flex flex-col gap-3 mt-1">
+                                        <div className="flex items-start gap-4 p-3 2xl:p-4 rounded-2xl bg-white/5 border border-white/5 transition-colors hover:bg-white/10">
+                                            <div className="bg-blue-500/20 text-blue-400 p-2 2xl:p-2.5 rounded-xl shrink-0 mt-0.5">
+                                                <Calculator className="w-5 h-5 2xl:w-6 2xl:h-6" />
                                             </div>
                                             <div>
-                                                <h4 className="text-white font-semibold text-[15px] mb-1">Presupuesto Rápido</h4>
-                                                <p className="text-white/60 text-[13px] leading-relaxed">Dimensionamos equipos y caudales para pasarte un presupuesto exacto y funcional.</p>
+                                                <h4 className="text-white font-semibold text-[14px] 2xl:text-[15px] mb-0.5">Presupuesto Rápido</h4>
+                                                <p className="text-white/60 text-[12px] 2xl:text-[13px] leading-relaxed">Dimensionamos equipos y caudales para pasarte un presupuesto exacto y funcional.</p>
                                             </div>
                                         </div>
                                         
-                                        <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 transition-colors hover:bg-white/10">
-                                            <div className="bg-blue-500/20 text-blue-400 p-2.5 rounded-xl shrink-0 mt-0.5">
-                                                <MapPin className="w-5 h-5" />
+                                        <div className="flex items-start gap-4 p-3 2xl:p-4 rounded-2xl bg-white/5 border border-white/5 transition-colors hover:bg-white/10">
+                                            <div className="bg-blue-500/20 text-blue-400 p-2 2xl:p-2.5 rounded-xl shrink-0 mt-0.5">
+                                                <MapPin className="w-5 h-5 2xl:w-6 2xl:h-6" />
                                             </div>
                                             <div>
-                                                <h4 className="text-white font-semibold text-[15px] mb-1">Visita Técnica</h4>
-                                                <p className="text-white/60 text-[13px] leading-relaxed">No importa dónde estés. Coordinamos visita a tu campo o predio en cualquier parte del país.</p>
+                                                <h4 className="text-white font-semibold text-[14px] 2xl:text-[15px] mb-0.5">Visita Técnica</h4>
+                                                <p className="text-white/60 text-[12px] 2xl:text-[13px] leading-relaxed">No importa dónde estés. Coordinamos visita a tu predio en cualquier parte del país.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -304,7 +304,7 @@ export default function ServiciosPage() {
                                         href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustar%C3%ADa%20agendar%20una%20visita%20técnica%20o%20solicitar%20presupuesto`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="relative z-10 mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-green-500 px-6 py-4 font-epilogue font-bold text-white shadow-[0_8px_25px_rgba(34,197,94,0.3)] transition-all hover:bg-green-400 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)]"
+                                        className="relative z-10 mt-1 2xl:mt-3 flex w-full items-center justify-center gap-3 rounded-xl bg-green-500 px-5 py-3.5 font-epilogue font-bold text-white shadow-[0_8px_25px_rgba(34,197,94,0.3)] transition-all hover:bg-green-400 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)]"
                                     >
                                         <MessageCircle className="w-5 h-5" />
                                         WhatsApp Directo
