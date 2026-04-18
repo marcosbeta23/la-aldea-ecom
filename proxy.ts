@@ -2,6 +2,19 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
+const BLOCKED_BOTS = [
+  'semrushbot',
+  'ahrefsbot',
+  'mj12bot',
+  'dotbot',
+  'ccbot',
+  'petalbot',
+  'dataforseobot',
+  'blexbot',
+  'megaindex',
+  'linkdexbot',
+];
+
 // Routes that require Clerk authentication
 const isAdminRoute = createRouteMatcher(['/admin(.*)', '/api/admin(.*)']);
 // Admin login is public (Clerk renders its SignIn component there)
@@ -44,6 +57,17 @@ function buildCsp(nonce: string): string {
 }
 
 export default clerkMiddleware(async (auth, request) => {
+  // Block known scraping bots that create CPU-heavy, low-value traffic.
+  const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
+  if (BLOCKED_BOTS.some((bot) => userAgent.includes(bot))) {
+    return new NextResponse('Forbidden', {
+      status: 403,
+      headers: {
+        'Cache-Control': 'public, s-maxage=300',
+      },
+    });
+  }
+
   // 1. CSRF Protection for API routes
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     const isWebhook = request.nextUrl.pathname.startsWith('/api/webhooks/');

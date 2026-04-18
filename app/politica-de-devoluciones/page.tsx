@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+export const revalidate = false;
+
 export const metadata: Metadata = {
   title: 'Política de Devoluciones',
   description:

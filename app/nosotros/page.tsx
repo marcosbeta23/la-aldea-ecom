@@ -22,14 +22,16 @@ import PageHeader from '@/components/layout/PageHeader';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+export const revalidate = false;
+
 export const metadata: Metadata = {
-  title: 'Sobre Nosotros',
+  title: { absolute: 'Quiénes Somos | La Aldea — 25 Años en Tala, Canelones' },
   description:
-    'Conoce La Aldea: mas de 24 años en Tala, Canelones, especializados en sistemas de riego, bombas de agua, agroquimicos y soluciones hidricas para Uruguay.',
+    'Conocé la historia de La Aldea, empresa familiar fundada en 1999 por Martín Betancor Peregalli. 25 años especializados en riego, hidráulica y bombas en Tala, Uruguay.',
   openGraph: {
-    title: 'Sobre Nosotros | La Aldea',
+    title: 'Quiénes Somos | La Aldea — 25 Años en Tala, Canelones',
     description:
-      'Conoce La Aldea: mas de 24 años en Tala, Canelones, especializados en sistemas de riego, bombas de agua, agroquimicos y soluciones hidricas para Uruguay.',
+      'Conocé la historia de La Aldea, empresa familiar fundada en 1999 por Martín Betancor Peregalli. 25 años especializados en riego, hidráulica y bombas en Tala, Uruguay.',
     type: 'website',
     url: `${siteUrl}/nosotros`,
     images: [

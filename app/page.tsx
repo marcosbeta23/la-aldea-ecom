@@ -24,7 +24,13 @@ import {
   Settings
 } from "lucide-react";
 import HomeHero from "@/components/home/HomeHero";
-import { WHATSAPP_PHONE, WHATSAPP_DISPLAY, GOOGLE_RATING, GOOGLE_REVIEW_COUNT } from "@/lib/constants";
+import {
+  WHATSAPP_PHONE,
+  WHATSAPP_DISPLAY,
+  GOOGLE_RATING,
+  GOOGLE_REVIEW_COUNT,
+  buildWhatsAppUrl,
+} from "@/lib/constants";
 import ClientHomePageElements from "@/components/home/ClientHomePageElements";
 import PartnersCarouselWrapper from "@/components/ui/PartnersCarouselWrapper";
 import HomeMapSection from "@/components/home/HomeMapSection";
@@ -651,7 +657,7 @@ export default async function Home() {
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <a
-                    href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustaría%20solicitar%20un%20presupuesto%20para...`}
+                    href={buildWhatsAppUrl(WHATSAPP_PHONE, "Hola, me gustaría solicitar un presupuesto para...")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-blue-600 shadow-lg transition-all hover:bg-blue-50"
@@ -798,7 +804,7 @@ export default async function Home() {
                 </p>
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
                   <a
-                    href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre...`}
+                    href={buildWhatsAppUrl(WHATSAPP_PHONE, "Hola, necesito asesoramiento sobre...")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-3 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-blue-600 shadow-xl transition-all hover:bg-blue-50"

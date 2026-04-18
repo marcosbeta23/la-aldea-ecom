@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import { FAQ_ARTICLES } from '@/lib/faq-articles';
 import { supabase } from '@/lib/supabase';
 import { Calendar, ChevronRight, BookOpen, Tag } from 'lucide-react';
-import { WHATSAPP_PHONE } from '@/lib/constants';
+import { WHATSAPP_PHONE, buildWhatsAppUrl } from '@/lib/constants';
 import PageHeader from '@/components/layout/PageHeader';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
@@ -13,13 +13,13 @@ const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'Blog',
+  title: { absolute: 'Blog — Riego, Hidráulica y Piscinas en Uruguay | La Aldea' },
   description:
-    'Articulos, guias tecnicas y novedades sobre riego, bombas de agua, agroquimicos, piscinas y mas. Consejos practicos para productores y hogares en Uruguay.',
+    'Guías, consejos y novedades sobre riego, bombas de agua, hidráulica y piscinas en Uruguay. Contenido técnico y práctico del equipo de La Aldea, Tala.',
   openGraph: {
-    title: 'Blog | La Aldea',
+    title: 'Blog — Riego, Hidráulica y Piscinas en Uruguay | La Aldea',
     description:
-      'Articulos, guias tecnicas y novedades sobre riego, bombas de agua, agroquimicos, piscinas y mas.',
+      'Guías, consejos y novedades sobre riego, bombas de agua, hidráulica y piscinas en Uruguay. Contenido técnico y práctico del equipo de La Aldea, Tala.',
     type: 'website',
     url: `${siteUrl}/blog`,
     images: [
@@ -330,7 +330,7 @@ export default async function BlogPage() {
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <a
-                    href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20tengo%20una%20consulta%20tecnica%20sobre...`}
+                    href={buildWhatsAppUrl(WHATSAPP_PHONE, 'Hola, tengo una consulta técnica sobre...')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-white px-8 py-3.5 font-bold text-blue-700 shadow-lg hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300"

@@ -63,21 +63,46 @@ export default function robots(): MetadataRoute.Robots {
         allow: ['/', '/productos', '/guias/', '/blog'],
         disallow: ['/admin/', '/api/', '/checkout'],
       },
+      // Bloquear crawlers de scraping/auditoría que consumen CPU sin aportar SEO real.
       {
         userAgent: 'SemrushBot',
-        allow: ['/'],
+        disallow: ['/'],
       },
       {
         userAgent: 'AhrefsBot',
-        allow: ['/'],
+        disallow: ['/'],
       },
       {
         userAgent: 'DotBot',
-        allow: ['/'],
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'MJ12bot',
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'PetalBot',
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'DataForSeoBot',
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'BLEXBot',
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'MegaIndex',
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'linkdexbot',
+        disallow: ['/'],
       },
       {
         userAgent: 'CCBot',
-        allow: ['/'],
+        disallow: ['/'],
       },
     ],
     // sitemap-images.xml no se declara aquí para evitar que Ahrefs y otros tools

@@ -6,6 +6,7 @@ import { normalizeCategory } from '@/lib/validators';
 import { CATEGORY_HIERARCHY, getSubcategories, isMainCategory } from '@/lib/categories';
 import { getCategoryPath } from '@/lib/category-slugs';
 import { getArticlesForCategory } from '@/lib/faq-articles';
+import { cacheGet, cacheSet } from '@/lib/redis';
 import { Product } from '@/types/database';
 import ProductGrid from '@/components/products/ProductGrid';
 import SearchAnalytics from '@/components/products/SearchAnalytics';
@@ -45,6 +46,9 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
   const cat = params.categoria;
   const sub = params.sub;
   const catConfig = cat ? CATEGORY_HIERARCHY.find(c => c.value === cat) : null;
+  const defaultCatalogTitle = 'Catálogo — Riego, Bombas, Hidráulica y Más | La Aldea';
+  const defaultCatalogDescription =
+    'Explorá el catálogo completo de La Aldea: bombas de agua, sistemas de riego, hidráulica, herramientas, piscinas y más. Comprá online o consultanos en Tala, Uruguay.';
 
   // Obtener conteo real para totalPages
   const { total, page: currentPage } = await cachedGetProducts(params);
@@ -70,19 +74,23 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
 
   const title = cat
     ? sub ? `${sub} — ${cat}` : cat
-    : 'Tienda — Bombas de Agua, Riego e Insumos';
+    : defaultCatalogTitle;
+
+  const metadataTitle: Metadata['title'] = cat
+    ? title
+    : { absolute: defaultCatalogTitle };
 
   const description = cat
     ? catConfig?.description
       ? `${catConfig.description}. Compra ${cat.toLowerCase()}${sub ? ` ${sub.toLowerCase()}` : ''} en La Aldea, Tala. Envíos a todo Uruguay.`
       : `Compra ${cat.toLowerCase()} en La Aldea, Tala. Envíos a todo Uruguay.`
-    : 'Catálogo completo de bombas de agua, sistemas de riego, insumos agrícolas, herramientas y más. Envíos a todo Uruguay.';
+    : defaultCatalogDescription;
 
   return {
-    title,
+    title: metadataTitle,
     description,
     openGraph: {
-      title: `${title} | La Aldea`,
+      title: cat ? `${title} | La Aldea` : defaultCatalogTitle,
       description,
       type: 'website',
       url: canonical,
@@ -331,7 +339,18 @@ function stripAccents(str: string): string {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+type FilterOptionsResult = {
+  categories: { value: string; label: string; count: number }[];
+  subcategories: { value: string; label: string; count: number }[];
+  brands: { value: string; label: string; count: number }[];
+};
+
 async function getFilterOptions(currentCategory?: string) {
+  const normalizedCategory = currentCategory ? normalizeCategory(currentCategory) : 'all';
+  const cacheKey = `filter-options:v1:${normalizedCategory}`;
+  const cached = await cacheGet<FilterOptionsResult>(cacheKey);
+  if (cached) return cached;
+
   // Get unique categories with counts (case-insensitive dedup)
   const { data: categoriesData } = await supabaseAdmin
     .from('products')
@@ -428,7 +447,9 @@ async function getFilterOptions(currentCategory?: string) {
     .map(([value, count]) => ({ value, label: value, count }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  return { categories, subcategories, brands };
+  const result: FilterOptionsResult = { categories, subcategories, brands };
+  await cacheSet(cacheKey, result, 300);
+  return result;
 }
 
 

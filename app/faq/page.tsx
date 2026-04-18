@@ -17,11 +17,11 @@ const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Preguntas Frecuentes',
-  description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas. La Aldea - Tala, Uruguay.',
+  title: { absolute: 'Preguntas Frecuentes — Riego, Bombas y Piscinas | La Aldea' },
+  description: 'Respondemos las dudas más comunes sobre bombas de agua, sistemas de riego, piscinas, envíos y servicios de instalación en Uruguay. La Aldea, Tala, Canelones.',
   openGraph: {
-    title: 'Preguntas Frecuentes | La Aldea',
-    description: 'Respuestas a las preguntas mas frecuentes sobre envios, formas de pago, bombas de agua, riego, agroquimicos, piscinas y mas. La Aldea Agroinsumos, Tala, Uruguay.',
+    title: 'Preguntas Frecuentes — Riego, Bombas y Piscinas | La Aldea',
+    description: 'Respondemos las dudas más comunes sobre bombas de agua, sistemas de riego, piscinas, envíos y servicios de instalación en Uruguay. La Aldea, Tala, Canelones.',
     type: 'website',
     url: `${siteUrl}/faq`,
     siteName: 'La Aldea',

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import { Clock, Building2, MessageCircle, Copy, Check, Phone, Home, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
-import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY, buildWhatsAppUrl } from '@/lib/constants';
 
 
 function PendienteContent() {
@@ -115,7 +115,10 @@ function PendienteContent() {
               {/* WhatsApp CTA for bank transfer */}
               {isBankTransfer && (
                 <a
-                  href={`https://wa.me/${whatsapp}?text=Hola! Realicé una transferencia para el pedido ${orderNumber || ''}`}
+                  href={buildWhatsAppUrl(
+                    whatsapp,
+                    `Hola! Realicé una transferencia para el pedido ${orderNumber || ''}`
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors mb-4"

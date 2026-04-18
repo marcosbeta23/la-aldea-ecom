@@ -19,10 +19,12 @@ import {
     LifeBuoy,
     MapPin,
 } from 'lucide-react';
-import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY, buildWhatsAppUrl } from '@/lib/constants';
 import ServicesCarousel from '@/components/services/ServicesCarousel';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
+
+export const revalidate = false;
 
 /* ─────────────────────────────────────────────
    SEO METADATA
@@ -244,7 +246,7 @@ export default function ServiciosPage() {
 
                                 <div className="services-hero-ctas mt-4 sm:mt-8 mb-6 sm:mb-10 flex flex-col sm:flex-row items-stretch gap-3 sm:gap-3 max-w-[480px]">
                                     <a
-                                        href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
+                                        href={buildWhatsAppUrl(WHATSAPP_PHONE, 'Hola, quiero consultar sobre un servicio de instalación...')}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         data-whatsapp-source="services_hero_cta"
@@ -270,9 +272,9 @@ export default function ServiciosPage() {
                                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 blur-[40px] rounded-full pointer-events-none" />
                                     
                                     <div className="relative z-10">
-                                        <h3 className="font-barlow text-2xl xl:text-3xl font-bold text-white tracking-tight uppercase">
+                                        <h2 className="font-barlow text-2xl xl:text-3xl font-bold text-white tracking-tight uppercase">
                                             ¿Tenés un proyecto <span className="text-blue-400">en mente?</span>
-                                        </h3>
+                                        </h2>
                                         <p className="mt-1.5 text-slate-300 font-light text-[14px] xl:text-[15px] leading-snug">
                                             Te asesoramos sin costo ni compromiso. Escribinos para coordinar una evaluación de tus necesidades.
                                         </p>
@@ -284,7 +286,7 @@ export default function ServiciosPage() {
                                                 <Calculator className="w-5 h-5 2xl:w-6 2xl:h-6" />
                                             </div>
                                             <div>
-                                                <h4 className="text-white font-semibold text-[14px] 2xl:text-[15px] mb-0.5">Presupuesto Rápido</h4>
+                                                <h3 className="text-white font-semibold text-[14px] 2xl:text-[15px] mb-0.5">Presupuesto Rápido</h3>
                                                 <p className="text-white/60 text-[12px] 2xl:text-[13px] leading-relaxed">Dimensionamos equipos y caudales para pasarte un presupuesto exacto y funcional.</p>
                                             </div>
                                         </div>
@@ -294,14 +296,14 @@ export default function ServiciosPage() {
                                                 <MapPin className="w-5 h-5 2xl:w-6 2xl:h-6" />
                                             </div>
                                             <div>
-                                                <h4 className="text-white font-semibold text-[14px] 2xl:text-[15px] mb-0.5">Visita Técnica</h4>
+                                                <h3 className="text-white font-semibold text-[14px] 2xl:text-[15px] mb-0.5">Visita Técnica</h3>
                                                 <p className="text-white/60 text-[12px] 2xl:text-[13px] leading-relaxed">No importa dónde estés. Coordinamos visita a tu predio en cualquier parte del país.</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <a
-                                        href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20me%20gustar%C3%ADa%20agendar%20una%20visita%20técnica%20o%20solicitar%20presupuesto`}
+                                        href={buildWhatsAppUrl(WHATSAPP_PHONE, 'Hola, me gustaría agendar una visita técnica o solicitar presupuesto')}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="relative z-10 mt-1 2xl:mt-3 flex w-full items-center justify-center gap-3 rounded-xl bg-green-500 px-5 py-3.5 font-epilogue font-bold text-white shadow-[0_8px_25px_rgba(34,197,94,0.3)] transition-all hover:bg-green-400 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)]"
@@ -429,7 +431,7 @@ export default function ServiciosPage() {
 
                         <div className="mt-10 text-center">
                             <a
-                                href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n...`}
+                                href={buildWhatsAppUrl(WHATSAPP_PHONE, 'Hola, quiero consultar sobre un servicio de instalación...')}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 data-whatsapp-source="services_process_cta"
@@ -616,7 +618,7 @@ export default function ServiciosPage() {
 
                                     <div className="shrink-0">
                                         <a
-                                            href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20quiero%20consultar%20sobre%20un%20servicio%20de%20instalaci%C3%B3n%20h%C3%ADdrica...`}
+                                            href={buildWhatsAppUrl(WHATSAPP_PHONE, 'Hola, quiero consultar sobre un servicio de instalación hídrica...')}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             data-whatsapp-source="services_main_cta"

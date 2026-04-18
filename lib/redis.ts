@@ -5,13 +5,25 @@ import { Ratelimit } from '@upstash/ratelimit';
 
 // Lazy-initialize to avoid errors when env vars aren't set
 let _redis: Redis | null = null;
+let _warnedMissingRedisEnv = false;
+let _loggedRedisInit = false;
 
 export function getRedis(): Redis | null {
   if (_redis) return _redis;
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
+  if (!url || !token) {
+    if (!_warnedMissingRedisEnv && process.env.NODE_ENV !== 'test') {
+      console.warn('[Redis] Missing UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN. Cache and rate limiting are disabled.');
+      _warnedMissingRedisEnv = true;
+    }
+    return null;
+  }
   _redis = new Redis({ url, token });
+  if (!_loggedRedisInit && process.env.NODE_ENV !== 'test') {
+    console.info('[Redis] Upstash Redis client initialized.');
+    _loggedRedisInit = true;
+  }
   return _redis;
 }
 

@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+export const revalidate = false;
+
 export const metadata: Metadata = {
   title: 'Política de Privacidad',
   description: 'Política de privacidad y protección de datos personales de La Aldea, conforme a la Ley N.° 18.331 de Uruguay.',

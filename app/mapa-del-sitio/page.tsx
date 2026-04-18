@@ -11,9 +11,9 @@ import Header from '@/components/Header';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Mapa del Sitio | La Aldea — Bombas, Riego e Insumos en Tala, Uruguay',
+  title: { absolute: 'Mapa del Sitio | La Aldea' },
   description:
-    'Mapa completo del sitio de La Aldea. Encontrá todos los productos, categorías y secciones: bombas de agua, riego, insumos agrícolas, herramientas y piscinas en Tala, Uruguay.',
+    'Mapa del sitio de La Aldea — navegá todas las secciones: productos, categorías, servicios, guías y contacto.',
   robots: { index: true, follow: true },
 };
 

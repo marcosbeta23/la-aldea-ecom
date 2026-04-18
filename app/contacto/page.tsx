@@ -12,20 +12,22 @@ import {
   Facebook,
   ExternalLink,
 } from 'lucide-react';
-import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY, buildWhatsAppUrl } from '@/lib/constants';
 import PageHeader from '@/components/layout/PageHeader';
 import QuoteRequestForm from '@/components/contact/QuoteRequestForm';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+export const revalidate = false;
+
 export const metadata: Metadata = {
-  title: 'Contacto',
+  title: { absolute: 'Contacto | La Aldea — Tala, Canelones, Uruguay' },
   description:
-    'Contacta a La Aldea en Tala, Canelones. WhatsApp, telefono, email y direccion. Asesoramiento tecnico sin costo en bombas de agua, riego y agroquimicos.',
+    'Contactate con La Aldea por WhatsApp, teléfono o email. Estamos en José Alonso y Trelles y Av Artigas, Tala. Atendemos riego, bombas, hidráulica y piscinas.',
   openGraph: {
-    title: 'Contacto | La Aldea',
+    title: 'Contacto | La Aldea — Tala, Canelones, Uruguay',
     description:
-      'Contacta a La Aldea en Tala, Canelones. WhatsApp, telefono, email y direccion. Asesoramiento tecnico sin costo.',
+      'Contactate con La Aldea por WhatsApp, teléfono o email. Estamos en José Alonso y Trelles y Av Artigas, Tala. Atendemos riego, bombas, hidráulica y piscinas.',
     type: 'website',
     url: `${siteUrl}/contacto`,
     images: [
@@ -156,7 +158,7 @@ export default function ContactoPage() {
                     ¿Buscás una solución específica? Respondemos en minutos. Manda tu consulta, planos o presupuesto y te asesoramos personalmente.
                   </p>
                   <a
-                    href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola,%20necesito%20asesoramiento%20sobre...`}
+                    href={buildWhatsAppUrl(WHATSAPP_PHONE, 'Hola, necesito asesoramiento sobre...')}
                     target="_blank"
                     rel="noopener noreferrer"
                     data-whatsapp-source="contact_whatsapp_card"

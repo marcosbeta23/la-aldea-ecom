@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cacheGet, cacheSet, searchRatelimit, getClientIp } from '@/lib/redis';
+import rateLimit, { getClientIP } from '@/lib/rate-limit';
 import { getCachedQueryEmbedding } from '@/lib/search/embedding-cache';
 import { expandQuery } from '@/lib/search/query-expansion';
 import { getSearchFallback } from '@/lib/search/ai-fallback';
@@ -9,6 +10,10 @@ import type { Database } from '@/types/database';
 
 const MIN_SEARCH_QUERY_LENGTH = 2;
 const MAX_SEARCH_QUERY_LENGTH = 100;
+const SEARCH_CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+} as const;
+const lruSearchRatelimit = rateLimit({ uniqueTokenPerInterval: 500, interval: 60000 });
 
 type SearchProductRpcRow = Database['public']['Functions']['search_products_fuzzy']['Returns'][number];
 type SearchSemanticRpcRow = Database['public']['Functions']['search_products_semantic']['Returns'][number];
@@ -93,6 +98,12 @@ function toProductResult(product: SearchProductRpcRow): ProductResult {
   };
 }
 
+function jsonWithEdgeCache(payload: unknown) {
+  return NextResponse.json(payload, {
+    headers: SEARCH_CACHE_HEADERS,
+  });
+}
+
 // ── Synonym resolver ──────────────────────────────────────────────────────────
 async function resolveQuery(query: string): Promise<string> {
   const normalized = stripAccents(query.toLowerCase().trim());
@@ -142,13 +153,22 @@ export async function GET(request: NextRequest) {
           { status: 429 }
         );
       }
+    } else {
+      try {
+        await lruSearchRatelimit.check(30, getClientIP(request));
+      } catch {
+        return NextResponse.json(
+          { suggestions: [], error: 'Too many requests' },
+          { status: 429 }
+        );
+      }
     }
 
     // Cache keyed on raw query — synonym resolution is inside the cache miss
     const cacheKey = `search:v2:${sanitizedQuery.toLowerCase()}`;
     const cached = await cacheGet<{ suggestions: unknown[]; query: string }>(cacheKey);
     if (cached) {
-      return NextResponse.json(cached);
+      return jsonWithEdgeCache(cached);
     }
 
     // Only hit the DB for synonym + search on cache miss
@@ -399,7 +419,7 @@ export async function GET(request: NextRequest) {
     // Cache for 60 seconds
     await cacheSet(cacheKey, result, 60);
 
-    return NextResponse.json(result);
+    return jsonWithEdgeCache(result);
 
   } catch (error) {
     console.error('Search suggestions error:', error);

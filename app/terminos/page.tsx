@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
+export const revalidate = false;
+
 export const metadata: Metadata = {
   title: 'Términos y Condiciones',
   description: 'Términos y condiciones de uso y compra en La Aldea. Información sobre envíos, devoluciones, garantías y métodos de pago.',

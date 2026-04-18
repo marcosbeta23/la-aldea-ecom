@@ -4,6 +4,7 @@ import ProductsPage from '@/app/productos/page';
 import { CATEGORY_HIERARCHY } from '@/lib/categories';
 import { getCategoryFromSlug, getCategoryPath, getCategorySlug } from '@/lib/category-slugs';
 import AllProductsIndex from '@/components/products/AllProductsIndex';
+import { getCategoryMeta } from '@/lib/seo-metadata';
 
 interface CategoryProductsPageProps {
   params: Promise<{ categoria: string }>;
@@ -35,6 +36,7 @@ export async function generateMetadata({
   searchParams,
 }: CategoryProductsPageProps): Promise<Metadata> {
   const { categoria: slug } = await params;
+  const query = await searchParams;
   const categoryValue = getCategoryFromSlug(slug);
 
   if (!categoryValue) {
@@ -44,8 +46,8 @@ export async function generateMetadata({
     };
   }
 
-  const query = await searchParams;
-  const categoryConfig = CATEGORY_HIERARCHY.find((c) => c.value === categoryValue);
+  const sub = typeof query.sub === 'string' ? query.sub : undefined;
+  const { title, description } = getCategoryMeta(categoryValue, sub);
 
   const refinementFilters = Boolean(
     query.marca ||
@@ -57,31 +59,26 @@ export async function generateMetadata({
       (query.page && query.page !== '1')
   );
 
-  const canonicalParams = new URLSearchParams();
-  if (query.sub) canonicalParams.set('sub', query.sub);
-
   const categoryPath = getCategoryPath(categoryValue);
-  const canonical = `${siteUrl}${categoryPath}${
-    canonicalParams.toString() ? `?${canonicalParams.toString()}` : ''
-  }`;
-
-  const title = query.sub ? `${query.sub} — ${categoryValue}` : categoryValue;
-  const description = categoryConfig?.description
-    ? `${categoryConfig.description}. Compra en La Aldea con envíos a todo Uruguay.`
-    : `Compra ${categoryValue.toLowerCase()} en La Aldea. Envíos a todo Uruguay.`;
+  const canonicalBase = `${siteUrl}${categoryPath}`;
+  const canonical = sub
+    ? `${canonicalBase}?sub=${encodeURIComponent(sub)}`
+    : canonicalBase;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     robots: refinementFilters
       ? { index: false, follow: true }
       : { index: true, follow: true },
     openGraph: {
-      title: `${title} | La Aldea`,
+      title,
       description,
       type: 'website',
       url: canonical,
+      siteName: 'La Aldea',
+      locale: 'es_UY',
       images: [
         {
           url: `${siteUrl}/assets/images/og-image.webp`,

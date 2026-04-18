@@ -12,6 +12,7 @@ import RelatedProducts from '@/components/products/RelatedProducts';
 import { productBreadcrumb } from '@/lib/schema';
 import { WHATSAPP_PHONE } from '@/lib/constants';
 import { getCategoryPath } from '@/lib/category-slugs';
+import { getProductTitle } from '@/lib/seo-metadata';
 
 export const dynamicParams = true; // explicitly allow on-demand slugs
 
@@ -45,11 +46,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         : `${siteUrl}${product.images[0]}`
       : `${siteUrl}/assets/images/og-image.webp`;
 
-    // Keep room for the global title template suffix: " | La Aldea" (11 chars)
-    const maxNameLength = 49;
-    const seoTitle = product.name.length > maxNameLength
-      ? `${product.name.slice(0, maxNameLength - 3)}...`
-      : product.name;
+    const categories = Array.isArray(product.category)
+      ? product.category.filter((category): category is string => Boolean(category))
+      : product.category
+        ? [product.category]
+        : [];
+    const seoTitle = getProductTitle(product.name, categories);
     
     // Create SEO-optimized description
     const seoDescription = product.description 
@@ -65,12 +67,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         ].filter(Boolean).join(' ');
 
     return {
-      title: seoTitle,
+      title: { absolute: seoTitle },
       description: seoDescription,
       
       // Open Graph (Facebook, LinkedIn, WhatsApp)
       openGraph: {
-        title: `${product.name} | La Aldea`,
+        title: seoTitle,
         description: seoDescription,
         url: productUrl,
         siteName: 'La Aldea Tala',
@@ -89,7 +91,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       // Twitter Cards
       twitter: {
         card: 'summary_large_image',
-        title: `${product.name} | La Aldea`,
+        title: seoTitle,
         description: seoDescription,
         images: [productImage],
       },
