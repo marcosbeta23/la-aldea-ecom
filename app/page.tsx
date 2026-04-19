@@ -525,7 +525,6 @@ export default async function Home() {
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                       quality={45}
-                      priority={i === 0} // Prioritize the first image
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     {/* Gradient overlay */}

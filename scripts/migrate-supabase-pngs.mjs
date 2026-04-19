@@ -18,9 +18,9 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 const BUCKET = 'product-images';
-const QUALITY = Number(process.env.PNG_WEBP_QUALITY || 80);
-const MAX_DIM = Number(process.env.PNG_WEBP_MAX_DIM || 600);
-const AVIF_CQ = Number(process.env.PNG_AVIF_CQ || 40);
+const QUALITY = Number(process.env.IMAGE_WEBP_QUALITY || process.env.PNG_WEBP_QUALITY || 80);
+const MAX_DIM = Number(process.env.IMAGE_MAX_DIM || process.env.PNG_WEBP_MAX_DIM || 600);
+const AVIF_CQ = Number(process.env.IMAGE_AVIF_CQ || process.env.PNG_AVIF_CQ || 40);
 
 const args = process.argv.slice(2);
 const hasArg = (name) => args.includes(name);
@@ -33,9 +33,22 @@ const getArgValue = (name, fallback = null) => {
 const apply = hasArg('--apply');
 const deleteOriginal = hasArg('--delete-original');
 const allowAvifFallback = hasArg('--allow-avif-fallback');
+const includeWebp = hasArg('--include-webp');
 const limit = Number(getArgValue('--limit', '0')) || 0;
 const onlySlug = getArgValue('--only-slug', null);
 const onlyId = getArgValue('--only-id', null);
+const extensionsArg = getArgValue('--extensions', 'png,jpg,jpeg');
+
+const extensions = new Set(
+  String(extensionsArg)
+    .split(',')
+    .map((ext) => ext.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+if (includeWebp) {
+  extensions.add('webp');
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
@@ -45,9 +58,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 });
 
 const sanitize = (s) => s.replace(/[^a-zA-Z0-9-_]/g, '-').slice(0, 60);
-const isPngUrl = (url) => {
+const getExtensionFromUrl = (url) => {
   const clean = String(url || '').split('?')[0].toLowerCase();
-  return clean.endsWith('.png');
+  const ext = path.extname(clean).replace('.', '');
+  return ext || null;
+};
+
+const isTargetImageUrl = (url) => {
+  const ext = getExtensionFromUrl(url);
+  return ext ? extensions.has(ext) : false;
 };
 
 const extractBucketPath = (publicUrl) => {
@@ -85,8 +104,9 @@ const runFfmpeg = (inputPath, outputPath, format) => {
   }
 };
 
-async function convertPngBuffer(buffer, tempDir, token, format) {
-  const inputPath = path.join(tempDir, `${token}.png`);
+async function convertImageBuffer(buffer, tempDir, token, inputExt, format) {
+  const safeInputExt = inputExt || 'img';
+  const inputPath = path.join(tempDir, `${token}.${safeInputExt}`);
   const outputPath = path.join(tempDir, `${token}.${format}`);
 
   await fs.writeFile(inputPath, buffer);
@@ -100,7 +120,9 @@ async function convertPngBuffer(buffer, tempDir, token, format) {
 
 async function main() {
   console.log(`Mode: ${apply ? 'APPLY' : 'DRY-RUN'}`);
-  console.log(`Bucket: ${BUCKET} | webpQ=${QUALITY} | avifCQ=${AVIF_CQ} | maxDim=${MAX_DIM} | avifFallback=${allowAvifFallback}`);
+  console.log(
+    `Bucket: ${BUCKET} | exts=${[...extensions].join(',')} | webpQ=${QUALITY} | avifCQ=${AVIF_CQ} | maxDim=${MAX_DIM} | avifFallback=${allowAvifFallback}`
+  );
 
   const { data, error } = await supabase
     .from('products')
@@ -113,23 +135,23 @@ async function main() {
   }
 
   let products = (data || []).filter(
-    (p) => Array.isArray(p.images) && p.images.some((img) => isPngUrl(img))
+    (p) => Array.isArray(p.images) && p.images.some((img) => isTargetImageUrl(img))
   );
 
   if (onlySlug) products = products.filter((p) => p.slug === onlySlug);
   if (onlyId) products = products.filter((p) => p.id === onlyId);
   if (limit > 0) products = products.slice(0, limit);
 
-  console.log(`Products with PNG images: ${products.length}`);
+  console.log(`Products with target images: ${products.length}`);
 
   if (products.length === 0) {
     console.log('Nothing to migrate.');
     return;
   }
 
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'supabase-png-migrate-'));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'supabase-image-migrate-'));
 
-  let pngFound = 0;
+  let sourceFound = 0;
   let convertedCount = 0;
   let productUpdates = 0;
   let failedCount = 0;
@@ -145,9 +167,12 @@ async function main() {
 
       for (let i = 0; i < product.images.length; i += 1) {
         const originalUrl = product.images[i];
-        if (!isPngUrl(originalUrl)) continue;
+        if (!isTargetImageUrl(originalUrl)) continue;
 
-        pngFound += 1;
+        const sourceExt = getExtensionFromUrl(originalUrl);
+        if (!sourceExt) continue;
+
+        sourceFound += 1;
 
         try {
           const res = await fetch(originalUrl);
@@ -157,13 +182,13 @@ async function main() {
 
           const inputBuffer = Buffer.from(await res.arrayBuffer());
           const token = crypto.randomBytes(8).toString('hex');
-          let outputBuffer = await convertPngBuffer(inputBuffer, tempDir, token, 'webp');
+          let outputBuffer = await convertImageBuffer(inputBuffer, tempDir, token, sourceExt, 'webp');
           let outputExt = 'webp';
           let outputContentType = 'image/webp';
 
           if (outputBuffer.length >= inputBuffer.length && allowAvifFallback) {
             try {
-              const avifBuffer = await convertPngBuffer(inputBuffer, tempDir, `${token}-avif`, 'avif');
+              const avifBuffer = await convertImageBuffer(inputBuffer, tempDir, `${token}-avif`, sourceExt, 'avif');
               if (avifBuffer.length < outputBuffer.length) {
                 outputBuffer = avifBuffer;
                 outputExt = 'avif';
@@ -257,7 +282,7 @@ async function main() {
   const savingsPct = totalBytesBefore > 0 ? ((savings / totalBytesBefore) * 100).toFixed(2) : '0.00';
 
   console.log('--- Summary ---');
-  console.log(`PNG found: ${pngFound}`);
+  console.log(`Source images found: ${sourceFound}`);
   console.log(`Converted: ${convertedCount}`);
   console.log(`AVIF fallback used: ${avifFallbackCount}`);
   console.log(`Skipped (larger): ${skippedLargerCount}`);

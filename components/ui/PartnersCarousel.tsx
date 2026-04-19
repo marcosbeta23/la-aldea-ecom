@@ -1,7 +1,5 @@
-'use client';
 import Image from "next/image";
 import Link from "next/link";
-import { trackUiInteraction } from '@/lib/analytics';
 
 export interface Partner {
   name: string;
@@ -11,6 +9,7 @@ export interface Partner {
 
 interface PartnersCarouselProps {
   partners: Partner[];
+  speed?: number;
 }
 
 export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
@@ -35,13 +34,13 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
                 data-ph-zone="partners-carousel"
                 data-ph-target={partner.name}
                 className="block"
-                onClick={() => trackUiInteraction('partners_logo_click', { partner: partner.name, destination_type: 'external' })}
               >
                 <Image
                   src={partner.logo}
                   alt={partner.name}
                   width={140}
                   height={60}
+                  sizes="(max-width: 768px) 120px, 140px"
                   quality={45}
                   className="h-10 md:h-12 w-auto object-contain"
                 />
@@ -53,13 +52,13 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
                 data-ph-zone="partners-carousel"
                 data-ph-target={partner.name}
                 className="block"
-                onClick={() => trackUiInteraction('partners_logo_click', { partner: partner.name, destination_type: 'brand_filter' })}
               >
                 <Image
                   src={partner.logo}
                   alt={partner.name}
                   width={140}
                   height={60}
+                  sizes="(max-width: 768px) 120px, 140px"
                   quality={45}
                   className="h-10 md:h-12 w-auto object-contain"
                 />
@@ -70,8 +69,8 @@ export default function PartnersCarousel({ partners }: PartnersCarouselProps) {
       </div>
       
       {/* Gradients to fade edges cleanly */}
-      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-white to-transparent" />
-      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-white to-transparent" />
+      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-linear-to-r from-white to-transparent" />
+      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-linear-to-l from-white to-transparent" />
     </div>
   );
 }

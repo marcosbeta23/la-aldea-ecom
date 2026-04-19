@@ -16,6 +16,18 @@ const BUCKET = 'product-images';
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');
 const onlyRecent = args.includes('--only-recent');
+const getArgValue = (name, fallback = null) => {
+  const prefix = `${name}=`;
+  const found = args.find((a) => a.startsWith(prefix));
+  return found ? found.slice(prefix.length) : fallback;
+};
+const extensionsArg = getArgValue('--extensions', 'png,jpg,jpeg');
+const cleanupExtensions = new Set(
+  String(extensionsArg)
+    .split(',')
+    .map((ext) => ext.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
@@ -39,6 +51,7 @@ const migratedPattern = /^\d{13}-[a-f0-9]{6}-(.+)\.(webp|avif)$/i;
 async function main() {
   console.log(`Mode: ${apply ? 'APPLY' : 'DRY-RUN'}`);
   console.log(`Bucket: ${BUCKET}`);
+  console.log(`Extensions: ${[...cleanupExtensions].join(',')}`);
 
   let query = supabase.from('products').select('id,slug,images,updated_at');
   if (onlyRecent) {
@@ -72,9 +85,11 @@ async function main() {
     const match = p.match(migratedPattern);
     if (!match) continue;
     const oldBase = match[1];
-    const oldPng = `${oldBase}.png`;
-    if (!referencedPaths.has(oldPng)) {
-      candidates.add(oldPng);
+    for (const ext of cleanupExtensions) {
+      const originalPath = `${oldBase}.${ext}`;
+      if (!referencedPaths.has(originalPath)) {
+        candidates.add(originalPath);
+      }
     }
   }
 
@@ -93,8 +108,8 @@ async function main() {
 
   console.log(`Referenced storage paths: ${referencedPaths.size}`);
   console.log(`Migrated modern image paths: ${migratedImagePaths.length}`);
-  console.log(`Orphan PNG candidates (derived): ${candidateList.length}`);
-  console.log(`Orphan PNG candidates (existing): ${existingCandidates.length}`);
+  console.log(`Orphan candidates (derived): ${candidateList.length}`);
+  console.log(`Orphan candidates (existing): ${existingCandidates.length}`);
 
   if (!apply) {
     for (const c of existingCandidates) {

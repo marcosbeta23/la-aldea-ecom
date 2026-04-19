@@ -19,7 +19,9 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ['image/avif', 'image/webp'],
-    unoptimized: true,
+    // Default to manual optimization mode to avoid Vercel image quota usage.
+    // Set NEXT_IMAGE_UNOPTIMIZED=false when you want to re-enable Next/Vercel optimization.
+    unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED !== 'false',
     remotePatterns: [
       {
         protocol: 'https',
