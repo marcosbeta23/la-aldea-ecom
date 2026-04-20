@@ -173,6 +173,7 @@ export default function NosotrosPage() {
                     width={800}
                     height={1000}
                     priority
+                    sizes="(max-width: 1024px) 100vw, 42vw"
                     className="h-full w-full object-cover filter grayscale-[40%] hover:grayscale-0 transition-all duration-700"
                   />
                 </div>

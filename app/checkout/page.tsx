@@ -998,6 +998,7 @@ export default function CheckoutPage() {
                               src={item.product.images[0]}
                               alt={item.product.name}
                               fill
+                              sizes="64px"
                               className="object-cover"
                             />
                           ) : (

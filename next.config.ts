@@ -18,7 +18,22 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    formats: ['image/avif', 'image/webp'],
+    // Cost controls below are applied when NEXT_IMAGE_UNOPTIMIZED=false.
+    formats: ['image/webp'],
+    minimumCacheTTL: 2678400,
+    qualities: [45, 55, 65, 75, 85],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1536],
+    imageSizes: [32, 48, 64, 80, 96, 120, 140, 150, 180, 220, 256, 310, 384, 400],
+    localPatterns: [
+      {
+        pathname: '/assets/images/**',
+        search: '',
+      },
+      {
+        pathname: '/logo.svg',
+        search: '',
+      },
+    ],
     // Default to manual optimization mode to avoid Vercel image quota usage.
     // Set NEXT_IMAGE_UNOPTIMIZED=false when you want to re-enable Next/Vercel optimization.
     unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED !== 'false',
