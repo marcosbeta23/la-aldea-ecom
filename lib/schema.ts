@@ -71,3 +71,12 @@ export function categoryBreadcrumb(categoryName: string) {
     { name: categoryName },
   ]);
 }
+
+// Department service area page breadcrumb
+export function departmentBreadcrumb(departmentName: string) {
+  return breadcrumbSchema([
+    { name: "Inicio", url: "/" },
+    { name: "Servicios", url: "/servicios" },
+    { name: departmentName },
+  ]);
+}

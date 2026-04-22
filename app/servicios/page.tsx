@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/Header';
@@ -21,10 +21,23 @@ import {
 } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY, buildWhatsAppUrl } from '@/lib/constants';
 import ServicesCarousel from '@/components/services/ServicesCarousel';
+import { getDepartmentsByTier, PUBLISHED_DEPARTMENTS } from '@/lib/departments';
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://laaldeatala.com.uy';
 
 export const revalidate = false;
+
+const SERVICE_OFFER_NAMES = [
+    'Diseño e Instalación de Riego por Goteo',
+    'Riego por Aspersión y Microaspersión',
+    'Instalación de Sistemas de Bombeo',
+    'Automatización de Riego',
+    'Bombeo Solar Fotovoltaico',
+    'Almacenamiento de Agua — Represas y Cisternas',
+    'Instalaciones Ganaderas',
+    'Arcos Sanitarios de Desinfección',
+    'Asesoramiento Técnico Hídrico',
+];
 
 /* ─────────────────────────────────────────────
    SEO METADATA
@@ -96,22 +109,50 @@ const serviceSchema = {
     hasOfferCatalog: {
         '@type': 'OfferCatalog',
         name: 'Servicios de Riego, Bombeo y Soluciones Hídricas',
-        itemListElement: [
-            'Diseño e Instalación de Riego por Goteo',
-            'Riego por Aspersión y Microaspersión',
-            'Instalación de Sistemas de Bombeo',
-            'Automatización de Riego',
-            'Bombeo Solar Fotovoltaico',
-            'Almacenamiento de Agua — Represas y Cisternas',
-            'Instalaciones Ganaderas',
-            'Arcos Sanitarios de Desinfección',
-            'Asesoramiento Técnico Hídrico',
-        ].map((name) => ({
+        itemListElement: SERVICE_OFFER_NAMES.map((name) => ({
             '@type': 'Offer',
             itemOffered: {
                 '@type': 'Service',
                 name,
                 areaServed: { '@type': 'Country', name: 'Uruguay' },
+            },
+        })),
+    },
+};
+
+const serviceCoverageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': `${siteUrl}/servicios#service`,
+    serviceType: 'Venta e Instalacion de Riego Agricola',
+    provider: {
+        '@type': 'LocalBusiness',
+        '@id': `${siteUrl}/#business`,
+        name: 'La Aldea',
+        address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Tala',
+            addressRegion: 'Canelones',
+            addressCountry: 'UY',
+        },
+    },
+    areaServed: PUBLISHED_DEPARTMENTS.map((department) => ({
+        '@type': 'State',
+        name: department.name,
+        geo: {
+            '@type': 'GeoCoordinates',
+            latitude: department.geoCoordinates.latitude,
+            longitude: department.geoCoordinates.longitude,
+        },
+    })),
+    hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Soluciones Hidricas',
+        itemListElement: SERVICE_OFFER_NAMES.map((name) => ({
+            '@type': 'Offer',
+            itemOffered: {
+                '@type': 'Service',
+                name,
             },
         })),
     },
@@ -191,6 +232,10 @@ export default function ServiciosPage() {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceCoverageSchema) }}
             />
 
             <Header />
@@ -631,6 +676,63 @@ export default function ServiciosPage() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                {/* ══════════════════════════════════════════
+            DEPARTMENTS HUB — cross-linking section
+            ═══════════════════════════════════════ */}
+                <section id="departamentos" className="cv-auto border-t border-slate-200 bg-white py-16 lg:py-20">
+                    <div className="container mx-auto px-4">
+                        <div className="mb-10 text-center">
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                <span className="font-dm-mono text-[10.5px] font-medium uppercase tracking-[0.2em] text-blue-700">
+                                    Cobertura nacional
+                                </span>
+                            </div>
+                            <h2 className="font-barlow text-3xl font-bold leading-tight text-slate-900 md:text-4xl">
+                                Servicios en todo el Uruguay.
+                            </h2>
+                            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-500 lg:text-lg">
+                                Instalamos sistemas de riego, bombeo e infraestructura hídrica en los 19 departamentos.
+                                Cada región tiene necesidades distintas y las conocemos.
+                            </p>
+                        </div>
+
+                        {(() => {
+                            const tiers = getDepartmentsByTier();
+                            const tierGroups = [
+                                { label: 'Zona núcleo', depts: tiers.tier1 },
+                                { label: 'Zona agrícola intensiva', depts: tiers.tier2 },
+                                { label: 'Ganadería y costa', depts: tiers.tier3 },
+                                { label: 'Norte y fronteras', depts: tiers.tier4 },
+                            ];
+                            return (
+                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
+                                    {tierGroups.map((group) => (
+                                        <div key={group.label} className="rounded-[1.75rem] border border-slate-100 bg-slate-50 p-5">
+                                            <p className="mb-3 font-dm-mono text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">
+                                                {group.label}
+                                            </p>
+                                            <ul className="space-y-2">
+                                                {group.depts.map((dept) => (
+                                                    <li key={dept.slug}>
+                                                        <Link
+                                                            href={`/servicios/${dept.slug}`}
+                                                            className="flex items-center gap-2 text-sm font-medium text-slate-700 transition-colors hover:text-blue-600"
+                                                        >
+                                                            <MapPin className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                                                            {dept.name}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()}
                     </div>
                 </section>
 

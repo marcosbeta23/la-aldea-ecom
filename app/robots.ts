@@ -45,23 +45,33 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: 'ChatGPT-User',
-        allow: ['/', '/productos', '/guias/', '/blog'],
+        allow: ['/', '/productos', '/guias/', '/blog', '/servicios/', '/faq'],
         disallow: ['/admin/', '/api/', '/checkout'],
       },
       {
         userAgent: 'Claude-Web',
-        allow: ['/', '/productos', '/guias/', '/blog'],
+        allow: ['/', '/productos', '/guias/', '/blog', '/servicios/', '/faq'],
         disallow: ['/admin/', '/api/', '/checkout'],
       },
       {
         userAgent: 'PerplexityBot',
-        allow: ['/', '/productos', '/guias/', '/blog'],
+        allow: ['/', '/productos', '/guias/', '/blog', '/servicios/', '/faq'],
         disallow: ['/admin/', '/api/', '/checkout'],
       },
       {
         userAgent: 'Anthropic-AI',
-        allow: ['/', '/productos', '/guias/', '/blog'],
+        allow: ['/', '/productos', '/guias/', '/blog', '/servicios/', '/faq'],
         disallow: ['/admin/', '/api/', '/checkout'],
+      },
+      {
+        userAgent: 'OpenAI-GPT',
+        allow: ['/', '/productos', '/guias/', '/blog', '/servicios/', '/faq'],
+        disallow: ['/admin/', '/api/', '/cart'],
+      },
+      {
+        userAgent: 'OAI-SearchBot',
+        allow: ['/', '/productos', '/guias/', '/blog', '/servicios/', '/faq'],
+        disallow: ['/admin/', '/api/', '/cart'],
       },
       // Bloquear crawlers de scraping/auditoría que consumen CPU sin aportar SEO real.
       {

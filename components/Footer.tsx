@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, Mail, Instagram, Facebook } from 'lucide-react';
+import { Phone, Mail, Instagram, Facebook, MapPin } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/constants';
+import { DEPARTMENTS } from '@/lib/departments';
 
 export default function Footer() {
   return (
     <footer className="border-t border-slate-200 bg-white py-10 md:py-12">
       <div className="container mx-auto px-4">
-        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div className="sm:col-span-2">
             <Link href="/" className="inline-block transition-opacity hover:opacity-80">
@@ -97,6 +98,32 @@ export default function Footer() {
               <li>
                 <Link href="/mapa-del-sitio" className="text-sm text-slate-600 hover:text-blue-600">
                   Mapa del Sitio
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Departments */}
+          <div>
+            <h3 className="font-semibold text-slate-900">Servicios por Departamento</h3>
+            <ul className="mt-4 space-y-2">
+              {DEPARTMENTS.filter(d => d.published && d.tier <= 2).slice(0, 8).map((dept) => (
+                <li key={dept.slug}>
+                  <Link
+                    href={`/servicios/${dept.slug}`}
+                    className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-blue-600"
+                  >
+                    <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
+                    {dept.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href="/servicios#departamentos"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Ver todos los departamentos →
                 </Link>
               </li>
             </ul>

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { CATEGORY_HIERARCHY } from "@/lib/categories";
 import { FAQ_ARTICLES } from "@/lib/faq-articles";
 import { getCategoryPath } from "@/lib/category-slugs";
+import { PUBLISHED_DEPARTMENTS } from "@/lib/departments";
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || "https://laaldeatala.com.uy";
 
@@ -154,5 +155,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching products for sitemap:", error);
   }
 
-  return [...staticPages, ...categoryPages, ...guidePages, ...dbGuidePages, ...productPages];
+  // Department service area pages
+  const departmentPages: MetadataRoute.Sitemap = PUBLISHED_DEPARTMENTS.map((dept) => ({
+    url: `${siteUrl}/servicios/${dept.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.75,
+  }));
+
+  return [...staticPages, ...categoryPages, ...guidePages, ...dbGuidePages, ...productPages, ...departmentPages];
 }
