@@ -319,8 +319,11 @@ export default async function DepartamentoPage({ params }: PageProps) {
                                 </span>
                             </div>
 
-                            <h1 className="font-barlow text-[clamp(2rem,6vw,3.5rem)] font-bold leading-[0.95] tracking-[-0.01em] text-white">
-                                <span className="block">Servicios de Riego y Bombeo</span>
+                            <h1
+                                aria-label={`Servicios de Riego y Bombeo en ${dept.name}`}
+                                className="font-barlow text-[clamp(2rem,6vw,3.5rem)] font-bold leading-[0.95] tracking-[-0.01em] text-white"
+                            >
+                                Servicios de Riego y Bombeo{' '}
                                 <span className="block mt-1 bg-linear-to-r from-blue-300 via-cyan-300 to-blue-500 bg-clip-text text-transparent">
                                     en {dept.name}
                                 </span>
