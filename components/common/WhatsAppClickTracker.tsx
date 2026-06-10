@@ -2,34 +2,35 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { trackPhoneClick, trackWhatsAppClick } from '@/lib/analytics';
+import { trackPhoneClick, trackWhatsAppClick, trackEmailClick } from '@/lib/analytics';
 
-function resolveSource(anchor: HTMLAnchorElement, pathname: string, channel: 'whatsapp' | 'phone'): string {
+function resolveSource(anchor: HTMLAnchorElement, pathname: string, channel: 'whatsapp' | 'phone' | 'email'): string {
+  const dataAttr = {
+    whatsapp: 'whatsappSource',
+    phone: 'phoneSource',
+    email: 'emailSource',
+  }[channel];
+  const containerAttr = `[data-${channel === 'whatsapp' ? 'whatsapp' : channel}-source]`;
+
   const explicitSource =
-    channel === 'whatsapp'
-      ? anchor.dataset.whatsappSource ||
-        anchor.closest<HTMLElement>('[data-whatsapp-source]')?.dataset.whatsappSource
-      : anchor.dataset.phoneSource ||
-        anchor.closest<HTMLElement>('[data-phone-source]')?.dataset.phoneSource;
+    (anchor.dataset as Record<string, string | undefined>)[dataAttr] ||
+    anchor.closest<HTMLElement>(containerAttr)?.dataset[dataAttr];
 
   if (explicitSource) return explicitSource;
 
-  if (channel === 'phone') {
-    if (pathname === '/contacto') return 'contact_page';
-    if (pathname === '/servicios') return 'services_page';
-    if (pathname === '/') return 'homepage';
-    if (pathname.startsWith('/nosotros')) return 'about_page';
-    if (pathname.startsWith('/pendiente')) return 'pending_page';
-    if (pathname.startsWith('/faq')) return 'faq_page';
-    return 'phone_link';
-  }
-
+  // Fallback: derive source from page path
+  if (pathname === '/contacto') return 'contact_page';
   if (pathname === '/') return 'homepage';
   if (pathname.startsWith('/productos/')) return 'product_page';
+  if (pathname === '/productos') return 'products_page';
   if (pathname.startsWith('/servicios')) return 'services_page';
   if (pathname.startsWith('/checkout')) return 'checkout_page';
+  if (pathname.startsWith('/nosotros')) return 'about_page';
+  if (pathname.startsWith('/faq')) return 'faq_page';
+  if (pathname.startsWith('/blog') || pathname.startsWith('/guias')) return 'blog_page';
+  if (pathname.startsWith('/pendiente')) return 'pending_page';
 
-  return pathname === '/productos' ? 'products_page' : 'unknown';
+  return `${channel}_link`;
 }
 
 export default function WhatsAppClickTracker() {
@@ -45,7 +46,8 @@ export default function WhatsAppClickTracker() {
       const href = link.getAttribute('href') || '';
       const isWhatsApp = href.includes('wa.me/');
       const isPhone = href.startsWith('tel:');
-      if (!isWhatsApp && !isPhone) return;
+      const isEmail = href.startsWith('mailto:');
+      if (!isWhatsApp && !isPhone && !isEmail) return;
 
       const now = Date.now();
       if (now - lastTrackedAt.current < 400) return;
@@ -65,6 +67,15 @@ export default function WhatsAppClickTracker() {
       if (isPhone) {
         trackPhoneClick(
           resolveSource(link, page, 'phone'),
+          page,
+          href,
+          label
+        );
+      }
+
+      if (isEmail) {
+        trackEmailClick(
+          resolveSource(link, page, 'email'),
           page,
           href,
           label

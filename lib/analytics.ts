@@ -1,4 +1,15 @@
 
+/**
+ * Fire a Google Analytics 4 event via gtag.
+ * Events are queued in dataLayer even if the GA script hasn't loaded yet.
+ */
+function gaEvent(eventName: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, params);
+  }
+}
+
 function capture(event: string, properties?: Record<string, unknown>) {
   if (typeof window === "undefined") return; // SSR guard
   if (process.env.NODE_ENV !== "production") {
@@ -119,6 +130,20 @@ export function trackWhatsAppClick(
   label: string
 ) {
   capture("whatsapp_click", { source, page, href, label });
+  gaEvent("generate_lead", {
+    event_category: "contact",
+    event_label: `whatsapp_${source}`,
+    contact_method: "whatsapp",
+    link_url: href,
+    page_location: page,
+    button_text: label,
+  });
+  gaEvent("whatsapp_click", {
+    source,
+    page_location: page,
+    link_url: href,
+    button_text: label,
+  });
 }
 
 export function trackPhoneClick(
@@ -128,11 +153,60 @@ export function trackPhoneClick(
   label: string
 ) {
   capture("phone_click", { source, page, href, label });
+  gaEvent("generate_lead", {
+    event_category: "contact",
+    event_label: `phone_${source}`,
+    contact_method: "phone",
+    link_url: href,
+    page_location: page,
+    button_text: label,
+  });
+  gaEvent("phone_click", {
+    source,
+    page_location: page,
+    link_url: href,
+    button_text: label,
+  });
+}
+
+export function trackEmailClick(
+  source: string,
+  page: string,
+  href: string,
+  label: string
+) {
+  capture("email_click", { source, page, href, label });
+  gaEvent("generate_lead", {
+    event_category: "contact",
+    event_label: `email_${source}`,
+    contact_method: "email",
+    link_url: href,
+    page_location: page,
+    button_text: label,
+  });
+  gaEvent("email_click", {
+    source,
+    page_location: page,
+    link_url: href,
+    button_text: label,
+  });
 }
 
 export function trackQuoteSubmitted(category: string, source: string = "contact_form") {
   capture("quote_submitted", {
     category,
+    source,
+  });
+  gaEvent("generate_lead", {
+    event_category: "contact",
+    event_label: `quote_${source}`,
+    contact_method: "form",
+    form_category: category,
+  });
+  gaEvent("form_submit", {
+    form_id: "quote_request",
+    form_name: "Solicitud de Cotización",
+    form_category: category,
     source,
   });
 }
