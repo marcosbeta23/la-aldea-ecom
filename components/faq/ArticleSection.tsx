@@ -1,6 +1,9 @@
 import type { ArticleSection } from '@/lib/faq-articles';
 import { autoLinkBlogContent } from '@/lib/auto-link';
 import type { SeoCluster } from '@/lib/seo-clusters';
+import CloroCalculator from '@/components/calculators/CloroCalculator';
+import PumpCalculator from '@/components/calculators/PumpCalculator';
+import ArticleProductCard from '@/components/products/ArticleProductCard';
 
 interface ArticleSectionProps {
   section: ArticleSection;
@@ -21,6 +24,18 @@ export default function ArticleSectionBlock({
     excludePaths: [currentSlug],
     additionalClusters: additionalClusters,
   });
+
+  if (section.type === 'calculator-cloro') {
+    return <CloroCalculator />;
+  }
+
+  if (section.type === 'calculator-pump') {
+    return <PumpCalculator />;
+  }
+
+  if (section.type === 'product-card') {
+    return <ArticleProductCard slug={section.content} />;
+  }
 
   // Stats type gets a colored banner
   if (section.type === 'stats') {

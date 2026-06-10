@@ -5,7 +5,7 @@
 export interface ArticleSection {
   title: string;
   content: string; // HTML-safe string (rendered with dangerouslySetInnerHTML)
-  type: 'text' | 'list' | 'steps' | 'stats' | 'table' | 'comparison';
+  type: 'text' | 'list' | 'steps' | 'stats' | 'table' | 'comparison' | 'calculator-cloro' | 'calculator-pump' | 'product-card';
 }
 
 export interface FaqArticle {
